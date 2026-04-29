@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 using MoveMentorChess.App.Controls;
 using MoveMentorChess.App.ViewModels;
 
@@ -11,6 +12,8 @@ namespace MoveMentorChess.App.Views;
 
 public partial class ProfilesWindow : Window
 {
+    private const string TrainerPreparingSuggestionsText = "Your personal trainer is preparing suggestions...";
+
     private readonly PlayerProfileService profileService;
     private readonly IPlayerProfileFormatter profileFormatter;
     private readonly ITrainingPlanFormatter trainingPlanFormatter;
@@ -19,6 +22,7 @@ public partial class ProfilesWindow : Window
     private readonly Func<OpeningMoveRecommendation, Task>? navigateToOpeningPositionAsync;
     private List<PlayerProfileSummaryItemViewModel> items = [];
     private string? currentProfilePlayerKey;
+    private int profileRenderVersion;
     private readonly Dictionary<string, IReadOnlyList<OpeningTrainingPosition>> branchAwarenessPositionsByEco = new(StringComparer.OrdinalIgnoreCase);
 
     public ProfilesWindow()
@@ -49,7 +53,7 @@ public partial class ProfilesWindow : Window
         RefreshList();
     }
 
-    private void ProfilesListBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private async void ProfilesListBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (ProfilesListBox.SelectedItem is not PlayerProfileSummaryItemViewModel item)
         {
@@ -57,14 +61,43 @@ public partial class ProfilesWindow : Window
             return;
         }
 
-        if (!profileService.TryBuildProfile(item.Summary.PlayerKey, out PlayerProfileReport? report) || report is null)
+        string requestedPlayerKey = item.Summary.PlayerKey;
+        int renderVersion = ++profileRenderVersion;
+        ShowProfileLoadingStatus(item.Summary.DisplayName);
+
+        try
+        {
+            (PlayerProfileReport? Report, OpeningWeaknessReport? OpeningReport) result = await Task.Run<(PlayerProfileReport? Report, OpeningWeaknessReport? OpeningReport)>(() =>
+            {
+                if (!profileService.TryBuildProfile(requestedPlayerKey, out PlayerProfileReport? builtReport) || builtReport is null)
+                {
+                    return (null, null);
+                }
+
+                profileService.TryBuildOpeningWeaknessReport(requestedPlayerKey, out OpeningWeaknessReport? builtOpeningReport);
+                return (builtReport, builtOpeningReport);
+            });
+
+            if (renderVersion != profileRenderVersion
+                || IsClosed()
+                || ProfilesListBox.SelectedItem is not PlayerProfileSummaryItemViewModel selectedItem
+                || !string.Equals(selectedItem.Summary.PlayerKey, requestedPlayerKey, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            if (result.Report is null)
+            {
+                ShowStatus("Could not load the selected player profile.");
+                return;
+            }
+
+            RenderProfile(result.Report, result.OpeningReport, renderVersion);
+        }
+        catch
         {
             ShowStatus("Could not load the selected player profile.");
-            return;
         }
-
-        profileService.TryBuildOpeningWeaknessReport(item.Summary.PlayerKey, out OpeningWeaknessReport? openingReport);
-        RenderProfile(report, openingReport);
     }
 
     private void CloseButton_Click(object? sender, RoutedEventArgs e)
@@ -122,22 +155,18 @@ public partial class ProfilesWindow : Window
     }
 
     private void RenderProfile(PlayerProfileReport report, OpeningWeaknessReport? openingReport)
+        => RenderProfile(report, openingReport, ++profileRenderVersion);
+
+    private void RenderProfile(PlayerProfileReport report, OpeningWeaknessReport? openingReport, int renderVersion)
     {
         DetailsPanel.Children.Clear();
         currentProfilePlayerKey = report.PlayerKey;
         branchAwarenessPositionsByEco.Clear();
-        LlamaGpuSettings settings = LlamaGpuSettingsStore.Load();
-        PlayerProfileFormattedOutput formattedProfile = profileFormatter.Format(
-            report,
-            ToProfileAudienceLevel(settings.DefaultExplanationLevel),
-            settings.NarrationStyle);
-        TrainingPlanFormattedOutput formattedTrainingPlan = trainingPlanFormatter.Format(
-            report.TrainingPlan,
-            ToProfileAudienceLevel(settings.DefaultExplanationLevel),
-            settings.NarrationStyle);
+        StackPanel summaryPanel = BuildRowsPanel(BuildFormattedProfilePlaceholderRows());
+        StackPanel weeklyPlanPanel = BuildRowsPanel(BuildWeeklyPlanRows(report, CreateTrainingPlanPlaceholder()));
 
         DetailsPanel.Children.Add(CreateHeroCard(report));
-        DetailsPanel.Children.Add(CreateCollapsibleSection("Summary", BuildFormattedProfileRows(formattedProfile), isExpanded: true));
+        DetailsPanel.Children.Add(CreateCollapsibleSection("Summary", summaryPanel, isExpanded: true));
         DetailsPanel.Children.Add(CreateSnapshotCard(report));
         DetailsPanel.Children.Add(CreateMetricsCard(report));
         DetailsPanel.Children.Add(CreateCollapsibleSection("Profile summary", BuildProfileSummaryRows(report), isExpanded: true));
@@ -151,8 +180,21 @@ public partial class ProfilesWindow : Window
         DetailsPanel.Children.Add(CreateCollapsibleSection("Costliest patterns", BuildCostliestRows(report)));
         DetailsPanel.Children.Add(CreateCollapsibleSection("Trend", BuildTrendRows(report)));
         DetailsPanel.Children.Add(CreateCollapsibleSection("Recommendations", BuildRecommendationRows(report)));
-        DetailsPanel.Children.Add(CreateCollapsibleSection("Weekly plan", BuildWeeklyPlanRows(report, formattedTrainingPlan)));
+        DetailsPanel.Children.Add(CreateCollapsibleSection("Weekly plan", weeklyPlanPanel));
         DetailsPanel.Children.Add(CreateCollapsibleSection("Examples", BuildExampleRows(report)));
+
+        _ = RenderFormattedProfileAsync(report, renderVersion, summaryPanel, weeklyPlanPanel);
+    }
+
+    private void ShowProfileLoadingStatus(string displayName)
+    {
+        DetailsPanel.Children.Clear();
+        DetailsPanel.Children.Add(CreateSectionCard(
+            "Profile Details",
+            [
+                CreateBodyText($"Loading {displayName}'s profile...", "#D7E2EA"),
+                CreateBodyText(TrainerPreparingSuggestionsText, "#9EB5C5")
+            ]));
     }
 
     private IEnumerable<Control> BuildFormattedProfileRows(PlayerProfileFormattedOutput output)
@@ -165,6 +207,69 @@ public partial class ProfilesWindow : Window
         if (!string.IsNullOrWhiteSpace(output.DeepDive))
         {
             yield return CreateBodyText(output.DeepDive);
+        }
+    }
+
+    private IEnumerable<Control> BuildFormattedProfilePlaceholderRows()
+    {
+        yield return CreateBodyText(TrainerPreparingSuggestionsText, "#D7E2EA");
+    }
+
+    private static TrainingPlanFormattedOutput CreateTrainingPlanPlaceholder()
+    {
+        return new TrainingPlanFormattedOutput(
+            TrainerPreparingSuggestionsText,
+            TrainerPreparingSuggestionsText,
+            TrainerPreparingSuggestionsText,
+            TrainerPreparingSuggestionsText);
+    }
+
+    private async Task RenderFormattedProfileAsync(
+        PlayerProfileReport report,
+        int renderVersion,
+        StackPanel summaryPanel,
+        StackPanel weeklyPlanPanel)
+    {
+        try
+        {
+            LlamaGpuSettings settings = LlamaGpuSettingsStore.Load();
+            PlayerProfileAudienceLevel audienceLevel = ToProfileAudienceLevel(settings.DefaultExplanationLevel);
+            AdviceNarrationStyle narrationStyle = settings.NarrationStyle;
+
+            (PlayerProfileFormattedOutput Profile, TrainingPlanFormattedOutput TrainingPlan) formatted = await Task.Run(() =>
+            {
+                PlayerProfileFormattedOutput formattedProfile = profileFormatter.Format(report, audienceLevel, narrationStyle);
+                TrainingPlanFormattedOutput formattedTrainingPlan = trainingPlanFormatter.Format(report.TrainingPlan, audienceLevel, narrationStyle);
+                return (formattedProfile, formattedTrainingPlan);
+            });
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (renderVersion != profileRenderVersion
+                    || !string.Equals(currentProfilePlayerKey, report.PlayerKey, StringComparison.Ordinal)
+                    || IsClosed())
+                {
+                    return;
+                }
+
+                ReplacePanelChildren(summaryPanel, BuildFormattedProfileRows(formatted.Profile));
+                ReplacePanelChildren(weeklyPlanPanel, BuildWeeklyPlanRows(report, formatted.TrainingPlan));
+            });
+        }
+        catch
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (renderVersion != profileRenderVersion || IsClosed())
+                {
+                    return;
+                }
+
+                PlayerProfileFormattedOutput fallbackProfile = new HeuristicPlayerProfileFormatter().Format(report);
+                TrainingPlanFormattedOutput fallbackPlan = new HeuristicTrainingPlanFormatter().Format(report.TrainingPlan);
+                ReplacePanelChildren(summaryPanel, BuildFormattedProfileRows(fallbackProfile));
+                ReplacePanelChildren(weeklyPlanPanel, BuildWeeklyPlanRows(report, fallbackPlan));
+            });
         }
     }
 
@@ -730,12 +835,11 @@ public partial class ProfilesWindow : Window
 
     private Control CreateCollapsibleSection(string title, IEnumerable<Control> children, bool isExpanded = false)
     {
-        StackPanel panel = CreateCardPanel();
-        foreach (Control child in children)
-        {
-            panel.Children.Add(child);
-        }
+        return CreateCollapsibleSection(title, BuildRowsPanel(children), isExpanded);
+    }
 
+    private Control CreateCollapsibleSection(string title, StackPanel panel, bool isExpanded = false)
+    {
         Expander expander = new()
         {
             IsExpanded = isExpanded,
@@ -765,6 +869,22 @@ public partial class ProfilesWindow : Window
         };
 
         return expander;
+    }
+
+    private StackPanel BuildRowsPanel(IEnumerable<Control> children)
+    {
+        StackPanel panel = CreateCardPanel();
+        ReplacePanelChildren(panel, children);
+        return panel;
+    }
+
+    private static void ReplacePanelChildren(StackPanel panel, IEnumerable<Control> children)
+    {
+        panel.Children.Clear();
+        foreach (Control child in children)
+        {
+            panel.Children.Add(child);
+        }
     }
 
     private Control CreateActionRow(PlayerProfileReport report, OpeningWeaknessReport? openingReport)

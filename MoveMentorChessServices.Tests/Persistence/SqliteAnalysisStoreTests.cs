@@ -248,6 +248,52 @@ public sealed class SqliteAnalysisStoreTests
     }
 
     [Fact]
+    public void SqliteAnalysisStore_RestoresLegacyHighlightedLabelsFromMoveTags()
+    {
+        string databasePath = CreateTempDatabasePath();
+
+        try
+        {
+            SqliteAnalysisStore store = new(databasePath);
+            ImportedGame game = PgnGameParser.Parse(GameOnePgn);
+            GameAnalysisCacheKey key = GameAnalysisCache.CreateKey(game, PlayerSide.White, new EngineAnalysisOptions());
+            MoveAnalysisResult move = CreateMoveAnalysis(
+                ply: 3,
+                moveNumber: 2,
+                phase: GamePhase.Opening,
+                quality: MoveQualityBucket.Mistake,
+                centipawnLoss: 145,
+                label: "opening_principles");
+            GameAnalysisResult result = new(
+                game,
+                PlayerSide.White,
+                [move.Replay],
+                [move],
+                [
+                    new SelectedMistake(
+                        [move],
+                        move.Quality,
+                        null,
+                        move.Explanation ?? new MoveExplanation("Short", "Hint", "Detailed"))
+                ]);
+
+            store.SaveResult(key, result);
+
+            bool found = store.TryLoadResult(key, out GameAnalysisResult? restored);
+            GameAnalysisResult listed = Assert.Single(store.ListResults("Alpha"));
+
+            Assert.True(found);
+            Assert.NotNull(restored);
+            Assert.Equal("opening_principles", restored!.HighlightedMistakes[0].Tag?.Label);
+            Assert.Equal("opening_principles", listed.HighlightedMistakes[0].Tag?.Label);
+        }
+        finally
+        {
+            DeleteTempDatabase(databasePath);
+        }
+    }
+
+    [Fact]
     public void SqliteAnalysisStore_SavesAndListsOpeningTrainingSessionResults()
     {
         string databasePath = CreateTempDatabasePath();

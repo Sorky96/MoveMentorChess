@@ -508,7 +508,13 @@ public sealed class SqliteAnalysisStore : IAnalysisStore, IOpeningTreeStore, IOp
         {
             using SqliteDatabase database = OpenDatabase();
             using SqliteStatement statement = database.Prepare($"""
-                SELECT analysis_results.payload_json
+                SELECT
+                    analysis_results.game_fingerprint,
+                    analysis_results.analyzed_side,
+                    analysis_results.depth,
+                    analysis_results.multi_pv,
+                    analysis_results.move_time_ms,
+                    analysis_results.payload_json
                 FROM analysis_results
                 LEFT JOIN imported_games ON imported_games.game_fingerprint = analysis_results.game_fingerprint
                 {(string.IsNullOrWhiteSpace(normalizedFilter)
@@ -525,7 +531,13 @@ public sealed class SqliteAnalysisStore : IAnalysisStore, IOpeningTreeStore, IOp
 
             while (statement.Step() == SqliteRow)
             {
-                string? payload = statement.GetText(0);
+                GameAnalysisCacheKey key = new(
+                    statement.GetText(0) ?? string.Empty,
+                    (PlayerSide)statement.GetInt(1),
+                    statement.GetInt(2),
+                    statement.GetInt(3),
+                    ReadMoveTime(statement.GetInt(4)));
+                string? payload = statement.GetText(5);
                 if (string.IsNullOrWhiteSpace(payload))
                 {
                     continue;
@@ -534,7 +546,7 @@ public sealed class SqliteAnalysisStore : IAnalysisStore, IOpeningTreeStore, IOp
                 GameAnalysisResult? item = JsonSerializer.Deserialize<GameAnalysisResult>(payload, JsonOptions);
                 if (item is not null)
                 {
-                    items.Add(item);
+                    items.Add(NormalizeLoadedResult(database, key, item));
                 }
             }
         }
@@ -688,6 +700,11 @@ public sealed class SqliteAnalysisStore : IAnalysisStore, IOpeningTreeStore, IOp
             }
 
             result = JsonSerializer.Deserialize<GameAnalysisResult>(payload, JsonOptions);
+            if (result is not null)
+            {
+                result = NormalizeLoadedResult(database, key, result);
+            }
+
             return result is not null;
         }
     }
@@ -1010,6 +1027,126 @@ public sealed class SqliteAnalysisStore : IAnalysisStore, IOpeningTreeStore, IOp
                 "INTEGER NOT NULL DEFAULT 1");
             EnsureOpeningTreeSchema(database);
         }
+    }
+
+    private static GameAnalysisResult NormalizeLoadedResult(
+        SqliteDatabase database,
+        GameAnalysisCacheKey key,
+        GameAnalysisResult result)
+    {
+        IReadOnlyDictionary<int, StoredMoveAnnotation> annotations = LoadMoveAnnotations(database, key);
+        Dictionary<int, MoveAnalysisResult> normalizedMoves = result.MoveAnalyses
+            .Select(move => NormalizeMove(move, annotations))
+            .ToDictionary(move => move.Replay.Ply);
+        IReadOnlyList<MoveAnalysisResult> moveAnalyses = result.MoveAnalyses
+            .Select(move => normalizedMoves[move.Replay.Ply])
+            .ToList();
+        IReadOnlyList<SelectedMistake> highlightedMistakes = result.HighlightedMistakes
+            .Select(mistake => NormalizeMistake(mistake, normalizedMoves, annotations))
+            .ToList();
+
+        return result with
+        {
+            MoveAnalyses = moveAnalyses,
+            HighlightedMistakes = highlightedMistakes
+        };
+    }
+
+    private static MoveAnalysisResult NormalizeMove(
+        MoveAnalysisResult move,
+        IReadOnlyDictionary<int, StoredMoveAnnotation> annotations)
+    {
+        if (!annotations.TryGetValue(move.Replay.Ply, out StoredMoveAnnotation? annotation))
+        {
+            return move;
+        }
+
+        return move with
+        {
+            MistakeTag = move.MistakeTag ?? annotation.Tag,
+            Explanation = move.Explanation ?? annotation.Explanation
+        };
+    }
+
+    private static SelectedMistake NormalizeMistake(
+        SelectedMistake mistake,
+        IReadOnlyDictionary<int, MoveAnalysisResult> normalizedMoves,
+        IReadOnlyDictionary<int, StoredMoveAnnotation> annotations)
+    {
+        IReadOnlyList<MoveAnalysisResult> moves = mistake.Moves
+            .Select(move => normalizedMoves.TryGetValue(move.Replay.Ply, out MoveAnalysisResult? normalized)
+                ? normalized
+                : NormalizeMove(move, annotations))
+            .ToList();
+        MoveAnalysisResult? lead = moves
+            .OrderByDescending(move => move.Quality)
+            .ThenByDescending(move => move.CentipawnLoss ?? 0)
+            .FirstOrDefault();
+
+        return mistake with
+        {
+            Moves = moves,
+            Tag = mistake.Tag ?? lead?.MistakeTag,
+            Explanation = lead?.Explanation ?? mistake.Explanation
+        };
+    }
+
+    private static IReadOnlyDictionary<int, StoredMoveAnnotation> LoadMoveAnnotations(
+        SqliteDatabase database,
+        GameAnalysisCacheKey key)
+    {
+        Dictionary<int, StoredMoveAnnotation> annotations = new();
+        using SqliteStatement statement = database.Prepare("""
+            SELECT
+                ply,
+                mistake_label,
+                mistake_confidence,
+                evidence_json,
+                short_explanation,
+                detailed_explanation,
+                training_hint
+            FROM analysis_moves
+            WHERE game_fingerprint = ?1
+              AND analyzed_side = ?2
+              AND depth = ?3
+              AND multi_pv = ?4
+              AND move_time_ms = ?5;
+            """);
+
+        statement.BindText(1, key.GameFingerprint);
+        statement.BindInt(2, (int)key.Side);
+        statement.BindInt(3, key.Depth);
+        statement.BindInt(4, key.MultiPv);
+        statement.BindInt(5, NormalizeMoveTime(key.MoveTimeMs));
+
+        while (statement.Step() == SqliteRow)
+        {
+            MistakeTag? tag = null;
+            string? label = statement.GetText(1);
+            if (!string.IsNullOrWhiteSpace(label))
+            {
+                tag = new MistakeTag(
+                    label,
+                    ParseNullableDouble(statement.GetText(2)) ?? 0,
+                    DeserializeEvidence(statement.GetText(3)));
+            }
+
+            MoveExplanation? explanation = null;
+            string? shortExplanation = statement.GetText(4);
+            string? trainingHint = statement.GetText(6);
+            if (!string.IsNullOrWhiteSpace(shortExplanation)
+                || !string.IsNullOrWhiteSpace(trainingHint))
+            {
+                explanation = new MoveExplanation(
+                    shortExplanation ?? string.Empty,
+                    trainingHint ?? string.Empty,
+                    statement.GetText(5) ?? string.Empty);
+            }
+
+            annotations[statement.GetInt(0)] = new StoredMoveAnnotation(tag, explanation);
+        }
+
+        return annotations;
     }
 
     private SqliteDatabase OpenDatabase() => new(databasePath);
@@ -1715,6 +1852,8 @@ public sealed class SqliteAnalysisStore : IAnalysisStore, IOpeningTreeStore, IOp
         string ecoPart = string.IsNullOrWhiteSpace(eco) ? string.Empty : $" | {OpeningCatalog.Describe(eco)}";
         return players + datePart + resultPart + ecoPart;
     }
+
+    private sealed record StoredMoveAnnotation(MistakeTag? Tag, MoveExplanation? Explanation);
 
     [DllImport("winsqlite3", CharSet = CharSet.Unicode, EntryPoint = "sqlite3_open16")]
     private static extern int sqlite3_open16(string filename, out IntPtr db);

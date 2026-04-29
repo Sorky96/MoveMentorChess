@@ -574,19 +574,56 @@ public partial class AnalysisWindow : Window
                 .OrderByDescending(move => move.Quality)
                 .ThenByDescending(move => move.CentipawnLoss ?? 0)
                 .First();
+            MoveRange = BuildMoveRange(Mistake);
+            string rawLabel = Mistake.Tag?.Label ?? LeadMove.MistakeTag?.Label ?? "unclassified";
+            LabelText = FormatMistakeLabel(rawLabel);
+            LabelBrush = GetMistakeLabelBrush(rawLabel);
+            LabelForeground = GetMistakeLabelForeground(rawLabel);
+            MetaText = $"{Mistake.Quality} | CPL {LeadMove.CentipawnLoss?.ToString() ?? "n/a"}";
         }
 
         public SelectedMistake Mistake { get; }
 
         public MoveAnalysisResult LeadMove { get; }
 
+        public string MoveRange { get; }
+
+        public string LabelText { get; }
+
+        public string LabelBrush { get; }
+
+        public string LabelForeground { get; }
+
+        public string MetaText { get; }
+
         public override string ToString()
         {
-            string moveRange = BuildMoveRange(Mistake);
-            string label = FormatMistakeLabel(Mistake.Tag?.Label ?? "unclassified");
-            string cpl = LeadMove.CentipawnLoss?.ToString() ?? "n/a";
-            return $"{moveRange} | {Mistake.Quality} | {label} | CPL {cpl}";
+            return $"{MoveRange} | {Mistake.Quality} | {LabelText} | CPL {LeadMove.CentipawnLoss?.ToString() ?? "n/a"}";
         }
+    }
+
+    private static string GetMistakeLabelBrush(string label)
+    {
+        return label switch
+        {
+            "hanging_piece" => "#B93838",
+            "material_loss" => "#8F3F9F",
+            "missed_tactic" => "#C56A19",
+            "opening_principles" => "#1F7A55",
+            "king_safety" => "#B88A10",
+            "endgame_technique" => "#2F6FB3",
+            "piece_activity" => "#4D6B2E",
+            _ => "#657386"
+        };
+    }
+
+    private static string GetMistakeLabelForeground(string label)
+    {
+        return label switch
+        {
+            "king_safety" => "#111827",
+            _ => "White"
+        };
     }
 
     private static string BuildExplanationCacheKey(
