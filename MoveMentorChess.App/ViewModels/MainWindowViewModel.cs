@@ -33,6 +33,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private PieceMoveOptionViewModel? selectedPieceMoveOption;
     private bool rotateBoard;
     private bool isBusy;
+    private CancellationTokenSource? importCancellationTokenSource;
     private int importedCursor;
     private int evaluationBarValue = 50;
     private string selectedAnalysisFilter = AnalysisFilterOptions[0];
@@ -46,6 +47,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         ApplyNextImportedMoveCommand = new RelayCommand(ApplyNextImportedMove, () => !IsBusy && importedCursor < importedReplay.Count);
         ApplySelectedImportedMoveCommand = new RelayCommand(ApplySelectedImportedMove, () => !IsBusy && SelectedImportedMove is not null);
         AnalyzeImportedGameCommand = new RelayCommand(async () => await AnalyzeImportedGameAsync(), () => !IsBusy && importedGame is not null && engine is not null);
+        StopImportCommand = new RelayCommand(StopImport, () => IsImportCancellationAvailable);
         ShowSelectedMistakeOnBoardCommand = new RelayCommand(ShowSelectedMistakeOnBoard, () => !IsBusy && SelectedAnalysisMistake is not null);
 
         TryInitializeEngine();
@@ -73,6 +75,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     public RelayCommand ApplySelectedImportedMoveCommand { get; }
 
     public RelayCommand AnalyzeImportedGameCommand { get; }
+
+    public RelayCommand StopImportCommand { get; }
 
     public RelayCommand ShowSelectedMistakeOnBoardCommand { get; }
 
@@ -140,12 +144,15 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             if (SetProperty(ref isBusy, value))
             {
                 OnPropertyChanged(nameof(CanOpenImportedAnalysis));
+                OnPropertyChanged(nameof(IsImportCancellationAvailable));
                 RaiseCommandStates();
             }
         }
     }
 
     public bool CanOpenImportedAnalysis => importedGame is not null && !IsBusy;
+
+    public bool IsImportCancellationAvailable => IsBusy && importCancellationTokenSource is not null && !importCancellationTokenSource.IsCancellationRequested;
 
     public int EvaluationBarValue
     {
@@ -449,7 +456,10 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
         try
         {
+            using CancellationTokenSource cancellation = new();
+            importCancellationTokenSource = cancellation;
             IsBusy = true;
+            OnPropertyChanged(nameof(IsImportCancellationAvailable));
             AnalysisMistakes.Clear();
             SelectedAnalysisMistake = null;
             AnalysisDetails = string.IsNullOrWhiteSpace(primaryPlayer)
@@ -462,6 +472,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
             foreach (ImportedGame game in games)
             {
+                cancellation.Token.ThrowIfCancellationRequested();
                 PlayerSide side = ResolveAnalysisSide(game, primaryPlayer, SelectedAnalysisSide);
                 if (!PlayerMatchesSide(game, primaryPlayer, side))
                 {
@@ -482,10 +493,16 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
                 try
                 {
-                    GameAnalysisResult result = await Task.Run(() => analysisService.AnalyzeGame(game, side, options));
+                    GameAnalysisResult result = await Task.Run(
+                        () => analysisService.AnalyzeGame(game, side, options, cancellationToken: cancellation.Token),
+                        cancellation.Token);
                     GameAnalysisCache.StoreResult(cacheKey, result);
                     analyzed++;
                     lastResult = result;
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
                 }
                 catch (Exception ex)
                 {
@@ -510,9 +527,15 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             string playerText = string.IsNullOrWhiteSpace(primaryPlayer) ? string.Empty : $" for {primaryPlayer}";
             StatusMessage = $"Bulk analysis finished{playerText}. New: {analyzed}, cached: {cached}, skipped: {skipped}, failed: {failed}.";
         }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = $"Bulk analysis stopped. New: {analyzed}, cached: {cached}, skipped: {skipped}, failed: {failed}.";
+        }
         finally
         {
             IsBusy = false;
+            importCancellationTokenSource = null;
+            OnPropertyChanged(nameof(IsImportCancellationAvailable));
             RefreshEngineSummary();
             RefreshImportedSummary();
         }
@@ -729,6 +752,19 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         AnalysisDetails = "Imported game loaded. Choose a side and run analysis.";
         OnPropertyChanged(nameof(CanOpenImportedAnalysis));
         RaiseCommandStates();
+    }
+
+    private void StopImport()
+    {
+        if (importCancellationTokenSource is null || importCancellationTokenSource.IsCancellationRequested)
+        {
+            return;
+        }
+
+        importCancellationTokenSource.Cancel();
+        StatusMessage = "Stopping PGN import analysis after the current engine step...";
+        OnPropertyChanged(nameof(IsImportCancellationAvailable));
+        StopImportCommand.RaiseCanExecuteChanged();
     }
 
     private bool TryLoadFirstReplayableImportedGame(IReadOnlyList<ImportedGame> games, out int skippedGames)
@@ -1392,6 +1428,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         ApplyNextImportedMoveCommand.RaiseCanExecuteChanged();
         ApplySelectedImportedMoveCommand.RaiseCanExecuteChanged();
         AnalyzeImportedGameCommand.RaiseCanExecuteChanged();
+        StopImportCommand.RaiseCanExecuteChanged();
         ShowSelectedMistakeOnBoardCommand.RaiseCanExecuteChanged();
     }
 

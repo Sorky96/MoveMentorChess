@@ -9,7 +9,7 @@
         Background="{DynamicResource ChromeBrush}">
   <Grid Margin="18" RowDefinitions="Auto,*">
     <Border Padding="16" CornerRadius="18" Background="{DynamicResource PanelBrush}">
-      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto">
         <TextBlock VerticalAlignment="Center"
                    Margin="0,0,16,0"
                    FontSize="24"
@@ -35,7 +35,13 @@
                 IsEnabled="False"
                 Click="OpenAnalysisButton_Click"
                 Content="Open Analysis" />
-        <Button Grid.Column="4"
+        <Button x:Name="DeleteSelectedButton"
+                Grid.Column="4"
+                Margin="12,0,0,0"
+                IsEnabled="False"
+                Click="DeleteSelectedButton_Click"
+                Content="Delete Selected" />
+        <Button Grid.Column="5"
                 Margin="12,0,0,0"
                 Click="CloseButton_Click"
                 Content="Close" />

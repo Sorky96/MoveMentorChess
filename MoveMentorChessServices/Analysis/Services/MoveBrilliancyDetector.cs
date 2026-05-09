@@ -3,9 +3,9 @@ namespace MoveMentorChessServices;
 public static class MoveBrilliancyDetector
 {
     private const int MaxCentipawnLoss = 20;
-    private const int MinimumSacrificedPieceValueCp = 300;
     private const int MinimumMaterialSacrificeCp = 300;
     private const int MinimumCompensationCp = -50;
+    private const int MinimumMaterialRecoveryGainCp = 100;
 
     public static bool IsBrilliant(
         ReplayPly replay,
@@ -14,9 +14,12 @@ public static class MoveBrilliancyDetector
         int? playedMateIn,
         int materialDeltaCp,
         bool isBookMove,
+        EngineAnalysis afterAnalysis,
+        PlayerSide analyzedSide,
         MoveHeuristicContext context)
     {
         ArgumentNullException.ThrowIfNull(replay);
+        ArgumentNullException.ThrowIfNull(afterAnalysis);
 
         if (isBookMove
             || centipawnLoss is not int loss
@@ -31,9 +34,14 @@ public static class MoveBrilliancyDetector
             return false;
         }
 
-        return HasMaterialSacrifice(materialDeltaCp)
-            || LeavesValuablePieceEnPrise(context)
-            || PlayedLineAcceptsMaterialDrop(context);
+        int sacrificeDepthCp = ComputeSacrificeDepth(replay, materialDeltaCp, afterAnalysis, analyzedSide, context);
+        if (sacrificeDepthCp < MinimumMaterialSacrificeCp)
+        {
+            return false;
+        }
+
+        return HasCheckingCompensation(replay, playedMateIn)
+            || HasMaterialRecoveryCompensation(afterAnalysis, analyzedSide, sacrificeDepthCp);
     }
 
     public static bool IsBrilliant(
@@ -51,6 +59,8 @@ public static class MoveBrilliancyDetector
             result.PlayedMateIn,
             result.MaterialDeltaCp,
             isBookMove,
+            result.AfterAnalysis,
+            analyzedSide,
             context);
     }
 
@@ -64,22 +74,75 @@ public static class MoveBrilliancyDetector
         return evalAfterCp is int after && after >= MinimumCompensationCp;
     }
 
-    private static bool HasMaterialSacrifice(int materialDeltaCp)
+    private static int ComputeSacrificeDepth(
+        ReplayPly replay,
+        int materialDeltaCp,
+        EngineAnalysis afterAnalysis,
+        PlayerSide analyzedSide,
+        MoveHeuristicContext context)
     {
-        return materialDeltaCp <= -MinimumMaterialSacrificeCp;
+        int immediateSacrificeCp = Math.Max(0, -materialDeltaCp);
+        int firstReplySacrificeCp = !replay.IsCapture
+            ? ComputeFirstReplyMaterialLoss(afterAnalysis, analyzedSide)
+            : 0;
+        int enPriseSacrificeCp = !replay.IsCapture && LeavesValuablePieceEnPrise(context)
+            ? context.MovedPieceValueCp ?? 0
+            : 0;
+
+        return Math.Max(Math.Max(immediateSacrificeCp, firstReplySacrificeCp), enPriseSacrificeCp);
+    }
+
+    private static int ComputeFirstReplyMaterialLoss(EngineAnalysis afterAnalysis, PlayerSide analyzedSide)
+    {
+        EngineLine? playedLine = afterAnalysis.Lines.FirstOrDefault();
+        string? firstReply = playedLine?.Pv.FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(firstReply))
+        {
+            return 0;
+        }
+
+        ChessGame game = new();
+        if (!game.TryLoadFen(afterAnalysis.Fen, out _)
+            || !game.TryApplyUci(firstReply, out AppliedMoveInfo? reply, out _)
+            || reply is null)
+        {
+            return 0;
+        }
+
+        int before = PositionInspector.MaterialScore(afterAnalysis.Fen, analyzedSide);
+        int after = PositionInspector.MaterialScore(reply.FenAfter, analyzedSide);
+        return Math.Max(0, before - after);
     }
 
     private static bool LeavesValuablePieceEnPrise(MoveHeuristicContext context)
     {
-        return context.MovedPieceValueCp >= MinimumSacrificedPieceValueCp
+        return context.MovedPieceValueCp >= MinimumMaterialSacrificeCp
             && (context.MovedPieceFreeToTake
                 || context.MovedPieceLikelyLosesExchange
                 || context.MovedPieceHangingAfterMove);
     }
 
-    private static bool PlayedLineAcceptsMaterialDrop(MoveHeuristicContext context)
+    private static bool HasCheckingCompensation(ReplayPly replay, int? playedMateIn)
     {
-        return context.PlayedLineMaterialSwingCp <= -MinimumMaterialSacrificeCp;
+        return playedMateIn is > 0
+            || replay.San.Contains('+', StringComparison.Ordinal)
+            || replay.San.Contains('#', StringComparison.Ordinal);
+    }
+
+    private static bool HasMaterialRecoveryCompensation(
+        EngineAnalysis afterAnalysis,
+        PlayerSide analyzedSide,
+        int sacrificeDepthCp)
+    {
+        EngineLine? playedLine = afterAnalysis.Lines.FirstOrDefault();
+        PositionInspector.MaterialSwingSummary? swing = PositionInspector.AnalyzeMaterialSwingAlongLine(
+            afterAnalysis.Fen,
+            analyzedSide,
+            playedLine?.Pv,
+            maxPlies: 8);
+
+        return swing is not null
+            && swing.Value.BestDeltaCp - swing.Value.WorstDeltaCp >= sacrificeDepthCp + MinimumMaterialRecoveryGainCp;
     }
 
     private static MoveHeuristicContext BuildContext(MoveAnalysisResult result, PlayerSide analyzedSide)

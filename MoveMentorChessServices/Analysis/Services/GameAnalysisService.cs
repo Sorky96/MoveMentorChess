@@ -36,7 +36,8 @@ public sealed class GameAnalysisService
         ImportedGame game,
         PlayerSide analyzedSide,
         EngineAnalysisOptions options,
-        IProgress<GameAnalysisProgress>? progress = null)
+        IProgress<GameAnalysisProgress>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(game);
         ArgumentNullException.ThrowIfNull(options);
@@ -52,6 +53,7 @@ public sealed class GameAnalysisService
 
         for (int i = 0; i < analyzedPlies.Count; i++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             ReplayPly ply = analyzedPlies[i];
             int currentAnalyzedMove = i + 1;
             progress?.Report(new GameAnalysisProgress(
@@ -62,6 +64,7 @@ public sealed class GameAnalysisService
                 analyzedPlies.Count));
 
             EngineAnalysis beforeAnalysis = AnalyzeCached(ply.FenBefore, options, analysisCache);
+            cancellationToken.ThrowIfCancellationRequested();
             progress?.Report(new GameAnalysisProgress(
                 ply,
                 ply.FenAfter,
@@ -70,6 +73,7 @@ public sealed class GameAnalysisService
                 analyzedPlies.Count));
 
             EngineAnalysis afterAnalysis = AnalyzeCached(ply.FenAfter, options, analysisCache);
+            cancellationToken.ThrowIfCancellationRequested();
 
             EngineLine? bestLine = beforeAnalysis.Lines.FirstOrDefault();
             EngineLine? playedLine = afterAnalysis.Lines.FirstOrDefault();
@@ -91,6 +95,8 @@ public sealed class GameAnalysisService
                 playedScore.MateIn,
                 materialDelta,
                 isBookMove,
+                afterAnalysis,
+                analyzedSide,
                 heuristicContext);
             MoveQualityBucket quality = ClassifyQuality(bestScore, playedScore, centipawnLoss, ply.Uci, beforeAnalysis.BestMoveUci, isBookMove, isGreatMove, isBrilliantMove);
 

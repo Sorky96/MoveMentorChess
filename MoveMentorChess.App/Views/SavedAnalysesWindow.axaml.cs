@@ -54,6 +54,23 @@ public partial class SavedAnalysesWindow : Window
         ConfirmSelection(SavedAnalysisAction.OpenAnalysis);
     }
 
+    private void DeleteSelectedButton_Click(object? sender, RoutedEventArgs e)
+    {
+        if (AnalysesListBox.SelectedItem is not SavedAnalysisListItem item)
+        {
+            return;
+        }
+
+        string gameFingerprint = GameFingerprint.Compute(item.Result.Game.PgnText);
+        if (!analysisStore.DeleteImportedGame(gameFingerprint))
+        {
+            return;
+        }
+
+        GameAnalysisCache.RemoveGame(gameFingerprint);
+        RefreshList();
+    }
+
     private void CloseButton_Click(object? sender, RoutedEventArgs e)
     {
         Close(false);
@@ -65,6 +82,7 @@ public partial class SavedAnalysesWindow : Window
         RequestedAction = SavedAnalysisAction.None;
         LoadGameButton.IsEnabled = false;
         OpenAnalysisButton.IsEnabled = false;
+        DeleteSelectedButton.IsEnabled = false;
 
         IReadOnlyList<GameAnalysisResult> items = analysisStore.ListResults(FilterTextBox.Text, limit: 1000);
         string normalizedFilter = FilterTextBox.Text?.Trim() ?? string.Empty;
@@ -99,12 +117,14 @@ public partial class SavedAnalysesWindow : Window
             DetailsTextBlock.Text = "Select a saved analysis to inspect the cached result.";
             LoadGameButton.IsEnabled = false;
             OpenAnalysisButton.IsEnabled = false;
+            DeleteSelectedButton.IsEnabled = false;
             return;
         }
 
         SelectedResult = item.Result;
         LoadGameButton.IsEnabled = true;
         OpenAnalysisButton.IsEnabled = canOpenAnalysis;
+        DeleteSelectedButton.IsEnabled = true;
 
         GameAnalysisResult result = item.Result;
         int blunders = result.HighlightedMistakes.Count(mistake => mistake.Quality == MoveQualityBucket.Blunder);

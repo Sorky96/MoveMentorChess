@@ -254,10 +254,28 @@
             Padding="12,8"
             Background="{DynamicResource PanelAccentBrush}"
             CornerRadius="8">
-      <TextBlock Foreground="#D7E2EA"
-                 FontSize="14"
-                 TextWrapping="Wrap"
-                 Text="{Binding StatusMessage}" />
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <TextBlock Foreground="#D7E2EA"
+                   FontSize="14"
+                   VerticalAlignment="Center"
+                   TextWrapping="Wrap"
+                   Text="{Binding StatusMessage}" />
+        <Button Width="28"
+                Height="28"
+                Padding="0"
+                Background="#3A171A"
+                BorderBrush="#D33838"
+                BorderThickness="1"
+                CornerRadius="14"
+                Command="{Binding StopImportCommand}"
+                IsVisible="{Binding IsImportCancellationAvailable}"
+                ToolTip.Tip="Stop import">
+          <Border Width="10"
+                  Height="10"
+                  CornerRadius="2"
+                  Background="#FF4A4A" />
+        </Button>
+      </StackPanel>
     </Border>
   </Grid>
 </Window>

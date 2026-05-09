@@ -953,7 +953,168 @@ Kxa2 62. Qb2# 1-0
     }
 
     [Fact]
-    public void MoveBrilliancyDetector_DetectsSoundValuablePieceSacrifice()
+    public void MoveBrilliancyDetector_DetectsSoundCheckingSacrifice()
+    {
+        ReplayPly replay = CreateReplay(
+            GamePhase.Middlegame,
+            "B",
+            "c4",
+            "f7",
+            "fen-before",
+            "fen-after",
+            san: "Bxf7+");
+        MoveHeuristicContext context = CreateContext(
+            MovedPieceHangingAfterMove: true,
+            MovedPieceValueCp: 330);
+
+        bool brilliant = MoveBrilliancyDetector.IsBrilliant(
+            replay,
+            centipawnLoss: 0,
+            evalAfterCp: 120,
+            playedMateIn: null,
+            materialDeltaCp: -320,
+            isBookMove: false,
+            afterAnalysis: AnalysisFor("fen-after", "e8f7", 120, null, "e8f7"),
+            analyzedSide: PlayerSide.White,
+            context);
+
+        Assert.True(brilliant);
+    }
+
+    [Fact]
+    public void MoveBrilliancyDetector_DetectsMaterialRecoverySacrifice()
+    {
+        const string fenAfter = "4k3/8/8/8/8/8/q7/RK6 b - - 0 1";
+        ReplayPly replay = CreateReplay(
+            GamePhase.Middlegame,
+            "R",
+            "a3",
+            "a1",
+            "fen-before",
+            fenAfter);
+        MoveHeuristicContext context = CreateContext();
+
+        bool brilliant = MoveBrilliancyDetector.IsBrilliant(
+            replay,
+            centipawnLoss: 0,
+            evalAfterCp: 120,
+            playedMateIn: null,
+            materialDeltaCp: -500,
+            isBookMove: false,
+            afterAnalysis: AnalysisFor(fenAfter, "a2a1", 120, null, "a2a1", "b1a1"),
+            analyzedSide: PlayerSide.White,
+            context);
+
+        Assert.True(brilliant);
+    }
+
+    [Fact]
+    public void MoveBrilliancyDetector_DetectsQuietSacrificeLeadingToMate()
+    {
+        const string fenAfter = "3q2k1/8/7Q/8/3R4/8/8/K7 b - - 0 1";
+        ReplayPly replay = CreateReplay(
+            GamePhase.Middlegame,
+            "Q",
+            "e3",
+            "h6",
+            "fen-before",
+            fenAfter,
+            san: "Qh6");
+        MoveHeuristicContext context = CreateContext();
+
+        bool brilliant = MoveBrilliancyDetector.IsBrilliant(
+            replay,
+            centipawnLoss: 0,
+            evalAfterCp: null,
+            playedMateIn: 5,
+            materialDeltaCp: 0,
+            isBookMove: false,
+            afterAnalysis: AnalysisFor(fenAfter, "d8d4", null, 5, "d8d4"),
+            analyzedSide: PlayerSide.White,
+            context);
+
+        Assert.True(brilliant);
+    }
+
+    [Fact]
+    public void MoveBrilliancyDetector_DetectsQuietEnPrisePieceLeadingToMate()
+    {
+        ReplayPly replay = CreateReplay(
+            GamePhase.Middlegame,
+            "B",
+            "e5",
+            "c7",
+            "fen-before",
+            "fen-after",
+            san: "Bc7");
+        MoveHeuristicContext context = CreateContext(
+            MovedPieceHangingAfterMove: true,
+            MovedPieceValueCp: 330);
+
+        bool brilliant = MoveBrilliancyDetector.IsBrilliant(
+            replay,
+            centipawnLoss: 0,
+            evalAfterCp: null,
+            playedMateIn: 3,
+            materialDeltaCp: 0,
+            isBookMove: false,
+            afterAnalysis: AnalysisFor("fen-after", "c8c7", null, 3, "c8c7"),
+            analyzedSide: PlayerSide.White,
+            context);
+
+        Assert.True(brilliant);
+    }
+
+    [Fact]
+    public void MoveBrilliancyDetector_DetectsRf6ExchangeSacrificeLeadingToMate()
+    {
+        const string pgn = "1. e4 g6 2. d4 Bg7 3. Nc3 d6 4. f4 Nf6 5. Nf3 O-O 6. Bd3 Bg4 7. h3 Bxf3 8. Qxf3 Nc6 9. Be3 e5 10. dxe5 dxe5 11. f5 gxf5 12. Qxf5 Nd4 13. Qf2 Ne8 14. O-O Nd6 15. Qg3 Kh8 16. Qg4 c6 17. Qh5 Qe8 18. Bxd4 exd4 19. Rf6 Kg8 20. e5 h6 21. Ne2 1-0";
+        ReplayPly replay = FindReplayPly(pgn, moveNumber: 19, PlayerSide.White, "Rf6");
+        int materialDelta = PositionInspector.MaterialScore(replay.FenAfter, PlayerSide.White)
+            - PositionInspector.MaterialScore(replay.FenBefore, PlayerSide.White);
+        MoveAnalysisResult result = new(
+            replay,
+            AnalysisFor(replay.FenBefore, replay.Uci, 300, null, replay.Uci),
+            AnalysisFor(replay.FenAfter, "g7f6", null, 5, "g7f6"),
+            300,
+            null,
+            null,
+            5,
+            0,
+            MoveQualityBucket.Brilliant,
+            materialDelta,
+            null,
+            null);
+
+        Assert.True(MoveBrilliancyDetector.IsBrilliant(result, PlayerSide.White));
+    }
+
+    [Fact]
+    public void MoveBrilliancyDetector_DetectsQf4CheckingQueenSacrifice()
+    {
+        const string pgn = "1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. cxd5 Nxd5 5. e4 Nxc3 6. bxc3 Bg7 7. Nf3 c5 8. Rb1 O-O 9. Be2 cxd4 10. cxd4 Qa5+ 11. Bd2 Qxa2 12. O-O Bg4 13. Be3 Nc6 14. d5 Na5 15. Bg5 b6 16. Bxe7 Rfe8 17. d6 Nc6 18. Bb5 Nxe7 19. h3 Bxf3 20. Qxf3 Qe6 21. Bxe8 Rxe8 22. dxe7 Rxe7 23. Rfe1 Bd4 24. Rbd1 Qe5 25. Rd3 a5 26. Qd1 Bc5 27. Re2 Re6 28. g3 Rd6 29. Kg2 Rxd3 30. Qxd3 a4 31. Rd2 a3 32. Qc4 Kg7 33. Rd7 Qf6 34. f4 Qb2+ 35. Kf3 Qf2+ 36. Kg4 h5+ 37. Kh4 g5+ 38. fxg5 Kg6 39. Qc3 f6 40. Rd5 a2 41. Rf5 Qf4+ 42. gxf4 Bf2+ 43. Qg3 Bxg3+ 44. Kxg3 a1=Q 45. Rxf6+ Kg7 46. e5 b5 47. Kh4 b4 48. Kxh5 Qd1+ 49. Kh4 b3 50. e6 b2 51. Rf7+ Kg8 52. Rb7 b1=Q 53. Rxb1 Qxb1 54. Kg4 Qe4 0-1";
+        ReplayPly replay = FindReplayPly(pgn, moveNumber: 41, PlayerSide.Black, "Qf4+");
+        int materialDelta = PositionInspector.MaterialScore(replay.FenAfter, PlayerSide.Black)
+            - PositionInspector.MaterialScore(replay.FenBefore, PlayerSide.Black);
+        MoveAnalysisResult result = new(
+            replay,
+            AnalysisFor(replay.FenBefore, replay.Uci, 250, null, replay.Uci),
+            AnalysisFor(replay.FenAfter, "g3f4", 250, null, "g3f4"),
+            250,
+            250,
+            null,
+            null,
+            0,
+            MoveQualityBucket.Brilliant,
+            materialDelta,
+            null,
+            null);
+
+        Assert.True(MoveBrilliancyDetector.IsBrilliant(result, PlayerSide.Black));
+    }
+
+    [Fact]
+    public void MoveBrilliancyDetector_RejectsSacrificeWithoutCheckingOrMaterialCompensation()
     {
         ReplayPly replay = CreateReplay(
             GamePhase.Middlegame,
@@ -962,6 +1123,61 @@ Kxa2 62. Qb2# 1-0
             "f7",
             "fen-before",
             "fen-after");
+        MoveHeuristicContext context = CreateContext();
+
+        bool brilliant = MoveBrilliancyDetector.IsBrilliant(
+            replay,
+            centipawnLoss: 0,
+            evalAfterCp: 120,
+            playedMateIn: null,
+            materialDeltaCp: -320,
+            isBookMove: false,
+            afterAnalysis: AnalysisFor("fen-after", "e8e7", 120, null, "e8e7"),
+            analyzedSide: PlayerSide.White,
+            context);
+
+        Assert.False(brilliant);
+    }
+
+    [Fact]
+    public void MoveBrilliancyDetector_RejectsLaterUnrelatedMaterialSwing()
+    {
+        const string fenAfter = "r4r1k/1bn1n1p1/7p/p1ppNq2/Pp6/1P1B4/NBP1QPPP/1K1R3R b - - 1 22";
+        ReplayPly replay = CreateReplay(
+            GamePhase.Middlegame,
+            "B",
+            "c4",
+            "d3",
+            "fen-before",
+            fenAfter,
+            san: "Bd3");
+        MoveHeuristicContext context = CreateContext(PlayedLineMaterialSwingCp: -500);
+
+        bool brilliant = MoveBrilliancyDetector.IsBrilliant(
+            replay,
+            centipawnLoss: 0,
+            evalAfterCp: 120,
+            playedMateIn: null,
+            materialDeltaCp: 0,
+            isBookMove: false,
+            afterAnalysis: AnalysisFor(fenAfter, "f5e6", 120, null, "f5e6", "h1e1", "c5c4", "e5c4"),
+            analyzedSide: PlayerSide.White,
+            context);
+
+        Assert.False(brilliant);
+    }
+
+    [Fact]
+    public void MoveBrilliancyDetector_RejectsEnPriseCaptureWithoutMaterialSacrifice()
+    {
+        ReplayPly replay = CreateReplay(
+            GamePhase.Middlegame,
+            "B",
+            "c4",
+            "f7",
+            "fen-before",
+            "fen-after",
+            isCapture: true);
         MoveHeuristicContext context = CreateContext(
             MovedPieceHangingAfterMove: true,
             MovedPieceValueCp: 330);
@@ -973,9 +1189,11 @@ Kxa2 62. Qb2# 1-0
             playedMateIn: null,
             materialDeltaCp: 100,
             isBookMove: false,
+            afterAnalysis: AnalysisFor("fen-after", "e8f7", 120, null, "e8f7"),
+            analyzedSide: PlayerSide.White,
             context);
 
-        Assert.True(brilliant);
+        Assert.False(brilliant);
     }
 
     [Fact]
@@ -997,21 +1215,25 @@ Kxa2 62. Qb2# 1-0
             centipawnLoss: 0,
             evalAfterCp: 120,
             playedMateIn: null,
-            materialDeltaCp: 100,
+            materialDeltaCp: -320,
             isBookMove: true,
+            afterAnalysis: AnalysisFor("fen-after", "e8f7", 120, null, "e8f7"),
+            analyzedSide: PlayerSide.White,
             context));
         Assert.False(MoveBrilliancyDetector.IsBrilliant(
             replay,
             centipawnLoss: 0,
             evalAfterCp: -120,
             playedMateIn: null,
-            materialDeltaCp: 100,
+            materialDeltaCp: -320,
             isBookMove: false,
+            afterAnalysis: AnalysisFor("fen-after", "e8f7", -120, null, "e8f7"),
+            analyzedSide: PlayerSide.White,
             context));
     }
 
     [Fact]
-    public void GameAnalysisService_ClassifiesSoundBishopSacrificeAsBrilliant()
+    public void GameAnalysisService_DoesNotClassifyOrdinaryCaptureAsBrilliant()
     {
         ImportedGame game = PgnGameParser.Parse("1. e4 e5 2. Bc4 Nf6 3. Bxf7+");
         GameReplayService replayService = new();
@@ -1038,7 +1260,7 @@ Kxa2 62. Qb2# 1-0
         GameAnalysisService service = new(fakeEngine, replayService);
         GameAnalysisResult result = service.AnalyzeGame(game, PlayerSide.White, new EngineAnalysisOptions());
 
-        Assert.Equal(MoveQualityBucket.Brilliant, result.MoveAnalyses[2].Quality);
+        Assert.NotEqual(MoveQualityBucket.Brilliant, result.MoveAnalyses[2].Quality);
         Assert.Empty(result.HighlightedMistakes);
     }
 
@@ -2221,14 +2443,16 @@ confidence: 0.82
         string fromSquare,
         string toSquare,
         string fenBefore,
-        string fenAfter)
+        string fenAfter,
+        bool isCapture = false,
+        string san = "test")
     {
         return new ReplayPly(
             1,
             1,
             PlayerSide.White,
-            "test",
-            "test",
+            san,
+            san,
             $"{fromSquare}{toSquare}",
             fenBefore,
             fenAfter,
@@ -2239,7 +2463,7 @@ confidence: 0.82
             null,
             fromSquare,
             toSquare,
-            false,
+            isCapture,
             false,
             false);
     }
@@ -2305,6 +2529,16 @@ confidence: 0.82
     {
         EngineLine? bestLine = lines.FirstOrDefault();
         return new EngineAnalysis(fen, lines, bestLine?.MoveUci);
+    }
+
+    private static ReplayPly FindReplayPly(string pgn, int moveNumber, PlayerSide side, string san)
+    {
+        ImportedGame game = PgnGameParser.Parse(pgn);
+        return new GameReplayService()
+            .Replay(game)
+            .Single(ply => ply.MoveNumber == moveNumber
+                && ply.Side == side
+                && ply.San.Equals(san, StringComparison.Ordinal));
     }
 
     private static string? TryFindStockfishExe()
