@@ -23,8 +23,7 @@ public static class MoveBrilliancyDetector
 
         if (isBookMove
             || centipawnLoss is not int loss
-            || loss > MaxCentipawnLoss
-            || replay.IsCastle)
+            || loss > MaxCentipawnLoss)
         {
             return false;
         }
