@@ -493,6 +493,210 @@ public sealed class SqliteAnalysisStoreTests
     }
 
     [Fact]
+    public void SaveOpeningReviewItems_UpsertsWithoutDeletingExistingItems()
+    {
+        string databasePath = CreateTempDatabasePath();
+
+        try
+        {
+            SqliteAnalysisStore store = new(databasePath);
+            DateTime now = DateTime.Parse("2026-05-01T10:00:00Z", null, System.Globalization.DateTimeStyles.AdjustToUniversal);
+            OpeningReviewItem existing = new(
+                new OpeningBranchKey("branch-existing"),
+                new OpeningPositionKey("position-existing"),
+                now.AddDays(-1),
+                now.AddDays(1),
+                2.2,
+                1,
+                0,
+                1,
+                new OpeningKey("B12"),
+                new OpeningLineKey("B12:main"));
+            OpeningReviewItem next = new(
+                new OpeningBranchKey("branch-new"),
+                new OpeningPositionKey("position-new"),
+                now,
+                now.AddDays(2),
+                1.8,
+                0,
+                1,
+                1,
+                new OpeningKey("C20"),
+                new OpeningLineKey("C20:main"));
+
+            store.SaveOpeningReviewItems("alpha", [existing]);
+            store.SaveOpeningReviewItems("alpha", [next]);
+
+            IReadOnlyList<OpeningReviewItem> items = store.ListOpeningReviewItems("alpha");
+
+            Assert.Equal(2, items.Count);
+            Assert.Contains(items, item => item.BranchKey.Value == "branch-existing");
+            Assert.Contains(items, item => item.BranchKey.Value == "branch-new");
+        }
+        finally
+        {
+            DeleteTempDatabase(databasePath);
+        }
+    }
+
+    [Fact]
+    public void SaveOpeningReviewItems_MergesAttemptsForSamePosition()
+    {
+        string databasePath = CreateTempDatabasePath();
+
+        try
+        {
+            SqliteAnalysisStore store = new(databasePath);
+            DateTime now = DateTime.Parse("2026-05-01T10:00:00Z", null, System.Globalization.DateTimeStyles.AdjustToUniversal);
+            OpeningReviewItem first = new(
+                new OpeningBranchKey("branch-merge"),
+                new OpeningPositionKey("position-merge"),
+                now.AddMinutes(-10),
+                now.AddDays(4),
+                2.2,
+                1,
+                0,
+                1,
+                new OpeningKey("C20"),
+                new OpeningLineKey("C20:main"));
+            OpeningReviewItem second = new(
+                new OpeningBranchKey("branch-merge"),
+                new OpeningPositionKey("position-merge"),
+                now,
+                now,
+                1.3,
+                0,
+                1,
+                1,
+                new OpeningKey("C20"),
+                new OpeningLineKey("C20:main"));
+
+            store.SaveOpeningReviewItems("alpha", [first]);
+            store.SaveOpeningReviewItems("alpha", [second]);
+
+            OpeningReviewItem merged = Assert.Single(store.ListOpeningReviewItems("alpha"));
+
+            Assert.Equal(2, merged.TotalAttempts);
+            Assert.Equal(0, merged.CorrectStreak);
+            Assert.Equal(1, merged.WrongStreak);
+            Assert.Equal(now, merged.LastReviewedUtc);
+            Assert.Equal(now, merged.NextReviewUtc);
+            Assert.Equal(1.3, merged.Ease);
+            Assert.Equal(new OpeningLineKey("C20:main"), merged.OpeningLineKey);
+        }
+        finally
+        {
+            DeleteTempDatabase(databasePath);
+        }
+    }
+
+    [Fact]
+    public void ListDueOpeningTrainingScheduledActions_ReturnsOnlyPendingDueItems()
+    {
+        string databasePath = CreateTempDatabasePath();
+
+        try
+        {
+            SqliteAnalysisStore store = new(databasePath);
+            DateTime now = DateTime.Parse("2026-05-01T10:00:00Z", null, System.Globalization.DateTimeStyles.AdjustToUniversal);
+            OpeningTrainingScheduledAction due = CreateScheduledAction("due", "alpha", now.AddMinutes(-1), OpeningTrainingScheduledActionStatus.Pending);
+            OpeningTrainingScheduledAction future = CreateScheduledAction("future", "alpha", now.AddMinutes(10), OpeningTrainingScheduledActionStatus.Pending);
+            OpeningTrainingScheduledAction otherPlayer = CreateScheduledAction("other", "beta", now.AddMinutes(-1), OpeningTrainingScheduledActionStatus.Pending);
+            OpeningTrainingScheduledAction completed = CreateScheduledAction("completed", "alpha", now.AddMinutes(-1), OpeningTrainingScheduledActionStatus.Completed);
+
+            store.SaveOpeningTrainingScheduledActions("alpha", [due, future, completed]);
+            store.SaveOpeningTrainingScheduledActions("beta", [otherPlayer]);
+
+            IReadOnlyList<OpeningTrainingScheduledAction> actions = store.ListDueOpeningTrainingScheduledActions("alpha", now);
+
+            OpeningTrainingScheduledAction action = Assert.Single(actions);
+            Assert.Equal("due", action.Id);
+        }
+        finally
+        {
+            DeleteTempDatabase(databasePath);
+        }
+    }
+
+    [Fact]
+    public void ExecuteNextAction_MarksActionCompleted()
+    {
+        string databasePath = CreateTempDatabasePath();
+
+        try
+        {
+            SqliteAnalysisStore store = new(databasePath);
+            DateTime now = DateTime.Parse("2026-05-01T10:00:00Z", null, System.Globalization.DateTimeStyles.AdjustToUniversal);
+            OpeningTrainingScheduledAction due = CreateScheduledAction("due", "alpha", now.AddMinutes(-1), OpeningTrainingScheduledActionStatus.Pending);
+
+            store.SaveOpeningTrainingScheduledActions("alpha", [due]);
+            store.MarkOpeningTrainingScheduledActionCompleted("alpha", "due", now);
+
+            Assert.Empty(store.ListDueOpeningTrainingScheduledActions("alpha", now.AddMinutes(1)));
+        }
+        finally
+        {
+            DeleteTempDatabase(databasePath);
+        }
+    }
+
+    [Fact]
+    public void ListTelemetryEvents_FiltersByPlayerAndDate()
+    {
+        string databasePath = CreateTempDatabasePath();
+
+        try
+        {
+            SqliteAnalysisStore store = new(databasePath);
+            DateTime now = DateTime.Parse("2026-05-01T10:00:00Z", null, System.Globalization.DateTimeStyles.AdjustToUniversal);
+            OpeningTrainingTelemetryEvent older = CreateTelemetryEvent("alpha", now.AddDays(-2), "old");
+            OpeningTrainingTelemetryEvent matching = CreateTelemetryEvent("alpha", now, "match");
+            OpeningTrainingTelemetryEvent otherPlayer = CreateTelemetryEvent("beta", now, "other");
+
+            store.SaveOpeningTrainingTelemetryEvent(older);
+            store.SaveOpeningTrainingTelemetryEvent(matching);
+            store.SaveOpeningTrainingTelemetryEvent(otherPlayer);
+
+            IReadOnlyList<OpeningTrainingTelemetryEvent> events = store.ListOpeningTrainingTelemetryEvents(
+                "Alpha",
+                now.AddHours(-1),
+                now.AddHours(1));
+
+            OpeningTrainingTelemetryEvent telemetryEvent = Assert.Single(events);
+            Assert.Equal("alpha", telemetryEvent.PlayerKey);
+            Assert.Equal("match", telemetryEvent.Properties!["marker"]);
+        }
+        finally
+        {
+            DeleteTempDatabase(databasePath);
+        }
+    }
+
+    [Fact]
+    public void Track_PersistsTelemetryEventInSqlite()
+    {
+        string databasePath = CreateTempDatabasePath();
+
+        try
+        {
+            SqliteAnalysisStore store = new(databasePath);
+            OpeningTrainingTelemetryEvent telemetryEvent = CreateTelemetryEvent("alpha", DateTime.UtcNow, "persisted");
+
+            store.SaveOpeningTrainingTelemetryEvent(telemetryEvent);
+
+            SqliteAnalysisStore reopened = new(databasePath);
+            OpeningTrainingTelemetryEvent restored = Assert.Single(reopened.ListOpeningTrainingTelemetryEvents("alpha"));
+            Assert.Equal(telemetryEvent.EventName, restored.EventName);
+            Assert.Equal(telemetryEvent.LineKey, restored.LineKey);
+            Assert.Equal("persisted", restored.Properties!["marker"]);
+        }
+        finally
+        {
+            DeleteTempDatabase(databasePath);
+        }
+    }
+
+    [Fact]
     public void SqliteAnalysisStore_DeletesImportedGameTogetherWithAnalysisData()
     {
         string databasePath = CreateTempDatabasePath();
@@ -915,6 +1119,45 @@ public sealed class SqliteAnalysisStoreTests
             -20,
             new MistakeTag(label, 0.82, ["late_development", "king_uncastled"]),
             new MoveExplanation("Short", "Hint", "Detailed"));
+    }
+
+    private static OpeningTrainingScheduledAction CreateScheduledAction(
+        string id,
+        string playerKey,
+        DateTime dueUtc,
+        OpeningTrainingScheduledActionStatus status)
+    {
+        return new OpeningTrainingScheduledAction(
+            id,
+            playerKey,
+            "session-1",
+            TrainingNextActionKind.RepeatAfterBreak,
+            new OpeningLineKey("C20:main"),
+            new OpeningBranchKey("branch-1"),
+            new OpeningPositionKey("position-1"),
+            dueUtc.AddMinutes(-10),
+            dueUtc,
+            status,
+            status == OpeningTrainingScheduledActionStatus.Completed ? dueUtc : null,
+            90,
+            "repeat-after-break");
+    }
+
+    private static OpeningTrainingTelemetryEvent CreateTelemetryEvent(string playerKey, DateTime createdUtc, string marker)
+    {
+        return new OpeningTrainingTelemetryEvent(
+            OpeningTrainingTelemetryEvents.OpeningTrainingStarted,
+            createdUtc,
+            playerKey,
+            new OpeningLineKey("C20:main"),
+            new OpeningKey("C20"),
+            "session-1",
+            "recommendation-1",
+            SpecialTrainingModeKind.QuickBlackReview,
+            new Dictionary<string, string>
+            {
+                ["marker"] = marker
+            });
     }
 
     private static MoveAdviceFeedback CreateFeedback(

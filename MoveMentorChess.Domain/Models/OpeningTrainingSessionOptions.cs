@@ -15,4 +15,6 @@ public sealed record OpeningTrainingSessionOptions(
     int MaxDepth = 12,
     bool IncludeSideVariations = true,
     bool PrioritizeOpponentFrequency = false,
-    bool IncludeTranspositions = true);
+    bool IncludeTranspositions = true,
+    SpecialTrainingModeKind? SpecialMode = null,
+    int? TimeLimitMinutes = null);

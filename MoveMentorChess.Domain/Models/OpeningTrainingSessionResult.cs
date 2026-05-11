@@ -17,8 +17,42 @@ public sealed record OpeningTrainingSessionResult(
     IReadOnlyList<string> RelatedOpenings,
     IReadOnlyList<string> ThemeLabels,
     IReadOnlyList<OpeningTrainingRecordedAttempt> Attempts,
-    IReadOnlyList<OpeningReviewItem>? ReviewItems = null)
+    IReadOnlyList<OpeningReviewItem>? ReviewItems = null,
+    string? StartSource = null,
+    string? RecommendationId = null,
+    int HintCount = 0,
+    int? TimeToFirstMoveSeconds = null,
+    DateTime? AbandonedUtc = null,
+    IReadOnlyList<string>? CompletedNextActionIds = null)
 {
+    public OpeningTrainingSessionResult()
+        : this(
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            DateTime.MinValue,
+            DateTime.MinValue,
+            OpeningTrainingSessionOutcome.Completed,
+            OpeningTrainingStyle.Mixed,
+            OpeningTrainingStrictness.BookFlexible,
+            0,
+            0,
+            0,
+            0,
+            0,
+            [],
+            [],
+            [],
+            null,
+            null,
+            null,
+            0,
+            null,
+            null,
+            null)
+    {
+    }
+
     public OpeningTrainingSessionResult(
         string sessionId,
         string playerKey,
@@ -51,6 +85,12 @@ public sealed record OpeningTrainingSessionResult(
             relatedOpenings,
             themeLabels,
             attempts,
+            null,
+            null,
+            null,
+            0,
+            null,
+            null,
             null)
     {
     }

@@ -486,6 +486,108 @@ public sealed class OpeningTrainerServiceTests
         Assert.Contains("Correct branch", branchResult.ShortExplanation);
     }
 
+    [Fact]
+    public void SaveSessionResult_PersistsCompletedSessionWithMetadata()
+    {
+        MinimalHistoryAnalysisStore store = new();
+        OpeningTrainerService service = new(store);
+        DateTime createdUtc = DateTime.Parse("2026-05-01T10:00:00Z", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal);
+        OpeningTrainingSession session = CreateTrainingSession(createdUtc);
+        OpeningTrainingAttemptResult attempt = CreateAttempt("position-1", OpeningTrainingScore.Correct, "Nf3", "g1f3");
+
+        OpeningTrainingSessionResult result = service.SaveSessionResult(
+            session,
+            [attempt],
+            OpeningTrainingSessionOutcome.Completed,
+            completedUtc: createdUtc.AddMinutes(5),
+            startSource: "today_recommendation",
+            recommendationId: "recommendation-1",
+            hintCount: 2,
+            timeToFirstMoveSeconds: 11,
+            completedNextActionIds: ["next-1"]);
+
+        OpeningTrainingSessionResult saved = Assert.Single(store.SessionResults);
+        Assert.Equal(result.SessionId, saved.SessionId);
+        Assert.Equal("today_recommendation", saved.StartSource);
+        Assert.Equal("recommendation-1", saved.RecommendationId);
+        Assert.Equal(2, saved.HintCount);
+        Assert.Equal(11, saved.TimeToFirstMoveSeconds);
+        Assert.Equal(["next-1"], saved.CompletedNextActionIds);
+        OpeningReviewItem reviewItem = Assert.Single(store.ReviewItems);
+        Assert.Equal(session.Positions[0].OpeningKey, reviewItem.OpeningKey);
+        Assert.Equal(session.Positions[0].OpeningLineKey, reviewItem.OpeningLineKey);
+    }
+
+    [Fact]
+    public void SaveSessionResult_PersistsWrongAttempts()
+    {
+        MinimalHistoryAnalysisStore store = new();
+        OpeningTrainerService service = new(store);
+        DateTime createdUtc = DateTime.Parse("2026-05-01T10:00:00Z", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal);
+        OpeningTrainingSession session = CreateTrainingSession(createdUtc);
+        OpeningTrainingAttemptResult wrongAttempt = CreateAttempt("position-1", OpeningTrainingScore.Wrong, "h3", "h2h3");
+
+        service.SaveSessionResult(session, [wrongAttempt], OpeningTrainingSessionOutcome.Completed, completedUtc: createdUtc.AddMinutes(3));
+
+        OpeningTrainingSessionResult saved = Assert.Single(store.SessionResults);
+        OpeningTrainingRecordedAttempt attempt = Assert.Single(saved.Attempts);
+        Assert.Equal(OpeningTrainingScore.Wrong, attempt.Score);
+        Assert.Equal("h3", attempt.SubmittedMoveText);
+        OpeningReviewItem review = Assert.Single(store.ReviewItems);
+        Assert.Equal(1, review.WrongStreak);
+        Assert.Equal(0, review.CorrectStreak);
+    }
+
+    [Fact]
+    public void SaveSessionResult_PersistsAbandonedSession()
+    {
+        MinimalHistoryAnalysisStore store = new();
+        OpeningTrainerService service = new(store);
+        DateTime createdUtc = DateTime.Parse("2026-05-01T10:00:00Z", CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal);
+        DateTime abandonedUtc = createdUtc.AddMinutes(2);
+        OpeningTrainingSession session = CreateTrainingSession(createdUtc);
+
+        service.SaveSessionResult(
+            session,
+            [],
+            OpeningTrainingSessionOutcome.Abandoned,
+            completedUtc: abandonedUtc,
+            startSource: "manual",
+            abandonedUtc: abandonedUtc);
+
+        OpeningTrainingSessionResult saved = Assert.Single(store.SessionResults);
+        Assert.Equal(OpeningTrainingSessionOutcome.Abandoned, saved.Outcome);
+        Assert.Equal(abandonedUtc, saved.AbandonedUtc);
+        Assert.Equal("manual", saved.StartSource);
+        Assert.Empty(saved.Attempts);
+    }
+
+    [Fact]
+    public void EvaluatePlanSelection_AcceptsCorrectOption()
+    {
+        OpeningTrainerService service = new(new MinimalHistoryAnalysisStore());
+        OpeningTrainingPosition position = CreatePlanSelectionPosition();
+
+        OpeningTrainingAttemptResult result = service.EvaluateAnswer(position, "correct-plan");
+
+        Assert.Equal(OpeningTrainingMode.PlanSelection, result.Mode);
+        Assert.Equal(OpeningTrainingScore.Correct, result.Score);
+        Assert.Equal("Develop pieces toward the center.", result.SubmittedMoveText);
+        Assert.NotEmpty(result.ExpectedMoves);
+    }
+
+    [Fact]
+    public void EvaluatePlanSelection_RejectsIncorrectOptionWithExplanation()
+    {
+        OpeningTrainerService service = new(new MinimalHistoryAnalysisStore());
+        OpeningTrainingPosition position = CreatePlanSelectionPosition();
+
+        OpeningTrainingAttemptResult result = service.EvaluateAnswer(position, "wrong-plan");
+
+        Assert.Equal(OpeningTrainingScore.Wrong, result.Score);
+        Assert.Contains("delays development", result.ShortExplanation, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static GameAnalysisResult CreateResult(
         string whitePlayer,
         string blackPlayer,
@@ -592,12 +694,132 @@ public sealed class OpeningTrainerServiceTests
             "Imported");
     }
 
+    private static OpeningTrainingSession CreateTrainingSession(DateTime createdUtc)
+    {
+        OpeningTrainingPosition position = new(
+            "position-1",
+            new OpeningKey("C20:King's Pawn Game"),
+            new OpeningLineKey("C20:King's Pawn Game:Main"),
+            new OpeningBranchKey("branch-1"),
+            new OpeningPositionKey("position-key-1"),
+            OpeningTrainingMode.LineRecall,
+            OpeningTrainingSourceKind.ExampleGame,
+            "C20",
+            "King's Pawn Game",
+            "rn1qkbnr/ppp2ppp/8/3pp3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 3",
+            3,
+            2,
+            PlayerSide.White,
+            "Play the book move.",
+            "Use SAN or UCI.",
+            1,
+            RepertoireSide.White,
+            OpeningTrainingStrictness.BookFlexible,
+            "opening_principles",
+            null,
+            "Nf3",
+            "Develop the knight.",
+            ["C20"],
+            [],
+            [],
+            new OpeningTrainingReference(string.Empty, PlayerSide.White, "Theory", null, null, "Test", 1, null),
+            "line-1");
+
+        return new OpeningTrainingSession(
+            "session-1",
+            "alpha",
+            "Alpha",
+            createdUtc,
+            OpeningTrainingStyle.Memorization,
+            OpeningTrainingStrictness.BookFlexible,
+            RepertoireSide.White,
+            [OpeningTrainingMode.LineRecall],
+            [OpeningTrainingSourceKind.ExampleGame],
+            [new OpeningTrainingSourceSummary(OpeningTrainingSourceKind.ExampleGame, 1, 1, ["C20"])],
+            [],
+            [position]);
+    }
+
+    private static OpeningTrainingAttemptResult CreateAttempt(
+        string positionId,
+        OpeningTrainingScore score,
+        string submittedMove,
+        string? resolvedUci)
+    {
+        return new OpeningTrainingAttemptResult(
+            positionId,
+            OpeningTrainingMode.LineRecall,
+            OpeningTrainingSourceKind.ExampleGame,
+            submittedMove,
+            submittedMove,
+            resolvedUci,
+            [],
+            score,
+            score == OpeningTrainingScore.Wrong ? "Wrong move." : "Correct move.",
+            [],
+            [],
+            []);
+    }
+
+    private static OpeningTrainingPosition CreatePlanSelectionPosition()
+    {
+        return CreateTrainingSession(DateTime.UtcNow).Positions[0] with
+        {
+            Mode = OpeningTrainingMode.PlanSelection,
+            AnswerKind = OpeningTrainingAnswerKind.SingleChoice,
+            AnswerOptions =
+            [
+                new OpeningTrainingAnswerOption(
+                    "correct-plan",
+                    "Develop pieces toward the center.",
+                    true,
+                    "That plan fits the opening idea."),
+                new OpeningTrainingAnswerOption(
+                    "wrong-plan",
+                    "Launch a flank pawn immediately.",
+                    false,
+                    "That plan delays development.")
+            ],
+            CandidateMoves = []
+        };
+    }
+
     private sealed record AnalyzedMoveSpec(
         int Ply,
         int Cpl,
         string? Label,
         string BestMoveUci,
         MoveQualityBucket? QualityOverride = null);
+
+    private sealed class MinimalHistoryAnalysisStore : IAnalysisStore, IOpeningTrainingHistoryStore
+    {
+        public List<OpeningTrainingSessionResult> SessionResults { get; } = [];
+        public List<OpeningReviewItem> ReviewItems { get; } = [];
+
+        public void SaveOpeningTrainingSessionResult(OpeningTrainingSessionResult result)
+            => SessionResults.Add(result);
+
+        public IReadOnlyList<OpeningTrainingSessionResult> ListOpeningTrainingSessionResults(string? playerKey = null, int limit = 200)
+            => SessionResults;
+
+        public void SaveOpeningReviewItems(string playerKey, IReadOnlyList<OpeningReviewItem> items)
+            => ReviewItems.AddRange(items);
+
+        public IReadOnlyList<OpeningReviewItem> ListOpeningReviewItems(string? playerKey = null, int limit = 1000)
+            => ReviewItems;
+
+        public void SaveImportedGame(ImportedGame game) => throw new NotSupportedException();
+        public void SaveImportedGames(IReadOnlyList<ImportedGame> games) => throw new NotSupportedException();
+        public bool TryLoadImportedGame(string gameFingerprint, out ImportedGame? game) => throw new NotSupportedException();
+        public bool DeleteImportedGame(string gameFingerprint) => throw new NotSupportedException();
+        public IReadOnlyList<SavedImportedGameSummary> ListImportedGames(string? filterText = null, int limit = 200) => [];
+        public IReadOnlyList<GameAnalysisResult> ListResults(string? filterText = null, int limit = 500) => [];
+        public bool TryLoadResult(GameAnalysisCacheKey key, out GameAnalysisResult? result) => throw new NotSupportedException();
+        public void SaveResult(GameAnalysisCacheKey key, GameAnalysisResult result) => throw new NotSupportedException();
+        public IReadOnlyList<StoredMoveAnalysis> ListMoveAnalyses(string? filterText = null, int limit = 5000) => [];
+        public bool TryLoadWindowState(string gameFingerprint, out AnalysisWindowState? state) => throw new NotSupportedException();
+        public void SaveWindowState(string gameFingerprint, AnalysisWindowState state) => throw new NotSupportedException();
+    }
 
     private sealed class FakeAnalysisStore :
         IImportedGameStore,

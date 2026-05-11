@@ -11,5 +11,6 @@ public sealed record OpeningTrainerOverview(
     IReadOnlyList<OpeningTrainingBranch> CommonBranches,
     OpponentReplyProfile OpponentReplyProfile,
     OpeningCoverageSummary Coverage,
+    IReadOnlyList<TrainingPriorityItem> Priorities,
     IReadOnlyList<OpeningTrainingPosition> WeakPositions,
     IReadOnlyList<OpeningMoveIdea> WhyTheseMovesMatter);

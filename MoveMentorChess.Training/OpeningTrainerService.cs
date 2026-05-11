@@ -183,6 +183,11 @@ public sealed class OpeningTrainerService
     {
         ArgumentNullException.ThrowIfNull(position);
 
+        if (position.AnswerKind != OpeningTrainingAnswerKind.Move)
+        {
+            return EvaluateAnswer(position, submittedMoveText);
+        }
+
         IReadOnlyList<OpeningTrainingMoveOption> preferredReferences = GetPreferredReferences(position);
         IReadOnlyList<OpeningTrainingMoveOption> playableReferences = GetPlayableReferences(position, preferredReferences);
         IReadOnlyList<OpeningTrainingMoveOption> expectedMoves = preferredReferences
@@ -270,6 +275,82 @@ public sealed class OpeningTrainerService
             whyThisMove);
     }
 
+    public OpeningTrainingAttemptResult EvaluateAnswer(OpeningTrainingPosition position, string answerId)
+    {
+        ArgumentNullException.ThrowIfNull(position);
+        if (position.AnswerKind == OpeningTrainingAnswerKind.Move)
+        {
+            return EvaluateMove(position, answerId);
+        }
+
+        OpeningTrainingAnswerOption? selected = position.AnswerOptions?
+            .FirstOrDefault(option => string.Equals(option.Id, answerId, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(option.Text, answerId, StringComparison.OrdinalIgnoreCase));
+        IReadOnlyList<OpeningTrainingMoveOption> expected = position.AnswerOptions?
+            .Where(option => option.IsCorrect)
+            .Select(option => new OpeningTrainingMoveOption(
+                option.Text,
+                option.Id,
+                OpeningTrainingMoveRole.Expected,
+                true,
+                option.Explanation,
+                OpeningLineRecallReferenceKind.ReferenceLine,
+                OpeningTrainingMoveSourceKind.OpeningBook,
+                null,
+                null))
+            .ToList()
+            ?? [];
+
+        if (selected is null)
+        {
+            return new OpeningTrainingAttemptResult(
+                position.PositionId,
+                position.Mode,
+                position.SourceKind,
+                OpeningTrainingAttemptStatus.Normal,
+                answerId,
+                null,
+                answerId,
+                expected,
+                OpeningTrainingScore.Wrong,
+                "The selected answer option is not available for this position.",
+                [],
+                expected,
+                []);
+        }
+
+        OpeningTrainingScore score = selected.IsCorrect
+            ? OpeningTrainingScore.Correct
+            : OpeningTrainingScore.Wrong;
+        string explanation = selected.Explanation
+            ?? (selected.IsCorrect ? "Correct plan." : "That plan does not fit this position.");
+        OpeningTrainingMoveOption selectedReference = new(
+            selected.Text,
+            selected.Id,
+            OpeningTrainingMoveRole.Expected,
+            selected.IsCorrect,
+            selected.Explanation,
+            OpeningLineRecallReferenceKind.ReferenceLine,
+            OpeningTrainingMoveSourceKind.OpeningBook,
+            null,
+            null);
+
+        return new OpeningTrainingAttemptResult(
+            position.PositionId,
+            position.Mode,
+            position.SourceKind,
+            OpeningTrainingAttemptStatus.Normal,
+            selected.Text,
+            selected.Text,
+            selected.Id,
+            expected,
+            score,
+            explanation,
+            selected.IsCorrect ? [selectedReference] : [],
+            expected,
+            []);
+    }
+
     public OpeningLineRecallAttemptResult EvaluateLineRecallMove(OpeningTrainingPosition position, string submittedMoveText)
     {
         ArgumentNullException.ThrowIfNull(position);
@@ -326,7 +407,13 @@ public sealed class OpeningTrainerService
         OpeningTrainingSession session,
         IReadOnlyList<OpeningTrainingAttemptResult> attempts,
         OpeningTrainingSessionOutcome outcome = OpeningTrainingSessionOutcome.Completed,
-        DateTime? completedUtc = null)
+        DateTime? completedUtc = null,
+        string? startSource = null,
+        string? recommendationId = null,
+        int hintCount = 0,
+        int? timeToFirstMoveSeconds = null,
+        DateTime? abandonedUtc = null,
+        IReadOnlyList<string>? completedNextActionIds = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(attempts);
@@ -352,7 +439,9 @@ public sealed class OpeningTrainerService
                     attempt.Score,
                     finishedUtc,
                     position?.OpeningBranchKey,
-                    position?.OpeningPositionKey);
+                    position?.OpeningPositionKey,
+                    position?.OpeningKey,
+                    position?.OpeningLineKey);
             })
             .ToList();
         IReadOnlyList<OpeningReviewItem> reviewItems = BuildReviewItems(recordedAttempts, finishedUtc);
@@ -387,16 +476,38 @@ public sealed class OpeningTrainerService
                 .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
                 .ToList(),
             recordedAttempts,
-            reviewItems);
+            reviewItems,
+            startSource,
+            recommendationId,
+            hintCount,
+            timeToFirstMoveSeconds,
+            abandonedUtc?.ToUniversalTime(),
+            completedNextActionIds);
     }
 
     public OpeningTrainingSessionResult SaveSessionResult(
         OpeningTrainingSession session,
         IReadOnlyList<OpeningTrainingAttemptResult> attempts,
         OpeningTrainingSessionOutcome outcome = OpeningTrainingSessionOutcome.Completed,
-        DateTime? completedUtc = null)
+        DateTime? completedUtc = null,
+        string? startSource = null,
+        string? recommendationId = null,
+        int hintCount = 0,
+        int? timeToFirstMoveSeconds = null,
+        DateTime? abandonedUtc = null,
+        IReadOnlyList<string>? completedNextActionIds = null)
     {
-        OpeningTrainingSessionResult result = BuildSessionResult(session, attempts, outcome, completedUtc);
+        OpeningTrainingSessionResult result = BuildSessionResult(
+            session,
+            attempts,
+            outcome,
+            completedUtc,
+            startSource,
+            recommendationId,
+            hintCount,
+            timeToFirstMoveSeconds,
+            abandonedUtc,
+            completedNextActionIds);
         if (historyStore is null)
         {
             throw new InvalidOperationException("The analysis store does not support opening training history.");
@@ -565,7 +676,9 @@ public sealed class OpeningTrainerService
             Math.Max(2, options?.MaxDepth ?? 12),
             options?.IncludeSideVariations ?? true,
             options?.PrioritizeOpponentFrequency ?? false,
-            options?.IncludeTranspositions ?? true);
+            options?.IncludeTranspositions ?? true,
+            options?.SpecialMode,
+            options?.TimeLimitMinutes);
     }
 
     private List<OpeningTrainerSnapshot> LoadSnapshots(string? filterText, int limit)
@@ -1861,7 +1974,9 @@ public sealed class OpeningTrainerService
                     attempt.Score == OpeningTrainingScore.Wrong ? 1.3 : attempt.Score == OpeningTrainingScore.Playable ? 1.8 : 2.2,
                     correctStreak,
                     attempt.Score == OpeningTrainingScore.Wrong ? 1 : 0,
-                    1);
+                    1,
+                    attempt.OpeningKey,
+                    attempt.OpeningLineKey);
             })
             .ToList();
     }

@@ -14,8 +14,31 @@ public sealed record OpeningTrainingRecordedAttempt(
     OpeningTrainingScore Score,
     DateTime RecordedUtc,
     OpeningBranchKey? BranchKey = null,
-    OpeningPositionKey? PositionKey = null)
+    OpeningPositionKey? PositionKey = null,
+    OpeningKey? OpeningKey = null,
+    OpeningLineKey? OpeningLineKey = null)
 {
+    public OpeningTrainingRecordedAttempt()
+        : this(
+            string.Empty,
+            OpeningTrainingMode.LineRecall,
+            OpeningTrainingSourceKind.ExampleGame,
+            OpeningTrainingAttemptStatus.Normal,
+            string.Empty,
+            string.Empty,
+            null,
+            string.Empty,
+            null,
+            null,
+            OpeningTrainingScore.Wrong,
+            DateTime.MinValue,
+            null,
+            null,
+            null,
+            null)
+    {
+    }
+
     public OpeningTrainingRecordedAttempt(
         string positionId,
         OpeningTrainingMode mode,
@@ -41,6 +64,8 @@ public sealed record OpeningTrainingRecordedAttempt(
             resolvedUci,
             score,
             recordedUtc,
+            null,
+            null,
             null,
             null)
     {

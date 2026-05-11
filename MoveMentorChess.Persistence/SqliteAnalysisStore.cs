@@ -13,7 +13,8 @@ public sealed class SqliteAnalysisStore :
     IAnalysisWindowStateStore,
     IOpeningTreeStore,
     IOpeningTheoryStore,
-    IOpeningTrainingHistoryStore
+    IOpeningTrainingHistoryStore,
+    IOpeningTrainingTelemetryStore
 {
     private const char CompositeKeySeparator = '|';
     private const string AppDataDirectoryName = "MoveMentorChessServices";
@@ -557,6 +558,7 @@ public sealed class SqliteAnalysisStore :
             branches,
             opponentProfile,
             coverage,
+            [],
             [],
             ideas);
         return true;
@@ -1414,10 +1416,6 @@ public sealed class SqliteAnalysisStore :
             database.ExecuteNonQuery("BEGIN IMMEDIATE;");
             try
             {
-                database.ExecuteNonQuery(
-                    "DELETE FROM opening_review_items WHERE player_key = ?1;",
-                    statement => statement.BindText(1, NormalizePlayerKey(playerKey)));
-
                 foreach (OpeningReviewItem item in items)
                 {
                     string branchKey = item.BranchKey.Value;
@@ -1433,8 +1431,31 @@ public sealed class SqliteAnalysisStore :
                             ease,
                             correct_streak,
                             wrong_streak,
-                            total_attempts)
-                        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9);
+                            total_attempts,
+                            opening_key,
+                            opening_line_key)
+                        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
+                        ON CONFLICT (player_key, branch_key, position_key)
+                        DO UPDATE SET
+                            opening_key = coalesce(excluded.opening_key, opening_review_items.opening_key),
+                            opening_line_key = coalesce(excluded.opening_line_key, opening_review_items.opening_line_key),
+                            last_reviewed_utc = CASE
+                                WHEN excluded.last_reviewed_utc IS NULL THEN opening_review_items.last_reviewed_utc
+                                WHEN opening_review_items.last_reviewed_utc IS NULL THEN excluded.last_reviewed_utc
+                                WHEN excluded.last_reviewed_utc > opening_review_items.last_reviewed_utc THEN excluded.last_reviewed_utc
+                                ELSE opening_review_items.last_reviewed_utc
+                            END,
+                            next_review_utc = excluded.next_review_utc,
+                            ease = excluded.ease,
+                            correct_streak = CASE
+                                WHEN excluded.correct_streak > 0 THEN opening_review_items.correct_streak + excluded.correct_streak
+                                ELSE 0
+                            END,
+                            wrong_streak = CASE
+                                WHEN excluded.wrong_streak > 0 THEN opening_review_items.wrong_streak + excluded.wrong_streak
+                                ELSE 0
+                            END,
+                            total_attempts = opening_review_items.total_attempts + excluded.total_attempts;
                         """,
                         statement =>
                         {
@@ -1447,6 +1468,8 @@ public sealed class SqliteAnalysisStore :
                             statement.BindInt(7, item.CorrectStreak);
                             statement.BindInt(8, item.WrongStreak);
                             statement.BindInt(9, item.TotalAttempts);
+                            statement.BindNullableText(10, item.OpeningKey?.Value);
+                            statement.BindNullableText(11, item.OpeningLineKey?.Value);
                         });
                 }
 
@@ -1470,7 +1493,7 @@ public sealed class SqliteAnalysisStore :
         {
             using SqliteDatabase database = OpenDatabase();
             using SqliteStatement statement = database.Prepare($"""
-                SELECT branch_key, position_key, last_reviewed_utc, next_review_utc, ease, correct_streak, wrong_streak, total_attempts
+                SELECT branch_key, position_key, last_reviewed_utc, next_review_utc, ease, correct_streak, wrong_streak, total_attempts, opening_key, opening_line_key
                 FROM opening_review_items
                 {(string.IsNullOrWhiteSpace(normalizedPlayerKey) ? string.Empty : "WHERE player_key = ?1")}
                 ORDER BY next_review_utc ASC
@@ -1492,11 +1515,249 @@ public sealed class SqliteAnalysisStore :
                     ParseDouble(statement.GetText(4)),
                     statement.GetInt(5),
                     statement.GetInt(6),
-                    statement.GetInt(7)));
+                    statement.GetInt(7),
+                    string.IsNullOrWhiteSpace(statement.GetText(8)) ? null : new OpeningKey(statement.GetText(8)!),
+                    string.IsNullOrWhiteSpace(statement.GetText(9)) ? null : new OpeningLineKey(statement.GetText(9)!)));
             }
         }
 
         return items;
+    }
+
+    public void SaveOpeningTrainingScheduledActions(string playerKey, IReadOnlyList<OpeningTrainingScheduledAction> actions)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(playerKey);
+        ArgumentNullException.ThrowIfNull(actions);
+
+        string normalizedPlayerKey = NormalizePlayerKey(playerKey);
+        lock (sync)
+        {
+            using SqliteDatabase database = OpenDatabase();
+            database.ExecuteNonQuery("BEGIN IMMEDIATE;");
+            try
+            {
+                foreach (OpeningTrainingScheduledAction action in actions)
+                {
+                    database.ExecuteNonQuery(
+                        """
+                        INSERT INTO opening_training_scheduled_actions (
+                            id,
+                            player_key,
+                            session_id,
+                            kind,
+                            line_key,
+                            branch_key,
+                            position_key,
+                            created_utc,
+                            due_utc,
+                            status,
+                            completed_utc,
+                            priority,
+                            source_action_id)
+                        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)
+                        ON CONFLICT (id)
+                        DO UPDATE SET
+                            player_key = excluded.player_key,
+                            session_id = excluded.session_id,
+                            kind = excluded.kind,
+                            line_key = excluded.line_key,
+                            branch_key = excluded.branch_key,
+                            position_key = excluded.position_key,
+                            created_utc = excluded.created_utc,
+                            due_utc = excluded.due_utc,
+                            status = excluded.status,
+                            completed_utc = excluded.completed_utc,
+                            priority = excluded.priority,
+                            source_action_id = excluded.source_action_id;
+                        """,
+                        statement =>
+                        {
+                            statement.BindText(1, action.Id);
+                            statement.BindText(2, normalizedPlayerKey);
+                            statement.BindText(3, action.SessionId);
+                            statement.BindInt(4, (int)action.Kind);
+                            statement.BindNullableText(5, action.LineKey?.Value);
+                            statement.BindNullableText(6, action.BranchKey?.Value);
+                            statement.BindNullableText(7, action.PositionKey?.Value);
+                            statement.BindText(8, action.CreatedUtc.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
+                            statement.BindText(9, action.DueUtc.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
+                            statement.BindInt(10, (int)action.Status);
+                            statement.BindNullableText(11, action.CompletedUtc?.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
+                            statement.BindInt(12, action.Priority);
+                            statement.BindNullableText(13, action.SourceActionId);
+                        });
+                }
+
+                database.ExecuteNonQuery("COMMIT;");
+            }
+            catch
+            {
+                database.ExecuteNonQuery("ROLLBACK;");
+                throw;
+            }
+        }
+    }
+
+    public IReadOnlyList<OpeningTrainingScheduledAction> ListDueOpeningTrainingScheduledActions(string? playerKey, DateTime nowUtc, int limit = 50)
+    {
+        string normalizedPlayerKey = NormalizePlayerKey(playerKey);
+        int safeLimit = Math.Clamp(limit, 1, 500);
+        List<OpeningTrainingScheduledAction> actions = [];
+
+        lock (sync)
+        {
+            using SqliteDatabase database = OpenDatabase();
+            using SqliteStatement statement = database.Prepare($"""
+                SELECT id, player_key, session_id, kind, line_key, branch_key, position_key, created_utc, due_utc, status, completed_utc, priority, source_action_id
+                FROM opening_training_scheduled_actions
+                WHERE status = ?1
+                  AND due_utc <= ?2
+                  {(string.IsNullOrWhiteSpace(normalizedPlayerKey) ? string.Empty : "AND player_key = ?3")}
+                ORDER BY priority DESC, due_utc ASC
+                LIMIT {safeLimit};
+                """);
+
+            statement.BindInt(1, (int)OpeningTrainingScheduledActionStatus.Pending);
+            statement.BindText(2, nowUtc.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
+            if (!string.IsNullOrWhiteSpace(normalizedPlayerKey))
+            {
+                statement.BindText(3, normalizedPlayerKey);
+            }
+
+            while (statement.Step() == SqliteRow)
+            {
+                actions.Add(ReadOpeningTrainingScheduledAction(statement));
+            }
+        }
+
+        return actions;
+    }
+
+    public void MarkOpeningTrainingScheduledActionCompleted(string playerKey, string actionId, DateTime completedUtc)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(playerKey);
+        ArgumentException.ThrowIfNullOrWhiteSpace(actionId);
+
+        lock (sync)
+        {
+            using SqliteDatabase database = OpenDatabase();
+            database.ExecuteNonQuery(
+                """
+                UPDATE opening_training_scheduled_actions
+                SET status = ?1,
+                    completed_utc = ?2
+                WHERE player_key = ?3
+                  AND id = ?4;
+                """,
+                statement =>
+                {
+                    statement.BindInt(1, (int)OpeningTrainingScheduledActionStatus.Completed);
+                    statement.BindText(2, completedUtc.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
+                    statement.BindText(3, NormalizePlayerKey(playerKey));
+                    statement.BindText(4, actionId);
+                });
+        }
+    }
+
+    public void SaveOpeningTrainingTelemetryEvent(OpeningTrainingTelemetryEvent telemetryEvent)
+    {
+        ArgumentNullException.ThrowIfNull(telemetryEvent);
+
+        string eventId = BuildTelemetryEventId(telemetryEvent);
+        lock (sync)
+        {
+            using SqliteDatabase database = OpenDatabase();
+            database.ExecuteNonQuery(
+                """
+                INSERT INTO opening_training_telemetry_events (
+                    event_id,
+                    event_name,
+                    occurred_utc,
+                    player_key,
+                    line_key,
+                    opening_key,
+                    session_id,
+                    recommendation_id,
+                    special_mode,
+                    properties_json)
+                VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)
+                ON CONFLICT (event_id)
+                DO UPDATE SET
+                    event_name = excluded.event_name,
+                    occurred_utc = excluded.occurred_utc,
+                    player_key = excluded.player_key,
+                    line_key = excluded.line_key,
+                    opening_key = excluded.opening_key,
+                    session_id = excluded.session_id,
+                    recommendation_id = excluded.recommendation_id,
+                    special_mode = excluded.special_mode,
+                    properties_json = excluded.properties_json;
+                """,
+                statement =>
+                {
+                    statement.BindText(1, eventId);
+                    statement.BindText(2, telemetryEvent.EventName);
+                    statement.BindText(3, telemetryEvent.CreatedUtc.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
+                    statement.BindNullableText(4, NormalizeNullablePlayerKey(telemetryEvent.PlayerKey));
+                    statement.BindNullableText(5, telemetryEvent.LineKey?.Value);
+                    statement.BindNullableText(6, telemetryEvent.OpeningKey?.Value);
+                    statement.BindNullableText(7, telemetryEvent.SessionId);
+                    statement.BindNullableText(8, telemetryEvent.RecommendationId);
+                    statement.BindNullableText(9, telemetryEvent.SpecialMode?.ToString());
+                    statement.BindText(10, JsonSerializer.Serialize(telemetryEvent.Properties ?? new Dictionary<string, string>(), JsonOptions));
+                });
+        }
+    }
+
+    public IReadOnlyList<OpeningTrainingTelemetryEvent> ListOpeningTrainingTelemetryEvents(
+        string? playerKey = null,
+        DateTime? fromUtc = null,
+        DateTime? toUtc = null,
+        int limit = 500)
+    {
+        string normalizedPlayerKey = NormalizeNullablePlayerKey(playerKey) ?? string.Empty;
+        int safeLimit = Math.Clamp(limit, 1, 5000);
+        List<OpeningTrainingTelemetryEvent> events = [];
+
+        lock (sync)
+        {
+            using SqliteDatabase database = OpenDatabase();
+            using SqliteStatement statement = database.Prepare($"""
+                SELECT event_name, occurred_utc, player_key, line_key, opening_key, session_id, recommendation_id, special_mode, properties_json
+                FROM opening_training_telemetry_events
+                WHERE (?1 = '' OR player_key = ?1)
+                  AND (?2 IS NULL OR occurred_utc >= ?2)
+                  AND (?3 IS NULL OR occurred_utc <= ?3)
+                ORDER BY occurred_utc DESC
+                LIMIT {safeLimit};
+                """);
+
+            statement.BindText(1, normalizedPlayerKey);
+            if (fromUtc.HasValue)
+            {
+                statement.BindText(2, fromUtc.Value.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
+            }
+            else
+            {
+                statement.BindNull(2);
+            }
+
+            if (toUtc.HasValue)
+            {
+                statement.BindText(3, toUtc.Value.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
+            }
+            else
+            {
+                statement.BindNull(3);
+            }
+
+            while (statement.Step() == SqliteRow)
+            {
+                events.Add(ReadOpeningTrainingTelemetryEvent(statement));
+            }
+        }
+
+        return events;
     }
 
     private void InitializeSchema()
@@ -1658,12 +1919,53 @@ public sealed class SqliteAnalysisStore :
                     correct_streak INTEGER NOT NULL,
                     wrong_streak INTEGER NOT NULL,
                     total_attempts INTEGER NOT NULL,
+                    opening_key TEXT NULL,
+                    opening_line_key TEXT NULL,
                     PRIMARY KEY (player_key, branch_key, position_key)
                 );
                 """);
             database.ExecuteNonQuery("""
                 CREATE INDEX IF NOT EXISTS idx_opening_review_items_player_next_review
                 ON opening_review_items (player_key, next_review_utc ASC);
+                """);
+            database.ExecuteNonQuery("""
+                CREATE TABLE IF NOT EXISTS opening_training_scheduled_actions (
+                    id TEXT NOT NULL PRIMARY KEY,
+                    player_key TEXT NOT NULL,
+                    session_id TEXT NOT NULL,
+                    kind INTEGER NOT NULL,
+                    line_key TEXT NULL,
+                    branch_key TEXT NULL,
+                    position_key TEXT NULL,
+                    created_utc TEXT NOT NULL,
+                    due_utc TEXT NOT NULL,
+                    status INTEGER NOT NULL,
+                    completed_utc TEXT NULL,
+                    priority INTEGER NOT NULL,
+                    source_action_id TEXT NULL
+                );
+                """);
+            database.ExecuteNonQuery("""
+                CREATE INDEX IF NOT EXISTS idx_opening_training_scheduled_actions_due
+                ON opening_training_scheduled_actions (player_key, status, due_utc ASC, priority DESC);
+                """);
+            database.ExecuteNonQuery("""
+                CREATE TABLE IF NOT EXISTS opening_training_telemetry_events (
+                    event_id TEXT NOT NULL PRIMARY KEY,
+                    event_name TEXT NOT NULL,
+                    occurred_utc TEXT NOT NULL,
+                    player_key TEXT NULL,
+                    line_key TEXT NULL,
+                    opening_key TEXT NULL,
+                    session_id TEXT NULL,
+                    recommendation_id TEXT NULL,
+                    special_mode TEXT NULL,
+                    properties_json TEXT NOT NULL
+                );
+                """);
+            database.ExecuteNonQuery("""
+                CREATE INDEX IF NOT EXISTS idx_opening_training_telemetry_events_player_date
+                ON opening_training_telemetry_events (player_key, occurred_utc DESC);
                 """);
             EnsureColumnExists(
                 database,
@@ -1685,6 +1987,8 @@ public sealed class SqliteAnalysisStore :
             EnsureColumnExists(database, "imported_games", "end_date", "TEXT NULL");
             EnsureColumnExists(database, "imported_games", "end_time", "TEXT NULL");
             EnsureColumnExists(database, "imported_games", "link", "TEXT NULL");
+            EnsureColumnExists(database, "opening_review_items", "opening_key", "TEXT NULL");
+            EnsureColumnExists(database, "opening_review_items", "opening_line_key", "TEXT NULL");
             EnsureOpeningTreeSchema(database);
             if (applyDerivedAnalysisDataVersionPolicy)
             {
@@ -2486,6 +2790,69 @@ public sealed class SqliteAnalysisStore :
                 statement.GetText(14) ?? string.Empty),
             "opening_book",
             BuildOpeningMoveIdea(moveSan, isMainMove));
+    }
+
+    private static OpeningTrainingScheduledAction ReadOpeningTrainingScheduledAction(SqliteStatement statement)
+    {
+        string? lineKey = statement.GetText(4);
+        string? branchKey = statement.GetText(5);
+        string? positionKey = statement.GetText(6);
+        return new OpeningTrainingScheduledAction(
+            statement.GetText(0) ?? string.Empty,
+            statement.GetText(1) ?? string.Empty,
+            statement.GetText(2) ?? string.Empty,
+            (TrainingNextActionKind)statement.GetInt(3),
+            string.IsNullOrWhiteSpace(lineKey) ? null : new OpeningLineKey(lineKey),
+            string.IsNullOrWhiteSpace(branchKey) ? null : new OpeningBranchKey(branchKey),
+            string.IsNullOrWhiteSpace(positionKey) ? null : new OpeningPositionKey(positionKey),
+            ParseUtc(statement.GetText(7)),
+            ParseUtc(statement.GetText(8)),
+            (OpeningTrainingScheduledActionStatus)statement.GetInt(9),
+            ParseNullableUtc(statement.GetText(10)),
+            statement.GetInt(11),
+            statement.GetText(12));
+    }
+
+    private static OpeningTrainingTelemetryEvent ReadOpeningTrainingTelemetryEvent(SqliteStatement statement)
+    {
+        string? lineKey = statement.GetText(3);
+        string? openingKey = statement.GetText(4);
+        string? specialModeText = statement.GetText(7);
+        IReadOnlyDictionary<string, string> properties = DeserializeTelemetryProperties(statement.GetText(8));
+
+        return new OpeningTrainingTelemetryEvent(
+            statement.GetText(0) ?? string.Empty,
+            ParseUtc(statement.GetText(1)),
+            statement.GetText(2),
+            string.IsNullOrWhiteSpace(lineKey) ? null : new OpeningLineKey(lineKey),
+            string.IsNullOrWhiteSpace(openingKey) ? null : new OpeningKey(openingKey),
+            statement.GetText(5),
+            statement.GetText(6),
+            Enum.TryParse(specialModeText, out SpecialTrainingModeKind specialMode) ? (SpecialTrainingModeKind?)specialMode : null,
+            properties);
+    }
+
+    private static IReadOnlyDictionary<string, string> DeserializeTelemetryProperties(string? payload)
+    {
+        if (string.IsNullOrWhiteSpace(payload))
+        {
+            return new Dictionary<string, string>();
+        }
+
+        return JsonSerializer.Deserialize<Dictionary<string, string>>(payload, JsonOptions)
+            ?? new Dictionary<string, string>();
+    }
+
+    private static string BuildTelemetryEventId(OpeningTrainingTelemetryEvent telemetryEvent)
+    {
+        return Guid.NewGuid().ToString("N");
+    }
+
+    private static string? NormalizeNullablePlayerKey(string? playerKey)
+    {
+        return string.IsNullOrWhiteSpace(playerKey)
+            ? null
+            : playerKey.Trim().ToLowerInvariant();
     }
 
     private static Guid ParseGuid(string? value)

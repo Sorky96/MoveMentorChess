@@ -1,3 +1,4 @@
+using MoveMentorChess.Domain;
 using MoveMentorChess.Persistence;
 
 namespace MoveMentorChess.Diagnostics;

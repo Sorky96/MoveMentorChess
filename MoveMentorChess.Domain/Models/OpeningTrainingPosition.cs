@@ -31,7 +31,10 @@ public sealed record OpeningTrainingPosition(
     IReadOnlyList<OpeningTrainingBranch>? Branches = null,
     string? BranchSelectionSummary = null,
     OpeningCoverageSummary? CoverageSummary = null,
-    OpponentReplyProfile? OpponentReplyProfile = null)
+    OpponentReplyProfile? OpponentReplyProfile = null,
+    IReadOnlyList<TrainingCoachHint>? CoachHints = null,
+    OpeningTrainingAnswerKind AnswerKind = OpeningTrainingAnswerKind.Move,
+    IReadOnlyList<OpeningTrainingAnswerOption>? AnswerOptions = null)
 {
     public OpeningTrainingPosition(
         string positionId,
@@ -88,6 +91,9 @@ public sealed record OpeningTrainingPosition(
             branches,
             branchSelectionSummary,
             null,
+            null,
+            null,
+            OpeningTrainingAnswerKind.Move,
             null)
     {
     }

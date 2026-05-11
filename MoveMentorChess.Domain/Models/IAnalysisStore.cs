@@ -74,4 +74,17 @@ public interface IOpeningTrainingHistoryStore
     IReadOnlyList<OpeningTrainingSessionResult> ListOpeningTrainingSessionResults(string? playerKey = null, int limit = 200);
     void SaveOpeningReviewItems(string playerKey, IReadOnlyList<OpeningReviewItem> items) { }
     IReadOnlyList<OpeningReviewItem> ListOpeningReviewItems(string? playerKey = null, int limit = 1000) => [];
+    void SaveOpeningTrainingScheduledActions(string playerKey, IReadOnlyList<OpeningTrainingScheduledAction> actions) { }
+    IReadOnlyList<OpeningTrainingScheduledAction> ListDueOpeningTrainingScheduledActions(string? playerKey, DateTime nowUtc, int limit = 50) => [];
+    void MarkOpeningTrainingScheduledActionCompleted(string playerKey, string actionId, DateTime completedUtc) { }
+}
+
+public interface IOpeningTrainingTelemetryStore
+{
+    void SaveOpeningTrainingTelemetryEvent(OpeningTrainingTelemetryEvent telemetryEvent);
+    IReadOnlyList<OpeningTrainingTelemetryEvent> ListOpeningTrainingTelemetryEvents(
+        string? playerKey = null,
+        DateTime? fromUtc = null,
+        DateTime? toUtc = null,
+        int limit = 500);
 }

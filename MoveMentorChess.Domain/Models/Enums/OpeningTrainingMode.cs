@@ -4,5 +4,10 @@ public enum OpeningTrainingMode
 {
     LineRecall,
     MistakeRepair,
-    BranchAwareness
+    BranchAwareness,
+    OpponentThreatRecognition,
+    PlanSelection,
+    TabiyaRecognition,
+    PunishOpponentMistake,
+    OutOfBookResponse
 }

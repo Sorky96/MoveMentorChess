@@ -15,7 +15,11 @@ public sealed record OpeningTrainingAttemptResult(
     IReadOnlyList<OpeningTrainingMoveOption> PreferredReferences,
     IReadOnlyList<OpeningTrainingMoveOption> PlayableReferences,
     OpeningPositionIdentity? ResolvedPosition = null,
-    OpeningMoveIdea? WhyThisMove = null)
+    OpeningMoveIdea? WhyThisMove = null,
+    string? RecoverySuggestion = null,
+    TrainingCoachHintLevel? NextHintLevel = null,
+    TrainingMistakeCategory MistakeCategory = TrainingMistakeCategory.Unknown,
+    bool ShouldRepeatImmediately = false)
 {
     public OpeningTrainingAttemptResult(
         string positionId,
@@ -45,7 +49,11 @@ public sealed record OpeningTrainingAttemptResult(
             preferredReferences,
             playableReferences,
             null,
-            null)
+            null,
+            null,
+            null,
+            TrainingMistakeCategory.Unknown,
+            false)
     {
     }
 }

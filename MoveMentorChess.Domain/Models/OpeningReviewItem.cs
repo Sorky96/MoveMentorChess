@@ -8,4 +8,6 @@ public sealed record OpeningReviewItem(
     double Ease,
     int CorrectStreak,
     int WrongStreak,
-    int TotalAttempts);
+    int TotalAttempts,
+    OpeningKey? OpeningKey = null,
+    OpeningLineKey? OpeningLineKey = null);
