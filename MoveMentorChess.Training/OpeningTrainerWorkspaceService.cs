@@ -9,8 +9,10 @@ public sealed class OpeningTrainerWorkspaceService
     private readonly OpeningTrainingPriorityService priorityService = new();
     private readonly OpeningTrainingCoachingService coachingService = new();
     private readonly OpeningTrainingNextActionService nextActionService = new();
+    private readonly OpeningTrainingResultPlanService resultPlanService = new();
     private readonly PlayerOpeningPlanService playerOpeningPlanService = new();
     private readonly SpecialTrainingModeService specialModeService = new();
+    private readonly OpeningUnderstandingService understandingService = new();
     private readonly OpeningTrainingTelemetryService telemetryService;
     private readonly IOpeningTrainingHistoryStore? historyStore;
 
@@ -116,6 +118,11 @@ public sealed class OpeningTrainerWorkspaceService
         };
         return true;
     }
+
+    public IReadOnlyList<OpeningUnderstandingCard> BuildUnderstandingCards(
+        OpeningTrainerOverview overview,
+        OpeningLineCatalogItem item)
+        => understandingService.BuildCards(overview, item);
 
     public OpeningTrainingSession BuildGuidedStudySession(
         OpeningLineCatalogItem item,
@@ -402,6 +409,14 @@ public sealed class OpeningTrainerWorkspaceService
     public IReadOnlyList<TrainingNextAction> BuildNextActions(TrainingSessionOutcomeSummary summary)
     {
         return nextActionService.BuildNextActions(summary);
+    }
+
+    public TrainingResultLearningPlan BuildLearningPlan(
+        TrainingSessionOutcomeSummary summary,
+        IReadOnlyList<OpeningTrainingAttemptResult> attempts,
+        IReadOnlyList<TrainingNextAction> nextActions)
+    {
+        return resultPlanService.BuildPlan(summary, attempts, nextActions);
     }
 
     public IReadOnlyList<OpeningTrainingScheduledAction> SaveScheduledActions(

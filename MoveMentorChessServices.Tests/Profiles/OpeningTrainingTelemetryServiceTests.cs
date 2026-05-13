@@ -72,6 +72,17 @@ public sealed class OpeningTrainingTelemetryServiceTests
         Assert.Equal("beta", telemetryEvent.PlayerKey);
     }
 
+    [Fact]
+    public void OpeningCoachTelemetryEvents_UseProductEventNames()
+    {
+        Assert.Equal("opening_daily_lesson_shown", OpeningTrainingTelemetryEvents.OpeningDailyLessonShown);
+        Assert.Equal("opening_daily_lesson_started", OpeningTrainingTelemetryEvents.OpeningDailyLessonStarted);
+        Assert.Equal("opening_advanced_opened", OpeningTrainingTelemetryEvents.OpeningAdvancedOpened);
+        Assert.Equal("opening_reference_revealed", OpeningTrainingTelemetryEvents.GuidedReferenceRevealed);
+        Assert.Equal("opening_dont_know_used", OpeningTrainingTelemetryEvents.GuidedDontKnowUsed);
+        Assert.Equal("opening_learning_plan_shown", OpeningTrainingTelemetryEvents.OpeningLearningPlanShown);
+    }
+
     private sealed class InMemoryTelemetryStore : IOpeningTrainingTelemetryStore
     {
         public List<OpeningTrainingTelemetryEvent> Events { get; } = [];
