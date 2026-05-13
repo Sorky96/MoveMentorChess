@@ -28,9 +28,9 @@
 
           <Border Grid.Column="1" Background="{DynamicResource ChromeBrush}" CornerRadius="14" Padding="14,10" MinWidth="210">
             <StackPanel Spacing="6">
-              <TextBlock Foreground="#D7E2EA" HorizontalAlignment="Center" Text="Lesson Progress" />
+              <TextBlock Foreground="#D7E2EA" HorizontalAlignment="Center" Text="Training Progress" />
               <ProgressBar Minimum="0" Maximum="100" Value="{Binding StageProgressPercent}" Height="10" />
-              <TextBlock Foreground="White" HorizontalAlignment="Center" Text="{Binding StageTitle}" TextWrapping="Wrap" />
+              <TextBlock Foreground="White" HorizontalAlignment="Center" Text="{Binding StageProgressLabel}" TextWrapping="Wrap" />
             </StackPanel>
           </Border>
           <Button Grid.Column="2"
@@ -47,8 +47,8 @@
       <ScrollViewer IsVisible="{Binding IsSelectionPageVisible}">
         <StackPanel Spacing="12">
         <Border Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="22">
-          <Grid ColumnDefinitions="*,240" RowDefinitions="Auto,Auto,Auto,Auto,Auto" MaxWidth="1320" HorizontalAlignment="Stretch">
-            <TextBlock Foreground="#9ED7A6" FontSize="15" FontWeight="SemiBold" Text="Today's Lesson" />
+          <Grid ColumnDefinitions="*,260" RowDefinitions="Auto,Auto,Auto,Auto,Auto" MaxWidth="1320" HorizontalAlignment="Stretch">
+            <TextBlock Foreground="#9ED7A6" FontSize="15" FontWeight="SemiBold" Text="Today's Training" />
             <TextBlock Grid.Row="1" Foreground="White" FontSize="32" FontWeight="Bold" Text="{Binding TodayLessonOpening}" TextWrapping="Wrap" />
             <WrapPanel Grid.Row="2" Margin="0,14,0,0">
               <Border Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="12,8" Margin="0,0,8,0">
@@ -61,14 +61,22 @@
                 <TextBlock Foreground="#D7E2EA" Text="{Binding TodayLessonMoveCountText}" TextWrapping="Wrap" />
               </Border>
             </WrapPanel>
-            <TextBlock Grid.Row="3" Foreground="#9EB5C5" Margin="0,16,28,0" FontSize="15" Text="{Binding TodayLessonReason}" TextWrapping="Wrap" />
-            <Border Grid.Row="4" Margin="0,16,28,0" Background="{DynamicResource ChromeBrush}" CornerRadius="12" Padding="12">
-              <Grid ColumnDefinitions="220,*" RowDefinitions="Auto,Auto">
-                <TextBlock Foreground="White" FontWeight="SemiBold" Text="Training Profile" />
-                <TextBlock Grid.Row="1" Foreground="#9EB5C5" Text="{Binding SelectedProfileSummary}" TextWrapping="Wrap" />
+            <Border Grid.Row="3" Margin="0,16,28,0" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="14">
+              <StackPanel Spacing="6">
+                <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="Why this lesson?" />
+                <TextBlock Foreground="White" FontSize="15" FontWeight="SemiBold" Text="{Binding TodayTrainingReasonLabel}" TextWrapping="Wrap" />
+                <TextBlock Foreground="#D7E2EA" FontSize="15" Text="{Binding TodayLessonReason}" TextWrapping="Wrap" />
+              </StackPanel>
+            </Border>
+            <Border Grid.Row="4" Grid.ColumnSpan="2" Margin="0,16,0,0" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="10">
+              <Grid ColumnDefinitions="180,*,260" RowDefinitions="Auto">
+                <StackPanel Spacing="2">
+                  <TextBlock Foreground="White" FontWeight="SemiBold" Text="Training Profile" />
+                  <TextBlock Foreground="#9EB5C5" FontSize="12" Text="{Binding SelectedProfileSummary}" TextWrapping="Wrap" />
+                </StackPanel>
                 <ComboBox Grid.Column="1"
-                          Grid.RowSpan="2"
                           VerticalAlignment="Center"
+                          Margin="12,0"
                           ItemsSource="{Binding AvailableProfileChoices}"
                           SelectedItem="{Binding SelectedProfileChoice}">
                   <ComboBox.ItemTemplate>
@@ -80,17 +88,20 @@
                     </DataTemplate>
                   </ComboBox.ItemTemplate>
                 </ComboBox>
+                <Button Grid.Column="2"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        MinHeight="48"
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Background="#2F7D4E"
+                        Foreground="White"
+                        Command="{Binding StartRecommendedStudyCommand}"
+                        Content="{Binding TodayLessonButtonText}"
+                        IsEnabled="{Binding HasTodayLesson}" />
               </Grid>
             </Border>
-            <Button Grid.Column="1"
-                    Grid.RowSpan="5"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center"
-                    MinHeight="54"
-                    Command="{Binding StartRecommendedStudyCommand}"
-                    Content="{Binding TodayLessonButtonText}"
-                    IsEnabled="{Binding HasTodayLesson}" />
           </Grid>
         </Border>
 
@@ -101,7 +112,7 @@
                 <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="{Binding SelectedOpeningName}" TextWrapping="Wrap" />
                 <TextBlock Foreground="#9EB5C5" FontSize="14" Text="{Binding SelectedOpeningSideText}" />
               </StackPanel>
-              <Button Grid.Column="1" VerticalAlignment="Center" Command="{Binding GoToOverviewCommand}" Content="View Opening Plan" />
+              <Button Grid.Column="1" VerticalAlignment="Center" Command="{Binding GoToOverviewCommand}" Content="See Training Plan" />
             </Grid>
 
             <Border Background="{DynamicResource ChromeBrush}" CornerRadius="16" Padding="14">
@@ -155,7 +166,7 @@
               </StackPanel>
             </Border>
 
-            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
+            <Grid ColumnDefinitions="*,*,*">
               <Border Margin="0,0,6,6" Background="{DynamicResource ChromeBrush}" CornerRadius="16" Padding="14">
                 <StackPanel Spacing="6">
                   <TextBlock Foreground="#9EB5C5" Text="What You Know" />
@@ -164,7 +175,7 @@
                 </StackPanel>
               </Border>
 
-              <Border Grid.Column="1" Margin="6,0,0,6" Background="{DynamicResource ChromeBrush}" CornerRadius="16" Padding="14">
+              <Border Grid.Column="1" Margin="6,0,6,6" Background="{DynamicResource ChromeBrush}" CornerRadius="16" Padding="14">
                 <StackPanel Spacing="6">
                   <TextBlock Foreground="#9EB5C5" Text="Opponent Plan" />
                   <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="Most common replies" />
@@ -172,7 +183,7 @@
                 </StackPanel>
               </Border>
 
-              <Border Grid.Row="1" Grid.ColumnSpan="2" Margin="0,6,0,0" Background="{DynamicResource ChromeBrush}" CornerRadius="16" Padding="14">
+              <Border Grid.Column="2" Margin="6,0,0,6" Background="{DynamicResource ChromeBrush}" CornerRadius="16" Padding="14">
                 <StackPanel Spacing="8">
                   <TextBlock Foreground="#9EB5C5" Text="Opening Preview" />
                   <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="{Binding SummaryText}" TextWrapping="Wrap" />
@@ -181,7 +192,7 @@
               </Border>
             </Grid>
 
-            <Expander Header="Advanced" IsExpanded="{Binding IsAdvancedOptionsExpanded}">
+            <Expander Header="Advanced Options" IsExpanded="{Binding IsAdvancedOptionsExpanded}">
               <Grid ColumnDefinitions="300,12,*,12,300" Margin="0,8,0,0" MinHeight="260" MaxHeight="320">
                 <Border Background="{DynamicResource ChromeBrush}" BorderBrush="{DynamicResource PanelAccentBrush}" BorderThickness="1" CornerRadius="14" Padding="12">
                   <StackPanel Spacing="8">
@@ -193,8 +204,8 @@
                     <ComboBox ItemsSource="{Binding AvailableSides}" SelectedItem="{Binding SelectedSide}" />
                     <ComboBox ItemsSource="{Binding AvailableStrictnessOptions}" SelectedItem="{Binding SelectedStrictness}" />
                     <Grid ColumnDefinitions="*,*">
-                      <Button Margin="0,0,5,0" Command="{Binding RefreshCommand}" Content="REFRESH" />
-                      <Button Grid.Column="1" Margin="5,0,0,0" Command="{Binding GoToOverviewCommand}" Content="OPEN PLAN" />
+                      <Button Margin="0,0,5,0" Command="{Binding RefreshCommand}" Content="Refresh" />
+                      <Button Grid.Column="1" Margin="5,0,0,0" Command="{Binding GoToOverviewCommand}" Content="See Plan" />
                     </Grid>
                   </StackPanel>
                 </Border>
@@ -239,7 +250,7 @@
       <Grid IsVisible="{Binding IsOverviewPageVisible}" ColumnDefinitions="430,12,*">
         <Border Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="14">
           <StackPanel Spacing="10">
-            <TextBlock Foreground="White" FontSize="20" FontWeight="SemiBold" Text="2. Understand The Plan" />
+            <TextBlock Foreground="White" FontSize="20" FontWeight="SemiBold" Text="Understand The Idea" />
             <controls:ChessBoardView Width="396"
                                      Height="396"
                                      Fen="{Binding PreviewFen}"
@@ -253,8 +264,15 @@
               </StackPanel>
             </Border>
             <Grid ColumnDefinitions="*,*">
-              <Button Margin="0,0,5,0" Command="{Binding GoToSelectionCommand}" Content="BACK TO SELECTION" />
-              <Button Grid.Column="1" Margin="5,0,0,0" Command="{Binding StartGuidedStudyCommand}" Content="START PRACTICE" />
+              <Button Margin="0,0,5,0" Command="{Binding GoToSelectionCommand}" Content="Back" />
+              <Button Grid.Column="1"
+                      Margin="5,0,0,0"
+                      MinHeight="46"
+                      FontWeight="SemiBold"
+                      Background="#2F7D4E"
+                      Foreground="White"
+                      Command="{Binding StartGuidedStudyCommand}"
+                      Content="Start Practice" />
             </Grid>
           </StackPanel>
         </Border>
@@ -346,7 +364,7 @@
       <Grid IsVisible="{Binding IsStudyPageVisible}" ColumnDefinitions="430,12,*">
         <Border Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="14">
           <StackPanel Spacing="10">
-            <TextBlock Foreground="White" FontSize="20" FontWeight="SemiBold" Text="3. Practice From Memory" />
+            <TextBlock Foreground="White" FontSize="20" FontWeight="SemiBold" Text="Practice From Memory" />
             <ProgressBar Minimum="0" Maximum="100" Value="{Binding StudyProgressPercent}" Height="10" />
             <TextBlock Foreground="#D7E2EA" Text="{Binding StudyProgressText}" />
             <controls:ChessBoardView Width="396"
@@ -366,12 +384,31 @@
           </StackPanel>
         </Border>
 
-        <Grid Grid.Column="2" RowDefinitions="Auto,*,Auto">
+        <Grid Grid.Column="2" RowDefinitions="Auto,Auto,*,Auto">
           <Border Margin="0,0,0,12" Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="14">
             <StackPanel Spacing="10">
               <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="Your Move" />
               <TextBlock Foreground="#D7E2EA" Text="{Binding StudyBoardHint}" TextWrapping="Wrap" />
-              <TextBlock Foreground="#9EB5C5" Text="{Binding StudyInputModeText}" TextWrapping="Wrap" />
+              <Grid ColumnDefinitions="*,*,*">
+                <Border Margin="0,0,5,0" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="10">
+                  <StackPanel Spacing="2">
+                    <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="{Binding SessionCorrectCountText}" />
+                    <TextBlock Foreground="#9EB5C5" FontSize="12" Text="clear moves" />
+                  </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Margin="5,0" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="10">
+                  <StackPanel Spacing="2">
+                    <TextBlock Foreground="#D7E2EA" FontWeight="SemiBold" Text="{Binding SessionAcceptedAlternativesText}" />
+                    <TextBlock Foreground="#9EB5C5" FontSize="12" Text="still useful" />
+                  </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Margin="5,0,0,0" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="10">
+                  <StackPanel Spacing="2">
+                    <TextBlock Foreground="#F5D97B" FontWeight="SemiBold" Text="{Binding SessionNeedsReviewText}" />
+                    <TextBlock Foreground="#9EB5C5" FontSize="12" Text="repeat targets" />
+                  </StackPanel>
+                </Border>
+              </Grid>
               <Border Background="#14222D" CornerRadius="12" Padding="12">
                 <TextBlock Foreground="#F5D97B" Text="{Binding ResultText}" TextWrapping="Wrap" />
               </Border>
@@ -387,31 +424,30 @@
                       </DataTemplate>
                     </ListBox.ItemTemplate>
                   </ListBox>
-                  <Button Command="{Binding EvaluateMoveCommand}" Content="SUBMIT ANSWER" />
+                  <Button Command="{Binding EvaluateMoveCommand}" Content="Submit Answer" />
                 </StackPanel>
               </Border>
               <Border Background="{DynamicResource ChromeBrush}" CornerRadius="14" Padding="12">
                 <StackPanel Spacing="6">
                   <Grid ColumnDefinitions="*,Auto,Auto">
                     <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="{Binding CurrentHintLevel}" TextWrapping="Wrap" />
-                    <Button Grid.Column="1" Command="{Binding ShowHintCommand}" Content="HINT" />
+                    <Button Grid.Column="1" Command="{Binding ShowHintCommand}" Content="Hint" />
                     <Button Grid.Column="2" Margin="6,0,0,0" Command="{Binding DontKnowCommand}" Content="{Binding DontKnowButtonText}" />
                   </Grid>
                   <TextBlock Foreground="#D7E2EA" Text="{Binding CurrentHintText}" TextWrapping="Wrap" />
                 </StackPanel>
               </Border>
               <Grid ColumnDefinitions="*,Auto">
-                <Button Margin="0,0,8,0" Command="{Binding PreviousStepCommand}" Content="PREV STEP" />
-                <Button Grid.Column="1" Command="{Binding RestartStudyCommand}" Content="RESTART" />
+                <Button Margin="0,0,8,0" Command="{Binding PreviousStepCommand}" Content="Back" />
+                <Button Grid.Column="1" Command="{Binding RestartStudyCommand}" Content="Restart" />
               </Grid>
-              <TextBlock Foreground="#9EB5C5" Text="Moves are submitted directly from the board. Hints reveal the idea in layers before showing the full explanation." TextWrapping="Wrap" />
             </StackPanel>
           </Border>
 
-          <Border Grid.Row="1" IsVisible="{Binding IsStudyReferenceHidden}" Margin="0,0,0,12" Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="14">
+          <Border Grid.Row="1" IsVisible="{Binding IsStudyReferenceHidden}" Margin="0,0,0,12" Background="{DynamicResource PanelBrush}" CornerRadius="12" Padding="12">
             <Grid ColumnDefinitions="*,Auto">
               <StackPanel Spacing="4">
-                <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="References Hidden" />
+                <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="Try From Memory First" />
                 <TextBlock Foreground="#9EB5C5" Text="{Binding StudyReferencePromptText}" TextWrapping="Wrap" />
               </StackPanel>
               <Button Grid.Column="1" Margin="12,0,0,0" Command="{Binding RevealStudyReferenceCommand}" Content="{Binding StudyReferenceButtonText}" />
@@ -434,9 +470,28 @@
             </Border>
           </Grid>
 
-          <Grid Grid.Row="2" ColumnDefinitions="*,*">
-            <Button Margin="0,0,6,0" Command="{Binding GoToOverviewCommand}" Content="BACK TO OVERVIEW" />
-            <Button Grid.Column="1" Margin="6,0,0,0" Command="{Binding RestartStudyCommand}" Content="RESTART THIS STUDY" />
+          <Border Grid.Row="2" Margin="0,0,0,12" Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="14">
+            <StackPanel Spacing="10">
+              <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="What This Position Trains" />
+              <Border Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="12">
+                <StackPanel Spacing="6">
+                  <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="{Binding CurrentPositionGoalText}" TextWrapping="Wrap" />
+                  <TextBlock Foreground="#D7E2EA" Text="{Binding CurrentMoveTrainingPurposeText}" TextWrapping="Wrap" />
+                </StackPanel>
+              </Border>
+              <Border Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="12">
+                <StackPanel Spacing="6">
+                  <TextBlock Foreground="#9EB5C5" Text="Attempt history" />
+                  <TextBlock Foreground="#D7E2EA" Text="{Binding CurrentAttemptHistoryText}" TextWrapping="Wrap" />
+                </StackPanel>
+              </Border>
+              <TextBlock Foreground="#9EB5C5" Text="{Binding StudyInputModeText}" TextWrapping="Wrap" />
+            </StackPanel>
+          </Border>
+
+          <Grid Grid.Row="3" ColumnDefinitions="*,*">
+            <Button Margin="0,0,6,0" Command="{Binding GoToOverviewCommand}" Content="Back" />
+            <Button Grid.Column="1" Margin="6,0,0,0" Command="{Binding RestartStudyCommand}" Content="Restart This Study" />
           </Grid>
         </Grid>
       </Grid>
@@ -444,14 +499,43 @@
       <Grid IsVisible="{Binding IsResultsPageVisible}" ColumnDefinitions="*,*">
         <Border Margin="0,0,6,0" Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="16">
           <StackPanel Spacing="12">
-            <TextBlock Foreground="White" FontSize="22" FontWeight="SemiBold" Text="4. Review Plan" />
-            <TextBlock Foreground="#D7E2EA" FontSize="16" Text="{Binding ResultHeadline}" TextWrapping="Wrap" />
-            <Border Background="{DynamicResource ChromeBrush}" CornerRadius="14" Padding="12">
+            <TextBlock Foreground="White" FontSize="22" FontWeight="SemiBold" Text="Review And Continue" />
+            <Border Background="#14222D" CornerRadius="12" Padding="14">
               <StackPanel Spacing="8">
-                <TextBlock Foreground="#9EB5C5" Text="Learning Plan" />
-                <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="{Binding LearningPlanMasteredText}" TextWrapping="Wrap" />
-                <TextBlock Foreground="#F5D97B" Text="{Binding LearningPlanRepeatText}" TextWrapping="Wrap" />
-                <TextBlock Foreground="#9ED7A6" Text="{Binding LearningPlanNextReviewText}" TextWrapping="Wrap" />
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Foreground="White" FontSize="24" FontWeight="Bold" Text="{Binding ResultCelebrationTitle}" TextWrapping="Wrap" />
+                  <Border Grid.Column="1" Background="#2F7D4E" CornerRadius="10" Padding="10,5">
+                    <TextBlock Foreground="White" FontWeight="SemiBold" Text="{Binding ResultOutcomeBadge}" />
+                  </Border>
+                </Grid>
+                <TextBlock Foreground="#D7E2EA" FontSize="15" Text="{Binding ResultCelebrationText}" TextWrapping="Wrap" />
+                <TextBlock Foreground="#9ED7A6" Text="{Binding ResultNextStepSummary}" TextWrapping="Wrap" />
+              </StackPanel>
+            </Border>
+            <Grid ColumnDefinitions="*,*,*">
+              <Border Margin="0,0,5,0" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="12">
+                <StackPanel Spacing="6">
+                  <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="{Binding ResultsMasteredLabel}" />
+                  <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="{Binding LearningPlanMasteredText}" TextWrapping="Wrap" />
+                </StackPanel>
+              </Border>
+              <Border Grid.Column="1" Margin="5,0" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="12">
+                <StackPanel Spacing="6">
+                  <TextBlock Foreground="#F5D97B" FontWeight="SemiBold" Text="{Binding ResultsNeedsReviewLabel}" />
+                  <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="{Binding LearningPlanRepeatText}" TextWrapping="Wrap" />
+                </StackPanel>
+              </Border>
+              <Border Grid.Column="2" Margin="5,0,0,0" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="12">
+                <StackPanel Spacing="6">
+                  <TextBlock Foreground="#9EB5C5" FontWeight="SemiBold" Text="Next Review" />
+                  <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="{Binding LearningPlanNextReviewText}" TextWrapping="Wrap" />
+                </StackPanel>
+              </Border>
+            </Grid>
+            <Border Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="12">
+              <StackPanel Spacing="8">
+                <TextBlock Foreground="#9EB5C5" Text="Biggest Weakness" />
+                <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="{Binding ResultsBiggestWeaknessText}" TextWrapping="Wrap" />
                 <TextBlock Foreground="#D7E2EA" Text="{Binding LearningPlanReasonText}" TextWrapping="Wrap" />
               </StackPanel>
             </Border>
@@ -464,8 +548,8 @@
                     <DataTemplate x:DataType="domain:TrainingResultReviewItem">
                       <Grid Margin="0,4" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
                         <TextBlock Foreground="#F5FAFD" FontWeight="SemiBold" Text="{Binding MoveText}" TextWrapping="Wrap" />
-                        <TextBlock Grid.Column="1" Margin="8,0,0,0" Foreground="#F5D97B" Text="{Binding ReasonText}" />
-                        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Foreground="#9EB5C5" Text="{Binding PositionId}" TextWrapping="Wrap" />
+                        <TextBlock Grid.Column="1" Margin="8,0,0,0" Foreground="#F5D97B" Text="{Binding Priority}" />
+                        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Foreground="#9EB5C5" Text="{Binding ReasonText}" TextWrapping="Wrap" />
                       </Grid>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
@@ -473,43 +557,77 @@
               </StackPanel>
             </Border>
             <TextBlock Foreground="#9ED7A6" Text="{Binding TranspositionSummaryText}" TextWrapping="Wrap" />
-            <Grid ColumnDefinitions="*,*">
-              <Button Margin="0,0,6,0" Command="{Binding GoToOverviewCommand}" Content="BACK TO OVERVIEW" />
-              <Button Grid.Column="1" Margin="6,0,0,0" Command="{Binding RestartStudyCommand}" Content="TRAIN THIS LINE AGAIN" />
-            </Grid>
+            <Button HorizontalAlignment="Left" MinWidth="120" Command="{Binding GoToOverviewCommand}" Content="Back" />
           </StackPanel>
         </Border>
 
         <Border Grid.Column="1" Margin="6,0,0,0" Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="16">
-          <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,*">
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto">
             <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="What To Do Next" />
             <TextBlock Grid.Row="1" Foreground="#9EB5C5" Text="{Binding NextActionsPlaceholder}" TextWrapping="Wrap" />
-            <ListBox Grid.Row="2"
-                     ItemsSource="{Binding NextActionItems}"
-                     SelectedItem="{Binding SelectedNextAction}"
-                     Background="{DynamicResource ChromeBrush}"
+            <Border Grid.Row="2" IsVisible="{Binding HasPrimaryNextAction}" Margin="0,10,0,12" Background="{DynamicResource ChromeBrush}" CornerRadius="12" Padding="14">
+              <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="{Binding PrimaryNextAction.Title}" TextWrapping="Wrap" />
+                  <TextBlock Grid.Column="1" Foreground="#9ED7A6" FontWeight="SemiBold" Text="{Binding PrimaryNextAction.TimingText}" />
+                </Grid>
+                <TextBlock Foreground="#D7E2EA" Text="{Binding PrimaryNextAction.Reason}" TextWrapping="Wrap" />
+                <Button MinHeight="48"
+                        FontWeight="SemiBold"
+                        Background="#2F7D4E"
+                        Foreground="White"
+                        Command="{Binding ExecutePrimaryNextActionCommand}"
+                        Content="{Binding PrimaryNextAction.ButtonText}" />
+              </StackPanel>
+            </Border>
+            <ListBox Grid.Row="3"
+                     ItemsSource="{Binding SecondaryNextActionCards}"
+                     SelectedItem="{Binding SelectedSecondaryNextAction}"
+                     IsVisible="{Binding HasSecondaryNextActions}"
+                     Background="Transparent"
                      BorderThickness="0">
               <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="domain:TrainingNextAction">
-                  <Grid Margin="8,6" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
-                    <TextBlock Foreground="#F5FAFD" FontWeight="SemiBold" Text="{Binding Title}" TextWrapping="Wrap" />
-                    <TextBlock Grid.Column="1" Foreground="#9ED7A6" Text="{Binding DelayMinutes}" />
-                    <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Foreground="#D7E2EA" Text="{Binding Description}" TextWrapping="Wrap" />
-                    <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Foreground="#9EB5C5" Text="{Binding CommandLabel}" TextWrapping="Wrap" />
-                  </Grid>
+                <DataTemplate x:DataType="vm:TrainingNextActionCardViewModel">
+                  <Border Margin="0,0,0,8" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="12">
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                      <TextBlock Foreground="#F5FAFD" FontWeight="SemiBold" Text="{Binding Title}" TextWrapping="Wrap" />
+                      <TextBlock Grid.Column="1" Foreground="#9ED7A6" Text="{Binding TimingText}" />
+                      <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Foreground="#D7E2EA" Text="{Binding Reason}" TextWrapping="Wrap" />
+                    </Grid>
+                  </Border>
                 </DataTemplate>
               </ListBox.ItemTemplate>
             </ListBox>
-            <Button Grid.Row="3" Margin="0,8,0,12" Command="{Binding ExecuteNextActionCommand}" Content="{Binding SelectedNextActionButtonText}" />
-            <StackPanel Grid.Row="4" Spacing="4" Margin="0,0,0,8">
+            <Button Grid.Row="4"
+                    IsVisible="{Binding HasSecondaryNextActions}"
+                    Margin="0,8,0,12"
+                    HorizontalAlignment="Left"
+                    Command="{Binding ExecuteSelectedSecondaryNextActionCommand}"
+                    Content="{Binding SelectedSecondaryNextAction.ButtonText}" />
+            <StackPanel Grid.Row="5" Spacing="4" Margin="0,0,0,8">
               <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="Session Recap" />
               <TextBlock Foreground="#D7E2EA" Text="{Binding ResultsSummaryText}" TextWrapping="Wrap" />
               <TextBlock Foreground="#9EB5C5" Text="{Binding ResultRecommendation}" TextWrapping="Wrap" />
             </StackPanel>
-            <StackPanel Grid.Row="5" Spacing="8">
-              <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="Move Log" />
-              <ListBox ItemsSource="{Binding ResultItems}" Background="{DynamicResource ChromeBrush}" BorderThickness="0" />
-            </StackPanel>
+            <Expander Grid.Row="6" Header="Advanced Details" IsVisible="{Binding HasAdvancedResultDetails}">
+              <StackPanel Spacing="10" Margin="0,8,0,0">
+                <TextBlock Foreground="#9EB5C5" Text="Diagnostic review positions" />
+                <ItemsControl ItemsSource="{Binding LearningPlanReviewItems}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="domain:TrainingResultReviewItem">
+                      <Grid Margin="0,4" ColumnDefinitions="120,*" RowDefinitions="Auto,Auto">
+                        <TextBlock Foreground="#9EB5C5" Text="PositionId" />
+                        <TextBlock Grid.Column="1" Foreground="#D7E2EA" Text="{Binding PositionId}" TextWrapping="Wrap" />
+                        <TextBlock Grid.Row="1" Foreground="#9EB5C5" Text="Reason" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Foreground="#D7E2EA" Text="{Binding ReasonText}" TextWrapping="Wrap" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="Move Log" />
+                <ListBox ItemsSource="{Binding ResultItems}" Background="{DynamicResource ChromeBrush}" BorderThickness="0" />
+              </StackPanel>
+            </Expander>
           </Grid>
         </Border>
       </Grid>

@@ -21,8 +21,8 @@ public sealed class PlayerOpeningPlanService
         IReadOnlyList<PlayerOpeningPlanItem> thisWeek = BuildThisWeek(availableLines, sessionResults, reviewItems);
         IReadOnlyList<PlayerOpeningPlanItem> longTermGaps = BuildLongTermGaps(availableLines, reviewItems, sessionResults);
         string summary = progress.SessionCount == 0
-            ? "No completed opening-trainer sessions yet. Today's plan starts from high-value theory and will personalize as history grows."
-            : $"Built from {progress.SessionCount} completed session(s), {progress.AttemptCount} attempt(s), and {progress.AccuracyPercent:0.#}% accepted moves.";
+            ? "No completed repertoire sessions yet. Today's plan starts from high-value theory and will personalize as history grows."
+            : $"Based on your last session: {progress.AttemptCount} moves practiced, {progress.AccuracyPercent:0.#}% accepted.";
 
         return new PlayerOpeningPlan(
             normalizedKey,
@@ -74,8 +74,8 @@ public sealed class PlayerOpeningPlanService
                     TrainingNextActionKind.RepairWeakBranches => "Due review: repair weak branches",
                     _ => "Due opening review"
                 },
-                $"Scheduled from session {action.SessionId}.",
-                $"Due since {action.DueUtc.ToLocalTime():g}.",
+                FormatDueDate(action.DueUtc),
+                string.Empty,
                 null,
                 TrainingPlanTopicCategory.CoreWeakness,
                 index + 1,
@@ -119,6 +119,11 @@ public sealed class PlayerOpeningPlanService
         ]).ToList();
     }
 
+    private static string FormatDueDate(DateTime dueUtc)
+        => dueUtc
+            .ToLocalTime()
+            .ToString("d MMM yyyy, HH:mm", System.Globalization.CultureInfo.CurrentCulture);
+
     private static IReadOnlyList<PlayerOpeningPlanItem> BuildThisWeek(
         IReadOnlyList<OpeningLineCatalogItem> availableLines,
         IReadOnlyList<OpeningTrainingSessionResult> history,
@@ -154,7 +159,7 @@ public sealed class PlayerOpeningPlanService
                 item.Line.DisplayName,
                 item.Wrong > 0 ? "Repair and repeat this week." : "Keep this line in weekly rotation.",
                 item.Wrong > 0
-                    ? $"{item.Wrong} wrong attempt(s) recorded in this ECO."
+                    ? $"{item.Wrong} move(s) need another look in this opening."
                     : $"{item.Gap} common branch gap(s) remain by current review history.",
                 item.Line.Eco,
                 index == 0 ? TrainingPlanTopicCategory.CoreWeakness : TrainingPlanTopicCategory.SecondaryWeakness,

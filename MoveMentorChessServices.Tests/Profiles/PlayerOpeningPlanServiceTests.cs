@@ -40,7 +40,7 @@ public sealed class PlayerOpeningPlanServiceTests
 
         Assert.NotEmpty(plan.ThisWeek);
         Assert.Equal("B12", plan.ThisWeek[0].Eco);
-        Assert.Contains("wrong", plan.ThisWeek[0].Evidence, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("need another look", plan.ThisWeek[0].Evidence, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(1, plan.Progress.SessionCount);
     }
 
@@ -106,6 +106,8 @@ public sealed class PlayerOpeningPlanServiceTests
 
         Assert.NotEmpty(plan.Today);
         Assert.Contains("Due review", plan.Today[0].Title, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("session", plan.Today[0].Detail, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(dueAction.DueUtc.ToLocalTime().ToString("HH:mm"), plan.Today[0].Detail, StringComparison.Ordinal);
     }
 
     private static OpeningLineCatalogItem CreateLine(string eco, string displayName, int branchCount, int gameCount)
