@@ -20,12 +20,25 @@
                  VerticalAlignment="Center"
                  Watermark="Search analyzed players..."
                  TextChanged="FilterTextBox_OnTextChanged" />
+        <Button x:Name="ToggleProfilesButton"
+                Content="Hide players"
+                Click="ToggleProfilesButton_Click" />
+        <Button x:Name="CoachModeButton"
+                Content="Coach"
+                Click="CoachModeButton_Click" />
+        <Button x:Name="EvidenceModeButton"
+                Content="Evidence"
+                Click="EvidenceModeButton_Click" />
         <Button Content="Back to board" Click="CloseButton_Click" />
       </StackPanel>
     </Border>
 
-    <Grid Grid.Row="1" ColumnDefinitions="340,*" Margin="0,14,0,0">
-      <Border Padding="16" CornerRadius="18" Background="{DynamicResource PanelBrush}">
+    <Grid x:Name="ProfilesLayout" Grid.Row="1" Margin="0,14,0,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="300" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+      <Border x:Name="ProfilesPanel" Padding="16" CornerRadius="18" Background="{DynamicResource PanelBrush}">
         <StackPanel Spacing="10">
           <TextBlock FontSize="18" FontWeight="SemiBold" Text="Analyzed players" />
           <ListBox x:Name="ProfilesListBox"
@@ -57,9 +70,11 @@
         </StackPanel>
       </Border>
 
-      <Border Grid.Column="1" Margin="14,0,0,0" Padding="16" CornerRadius="18" Background="{DynamicResource PanelBrush}">
-        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
-                      VerticalScrollBarVisibility="Auto">
+      <Border x:Name="DetailsHost" Grid.Column="1" Margin="14,0,0,0" Padding="16" CornerRadius="18" Background="{DynamicResource PanelBrush}">
+        <ScrollViewer x:Name="DetailsScrollViewer"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto"
+                      ScrollChanged="DetailsScrollViewer_OnScrollChanged">
           <StackPanel x:Name="DetailsPanel" Spacing="14" />
         </ScrollViewer>
       </Border>

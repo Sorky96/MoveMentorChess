@@ -128,7 +128,7 @@ public sealed class PlayerOpeningPlanService
         DateTime earliestDueUtc = actions.Min(action => action.DueUtc);
         string dueSince = $"due since {earliestDueUtc.ToLocalTime():HH:mm}";
         int count = actions.Count();
-        return count == 1 ? dueSince : $"{count} due items; earliest {dueSince}";
+        return count == 1 ? $"1 scheduled due item; {dueSince}" : $"{count} scheduled due items; earliest {dueSince}";
     }
 
     private static IReadOnlyList<PlayerOpeningPlanItem> BuildThisWeek(
@@ -208,10 +208,10 @@ public sealed class PlayerOpeningPlanService
             .Take(3)
             .Select((item, index) => new PlayerOpeningPlanItem(
                 item.Line.DisplayName,
-                "Long-term repertoire gap.",
+                "Available for future training.",
                 trainedEco.Contains(item.Line.Eco)
                     ? $"{item.BranchGap} branch gap(s) remain in review history."
-                    : "No completed session is recorded for this ECO yet.",
+                    : "No review history yet.",
                 item.Line.Eco,
                 TrainingPlanTopicCategory.MaintenanceTopic,
                 index + 1,

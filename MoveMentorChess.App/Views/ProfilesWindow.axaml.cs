@@ -20,11 +20,20 @@ public partial class ProfilesWindow : Window
     private readonly PlayerProfileService profileService;
     private readonly IPlayerProfileFormatter profileFormatter;
     private readonly ITrainingPlanFormatter trainingPlanFormatter;
+    private readonly OpeningTrainingTelemetryService telemetryService;
     private readonly Func<ProfileMistakeExample, Task>? navigateToProfileExampleAsync;
     private readonly Func<OpeningExampleGame, Task>? navigateToOpeningExampleAsync;
     private readonly Func<OpeningMoveRecommendation, Task>? navigateToOpeningPositionAsync;
     private List<PlayerProfileSummaryItemViewModel> items = [];
     private string? currentProfilePlayerKey;
+    private PlayerProfileReport? currentReport;
+    private OpeningWeaknessReport? currentOpeningReport;
+    private ProfileViewMode currentViewMode = ProfileViewMode.Coach;
+    private bool isProfilesPanelVisible = true;
+    private bool profileActionClicked;
+    private bool profileClosedTracked;
+    private DateTime? profileOpenedUtc;
+    private double maxProfileScrollDepth;
     private int profileRenderVersion;
 
     public ProfilesWindow()
@@ -43,10 +52,13 @@ public partial class ProfilesWindow : Window
         this.profileService = profileService;
         this.profileFormatter = profileFormatter ?? PlayerProfileFormatterFactory.CreateDefault();
         this.trainingPlanFormatter = trainingPlanFormatter ?? TrainingPlanFormatterFactory.CreateDefault();
+        telemetryService = new OpeningTrainingTelemetryService(AnalysisStoreProvider.GetStore() as IOpeningTrainingTelemetryStore);
         this.navigateToProfileExampleAsync = navigateToProfileExampleAsync;
         this.navigateToOpeningExampleAsync = navigateToOpeningExampleAsync;
         this.navigateToOpeningPositionAsync = navigateToOpeningPositionAsync;
         InitializeComponent();
+        UpdateViewModeButtons();
+        UpdateProfilesPanelVisibility();
         RefreshList();
     }
 
@@ -104,7 +116,73 @@ public partial class ProfilesWindow : Window
 
     private void CloseButton_Click(object? sender, RoutedEventArgs e)
     {
+        TrackProfileClosed("back_to_board");
         Close();
+    }
+
+    private void ToggleProfilesButton_Click(object? sender, RoutedEventArgs e)
+    {
+        isProfilesPanelVisible = !isProfilesPanelVisible;
+        UpdateProfilesPanelVisibility();
+        TrackProfileTelemetry("profile_players_panel_toggled", new Dictionary<string, string>
+        {
+            ["is_visible"] = isProfilesPanelVisible.ToString().ToLowerInvariant()
+        });
+    }
+
+    private void CoachModeButton_Click(object? sender, RoutedEventArgs e)
+    {
+        SwitchViewMode(ProfileViewMode.Coach);
+    }
+
+    private void EvidenceModeButton_Click(object? sender, RoutedEventArgs e)
+    {
+        SwitchViewMode(ProfileViewMode.Evidence);
+    }
+
+    private void SwitchViewMode(ProfileViewMode viewMode)
+    {
+        if (currentViewMode == viewMode)
+        {
+            return;
+        }
+
+        currentViewMode = viewMode;
+        UpdateViewModeButtons();
+        TrackProfileTelemetry("profile_view_mode_selected", new Dictionary<string, string>
+        {
+            ["view_mode"] = currentViewMode.ToString()
+        });
+
+        if (currentReport is not null)
+        {
+            RenderProfile(currentReport, currentOpeningReport);
+        }
+    }
+
+    private void DetailsScrollViewer_OnScrollChanged(object? sender, ScrollChangedEventArgs e)
+    {
+        double scrollableHeight = Math.Max(0, DetailsScrollViewer.Extent.Height - DetailsScrollViewer.Viewport.Height);
+        if (scrollableHeight <= 0)
+        {
+            return;
+        }
+
+        maxProfileScrollDepth = Math.Max(maxProfileScrollDepth, DetailsScrollViewer.Offset.Y / scrollableHeight);
+    }
+
+    private void UpdateViewModeButtons()
+    {
+        CoachModeButton.Background = Brush.Parse(currentViewMode == ProfileViewMode.Coach ? "#355D73" : "#203542");
+        EvidenceModeButton.Background = Brush.Parse(currentViewMode == ProfileViewMode.Evidence ? "#355D73" : "#203542");
+    }
+
+    private void UpdateProfilesPanelVisibility()
+    {
+        ProfilesPanel.IsVisible = isProfilesPanelVisible;
+        ProfilesLayout.ColumnDefinitions[0].Width = isProfilesPanelVisible ? new GridLength(300) : new GridLength(0);
+        DetailsHost.Margin = isProfilesPanelVisible ? new Thickness(14, 0, 0, 0) : new Thickness(0);
+        ToggleProfilesButton.Content = isProfilesPanelVisible ? "Hide players" : "Show players";
     }
 
     private void RefreshList()
@@ -157,26 +235,72 @@ public partial class ProfilesWindow : Window
     private void RenderProfile(PlayerProfileReport report, OpeningWeaknessReport? openingReport, int renderVersion)
     {
         DetailsPanel.Children.Clear();
+        if (currentReport is not null && !string.Equals(currentReport.PlayerKey, report.PlayerKey, StringComparison.Ordinal))
+        {
+            TrackProfileClosed("profile_changed");
+        }
+
         currentProfilePlayerKey = report.PlayerKey;
+        currentReport = report;
+        currentOpeningReport = openingReport;
+        profileActionClicked = false;
+        profileClosedTracked = false;
+        profileOpenedUtc = DateTime.UtcNow;
+        maxProfileScrollDepth = 0;
         StackPanel summaryPanel = BuildRowsPanel(BuildFormattedProfilePlaceholderRows());
         StackPanel weeklyPlanPanel = BuildRowsPanel(BuildWeeklyPlanRows(report, CreateTrainingPlanPlaceholder()));
+        StackPanel compactWeeklyPlanPanel = BuildRowsPanel(BuildCompactWeeklyPlanRows(report, CreateTrainingPlanPlaceholder()));
 
+        if (currentViewMode == ProfileViewMode.Coach)
+        {
+            RenderCoachView(report, openingReport, summaryPanel, compactWeeklyPlanPanel, weeklyPlanPanel);
+        }
+        else
+        {
+            RenderEvidenceView(report, openingReport, summaryPanel, weeklyPlanPanel);
+        }
+
+        _ = RenderFormattedProfileAsync(report, renderVersion, summaryPanel, weeklyPlanPanel, compactWeeklyPlanPanel);
+        TrackProfileTelemetry("profile_coach_opened", BuildProfileTelemetryProperties(report));
+    }
+
+    private void RenderCoachView(
+        PlayerProfileReport report,
+        OpeningWeaknessReport? openingReport,
+        StackPanel summaryPanel,
+        StackPanel compactWeeklyPlanPanel,
+        StackPanel weeklyPlanPanel)
+    {
         DetailsPanel.Children.Add(CreateHeroCard(report));
+        DetailsPanel.Children.Add(CreateCoachDecisionCard(report));
+        DetailsPanel.Children.Add(CreateMetricsCard(report));
         DetailsPanel.Children.Add(CreateCollapsibleSection("Coach summary", summaryPanel, isExpanded: true));
+        DetailsPanel.Children.Add(CreateCollapsibleSection("Priorities", BuildPriorityRows(report), isExpanded: true));
+        DetailsPanel.Children.Add(CreateCollapsibleSection("Weekly plan", compactWeeklyPlanPanel, isExpanded: true));
+        DetailsPanel.Children.Add(CreateCollapsibleSection("Weekly plan details", weeklyPlanPanel));
+        DetailsPanel.Children.Add(CreateCollapsibleSection("Evidence snapshot", BuildEvidenceSnapshotRows(report, openingReport)));
+        DetailsPanel.Children.Add(CreateCollapsibleSection("Opening weaknesses", BuildOpeningWeaknessRows(openingReport)));
+        DetailsPanel.Children.Add(CreateCollapsibleSection("Mistake patterns", BuildMistakePatternRows(report)));
+        DetailsPanel.Children.Add(CreateCollapsibleSection("Example positions", BuildExampleRows(report)));
+    }
+
+    private void RenderEvidenceView(
+        PlayerProfileReport report,
+        OpeningWeaknessReport? openingReport,
+        StackPanel summaryPanel,
+        StackPanel weeklyPlanPanel)
+    {
+        DetailsPanel.Children.Add(CreateHeroCard(report));
         DetailsPanel.Children.Add(CreateSnapshotCard(report));
         DetailsPanel.Children.Add(CreateMetricsCard(report));
+        DetailsPanel.Children.Add(CreateCollapsibleSection("Coach summary", summaryPanel));
         DetailsPanel.Children.Add(CreateCollapsibleSection("Form and strength", BuildRatingAndFormRows(report), isExpanded: true));
         DetailsPanel.Children.Add(CreateCollapsibleSection("Opening weaknesses", BuildOpeningWeaknessRows(openingReport), isExpanded: true));
-        DetailsPanel.Children.Add(CreateCollapsibleSection("Fix first", BuildFixFirstRows(report), isExpanded: true));
-        DetailsPanel.Children.Add(CreateCollapsibleSection("Training focus", BuildWorkOnRows(report), isExpanded: true));
-        DetailsPanel.Children.Add(CreateCollapsibleSection("Weekly plan", weeklyPlanPanel));
+        DetailsPanel.Children.Add(CreateCollapsibleSection("Mistake patterns", BuildMistakePatternRows(report), isExpanded: true));
+        DetailsPanel.Children.Add(CreateCollapsibleSection("Weekly plan details", weeklyPlanPanel));
         DetailsPanel.Children.Add(CreateCollapsibleSection("Recent form", BuildRecentTrendRows(report)));
         DetailsPanel.Children.Add(CreateCollapsibleSection("Why this matters", BuildDeepDiveRows(report)));
-        DetailsPanel.Children.Add(CreateCollapsibleSection("Recurring mistakes", BuildTopLabelRows(report)));
-        DetailsPanel.Children.Add(CreateCollapsibleSection("Costliest mistakes", BuildCostliestRows(report)));
         DetailsPanel.Children.Add(CreateCollapsibleSection("Example positions", BuildExampleRows(report)));
-
-        _ = RenderFormattedProfileAsync(report, renderVersion, summaryPanel, weeklyPlanPanel);
     }
 
     private void ShowProfileLoadingStatus(string displayName)
@@ -221,7 +345,8 @@ public partial class ProfilesWindow : Window
         PlayerProfileReport report,
         int renderVersion,
         StackPanel summaryPanel,
-        StackPanel weeklyPlanPanel)
+        StackPanel weeklyPlanPanel,
+        StackPanel? compactWeeklyPlanPanel = null)
     {
         try
         {
@@ -247,6 +372,10 @@ public partial class ProfilesWindow : Window
 
                 ReplacePanelChildren(summaryPanel, BuildFormattedProfileRows(formatted.Profile));
                 ReplacePanelChildren(weeklyPlanPanel, BuildWeeklyPlanRows(report, formatted.TrainingPlan));
+                if (compactWeeklyPlanPanel is not null)
+                {
+                    ReplacePanelChildren(compactWeeklyPlanPanel, BuildCompactWeeklyPlanRows(report, formatted.TrainingPlan));
+                }
             });
         }
         catch
@@ -262,6 +391,10 @@ public partial class ProfilesWindow : Window
                 TrainingPlanFormattedOutput fallbackPlan = new HeuristicTrainingPlanFormatter().Format(report.TrainingPlan);
                 ReplacePanelChildren(summaryPanel, BuildFormattedProfileRows(fallbackProfile));
                 ReplacePanelChildren(weeklyPlanPanel, BuildWeeklyPlanRows(report, fallbackPlan));
+                if (compactWeeklyPlanPanel is not null)
+                {
+                    ReplacePanelChildren(compactWeeklyPlanPanel, BuildCompactWeeklyPlanRows(report, fallbackPlan));
+                }
             });
         }
     }
@@ -352,6 +485,195 @@ public partial class ProfilesWindow : Window
 
         card.Child = wrap;
         return card;
+    }
+
+    private Control CreateCoachDecisionCard(PlayerProfileReport report)
+    {
+        string mainIssue = report.TopMistakeLabels.Count > 0
+            ? FormatMistakeLabel(report.TopMistakeLabels[0].Label)
+            : "No dominant issue yet";
+        string trend = FormatTrendHeadline(report.ProgressSignal.Direction);
+        string firstAction = BuildFixFirstItems(report).FirstOrDefault()
+            ?? "Review two recent mistakes from your own games before the next training session.";
+        string whyItMatters = BuildCoachOverviewReason(report, trend);
+        string? firstOpening = FindFirstTrainingOpening(report);
+
+        Border card = CreateCardBorder();
+        StackPanel panel = CreateCardPanel();
+
+        panel.Children.Add(CreateBodyText("Coach overview", "#9EB5C5"));
+        panel.Children.Add(CreateBodyText("Main issue", "#9EB5C5"));
+        panel.Children.Add(new TextBlock
+        {
+            Text = mainIssue,
+            FontSize = 24,
+            FontWeight = FontWeight.Bold,
+            Foreground = Brushes.White,
+            TextWrapping = TextWrapping.Wrap
+        });
+        panel.Children.Add(CreateBodyText("Why it matters", "#9EB5C5"));
+        panel.Children.Add(CreateBodyText(whyItMatters, "#D7E2EA"));
+        panel.Children.Add(CreateBodyText("Train this first", "#9EB5C5"));
+        panel.Children.Add(CreateBodyText(firstAction, "#FFFFFF"));
+
+        Button primaryAction = CreateSectionButton(
+            string.IsNullOrWhiteSpace(firstOpening) ? "Start training" : "Practice this first",
+            async () => await OpenOpeningTrainerAsync(firstOpening));
+        primaryAction.Margin = new Thickness(0, 8, 0, 0);
+        primaryAction.HorizontalAlignment = HorizontalAlignment.Left;
+        panel.Children.Add(primaryAction);
+
+        card.Child = panel;
+        return card;
+    }
+
+    private static string BuildCoachOverviewReason(PlayerProfileReport report, string trend)
+    {
+        string summary = BuildSnapshotSummary(report);
+        if (report.CostliestMistakeLabels.Count > 0)
+        {
+            ProfileCostlyLabelStat costly = report.CostliestMistakeLabels[0];
+            return $"{trend}. {summary} The most expensive pattern is {FormatMistakeLabel(costly.Label).ToLowerInvariant()}, costing {costly.TotalCentipawnLoss} total CPL.";
+        }
+
+        if (report.MistakesByPhase.Count > 0)
+        {
+            ProfilePhaseStat phase = report.MistakesByPhase[0];
+            return $"{trend}. {summary} The issue shows up most in the {FormatPhase(phase.Phase).ToLowerInvariant()}, with {phase.Count} highlighted mistakes.";
+        }
+
+        return $"{trend}. {summary}";
+    }
+
+    private IEnumerable<Control> BuildPriorityRows(PlayerProfileReport report)
+    {
+        yield return CreateBodyText("Fix first", "#9EB5C5");
+        foreach (string item in BuildFixFirstItems(report))
+        {
+            yield return CreateBulletText(item);
+        }
+
+        if (report.TrainingPlan.Topics.Count == 0)
+        {
+            yield return CreateBodyText("No focused work items yet.", "#D7E2EA");
+            yield break;
+        }
+
+        yield return CreateBodyText("Training priorities", "#9EB5C5");
+        foreach (TrainingPlanTopic topic in report.TrainingPlan.Topics.OrderBy(topic => topic.Priority).Take(3))
+        {
+            yield return CreateInsightCard(
+                $"{BuildRoleLabel(topic.Category)}: {topic.Title}",
+                topic.Summary,
+                topic.WhyThisTopicNow);
+        }
+    }
+
+    private IEnumerable<Control> BuildCompactWeeklyPlanRows(PlayerProfileReport report, TrainingPlanFormattedOutput? formattedPlan = null)
+    {
+        if (formattedPlan is not null)
+        {
+            yield return CreateInsightCard("Weekly plan", "Personalized plan", formattedPlan.ShortWeeklyPlan);
+        }
+        else
+        {
+            yield return CreateInsightCard("Weekly plan", "Personalized plan", TrainerPreparingSuggestionsText);
+        }
+
+        if (report.WeeklyPlan.Days.Count == 0)
+        {
+            yield return CreateBodyText("No weekly schedule available yet.", "#D7E2EA");
+            yield break;
+        }
+
+        yield return CreateBodyText(report.WeeklyPlan.Budget.Summary, "#9EB5C5");
+        foreach (WeeklyTrainingDay day in report.WeeklyPlan.Days.Take(7))
+        {
+            Border dayCard = new()
+            {
+                Background = Brush.Parse("#182B37"),
+                CornerRadius = new CornerRadius(12),
+                Padding = new Thickness(12),
+                Margin = new Thickness(0, 0, 0, 8)
+            };
+
+            StackPanel dayPanel = new() { Spacing = 5 };
+            dayPanel.Children.Add(new TextBlock
+            {
+                Text = $"Day {day.DayNumber}: {day.Topic}",
+                FontSize = 16,
+                FontWeight = FontWeight.SemiBold,
+                Foreground = Brushes.White,
+                TextWrapping = TextWrapping.Wrap
+            });
+            dayPanel.Children.Add(CreateBodyText($"{day.WorkType} | {day.EstimatedMinutes} min | {day.Goal}", "#D7E2EA"));
+            if (day.LaunchTrainingMode.HasValue && day.RelatedOpenings is { Count: > 0 })
+            {
+                dayPanel.Children.Add(CreateSectionButton(
+                    "Practice this opening",
+                    async () => await OpenOpeningTrainerAsync(day.RelatedOpenings[0])));
+            }
+
+            dayCard.Child = dayPanel;
+            yield return dayCard;
+        }
+    }
+
+    private static string? FindFirstTrainingOpening(PlayerProfileReport report)
+    {
+        WeeklyTrainingDay? trainingDay = report.WeeklyPlan.Days.FirstOrDefault(day =>
+            day.LaunchTrainingMode.HasValue && day.RelatedOpenings is { Count: > 0 });
+        string? relatedOpening = trainingDay?.RelatedOpenings?.FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(relatedOpening))
+        {
+            return relatedOpening;
+        }
+
+        return report.MistakesByOpening.Count > 0 ? report.MistakesByOpening[0].Eco : null;
+    }
+
+    private IEnumerable<Control> BuildEvidenceSnapshotRows(PlayerProfileReport report, OpeningWeaknessReport? openingReport)
+    {
+        yield return CreateBodyText(report.ProgressSignal.Summary, "#D7E2EA");
+
+        if (report.MistakesByPhase.Count > 0)
+        {
+            ProfilePhaseStat phase = report.MistakesByPhase[0];
+            yield return CreateBulletText($"Weakest phase: {FormatPhase(phase.Phase)} ({phase.Count} highlighted mistakes)");
+        }
+
+        if (openingReport is not null && openingReport.WeakOpenings.Count > 0)
+        {
+            OpeningWeaknessEntry opening = openingReport.WeakOpenings[0];
+            yield return CreateBulletText($"Main opening signal: {opening.OpeningDisplayName} ({opening.Eco})");
+        }
+
+        if (report.CostliestMistakeLabels.Count > 0)
+        {
+            ProfileCostlyLabelStat costly = report.CostliestMistakeLabels[0];
+            yield return CreateBulletText($"Costliest pattern: {FormatMistakeLabel(costly.Label)} | total CPL {costly.TotalCentipawnLoss}");
+        }
+    }
+
+    private IEnumerable<Control> BuildMistakePatternRows(PlayerProfileReport report)
+    {
+        if (report.TopMistakeLabels.Count == 0 && report.CostliestMistakeLabels.Count == 0)
+        {
+            yield return CreateBodyText("No recurring or costly patterns yet.");
+            yield break;
+        }
+
+        yield return CreateBodyText("Recurring patterns", "#9EB5C5");
+        foreach (ProfileLabelStat item in report.TopMistakeLabels.Take(6))
+        {
+            yield return CreateBulletText($"{FormatMistakeLabel(item.Label)}: {FormatTimes(item.Count)}");
+        }
+
+        yield return CreateBodyText("Costliest patterns", "#9EB5C5");
+        foreach (ProfileCostlyLabelStat item in report.CostliestMistakeLabels.Take(6))
+        {
+            yield return CreateBulletText($"{FormatMistakeLabel(item.Label)}: total CPL {item.TotalCentipawnLoss}, avg {item.AverageCentipawnLoss?.ToString() ?? "n/a"}");
+        }
     }
 
     private IEnumerable<Control> BuildRatingAndFormRows(PlayerProfileReport report)
@@ -888,6 +1210,18 @@ public partial class ProfilesWindow : Window
             }
         };
 
+        expander.PropertyChanged += (_, change) =>
+        {
+            if (change.Property == Expander.IsExpandedProperty && expander.IsExpanded)
+            {
+                TrackProfileTelemetry("profile_section_expanded", new Dictionary<string, string>
+                {
+                    ["section"] = title,
+                    ["view_mode"] = currentViewMode.ToString()
+                });
+            }
+        };
+
         return expander;
     }
 
@@ -926,15 +1260,33 @@ public partial class ProfilesWindow : Window
         };
     }
 
-    private static Button CreateSectionButton(string title, Action onClick)
+    private Button CreateSectionButton(string title, Func<Task> onClick, bool isEnabled = true)
     {
         Button button = new()
         {
             Content = title,
             Margin = new Thickness(0, 0, 8, 8),
-            MinWidth = 200
+            MinWidth = 200,
+            IsEnabled = isEnabled
         };
-        button.Click += (_, _) => onClick();
+        button.Click += async (_, _) =>
+        {
+            profileActionClicked = true;
+            TrackProfileActionClicked(title);
+
+            button.IsEnabled = false;
+            try
+            {
+                await onClick();
+            }
+            finally
+            {
+                if (!IsClosed())
+                {
+                    button.IsEnabled = isEnabled;
+                }
+            }
+        };
         return button;
     }
 
@@ -1062,6 +1414,8 @@ public partial class ProfilesWindow : Window
                 return;
             }
 
+            profileActionClicked = true;
+            TrackProfileActionClicked("Go to Analysis");
             button.IsEnabled = false;
             try
             {
@@ -1154,6 +1508,11 @@ public partial class ProfilesWindow : Window
         };
         trainingButton.Click += async (_, _) =>
         {
+            profileActionClicked = true;
+            TrackProfileActionClicked("Practice this opening", new Dictionary<string, string>
+            {
+                ["opening"] = opening.Eco
+            });
             trainingButton.IsEnabled = false;
             try
             {
@@ -1206,6 +1565,17 @@ public partial class ProfilesWindow : Window
         await window.ShowDialog(this);
     }
 
+    private async Task OpenProfileExampleAsync(ProfileMistakeExample example)
+    {
+        if (navigateToProfileExampleAsync is null)
+        {
+            return;
+        }
+
+        await navigateToProfileExampleAsync(example);
+        Close();
+    }
+
     private Control CreateOpeningExampleCard(OpeningExampleGame example)
     {
         Border card = new()
@@ -1245,6 +1615,8 @@ public partial class ProfilesWindow : Window
                 return;
             }
 
+            profileActionClicked = true;
+            TrackProfileActionClicked("Open game");
             button.IsEnabled = false;
             try
             {
@@ -1329,6 +1701,11 @@ public partial class ProfilesWindow : Window
                 return;
             }
 
+            profileActionClicked = true;
+            TrackProfileActionClicked("Open position", new Dictionary<string, string>
+            {
+                ["opening"] = recommendation.Eco
+            });
             button.IsEnabled = false;
             try
             {
@@ -1899,8 +2276,79 @@ public partial class ProfilesWindow : Window
         return $"Across {report.GamesAnalyzed} games, the player averages CPL {cpl} with {report.HighlightedMistakes} highlighted mistakes.";
     }
 
+    private Dictionary<string, string> BuildProfileTelemetryProperties(
+        PlayerProfileReport report,
+        Dictionary<string, string>? properties = null)
+    {
+        Dictionary<string, string> result = properties is null
+            ? []
+            : new Dictionary<string, string>(properties, StringComparer.OrdinalIgnoreCase);
+
+        result["view_mode"] = currentViewMode.ToString();
+        result["games_analyzed"] = report.GamesAnalyzed.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        result["moves_analyzed"] = report.TotalAnalyzedMoves.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        result["highlighted_mistakes"] = report.HighlightedMistakes.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        result["main_issue"] = report.TopMistakeLabels.Count > 0 ? report.TopMistakeLabels[0].Label : "none";
+        result["trend"] = report.ProgressSignal.Direction.ToString();
+        return result;
+    }
+
+    private void TrackProfileTelemetry(string eventName, Dictionary<string, string>? properties = null)
+    {
+        Dictionary<string, string>? mergedProperties = currentReport is null
+            ? properties
+            : BuildProfileTelemetryProperties(currentReport, properties);
+        telemetryService.Track(eventName, currentProfilePlayerKey, properties: mergedProperties);
+    }
+
+    private void TrackProfileActionClicked(string action, Dictionary<string, string>? properties = null)
+    {
+        Dictionary<string, string> result = properties is null
+            ? []
+            : new Dictionary<string, string>(properties, StringComparer.OrdinalIgnoreCase);
+
+        result["action"] = action;
+        result["view_mode"] = currentViewMode.ToString();
+        result["seconds_since_open"] = profileOpenedUtc is null
+            ? "0"
+            : ((int)Math.Max(0, (DateTime.UtcNow - profileOpenedUtc.Value).TotalSeconds))
+                .ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+        TrackProfileTelemetry("profile_training_action_clicked", result);
+    }
+
+    private void TrackProfileClosed(string reason)
+    {
+        if (profileClosedTracked || profileOpenedUtc is null)
+        {
+            return;
+        }
+
+        profileClosedTracked = true;
+        int secondsOpen = (int)Math.Max(0, (DateTime.UtcNow - profileOpenedUtc.Value).TotalSeconds);
+        TrackProfileTelemetry("profile_coach_closed", new Dictionary<string, string>
+        {
+            ["reason"] = reason,
+            ["action_clicked"] = profileActionClicked.ToString().ToLowerInvariant(),
+            ["seconds_open"] = secondsOpen.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["max_scroll_depth"] = maxProfileScrollDepth.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
+        });
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        TrackProfileClosed("window_closed");
+        base.OnClosed(e);
+    }
+
     private bool IsClosed()
     {
         return VisualRoot is null || !IsVisible;
     }
+}
+
+internal enum ProfileViewMode
+{
+    Coach,
+    Evidence
 }

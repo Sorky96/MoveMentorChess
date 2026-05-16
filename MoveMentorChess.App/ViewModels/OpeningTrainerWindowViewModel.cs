@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Text.RegularExpressions;
 using Avalonia.Media;
 using MoveMentorChess.Persistence;
 using MoveMentorChess.Training;
@@ -74,6 +75,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     private bool isStudyReferenceVisible;
     private bool canRevealStudyReference;
     private bool isAdvancedOptionsExpanded;
+    private bool overviewOpenedFromTodayRecommendation;
 
     public OpeningTrainerWindowViewModel()
         : this(AnalysisStoreProvider.GetStore() ?? throw new InvalidOperationException("Local analysis store is unavailable."))
@@ -87,6 +89,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         GoToOverviewCommand = new RelayCommand(OpenOverviewPage, () => SelectedOpening is not null && overview is not null);
         GoToSelectionCommand = new RelayCommand(() => SetPage(SelectionPageIndex));
         StartRecommendedStudyCommand = new RelayCommand(StartRecommendedStudy, () => TodayRecommendation is not null);
+        StartRecommendedPracticeNowCommand = new RelayCommand(StartRecommendedPracticeNow, () => TodayRecommendation is not null);
         StartGuidedStudyCommand = new RelayCommand(StartGuidedStudy, () => SelectedOpening is not null && overview is not null);
         StartPriorityStudyCommand = new RelayCommand(StartPriorityStudy, () => SelectedPriority is not null && SelectedOpening is not null && overview is not null);
         StartSpecialModeCommand = new RelayCommand(StartSpecialMode, () => SelectedSpecialMode is not null && SelectedOpening is not null && overview is not null);
@@ -175,6 +178,8 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     public RelayCommand GoToSelectionCommand { get; }
 
     public RelayCommand StartRecommendedStudyCommand { get; }
+
+    public RelayCommand StartRecommendedPracticeNowCommand { get; }
 
     public RelayCommand StartGuidedStudyCommand { get; }
 
@@ -333,7 +338,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     public string TodayDecisionSummary => TodayRecommendation is null
         ? "Recommended today: import or choose an opening before starting."
-        : $"Today: {GetRecommendedPositionCount()} review positions covering {GetReviewMoveCount()} moves, approx. {GetEstimatedDurationText()}, {FormatRepertoireSide(TodayRecommendation.OpeningLine.RepertoireSide)} repertoire.";
+        : $"Today: {GetRecommendedPositionCount()} review positions from a {GetReviewMoveCount()}-move line, approx. {GetEstimatedDurationText()}, {FormatRepertoireSide(TodayRecommendation.OpeningLine.RepertoireSide)} repertoire.";
 
     public string TodayStartSequenceText => SelectedIntensityChoice?.Id switch
     {
@@ -355,7 +360,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             string reason = TodayRecommendation.Reason.Trim();
             if (TodayRecommendation.ReasonCode == TrainingRecommendationReasonCode.RevisitDue && TodayRecommendation.Priority >= 10_000)
             {
-                reason = "This review is due because scheduled items have aged past their review window.";
+                reason = "This review is due because some scheduled items passed their review window.";
             }
 
             string modeContext = SelectedIntensityChoice?.Id switch
@@ -368,7 +373,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
                 ? $"Goal: confirm the main setup and repair {weakBranches} weak branch{PluralSuffix(weakBranches)}."
                 : "Goal: confirm the main setup and keep recall stable.";
 
-            return $"{reason} {modeContext} {goal}";
+            return $"{reason} {modeContext}{Environment.NewLine}{goal}";
         }
     }
 
@@ -376,7 +381,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         ? "Recommended because..."
         : "Ready when you are";
 
-    public string TodayLessonButtonText => HasTodayLesson ? "Start Training" : "Import openings first";
+    public string TodayLessonButtonText => HasTodayLesson ? "Start guided training" : "Import openings first";
 
     public bool HasTodayLesson => TodayRecommendation is not null;
 
@@ -1049,23 +1054,23 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             {
                 return needsReview == 0
                     ? "You have practice history in this repertoire. This opening is in good shape for today."
-                    : $"You have practice history in this repertoire. {needsReview} position{PluralSuffix(needsReview)} are worth revisiting today.";
+                    : $"You have practice history in this repertoire. {needsReview} total review position{PluralSuffix(needsReview)} are worth revisiting today.";
             }
 
             if (overview.Coverage.CoveragePercent <= 0.1)
             {
-                return $"You are starting fresh in this opening. {needsReview} position{PluralSuffix(needsReview)} are ready for practice today.";
+                return $"You are starting fresh in this opening. {needsReview} total review position{PluralSuffix(needsReview)} are ready for practice today.";
             }
 
             return needsReview == 0
                 ? "This opening is in good shape. Today can stay light and retention-focused."
-                : $"{needsReview} position{PluralSuffix(needsReview)} are worth revisiting before adding new material.";
+                : $"{needsReview} total review position{PluralSuffix(needsReview)} are worth revisiting before adding new material.";
         }
     }
 
     public string CoverageMetricText => overview is null
         ? "No coverage metrics loaded yet."
-        : $"Today's practice set: {overview.Coverage.CoveredBranches}/{overview.Coverage.TotalBookBranches} practiced | To revisit {overview.Coverage.WeakBranches}";
+        : $"Today's set: {overview.Coverage.CoveredBranches}/{overview.Coverage.TotalBookBranches} practiced | {overview.Coverage.WeakBranches} to revisit";
 
     public string PracticeFocusText => overview is null
         ? "Practice focus appears after an opening loads."
@@ -1074,7 +1079,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             "safe" => "Focus: main line review only. Weak branches are listed below as optional repairs.",
             "challenge" => $"Focus: main line from {FormatMainLine(overview.MainLine, 4)}, plus less familiar opponent replies.",
             _ => overview.Coverage.WeakBranches > 0
-                ? $"Focus: {overview.Coverage.WeakBranches} review position{PluralSuffix(overview.Coverage.WeakBranches)} from {FormatMainLine(overview.MainLine, 4)}, covering {GetReviewMoveCount()} moves, with weak branches repaired after the main line."
+                ? $"Focus: {overview.Coverage.WeakBranches} review position{PluralSuffix(overview.Coverage.WeakBranches)} from your {FormatMainLine(overview.MainLine, 4)} line. The full line contains {GetReviewMoveCount()} moves, but today's practice stays focused."
                 : $"Focus: main line from {FormatMainLine(overview.MainLine, 4)}, plus the most useful opponent replies."
         };
 
@@ -1206,17 +1211,40 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             OnPropertyChanged(nameof(CoverageHumanText));
             OnPropertyChanged(nameof(MainLineText));
             OnPropertyChanged(nameof(RememberThisText));
-            OnPropertyChanged(nameof(SelectedSpecialModeDescription));
+        OnPropertyChanged(nameof(SelectedSpecialModeDescription));
         OnPropertyChanged(nameof(SelectedSpecialModeButtonText));
         StartRecommendedStudyCommand.RaiseCanExecuteChanged();
+        StartRecommendedPracticeNowCommand.RaiseCanExecuteChanged();
         StartSpecialModeCommand.RaiseCanExecuteChanged();
     }
 
     private void StartRecommendedStudy()
     {
-        if (TodayRecommendation is null)
+        if (!PrepareTodayRecommendationForStudy())
         {
             return;
+        }
+
+        overviewOpenedFromTodayRecommendation = true;
+        SetPage(OverviewPageIndex);
+    }
+
+    private void StartRecommendedPracticeNow()
+    {
+        if (!PrepareTodayRecommendationForStudy())
+        {
+            return;
+        }
+
+        overviewOpenedFromTodayRecommendation = false;
+        StartGuidedStudy(null, "today_recommendation", TodayRecommendation!.OpeningLine.LineKey.Value);
+    }
+
+    private bool PrepareTodayRecommendationForStudy()
+    {
+        if (TodayRecommendation is null)
+        {
+            return false;
         }
 
         SelectedOpening = TodayRecommendation.OpeningLine;
@@ -1226,7 +1254,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             SelectedOpening,
             recommendationId: TodayRecommendation.OpeningLine.LineKey.Value,
             properties: BuildRecommendationTelemetryProperties(TodayRecommendation));
-        StartGuidedStudy(null, "today_recommendation", TodayRecommendation.OpeningLine.LineKey.Value);
+        return true;
     }
 
     private void StartPriorityStudy()
@@ -1297,7 +1325,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         PreviewArrows = [];
         OnPropertyChanged(nameof(PreviewArrows));
         SummaryText = $"{SelectedOpening.DisplayName}{Environment.NewLine}Main line moves: {overview.MainLine.Count}";
-        OpponentSummary = overview.OpponentReplyProfile.Summary;
+        OpponentSummary = FormatOpponentSummary(overview.OpponentReplyProfile.Summary);
         CoverageText = $"Your saved progress: {overview.Coverage.CoveredBranches}/{overview.Coverage.TotalBookBranches}";
         CoverageExplanation = overview.Coverage.CoveragePercent <= 0.1
             ? "You do not have saved review progress for this opening yet, so coverage starts at zero."
@@ -1320,7 +1348,16 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     }
 
     private void StartGuidedStudy()
-        => StartGuidedStudy(null, "manual", null);
+    {
+        if (overviewOpenedFromTodayRecommendation && TodayRecommendation is not null)
+        {
+            overviewOpenedFromTodayRecommendation = false;
+            StartGuidedStudy(null, "today_recommendation", TodayRecommendation.OpeningLine.LineKey.Value);
+            return;
+        }
+
+        StartGuidedStudy(null, "manual", null);
+    }
 
     private void StartGuidedStudy(SpecialTrainingModeDefinition? specialMode, string startSource, string? recommendationId)
         => StartGuidedStudy(specialMode, startSource, recommendationId, null);
@@ -1873,6 +1910,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     {
         GoToOverviewCommand.RaiseCanExecuteChanged();
         StartRecommendedStudyCommand.RaiseCanExecuteChanged();
+        StartRecommendedPracticeNowCommand.RaiseCanExecuteChanged();
         StartGuidedStudyCommand.RaiseCanExecuteChanged();
         StartPriorityStudyCommand.RaiseCanExecuteChanged();
         StartSpecialModeCommand.RaiseCanExecuteChanged();
@@ -2437,6 +2475,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(TodayLessonButtonText));
         OnPropertyChanged(nameof(HasTodayLesson));
         StartRecommendedStudyCommand.RaiseCanExecuteChanged();
+        StartRecommendedPracticeNowCommand.RaiseCanExecuteChanged();
     }
 
     private void RaiseSelectionCoachingTextChanged()
@@ -2530,6 +2569,14 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             RepertoireSide.Black => "Black",
             _ => "Both sides"
         };
+
+    private static string FormatOpponentSummary(string summary)
+    {
+        Match match = Regex.Match(summary, @"Tracked (?<count>\d+) opponent branch\(es\)", RegexOptions.IgnoreCase);
+        return match.Success
+            ? $"We track {match.Groups["count"].Value} common opponent replies for this opening."
+            : summary;
+    }
 
     private static string FormatMainLine(IReadOnlyList<OpeningLineMove> moves, int maxPly)
     {

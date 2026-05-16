@@ -71,8 +71,8 @@
                   <TextBlock Foreground="#9EB5C5" FontSize="12" Text="{Binding TodayStartSequenceText}" TextWrapping="Wrap" />
                   <Button HorizontalAlignment="Stretch"
                           HorizontalContentAlignment="Center"
-                          Command="{Binding GoToOverviewCommand}"
-                          Content="Review plan before starting" />
+                          Command="{Binding StartRecommendedPracticeNowCommand}"
+                          Content="Skip briefing and practice now" />
                 </StackPanel>
               </Border>
             </Grid>

@@ -142,7 +142,7 @@ public sealed class PlayerOpeningPlanServiceTests
 
         PlayerOpeningPlanItem item = Assert.Single(plan.Today);
         Assert.Equal("Main line review", item.Title);
-        Assert.Contains("2 due items", item.Detail, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("2 scheduled due items", item.Detail, StringComparison.OrdinalIgnoreCase);
         Assert.Contains(firstDueUtc.ToLocalTime().ToString("HH:mm"), item.Detail, StringComparison.Ordinal);
     }
 
