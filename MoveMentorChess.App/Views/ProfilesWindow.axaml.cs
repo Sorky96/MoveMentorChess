@@ -10,6 +10,8 @@ using MoveMentorChess.App.Controls;
 using MoveMentorChess.App.ViewModels;
 using MoveMentorChess.Persistence;
 using MoveMentorChess.Profiles;
+using static MoveMentorChess.App.ViewModels.ProfileCoachPresentationText;
+using static MoveMentorChess.App.ViewModels.ProfileCoachSectionRenderer;
 
 namespace MoveMentorChess.App.Views;
 
@@ -20,7 +22,7 @@ public partial class ProfilesWindow : Window
     private readonly PlayerProfileService profileService;
     private readonly IPlayerProfileFormatter profileFormatter;
     private readonly ITrainingPlanFormatter trainingPlanFormatter;
-    private readonly OpeningTrainingTelemetryService telemetryService;
+    private readonly ProfileCoachSessionTracker profileSessionTracker;
     private readonly Func<ProfileMistakeExample, Task>? navigateToProfileExampleAsync;
     private readonly Func<OpeningExampleGame, Task>? navigateToOpeningExampleAsync;
     private readonly Func<OpeningMoveRecommendation, Task>? navigateToOpeningPositionAsync;
@@ -30,10 +32,6 @@ public partial class ProfilesWindow : Window
     private OpeningWeaknessReport? currentOpeningReport;
     private ProfileViewMode currentViewMode = ProfileViewMode.Coach;
     private bool isProfilesPanelVisible = true;
-    private bool profileActionClicked;
-    private bool profileClosedTracked;
-    private DateTime? profileOpenedUtc;
-    private double maxProfileScrollDepth;
     private int profileRenderVersion;
 
     public ProfilesWindow()
@@ -52,7 +50,8 @@ public partial class ProfilesWindow : Window
         this.profileService = profileService;
         this.profileFormatter = profileFormatter ?? PlayerProfileFormatterFactory.CreateDefault();
         this.trainingPlanFormatter = trainingPlanFormatter ?? TrainingPlanFormatterFactory.CreateDefault();
-        telemetryService = new OpeningTrainingTelemetryService(AnalysisStoreProvider.GetStore() as IOpeningTrainingTelemetryStore);
+        profileSessionTracker = new ProfileCoachSessionTracker(
+            new OpeningTrainingTelemetryService(AnalysisStoreProvider.GetStore() as IOpeningTrainingTelemetryStore));
         this.navigateToProfileExampleAsync = navigateToProfileExampleAsync;
         this.navigateToOpeningExampleAsync = navigateToOpeningExampleAsync;
         this.navigateToOpeningPositionAsync = navigateToOpeningPositionAsync;
@@ -116,7 +115,7 @@ public partial class ProfilesWindow : Window
 
     private void CloseButton_Click(object? sender, RoutedEventArgs e)
     {
-        TrackProfileClosed("back_to_board");
+        profileSessionTracker.TrackClosed("back_to_board");
         Close();
     }
 
@@ -124,7 +123,7 @@ public partial class ProfilesWindow : Window
     {
         isProfilesPanelVisible = !isProfilesPanelVisible;
         UpdateProfilesPanelVisibility();
-        TrackProfileTelemetry("profile_players_panel_toggled", new Dictionary<string, string>
+        profileSessionTracker.Track("profile_players_panel_toggled", new Dictionary<string, string>
         {
             ["is_visible"] = isProfilesPanelVisible.ToString().ToLowerInvariant()
         });
@@ -148,8 +147,9 @@ public partial class ProfilesWindow : Window
         }
 
         currentViewMode = viewMode;
+        profileSessionTracker.SetViewMode(currentViewMode);
         UpdateViewModeButtons();
-        TrackProfileTelemetry("profile_view_mode_selected", new Dictionary<string, string>
+        profileSessionTracker.Track("profile_view_mode_selected", new Dictionary<string, string>
         {
             ["view_mode"] = currentViewMode.ToString()
         });
@@ -168,7 +168,7 @@ public partial class ProfilesWindow : Window
             return;
         }
 
-        maxProfileScrollDepth = Math.Max(maxProfileScrollDepth, DetailsScrollViewer.Offset.Y / scrollableHeight);
+        profileSessionTracker.RecordScrollDepth(DetailsScrollViewer.Offset.Y / scrollableHeight);
     }
 
     private void UpdateViewModeButtons()
@@ -237,19 +237,16 @@ public partial class ProfilesWindow : Window
         DetailsPanel.Children.Clear();
         if (currentReport is not null && !string.Equals(currentReport.PlayerKey, report.PlayerKey, StringComparison.Ordinal))
         {
-            TrackProfileClosed("profile_changed");
+            profileSessionTracker.TrackClosed("profile_changed");
         }
 
         currentProfilePlayerKey = report.PlayerKey;
         currentReport = report;
         currentOpeningReport = openingReport;
-        profileActionClicked = false;
-        profileClosedTracked = false;
-        profileOpenedUtc = DateTime.UtcNow;
-        maxProfileScrollDepth = 0;
+        profileSessionTracker.StartProfile(report, currentProfilePlayerKey, currentViewMode);
         StackPanel summaryPanel = BuildRowsPanel(BuildFormattedProfilePlaceholderRows());
-        StackPanel weeklyPlanPanel = BuildRowsPanel(BuildWeeklyPlanRows(report, CreateTrainingPlanPlaceholder()));
-        StackPanel compactWeeklyPlanPanel = BuildRowsPanel(BuildCompactWeeklyPlanRows(report, CreateTrainingPlanPlaceholder()));
+        StackPanel weeklyPlanPanel = BuildRowsPanel(BuildWeeklyPlanRows(report, CreateTrainingPlanPlaceholder(), PracticeOpeningFromProfileAsync));
+        StackPanel compactWeeklyPlanPanel = BuildRowsPanel(BuildCompactWeeklyPlanRows(report, CreateTrainingPlanPlaceholder(), PracticeOpeningFromProfileAsync));
 
         if (currentViewMode == ProfileViewMode.Coach)
         {
@@ -261,7 +258,7 @@ public partial class ProfilesWindow : Window
         }
 
         _ = RenderFormattedProfileAsync(report, renderVersion, summaryPanel, weeklyPlanPanel, compactWeeklyPlanPanel);
-        TrackProfileTelemetry("profile_coach_opened", BuildProfileTelemetryProperties(report));
+        profileSessionTracker.TrackOpened();
     }
 
     private void RenderCoachView(
@@ -279,9 +276,14 @@ public partial class ProfilesWindow : Window
         DetailsPanel.Children.Add(CreateCollapsibleSection("Weekly plan", compactWeeklyPlanPanel, isExpanded: true));
         DetailsPanel.Children.Add(CreateCollapsibleSection("Weekly plan details", weeklyPlanPanel));
         DetailsPanel.Children.Add(CreateCollapsibleSection("Evidence snapshot", BuildEvidenceSnapshotRows(report, openingReport)));
-        DetailsPanel.Children.Add(CreateCollapsibleSection("Opening weaknesses", BuildOpeningWeaknessRows(openingReport)));
+        DetailsPanel.Children.Add(CreateCollapsibleSection("Opening weaknesses", BuildOpeningWeaknessRows(
+            openingReport,
+            !string.IsNullOrWhiteSpace(currentProfilePlayerKey),
+            CreateOpeningExampleCard,
+            CreateOpeningPositionCard,
+            PracticeOpeningFromProfileAsync)));
         DetailsPanel.Children.Add(CreateCollapsibleSection("Mistake patterns", BuildMistakePatternRows(report)));
-        DetailsPanel.Children.Add(CreateCollapsibleSection("Example positions", BuildExampleRows(report)));
+        DetailsPanel.Children.Add(CreateCollapsibleSection("Example positions", BuildExampleRows(report, CreateExampleCard)));
     }
 
     private void RenderEvidenceView(
@@ -295,12 +297,17 @@ public partial class ProfilesWindow : Window
         DetailsPanel.Children.Add(CreateMetricsCard(report));
         DetailsPanel.Children.Add(CreateCollapsibleSection("Coach summary", summaryPanel));
         DetailsPanel.Children.Add(CreateCollapsibleSection("Form and strength", BuildRatingAndFormRows(report), isExpanded: true));
-        DetailsPanel.Children.Add(CreateCollapsibleSection("Opening weaknesses", BuildOpeningWeaknessRows(openingReport), isExpanded: true));
+        DetailsPanel.Children.Add(CreateCollapsibleSection("Opening weaknesses", BuildOpeningWeaknessRows(
+            openingReport,
+            !string.IsNullOrWhiteSpace(currentProfilePlayerKey),
+            CreateOpeningExampleCard,
+            CreateOpeningPositionCard,
+            PracticeOpeningFromProfileAsync), isExpanded: true));
         DetailsPanel.Children.Add(CreateCollapsibleSection("Mistake patterns", BuildMistakePatternRows(report), isExpanded: true));
         DetailsPanel.Children.Add(CreateCollapsibleSection("Weekly plan details", weeklyPlanPanel));
         DetailsPanel.Children.Add(CreateCollapsibleSection("Recent form", BuildRecentTrendRows(report)));
-        DetailsPanel.Children.Add(CreateCollapsibleSection("Why this matters", BuildDeepDiveRows(report)));
-        DetailsPanel.Children.Add(CreateCollapsibleSection("Example positions", BuildExampleRows(report)));
+        DetailsPanel.Children.Add(CreateCollapsibleSection("Why this matters", BuildDeepDiveRows(report, CreateExampleCard)));
+        DetailsPanel.Children.Add(CreateCollapsibleSection("Example positions", BuildExampleRows(report, CreateExampleCard)));
     }
 
     private void ShowProfileLoadingStatus(string displayName)
@@ -371,10 +378,10 @@ public partial class ProfilesWindow : Window
                 }
 
                 ReplacePanelChildren(summaryPanel, BuildFormattedProfileRows(formatted.Profile));
-                ReplacePanelChildren(weeklyPlanPanel, BuildWeeklyPlanRows(report, formatted.TrainingPlan));
+                ReplacePanelChildren(weeklyPlanPanel, BuildWeeklyPlanRows(report, formatted.TrainingPlan, PracticeOpeningFromProfileAsync));
                 if (compactWeeklyPlanPanel is not null)
                 {
-                    ReplacePanelChildren(compactWeeklyPlanPanel, BuildCompactWeeklyPlanRows(report, formatted.TrainingPlan));
+                    ReplacePanelChildren(compactWeeklyPlanPanel, BuildCompactWeeklyPlanRows(report, formatted.TrainingPlan, PracticeOpeningFromProfileAsync));
                 }
             });
         }
@@ -390,10 +397,10 @@ public partial class ProfilesWindow : Window
                 PlayerProfileFormattedOutput fallbackProfile = new HeuristicPlayerProfileFormatter().Format(report);
                 TrainingPlanFormattedOutput fallbackPlan = new HeuristicTrainingPlanFormatter().Format(report.TrainingPlan);
                 ReplacePanelChildren(summaryPanel, BuildFormattedProfileRows(fallbackProfile));
-                ReplacePanelChildren(weeklyPlanPanel, BuildWeeklyPlanRows(report, fallbackPlan));
+                ReplacePanelChildren(weeklyPlanPanel, BuildWeeklyPlanRows(report, fallbackPlan, PracticeOpeningFromProfileAsync));
                 if (compactWeeklyPlanPanel is not null)
                 {
-                    ReplacePanelChildren(compactWeeklyPlanPanel, BuildCompactWeeklyPlanRows(report, fallbackPlan));
+                    ReplacePanelChildren(compactWeeklyPlanPanel, BuildCompactWeeklyPlanRows(report, fallbackPlan, PracticeOpeningFromProfileAsync));
                 }
             });
         }
@@ -407,84 +414,6 @@ public partial class ProfilesWindow : Window
             ExplanationLevel.Advanced => PlayerProfileAudienceLevel.Advanced,
             _ => PlayerProfileAudienceLevel.Intermediate
         };
-    }
-
-    private Control CreateHeroCard(PlayerProfileReport report)
-    {
-        Border card = CreateCardBorder();
-        StackPanel panel = CreateCardPanel();
-
-        panel.Children.Add(new TextBlock
-        {
-            Text = report.DisplayName,
-            FontSize = 28,
-            FontWeight = FontWeight.Bold,
-            Foreground = Brushes.White,
-            TextWrapping = TextWrapping.Wrap
-        });
-
-        panel.Children.Add(new TextBlock
-        {
-            Margin = new Thickness(0, 6, 0, 0),
-            Text = $"Based on {report.GamesAnalyzed} games and {report.TotalAnalyzedMoves} analyzed moves.",
-            FontSize = 15,
-            Foreground = Brush.Parse("#D7E2EA"),
-            TextWrapping = TextWrapping.Wrap
-        });
-
-        card.Child = panel;
-        return card;
-    }
-
-    private Control CreateSnapshotCard(PlayerProfileReport report)
-    {
-        string mainIssue = report.TopMistakeLabels.Count > 0
-            ? FormatMistakeLabel(report.TopMistakeLabels[0].Label)
-            : "No dominant issue yet";
-        string weakestPhase = report.MistakesByPhase.Count > 0
-            ? FormatPhase(report.MistakesByPhase[0].Phase)
-            : "mixed phases";
-        string opening = report.MistakesByOpening.Count > 0
-            ? FormatOpening(report.MistakesByOpening[0].Eco)
-            : "mixed openings";
-
-        return CreateInsightCard(
-            "Profile snapshot",
-            $"{FormatTrendHeadline(report.ProgressSignal.Direction)} • {mainIssue}",
-            $"This player most often struggles in the {weakestPhase.ToLowerInvariant()} and the pattern clusters around {opening}. {BuildSnapshotSummary(report)}");
-    }
-
-    private Control CreateMetricsCard(PlayerProfileReport report)
-    {
-        Border card = CreateCardBorder();
-        WrapPanel wrap = new()
-        {
-            Orientation = Orientation.Horizontal,
-            ItemWidth = 220
-        };
-
-        wrap.Children.Add(CreateMetricTile("Games analyzed", report.GamesAnalyzed.ToString()));
-        wrap.Children.Add(CreateMetricTile("Moves analyzed", report.TotalAnalyzedMoves.ToString()));
-        wrap.Children.Add(CreateMetricTile("Highlighted mistakes", report.HighlightedMistakes.ToString()));
-        wrap.Children.Add(CreateMetricTile("Average CPL", report.AverageCentipawnLoss?.ToString() ?? "n/a"));
-        if (report.RatingTrend.CurrentStrength is not null)
-        {
-            MoveMentorStrengthPoint strength = report.RatingTrend.CurrentStrength;
-            wrap.Children.Add(CreateMetricTile(
-                "MoveMentor estimated strength",
-                $"{strength.EstimatedStrength} ({strength.Low}-{strength.High})",
-                300));
-        }
-
-        if (report.GamesBySide.Count > 0)
-        {
-            string sides = string.Join(" | ", report.GamesBySide.Select(side =>
-                $"{(side.Side == PlayerSide.White ? "White" : "Black")}: {side.GamesAnalyzed} games, {side.HighlightedMistakes} mistakes"));
-            wrap.Children.Add(CreateMetricTile("By side", sides, 440));
-        }
-
-        card.Child = wrap;
-        return card;
     }
 
     private Control CreateCoachDecisionCard(PlayerProfileReport report)
@@ -527,631 +456,6 @@ public partial class ProfilesWindow : Window
         return card;
     }
 
-    private static string BuildCoachOverviewReason(PlayerProfileReport report, string trend)
-    {
-        string summary = BuildSnapshotSummary(report);
-        if (report.CostliestMistakeLabels.Count > 0)
-        {
-            ProfileCostlyLabelStat costly = report.CostliestMistakeLabels[0];
-            return $"{trend}. {summary} The most expensive pattern is {FormatMistakeLabel(costly.Label).ToLowerInvariant()}, costing {costly.TotalCentipawnLoss} total CPL.";
-        }
-
-        if (report.MistakesByPhase.Count > 0)
-        {
-            ProfilePhaseStat phase = report.MistakesByPhase[0];
-            return $"{trend}. {summary} The issue shows up most in the {FormatPhase(phase.Phase).ToLowerInvariant()}, with {phase.Count} highlighted mistakes.";
-        }
-
-        return $"{trend}. {summary}";
-    }
-
-    private IEnumerable<Control> BuildPriorityRows(PlayerProfileReport report)
-    {
-        yield return CreateBodyText("Fix first", "#9EB5C5");
-        foreach (string item in BuildFixFirstItems(report))
-        {
-            yield return CreateBulletText(item);
-        }
-
-        if (report.TrainingPlan.Topics.Count == 0)
-        {
-            yield return CreateBodyText("No focused work items yet.", "#D7E2EA");
-            yield break;
-        }
-
-        yield return CreateBodyText("Training priorities", "#9EB5C5");
-        foreach (TrainingPlanTopic topic in report.TrainingPlan.Topics.OrderBy(topic => topic.Priority).Take(3))
-        {
-            yield return CreateInsightCard(
-                $"{BuildRoleLabel(topic.Category)}: {topic.Title}",
-                topic.Summary,
-                topic.WhyThisTopicNow);
-        }
-    }
-
-    private IEnumerable<Control> BuildCompactWeeklyPlanRows(PlayerProfileReport report, TrainingPlanFormattedOutput? formattedPlan = null)
-    {
-        if (formattedPlan is not null)
-        {
-            yield return CreateInsightCard("Weekly plan", "Personalized plan", formattedPlan.ShortWeeklyPlan);
-        }
-        else
-        {
-            yield return CreateInsightCard("Weekly plan", "Personalized plan", TrainerPreparingSuggestionsText);
-        }
-
-        if (report.WeeklyPlan.Days.Count == 0)
-        {
-            yield return CreateBodyText("No weekly schedule available yet.", "#D7E2EA");
-            yield break;
-        }
-
-        yield return CreateBodyText(report.WeeklyPlan.Budget.Summary, "#9EB5C5");
-        foreach (WeeklyTrainingDay day in report.WeeklyPlan.Days.Take(7))
-        {
-            Border dayCard = new()
-            {
-                Background = Brush.Parse("#182B37"),
-                CornerRadius = new CornerRadius(12),
-                Padding = new Thickness(12),
-                Margin = new Thickness(0, 0, 0, 8)
-            };
-
-            StackPanel dayPanel = new() { Spacing = 5 };
-            dayPanel.Children.Add(new TextBlock
-            {
-                Text = $"Day {day.DayNumber}: {day.Topic}",
-                FontSize = 16,
-                FontWeight = FontWeight.SemiBold,
-                Foreground = Brushes.White,
-                TextWrapping = TextWrapping.Wrap
-            });
-            dayPanel.Children.Add(CreateBodyText($"{day.WorkType} | {day.EstimatedMinutes} min | {day.Goal}", "#D7E2EA"));
-            if (day.LaunchTrainingMode.HasValue && day.RelatedOpenings is { Count: > 0 })
-            {
-                dayPanel.Children.Add(CreateSectionButton(
-                    "Practice this opening",
-                    async () => await OpenOpeningTrainerAsync(day.RelatedOpenings[0])));
-            }
-
-            dayCard.Child = dayPanel;
-            yield return dayCard;
-        }
-    }
-
-    private static string? FindFirstTrainingOpening(PlayerProfileReport report)
-    {
-        WeeklyTrainingDay? trainingDay = report.WeeklyPlan.Days.FirstOrDefault(day =>
-            day.LaunchTrainingMode.HasValue && day.RelatedOpenings is { Count: > 0 });
-        string? relatedOpening = trainingDay?.RelatedOpenings?.FirstOrDefault();
-        if (!string.IsNullOrWhiteSpace(relatedOpening))
-        {
-            return relatedOpening;
-        }
-
-        return report.MistakesByOpening.Count > 0 ? report.MistakesByOpening[0].Eco : null;
-    }
-
-    private IEnumerable<Control> BuildEvidenceSnapshotRows(PlayerProfileReport report, OpeningWeaknessReport? openingReport)
-    {
-        yield return CreateBodyText(report.ProgressSignal.Summary, "#D7E2EA");
-
-        if (report.MistakesByPhase.Count > 0)
-        {
-            ProfilePhaseStat phase = report.MistakesByPhase[0];
-            yield return CreateBulletText($"Weakest phase: {FormatPhase(phase.Phase)} ({phase.Count} highlighted mistakes)");
-        }
-
-        if (openingReport is not null && openingReport.WeakOpenings.Count > 0)
-        {
-            OpeningWeaknessEntry opening = openingReport.WeakOpenings[0];
-            yield return CreateBulletText($"Main opening signal: {opening.OpeningDisplayName} ({opening.Eco})");
-        }
-
-        if (report.CostliestMistakeLabels.Count > 0)
-        {
-            ProfileCostlyLabelStat costly = report.CostliestMistakeLabels[0];
-            yield return CreateBulletText($"Costliest pattern: {FormatMistakeLabel(costly.Label)} | total CPL {costly.TotalCentipawnLoss}");
-        }
-    }
-
-    private IEnumerable<Control> BuildMistakePatternRows(PlayerProfileReport report)
-    {
-        if (report.TopMistakeLabels.Count == 0 && report.CostliestMistakeLabels.Count == 0)
-        {
-            yield return CreateBodyText("No recurring or costly patterns yet.");
-            yield break;
-        }
-
-        yield return CreateBodyText("Recurring patterns", "#9EB5C5");
-        foreach (ProfileLabelStat item in report.TopMistakeLabels.Take(6))
-        {
-            yield return CreateBulletText($"{FormatMistakeLabel(item.Label)}: {FormatTimes(item.Count)}");
-        }
-
-        yield return CreateBodyText("Costliest patterns", "#9EB5C5");
-        foreach (ProfileCostlyLabelStat item in report.CostliestMistakeLabels.Take(6))
-        {
-            yield return CreateBulletText($"{FormatMistakeLabel(item.Label)}: total CPL {item.TotalCentipawnLoss}, avg {item.AverageCentipawnLoss?.ToString() ?? "n/a"}");
-        }
-    }
-
-    private IEnumerable<Control> BuildRatingAndFormRows(PlayerProfileReport report)
-    {
-        yield return CreateBodyText(report.RatingTrend.Summary, "#D7E2EA");
-        yield return CreateBodyText("Current estimate. It will get more reliable as more games are analyzed for this player.", "#9EB5C5");
-
-        if (report.RatingTrend.RatingPoints.Count == 0 && report.RatingTrend.StrengthPoints.Count == 0)
-        {
-            yield return CreateBodyText("No rating or strength trend data yet.");
-            yield break;
-        }
-
-        yield return CreateChartCard(
-            "Rating trend",
-            [
-                new ProfileTrendChartSeries(
-                    "Chess.com rating",
-                    Brush.Parse("#7DD3FC"),
-                    report.RatingTrend.RatingPoints.Select(point => new ProfileTrendChartPoint(FormatChartDate(point.GameDate), point.PlayerRating)).ToList()),
-                new ProfileTrendChartSeries(
-                    "MoveMentor estimated strength",
-                    Brush.Parse("#FACC15"),
-                    report.RatingTrend.StrengthPoints.Select(point => new ProfileTrendChartPoint(FormatChartDate(point.GameDate), point.EstimatedStrength)).ToList())
-            ]);
-
-        yield return CreateChartCard(
-            "Average CPL",
-            [
-                new ProfileTrendChartSeries(
-                    "Average CPL",
-                    Brush.Parse("#FB7185"),
-                    report.RatingTrend.AverageCentipawnLossTrend.Select(point => new ProfileTrendChartPoint(point.MonthKey, point.AverageCentipawnLoss)).ToList(),
-                    ProfileTrendChartKind.Bars)
-            ]);
-
-        yield return CreateChartCard(
-            "Move quality per game",
-            [
-                new ProfileTrendChartSeries(
-                    "Blunders",
-                    Brush.Parse("#F87171"),
-                    report.RatingTrend.MoveQualityTrend.Select(point => new ProfileTrendChartPoint(point.PeriodKey, point.BlundersPerGame)).ToList(),
-                    ProfileTrendChartKind.Bars),
-                new ProfileTrendChartSeries(
-                    "Mistakes",
-                    Brush.Parse("#FDBA74"),
-                    report.RatingTrend.MoveQualityTrend.Select(point => new ProfileTrendChartPoint(point.PeriodKey, point.MistakesPerGame)).ToList(),
-                    ProfileTrendChartKind.Bars),
-                new ProfileTrendChartSeries(
-                    "Brilliant/great/best",
-                    Brush.Parse("#86EFAC"),
-                    report.RatingTrend.MoveQualityTrend.Select(point => new ProfileTrendChartPoint(point.PeriodKey, point.BrilliantGreatBestPerGame)).ToList(),
-                    ProfileTrendChartKind.Bars)
-            ]);
-
-        if (report.RatingTrendsByTimeControl.Count > 0)
-        {
-            yield return CreateBodyText("By time control", "#9EB5C5");
-            foreach (PlayerRatingTrendReport trend in report.RatingTrendsByTimeControl)
-            {
-                yield return CreateBulletText(trend.Summary);
-            }
-        }
-    }
-
-    private static Control CreateChartCard(string title, IReadOnlyList<ProfileTrendChartSeries> series)
-    {
-        Border card = new()
-        {
-            Background = Brush.Parse("#182B37"),
-            CornerRadius = new CornerRadius(12),
-            Padding = new Thickness(12),
-            Margin = new Thickness(0, 0, 0, 8),
-            HorizontalAlignment = HorizontalAlignment.Stretch
-        };
-
-        StackPanel panel = new() { Spacing = 8 };
-        panel.Children.Add(CreateBodyText(title, "#FFFFFF"));
-        panel.Children.Add(new ProfileTrendChartView
-        {
-            Height = 190,
-            Series = series
-        });
-        card.Child = panel;
-        return card;
-    }
-
-    private IEnumerable<Control> BuildTopLabelRows(PlayerProfileReport report)
-    {
-        if (report.TopMistakeLabels.Count == 0)
-        {
-            yield return CreateBodyText("No recurring labels yet.");
-            yield break;
-        }
-
-        foreach (ProfileLabelStat item in report.TopMistakeLabels.Take(8))
-        {
-            yield return CreateBulletText($"{FormatMistakeLabel(item.Label)}: {FormatTimes(item.Count)}");
-        }
-    }
-
-    private IEnumerable<Control> BuildFixFirstRows(PlayerProfileReport report)
-    {
-        IReadOnlyList<string> items = BuildFixFirstItems(report);
-        foreach (string item in items)
-        {
-            yield return CreateBulletText(item);
-        }
-    }
-
-    private IEnumerable<Control> BuildWorkOnRows(PlayerProfileReport report)
-    {
-        if (report.TrainingPlan.Topics.Count == 0)
-        {
-            yield return CreateBodyText("No focused work items yet.");
-            yield break;
-        }
-
-        foreach (TrainingPlanTopic topic in report.TrainingPlan.Topics.Take(3))
-        {
-            Border innerCard = new()
-            {
-                Background = Brush.Parse("#182B37"),
-                CornerRadius = new CornerRadius(12),
-                Padding = new Thickness(12),
-                Margin = new Thickness(0, 0, 0, 8)
-            };
-
-            StackPanel panel = new() { Spacing = 6 };
-            panel.Children.Add(new TextBlock
-            {
-                Text = $"{BuildRoleLabel(topic.Category)}: {topic.Title}",
-                FontSize = 17,
-                FontWeight = FontWeight.SemiBold,
-                Foreground = Brushes.White,
-                TextWrapping = TextWrapping.Wrap
-            });
-            panel.Children.Add(CreateBodyText(topic.Summary, "#D7E2EA"));
-            panel.Children.Add(CreateBodyText(topic.WhyThisTopicNow, "#D7E2EA"));
-
-            if (topic.Blocks.Count > 0)
-            {
-                string blocks = string.Join(", ", topic.Blocks.Select(block =>
-                    $"{FormatTrainingBlockPurpose(block.Purpose).ToLowerInvariant()} {FormatTrainingBlockKind(block.Kind).ToLowerInvariant()}"));
-                panel.Children.Add(CreateBodyText($"Training blocks: {blocks}.", "#9EB5C5"));
-            }
-
-            foreach (ProfileMistakeExample example in topic.Examples.Take(2))
-            {
-                panel.Children.Add(CreateExampleCard(example, compact: true));
-            }
-
-            innerCard.Child = panel;
-            yield return innerCard;
-        }
-    }
-
-    private IEnumerable<Control> BuildCostliestRows(PlayerProfileReport report)
-    {
-        if (report.CostliestMistakeLabels.Count == 0)
-        {
-            yield return CreateBodyText("No costly patterns yet.");
-            yield break;
-        }
-
-        foreach (ProfileCostlyLabelStat item in report.CostliestMistakeLabels.Take(8))
-        {
-            yield return CreateBulletText($"{FormatMistakeLabel(item.Label)}: total CPL {item.TotalCentipawnLoss}, avg {item.AverageCentipawnLoss?.ToString() ?? "n/a"}");
-        }
-    }
-
-    private IEnumerable<Control> BuildRecentTrendRows(PlayerProfileReport report)
-    {
-        yield return CreateBodyText(FormatTrendHeadline(report.ProgressSignal.Direction));
-        yield return CreateBodyText(report.ProgressSignal.Summary, "#D7E2EA");
-
-        if (report.ProgressSignal.Recent is not null)
-        {
-            yield return CreateBulletText($"Recent period: {FormatPeriod(report.ProgressSignal.Recent)}");
-        }
-
-        if (report.ProgressSignal.Previous is not null)
-        {
-            yield return CreateBulletText($"Earlier period: {FormatPeriod(report.ProgressSignal.Previous)}");
-        }
-
-        foreach (ProfileMonthlyTrend month in report.MonthlyTrend.Take(6))
-        {
-            yield return CreateBulletText($"{month.MonthKey}: {month.GamesAnalyzed} games, mistakes {month.HighlightedMistakes}, CPL {month.AverageCentipawnLoss?.ToString() ?? "n/a"}");
-        }
-    }
-
-    private IEnumerable<Control> BuildDeepDiveRows(PlayerProfileReport report)
-    {
-        if (report.TopMistakeLabels.Count == 0
-            && report.CostliestMistakeLabels.Count == 0
-            && report.MistakesByPhase.Count == 0
-            && report.MistakesByOpening.Count == 0
-            && report.GamesBySide.Count == 0
-            && report.LabelTrends.Count == 0
-            && report.MonthlyTrend.Count == 0
-            && report.QuarterlyTrend.Count == 0)
-        {
-            yield return CreateBodyText("More detail becomes available once recurring patterns accumulate.");
-            yield break;
-        }
-
-        yield return CreateBodyText("Detailed diagnosis behind the training plan.", "#D7E2EA");
-        yield return CreateBodyText("Recurring patterns", "#9EB5C5");
-        foreach (ProfileLabelStat item in report.TopMistakeLabels.Take(5))
-        {
-            yield return CreateBulletText($"{FormatMistakeLabel(item.Label)}: {FormatTimes(item.Count)} in highlighted mistakes");
-        }
-
-        yield return CreateBodyText("Costliest mistakes", "#9EB5C5");
-        foreach (ProfileCostlyLabelStat item in report.CostliestMistakeLabels.Take(5))
-        {
-            yield return CreateBulletText($"{FormatMistakeLabel(item.Label)}: total CPL {item.TotalCentipawnLoss}, avg {item.AverageCentipawnLoss?.ToString() ?? "n/a"}");
-        }
-
-        if (report.MistakesByPhase.Count > 0)
-        {
-            yield return CreateBodyText("By phase", "#9EB5C5");
-            foreach (ProfilePhaseStat item in report.MistakesByPhase.Take(5))
-            {
-                yield return CreateBulletText($"{FormatPhase(item.Phase)}: {item.Count} highlighted mistakes");
-            }
-        }
-
-        if (report.MistakesByOpening.Count > 0)
-        {
-            yield return CreateBodyText("By opening", "#9EB5C5");
-            foreach (ProfileOpeningStat item in report.MistakesByOpening.Take(6))
-            {
-                yield return CreateBulletText($"{FormatOpening(item.Eco)}: {item.Count} highlighted mistakes");
-            }
-        }
-
-        if (report.GamesBySide.Count > 0)
-        {
-            yield return CreateBodyText("By side", "#9EB5C5");
-            foreach (ProfileSideStat item in report.GamesBySide)
-            {
-                string side = item.Side == PlayerSide.White ? "White" : "Black";
-                yield return CreateBulletText($"{side}: {item.GamesAnalyzed} games, {item.HighlightedMistakes} highlighted mistakes");
-            }
-        }
-
-        if (report.LabelTrends.Count > 0)
-        {
-            yield return CreateBodyText("Pattern trends", "#9EB5C5");
-            foreach (ProfileLabelTrend trend in report.LabelTrends.Take(6))
-            {
-                yield return CreateBulletText(
-                    $"{FormatMistakeLabel(trend.Label)}: {trend.Direction}, recent {trend.RecentCount}, previous {trend.PreviousCount}, recent CPL {trend.RecentAverageCentipawnLoss?.ToString() ?? "n/a"}");
-            }
-        }
-
-        if (report.MonthlyTrend.Count > 0)
-        {
-            yield return CreateBodyText("Monthly trend", "#9EB5C5");
-            foreach (ProfileMonthlyTrend item in report.MonthlyTrend.Take(6))
-            {
-                yield return CreateBulletText($"{item.MonthKey}: {item.GamesAnalyzed} games, mistakes {item.HighlightedMistakes}, CPL {item.AverageCentipawnLoss?.ToString() ?? "n/a"}");
-            }
-        }
-
-        if (report.QuarterlyTrend.Count > 0)
-        {
-            yield return CreateBodyText("Quarterly trend", "#9EB5C5");
-            foreach (ProfileQuarterlyTrend item in report.QuarterlyTrend.Take(4))
-            {
-                yield return CreateBulletText($"{item.QuarterKey}: {item.GamesAnalyzed} games, mistakes {item.HighlightedMistakes}, CPL {item.AverageCentipawnLoss?.ToString() ?? "n/a"}");
-            }
-        }
-
-        IReadOnlyList<ProfileMistakeExample> rankedExamples = BuildDeepDiveExamples(report);
-        if (rankedExamples.Count > 0)
-        {
-            yield return CreateBodyText($"Showing {rankedExamples.Count} ranked example positions from dominant motifs.", "#D7E2EA");
-
-            foreach (IGrouping<string, ProfileMistakeExample> group in rankedExamples
-                .GroupBy(example => example.Label, StringComparer.OrdinalIgnoreCase))
-            {
-                yield return CreateBodyText(FormatMistakeLabel(group.Key), "#9EB5C5");
-                foreach (ProfileMistakeExample example in group)
-                {
-                    yield return CreateExampleCard(example);
-                }
-            }
-        }
-    }
-
-    private IEnumerable<Control> BuildWeeklyPlanRows(PlayerProfileReport report, TrainingPlanFormattedOutput? formattedPlan = null)
-    {
-        if (formattedPlan is null)
-        {
-            LlamaGpuSettings settings = LlamaGpuSettingsStore.Load();
-            formattedPlan = trainingPlanFormatter.Format(
-                report.TrainingPlan,
-                ToProfileAudienceLevel(settings.DefaultExplanationLevel),
-                settings.NarrationStyle);
-        }
-
-        yield return CreateInsightCard("Short weekly plan", "Personalized plan", formattedPlan.ShortWeeklyPlan);
-        yield return CreateInsightCard("Detailed weekly plan", "Expanded version", formattedPlan.DetailedWeeklyPlan);
-        yield return CreateInsightCard("Why these priorities", "Priority rationale", formattedPlan.PriorityRationale);
-        yield return CreateInsightCard("Tone adapted plan", "Training voice", formattedPlan.ToneAdaptedVersion);
-
-        yield return CreateInsightCard("Diagnosis to plan", report.TrainingPlan.Topics.Count == 0
-            ? "Training plan"
-            : $"Training plan built from {string.Join(", ", report.TrainingPlan.Topics.Select(topic => topic.Title))}.", report.TrainingPlan.Summary);
-
-        yield return CreateInsightCard("Weekly budget", "Time budget", report.WeeklyPlan.Budget.Summary);
-
-        yield return CreateBodyText("Priority order", "#9EB5C5");
-        foreach (TrainingPlanTopic topic in report.TrainingPlan.Topics.OrderBy(topic => topic.Priority))
-        {
-            foreach (TrainingBlock block in topic.Blocks
-                .OrderBy(block => GetBlockPurposeOrder(block.Purpose))
-                .ThenBy(block => block.EstimatedMinutes))
-            {
-                Border planCard = new()
-                {
-                    Background = Brush.Parse("#182B37"),
-                    CornerRadius = new CornerRadius(12),
-                    Padding = new Thickness(12),
-                    Margin = new Thickness(0, 0, 0, 8)
-                };
-
-                StackPanel planPanel = new() { Spacing = 6 };
-                planPanel.Children.Add(new TextBlock
-                {
-                    Text = $"Priority {topic.Priority} • {topic.Title}",
-                    FontSize = 16,
-                    FontWeight = FontWeight.SemiBold,
-                    Foreground = Brushes.White,
-                    TextWrapping = TextWrapping.Wrap
-                });
-                planPanel.Children.Add(CreateBodyText(block.Title, "#FFFFFF"));
-                planPanel.Children.Add(CreateBodyText(
-                    $"Block type: {FormatTrainingBlockKind(block.Kind)} | category: {FormatTrainingBlockPurpose(block.Purpose).ToLowerInvariant()} | estimated time: {block.EstimatedMinutes} min",
-                    "#D7E2EA"));
-
-                string topicContext = BuildTopicContext(topic);
-                if (!string.IsNullOrWhiteSpace(topicContext))
-                {
-                    planPanel.Children.Add(CreateBodyText(topicContext, "#9EB5C5"));
-                }
-
-                planPanel.Children.Add(CreateBodyText("Why this topic now", "#9EB5C5"));
-                planPanel.Children.Add(CreateBodyText(topic.WhyThisTopicNow, "#D7E2EA"));
-
-                planCard.Child = planPanel;
-                yield return planCard;
-            }
-        }
-
-        yield return CreateBodyText("Topic breakdown", "#9EB5C5");
-        foreach (TrainingPlanTopic topic in report.TrainingPlan.Topics.OrderBy(topic => topic.Priority))
-        {
-            Border topicCard = new()
-            {
-                Background = Brush.Parse("#182B37"),
-                CornerRadius = new CornerRadius(12),
-                Padding = new Thickness(12),
-                Margin = new Thickness(0, 0, 0, 8)
-            };
-
-            StackPanel panel = new() { Spacing = 6 };
-            panel.Children.Add(new TextBlock
-            {
-                Text = $"{BuildRoleLabel(topic.Category)}: {topic.Title}",
-                FontSize = 17,
-                FontWeight = FontWeight.SemiBold,
-                Foreground = Brushes.White,
-                TextWrapping = TextWrapping.Wrap
-            });
-            panel.Children.Add(CreateBodyText(topic.FocusArea, "#9EB5C5"));
-            panel.Children.Add(CreateBodyText(topic.Summary, "#D7E2EA"));
-            panel.Children.Add(CreateBodyText(topic.WhyThisTopicNow, "#D7E2EA"));
-
-            if (!string.IsNullOrWhiteSpace(topic.Rationale))
-            {
-                panel.Children.Add(CreateBodyText(topic.Rationale, "#9EB5C5"));
-            }
-
-            string context = BuildTopicContext(topic);
-            if (!string.IsNullOrWhiteSpace(context))
-            {
-                panel.Children.Add(CreateBodyText(context, "#9EB5C5"));
-            }
-
-            foreach (TrainingBlock block in topic.Blocks)
-            {
-                panel.Children.Add(CreateBulletText(
-                    $"{FormatTrainingBlockKind(block.Kind)} | {FormatTrainingBlockPurpose(block.Purpose)} | {block.EstimatedMinutes} min | {block.Title}"));
-            }
-
-            topicCard.Child = panel;
-            yield return topicCard;
-        }
-
-        yield return CreateBodyText("Weekly schedule", "#9EB5C5");
-        foreach (WeeklyTrainingDay day in report.WeeklyPlan.Days)
-        {
-            Border dayCard = new()
-            {
-                Background = Brush.Parse("#182B37"),
-                CornerRadius = new CornerRadius(12),
-                Padding = new Thickness(12),
-                Margin = new Thickness(0, 0, 0, 8)
-            };
-
-            StackPanel dayPanel = new() { Spacing = 6 };
-            dayPanel.Children.Add(new TextBlock
-            {
-                Text = $"Day {day.DayNumber}: {day.Topic}",
-                FontSize = 16,
-                FontWeight = FontWeight.SemiBold,
-                Foreground = Brushes.White,
-                TextWrapping = TextWrapping.Wrap
-            });
-            dayPanel.Children.Add(CreateBodyText($"{day.WorkType} | {day.EstimatedMinutes} min", "#D7E2EA"));
-            dayPanel.Children.Add(CreateBodyText(day.Goal, "#D7E2EA"));
-            if (day.LaunchTrainingMode.HasValue && day.RelatedOpenings is { Count: > 0 })
-            {
-                dayPanel.Children.Add(CreateSectionButton(
-                    "Practice this opening",
-                    async () => await OpenOpeningTrainerAsync(day.RelatedOpenings[0])));
-            }
-
-            dayCard.Child = dayPanel;
-            yield return dayCard;
-        }
-    }
-
-    private IEnumerable<Control> BuildExampleRows(PlayerProfileReport report)
-    {
-        if (report.MistakeExamples.Count == 0)
-        {
-            yield return CreateBodyText("No example positions available yet.");
-            yield break;
-        }
-
-        foreach (IGrouping<string, ProfileMistakeExample> group in report.MistakeExamples
-            .Take(9)
-            .GroupBy(example => example.Label, StringComparer.OrdinalIgnoreCase)
-            .OrderBy(group => group.Key, StringComparer.OrdinalIgnoreCase))
-        {
-            yield return CreateBodyText(FormatMistakeLabel(group.Key), "#9EB5C5");
-            foreach (ProfileMistakeExample example in group)
-            {
-                yield return CreateExampleCard(example);
-            }
-        }
-    }
-
-    private IEnumerable<Control> BuildOpeningWeaknessRows(OpeningWeaknessReport? report)
-    {
-        if (report is null || report.WeakOpenings.Count == 0)
-        {
-            yield return CreateBodyText("No recurring opening weaknesses available yet.");
-            yield break;
-        }
-
-        yield return CreateInsightCard(
-            "Opening signal",
-            $"Across {report.OpeningGamesAnalyzed} opening samples, the sharpest problems cluster in {report.WeakOpenings.Count} recurring openings.",
-            $"Average opening CPL: {report.AverageOpeningCentipawnLoss?.ToString() ?? "n/a"}. Use the example game and position shortcuts to jump straight into the board view.");
-
-        foreach (OpeningWeaknessEntry opening in report.WeakOpenings.Take(5))
-        {
-            yield return CreateOpeningWeaknessCard(opening, report.OpeningGamesAnalyzed);
-        }
-    }
-
     private Control CreateSectionCard(string title, IEnumerable<Control> children)
     {
         Border card = CreateCardBorder();
@@ -1177,10 +481,31 @@ public partial class ProfilesWindow : Window
 
     private Control CreateCollapsibleSection(string title, IEnumerable<Control> children, bool isExpanded = false)
     {
-        return CreateCollapsibleSection(title, BuildRowsPanel(children), isExpanded);
+        StackPanel? panel = isExpanded ? BuildRowsPanel(children) : null;
+        Expander expander = CreateCollapsibleSectionShell(title, panel, isExpanded);
+        bool contentBuilt = panel is not null;
+
+        expander.PropertyChanged += (_, change) =>
+        {
+            if (change.Property != Expander.IsExpandedProperty || !expander.IsExpanded || contentBuilt)
+            {
+                return;
+            }
+
+            panel = BuildRowsPanel(children);
+            expander.Content = CreateCollapsibleSectionContent(panel);
+            contentBuilt = true;
+        };
+
+        return expander;
     }
 
     private Control CreateCollapsibleSection(string title, StackPanel panel, bool isExpanded = false)
+    {
+        return CreateCollapsibleSectionShell(title, panel, isExpanded);
+    }
+
+    private Expander CreateCollapsibleSectionShell(string title, StackPanel? panel, bool isExpanded)
     {
         Expander expander = new()
         {
@@ -1189,12 +514,7 @@ public partial class ProfilesWindow : Window
             Background = Brush.Parse("#203542"),
             HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Stretch,
-            Content = new Border
-            {
-                Padding = new Thickness(16, 4, 16, 16),
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                Child = panel
-            },
+            Content = panel is null ? null : CreateCollapsibleSectionContent(panel),
             Header = new Border
             {
                 HorizontalAlignment = HorizontalAlignment.Stretch,
@@ -1214,7 +534,7 @@ public partial class ProfilesWindow : Window
         {
             if (change.Property == Expander.IsExpandedProperty && expander.IsExpanded)
             {
-                TrackProfileTelemetry("profile_section_expanded", new Dictionary<string, string>
+                profileSessionTracker.Track("profile_section_expanded", new Dictionary<string, string>
                 {
                     ["section"] = title,
                     ["view_mode"] = currentViewMode.ToString()
@@ -1223,6 +543,16 @@ public partial class ProfilesWindow : Window
         };
 
         return expander;
+    }
+
+    private static Border CreateCollapsibleSectionContent(StackPanel panel)
+    {
+        return new Border
+        {
+            Padding = new Thickness(16, 4, 16, 16),
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Child = panel
+        };
     }
 
     private StackPanel BuildRowsPanel(IEnumerable<Control> children)
@@ -1271,8 +601,7 @@ public partial class ProfilesWindow : Window
         };
         button.Click += async (_, _) =>
         {
-            profileActionClicked = true;
-            TrackProfileActionClicked(title);
+            profileSessionTracker.TrackActionClicked(title);
 
             button.IsEnabled = false;
             try
@@ -1288,38 +617,6 @@ public partial class ProfilesWindow : Window
             }
         };
         return button;
-    }
-
-    private static Control CreateMetricTile(string label, string value, double? width = null)
-    {
-        Border tile = new()
-        {
-            Width = width ?? 220,
-            Background = Brush.Parse("#182B37"),
-            CornerRadius = new CornerRadius(12),
-            Padding = new Thickness(14),
-            Margin = new Thickness(0, 0, 0, 8)
-        };
-
-        StackPanel panel = new() { Spacing = 4 };
-        panel.Children.Add(new TextBlock
-        {
-            Text = label,
-            Foreground = Brush.Parse("#9EB5C5"),
-            FontSize = 13,
-            TextWrapping = TextWrapping.Wrap
-        });
-        panel.Children.Add(new TextBlock
-        {
-            Text = value,
-            Foreground = Brushes.White,
-            FontSize = 22,
-            FontWeight = FontWeight.Bold,
-            TextWrapping = TextWrapping.Wrap
-        });
-
-        tile.Child = panel;
-        return tile;
     }
 
     private static TextBlock CreateBodyText(string text, string? color = null)
@@ -1344,11 +641,6 @@ public partial class ProfilesWindow : Window
         };
     }
 
-    private static string FormatPeriod(ProfileProgressPeriod period)
-    {
-        return $"{period.GamesAnalyzed} games, CPL {period.AverageCentipawnLoss?.ToString() ?? "n/a"}, highlighted mistakes/game {period.HighlightedMistakesPerGame:F2}";
-    }
-
     private Control CreateExampleCard(ProfileMistakeExample example, bool compact = false)
     {
         Border card = new()
@@ -1364,21 +656,7 @@ public partial class ProfilesWindow : Window
             ColumnDefinitions = new ColumnDefinitions(compact ? "120,*" : "160,*")
         };
 
-        Border boardHost = new()
-        {
-            Width = compact ? 120 : 160,
-            Height = compact ? 120 : 160,
-            CornerRadius = new CornerRadius(10),
-            ClipToBounds = true
-        };
-        boardHost.Child = new ChessBoardView
-        {
-            Width = compact ? 120 : 160,
-            Height = compact ? 120 : 160,
-            Fen = example.FenBefore,
-            IsHitTestVisible = false
-        };
-        grid.Children.Add(boardHost);
+        grid.Children.Add(CreateLazyBoardPreview(example.FenBefore, compact ? 120 : 160, []));
 
         StackPanel panel = new()
         {
@@ -1414,8 +692,7 @@ public partial class ProfilesWindow : Window
                 return;
             }
 
-            profileActionClicked = true;
-            TrackProfileActionClicked("Go to Analysis");
+            profileSessionTracker.TrackActionClicked("Go to Analysis");
             button.IsEnabled = false;
             try
             {
@@ -1437,100 +714,13 @@ public partial class ProfilesWindow : Window
         return card;
     }
 
-    private Control CreateOpeningWeaknessCard(OpeningWeaknessEntry opening, int openingGamesAnalyzed)
+    private async Task PracticeOpeningFromProfileAsync(string eco)
     {
-        Border card = new()
+        profileSessionTracker.TrackActionClicked("Practice this opening", new Dictionary<string, string>
         {
-            Background = Brush.Parse("#182B37"),
-            CornerRadius = new CornerRadius(14),
-            Padding = new Thickness(14),
-            Margin = new Thickness(0, 0, 0, 10)
-        };
-
-        StackPanel panel = new() { Spacing = 8 };
-        panel.Children.Add(new TextBlock
-        {
-            Text = opening.OpeningDisplayName,
-            FontSize = 18,
-            FontWeight = FontWeight.SemiBold,
-            Foreground = Brushes.White,
-            TextWrapping = TextWrapping.Wrap
+            ["opening"] = eco
         });
-        panel.Children.Add(CreateBodyText(
-            $"{opening.Eco} | {FormatOpeningFrequency(opening.Count, openingGamesAnalyzed)} | Avg opening CPL {opening.AverageOpeningCentipawnLoss?.ToString() ?? "n/a"}",
-            "#D7E2EA"));
-        panel.Children.Add(CreateBodyText(
-            $"{FormatOpeningWeaknessCategory(opening.Category)} | {FormatTrendHeadline(opening.TrendDirection)}",
-            "#9EB5C5"));
-        panel.Children.Add(CreateBodyText(opening.CategoryReason, "#9EB5C5"));
-        panel.Children.Add(CreateBodyText(
-            $"First recurring mistake: {FormatMistakeLabel(opening.FirstRecurringMistakeType ?? "unclassified")} ({opening.FirstRecurringMistakeCount} examples).",
-            "#D7E2EA"));
-
-        if (opening.RecurringMistakeSequences.Count > 0)
-        {
-            string sequenceSummary = string.Join(
-                " | ",
-                opening.RecurringMistakeSequences.Select(item =>
-                    $"{string.Join(" -> ", item.Labels.Select(FormatMistakeLabel))} ({item.Count})"));
-            panel.Children.Add(CreateBodyText($"Recurring sequence: {sequenceSummary}", "#9EB5C5"));
-        }
-
-        if (opening.ExampleGames.Count > 0)
-        {
-            panel.Children.Add(CreateBodyText("Example games", "#9EB5C5"));
-            foreach (OpeningExampleGame example in opening.ExampleGames.Take(3))
-            {
-                panel.Children.Add(CreateOpeningExampleCard(example));
-            }
-        }
-
-        if (opening.ExampleBetterMoves.Count > 0)
-        {
-            panel.Children.Add(CreateBodyText("Example positions", "#9EB5C5"));
-            foreach (OpeningMoveRecommendation recommendation in opening.ExampleBetterMoves.Take(3))
-            {
-                panel.Children.Add(CreateOpeningPositionCard(recommendation));
-            }
-        }
-
-        WrapPanel actions = new()
-        {
-            Orientation = Orientation.Horizontal,
-            Margin = new Thickness(0, 4, 0, 0)
-        };
-        Button trainingButton = new()
-        {
-            Content = "Practice this opening",
-            IsEnabled = !string.IsNullOrWhiteSpace(currentProfilePlayerKey),
-            Margin = new Thickness(0, 0, 8, 0),
-            MinWidth = 220
-        };
-        trainingButton.Click += async (_, _) =>
-        {
-            profileActionClicked = true;
-            TrackProfileActionClicked("Practice this opening", new Dictionary<string, string>
-            {
-                ["opening"] = opening.Eco
-            });
-            trainingButton.IsEnabled = false;
-            try
-            {
-                await OpenOpeningTrainerAsync(opening.Eco);
-            }
-            finally
-            {
-                if (!IsClosed())
-                {
-                    trainingButton.IsEnabled = !string.IsNullOrWhiteSpace(currentProfilePlayerKey);
-                }
-            }
-        };
-        actions.Children.Add(trainingButton);
-        panel.Children.Add(actions);
-
-        card.Child = panel;
-        return card;
+        await OpenOpeningTrainerAsync(eco);
     }
 
     private async Task OpenOpeningTrainerAsync(string? openingFilter)
@@ -1615,8 +805,7 @@ public partial class ProfilesWindow : Window
                 return;
             }
 
-            profileActionClicked = true;
-            TrackProfileActionClicked("Open game");
+            profileSessionTracker.TrackActionClicked("Open game");
             button.IsEnabled = false;
             try
             {
@@ -1701,8 +890,7 @@ public partial class ProfilesWindow : Window
                 return;
             }
 
-            profileActionClicked = true;
-            TrackProfileActionClicked("Open position", new Dictionary<string, string>
+            profileSessionTracker.TrackActionClicked("Open position", new Dictionary<string, string>
             {
                 ["opening"] = recommendation.Eco
             });
@@ -1762,6 +950,14 @@ public partial class ProfilesWindow : Window
         double size,
         IReadOnlyList<BoardArrowViewModel> arrows,
         Func<Task>? onClick = null)
+        => CreateLazyBoardPreview(fen, size, arrows, onClick, "Show board");
+
+    private static Control CreateLazyBoardPreview(
+        string fen,
+        double size,
+        IReadOnlyList<BoardArrowViewModel> arrows,
+        Func<Task>? onClick = null,
+        string buttonText = "Show board")
     {
         Border boardHost = new()
         {
@@ -1771,14 +967,40 @@ public partial class ProfilesWindow : Window
             ClipToBounds = true
         };
 
-        boardHost.Child = new ChessBoardView
+        Control placeholder = onClick is null
+            ? new Button
+            {
+                Content = buttonText,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                MinWidth = Math.Min(110, Math.Max(80, size - 24))
+            }
+            : new TextBlock
+            {
+                Text = buttonText,
+                Foreground = Brush.Parse("#D7E2EA"),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextWrapping = TextWrapping.Wrap
+            };
+        boardHost.Child = placeholder;
+
+        void RevealBoard()
         {
-            Width = size,
-            Height = size,
-            Fen = fen,
-            Arrows = arrows,
-            IsHitTestVisible = false
-        };
+            boardHost.Child = new ChessBoardView
+            {
+                Width = size,
+                Height = size,
+                Fen = fen,
+                Arrows = arrows,
+                IsHitTestVisible = false
+            };
+        }
+
+        if (placeholder is Button revealButton)
+        {
+            revealButton.Click += (_, _) => RevealBoard();
+        }
 
         if (onClick is null)
         {
@@ -1795,7 +1017,15 @@ public partial class ProfilesWindow : Window
             Cursor = new Cursor(StandardCursorType.Hand),
             Content = boardHost
         };
-        button.Click += async (_, _) => await onClick();
+        button.Click += async (_, _) =>
+        {
+            if (boardHost.Child is not ChessBoardView)
+            {
+                RevealBoard();
+            }
+
+            await onClick();
+        };
         return button;
     }
 
@@ -1961,75 +1191,6 @@ public partial class ProfilesWindow : Window
         return parenIndex > 0 ? moveText[..parenIndex].Trim() : moveText;
     }
 
-    private static IReadOnlyList<string> BuildFixFirstItems(PlayerProfileReport report)
-    {
-        List<string> items = [];
-
-        if (report.Recommendations.Count > 0)
-        {
-            TrainingRecommendation primary = report.Recommendations[0];
-            TryAddFixFirst(items, primary.Checklist, 0);
-            TryAddFixFirst(items, primary.Checklist, 1);
-        }
-
-        if (report.Recommendations.Count > 1)
-        {
-            TryAddFixFirst(items, report.Recommendations[1].Checklist, 0);
-        }
-
-        if (items.Count < 3 && report.MistakesByOpening.Count > 0)
-        {
-            string opening = FormatOpening(report.MistakesByOpening[0].Eco);
-            items.Add($"Review two recent positions from {opening} where this pattern showed up.");
-        }
-
-        if (items.Count < 3 && report.MistakesByPhase.Count > 0)
-        {
-            string phase = FormatPhase(report.MistakesByPhase[0].Phase).ToLowerInvariant();
-            items.Add($"Slow down in the {phase} and do a full safety check before moving.");
-        }
-
-        if (items.Count == 0)
-        {
-            items.Add("Pause at every big evaluation swing and ask what had to be checked first.");
-            items.Add("Review two recent mistakes from your own games before the next training session.");
-        }
-
-        return items.Take(3).ToList();
-    }
-
-    private static void TryAddFixFirst(List<string> items, IReadOnlyList<string> checklist, int index)
-    {
-        if (checklist.Count <= index)
-        {
-            return;
-        }
-
-        string action = TrimSentence(checklist[index]);
-        if (string.IsNullOrWhiteSpace(action))
-        {
-            return;
-        }
-
-        if (items.Any(existing => string.Equals(existing, action, StringComparison.OrdinalIgnoreCase)))
-        {
-            return;
-        }
-
-        items.Add(action + ".");
-    }
-
-    private static string BuildRoleLabel(TrainingPlanTopicCategory category)
-    {
-        return category switch
-        {
-            TrainingPlanTopicCategory.CoreWeakness => "Core weakness",
-            TrainingPlanTopicCategory.SecondaryWeakness => "Secondary weakness",
-            TrainingPlanTopicCategory.MaintenanceTopic => "Maintenance topic",
-            _ => "Training topic"
-        };
-    }
-
     private static Control CreateInsightCard(string label, string value, string? detail = null)
     {
         Border card = new()
@@ -2061,283 +1222,9 @@ public partial class ProfilesWindow : Window
         return card;
     }
 
-    private static string FormatMistakeLabel(string label)
-    {
-        return label switch
-        {
-            "hanging_piece" => "Loose pieces",
-            "missed_tactic" => "Missed tactics",
-            "opening_principles" => "Opening discipline",
-            "king_safety" => "King safety",
-            "endgame_technique" => "Endgame technique",
-            "material_loss" => "Material losses",
-            "piece_activity" => "Passive pieces",
-            _ => System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase((label ?? string.Empty).Replace('_', ' ').ToLowerInvariant())
-        };
-    }
-
-    private static string FormatTrendHeadline(ProfileProgressDirection direction)
-    {
-        return direction switch
-        {
-            ProfileProgressDirection.Improving => "Improving lately",
-            ProfileProgressDirection.Stable => "Mostly stable",
-            ProfileProgressDirection.Regressing => "Results slipped recently",
-            _ => "Need more games"
-        };
-    }
-
-    private static string FormatTimes(int count) => count == 1 ? "1 time" : $"{count} times";
-
-    private static string FormatChartDate(DateTime? date)
-    {
-        return date?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) ?? "Unknown";
-    }
-
-    private static string FormatOpening(string eco)
-    {
-        string description = OpeningCatalog.Describe(eco);
-        return string.IsNullOrWhiteSpace(description) ? "Mixed openings" : description;
-    }
-
-    private static string FormatPhase(GamePhase phase)
-    {
-        return phase switch
-        {
-            GamePhase.Opening => "Opening",
-            GamePhase.Middlegame => "Middlegame",
-            GamePhase.Endgame => "Endgame",
-            _ => phase.ToString()
-        };
-    }
-
-    private static string FormatOpeningFrequency(int count, int total)
-    {
-        if (total <= 0)
-        {
-            return $"{count} games";
-        }
-
-        double percentage = (double)count / total * 100.0;
-        return $"{count}/{total} games ({percentage:0.#}%)";
-    }
-
-    private static string FormatPlyLabel(PlayerSide side, int? ply, string? san)
-    {
-        if (!ply.HasValue)
-        {
-            return string.IsNullOrWhiteSpace(san) ? "Unknown move" : san!;
-        }
-
-        int moveNumber = (ply.Value + 1) / 2;
-        string prefix = ply.Value % 2 == 1 ? $"{moveNumber}." : $"{moveNumber}...";
-        return string.IsNullOrWhiteSpace(san) ? prefix : $"{prefix} {san}";
-    }
-
-    private static string TrimSentence(string text)
-    {
-        return string.IsNullOrWhiteSpace(text)
-            ? string.Empty
-            : text.Trim().TrimEnd('.', ';', ':', '!');
-    }
-
-    private static string FormatTrainingBlockKind(TrainingBlockKind kind)
-    {
-        return kind switch
-        {
-            TrainingBlockKind.Tactics => "Tactics",
-            TrainingBlockKind.OpeningReview => "Opening review",
-            TrainingBlockKind.EndgameDrill => "Endgame drill",
-            TrainingBlockKind.GameReview => "Game review",
-            TrainingBlockKind.SlowPlayFocus => "Slow play focus",
-            _ => kind.ToString()
-        };
-    }
-
-    private static string FormatTrainingBlockPurpose(TrainingBlockPurpose purpose)
-    {
-        return purpose switch
-        {
-            TrainingBlockPurpose.Repair => "Repair",
-            TrainingBlockPurpose.Maintain => "Maintain",
-            TrainingBlockPurpose.Checklist => "Checklist",
-            _ => purpose.ToString()
-        };
-    }
-
-    private static string FormatOpeningWeaknessCategory(OpeningWeaknessCategory category)
-    {
-        return category switch
-        {
-            OpeningWeaknessCategory.FixNow => "Opening to fix now",
-            OpeningWeaknessCategory.ReviewLater => "Opening to review later",
-            OpeningWeaknessCategory.Stable => "Opening stable",
-            _ => category.ToString()
-        };
-    }
-
-    private static int GetBlockPurposeOrder(TrainingBlockPurpose purpose)
-    {
-        return purpose switch
-        {
-            TrainingBlockPurpose.Repair => 0,
-            TrainingBlockPurpose.Maintain => 1,
-            TrainingBlockPurpose.Checklist => 2,
-            _ => 3
-        };
-    }
-
-    private static string BuildTopicContext(TrainingPlanTopic topic)
-    {
-        List<string> parts = [];
-
-        if (topic.EmphasisPhase.HasValue)
-        {
-            parts.Add(FormatPhase(topic.EmphasisPhase.Value));
-        }
-
-        if (topic.EmphasisSide.HasValue)
-        {
-            parts.Add(topic.EmphasisSide.Value == PlayerSide.White ? "Mostly as White" : "Mostly as Black");
-        }
-
-        if (topic.RelatedOpenings.Count > 0)
-        {
-            parts.Add(string.Join(" / ", topic.RelatedOpenings.Take(2).Select(FormatOpening)));
-        }
-
-        return parts.Count == 0 ? string.Empty : string.Join(" | ", parts);
-    }
-
-    private static IReadOnlyList<ProfileMistakeExample> BuildDeepDiveExamples(PlayerProfileReport report)
-    {
-        if (report.MistakeExamples.Count == 0)
-        {
-            return [];
-        }
-
-        List<ProfileMistakeExample> selected = [];
-        IEnumerable<string> dominantLabels = report.TopMistakeLabels
-            .Select(item => item.Label)
-            .Where(label => !string.IsNullOrWhiteSpace(label))
-            .Take(3);
-
-        foreach (string label in dominantLabels)
-        {
-            List<ProfileMistakeExample> examplesForLabel = report.MistakeExamples
-                .Where(example => string.Equals(example.Label, label, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(example => GetExampleRankOrder(example.Rank))
-                .ThenByDescending(example => example.CentipawnLoss ?? 0)
-                .Take(3)
-                .ToList();
-
-            selected.AddRange(examplesForLabel);
-        }
-
-        if (selected.Count == 0)
-        {
-            selected.AddRange(report.MistakeExamples
-                .OrderBy(example => GetExampleRankOrder(example.Rank))
-                .ThenByDescending(example => example.CentipawnLoss ?? 0)
-                .Take(6));
-        }
-
-        return selected
-            .GroupBy(example => $"{example.GameFingerprint}|{example.Ply}|{example.Rank}", StringComparer.Ordinal)
-            .Select(group => group.First())
-            .ToList();
-    }
-
-    private static int GetExampleRankOrder(ProfileMistakeExampleRank rank)
-    {
-        return rank switch
-        {
-            ProfileMistakeExampleRank.MostFrequent => 0,
-            ProfileMistakeExampleRank.MostCostly => 1,
-            ProfileMistakeExampleRank.MostRepresentative => 2,
-            _ => 3
-        };
-    }
-
-    private static string FormatExampleRank(ProfileMistakeExampleRank rank)
-    {
-        return rank switch
-        {
-            ProfileMistakeExampleRank.MostFrequent => "Most frequent",
-            ProfileMistakeExampleRank.MostCostly => "Most costly",
-            ProfileMistakeExampleRank.MostRepresentative => "Most representative",
-            _ => rank.ToString()
-        };
-    }
-
-    private static string BuildSnapshotSummary(PlayerProfileReport report)
-    {
-        string cpl = report.AverageCentipawnLoss?.ToString() ?? "n/a";
-        return $"Across {report.GamesAnalyzed} games, the player averages CPL {cpl} with {report.HighlightedMistakes} highlighted mistakes.";
-    }
-
-    private Dictionary<string, string> BuildProfileTelemetryProperties(
-        PlayerProfileReport report,
-        Dictionary<string, string>? properties = null)
-    {
-        Dictionary<string, string> result = properties is null
-            ? []
-            : new Dictionary<string, string>(properties, StringComparer.OrdinalIgnoreCase);
-
-        result["view_mode"] = currentViewMode.ToString();
-        result["games_analyzed"] = report.GamesAnalyzed.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        result["moves_analyzed"] = report.TotalAnalyzedMoves.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        result["highlighted_mistakes"] = report.HighlightedMistakes.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        result["main_issue"] = report.TopMistakeLabels.Count > 0 ? report.TopMistakeLabels[0].Label : "none";
-        result["trend"] = report.ProgressSignal.Direction.ToString();
-        return result;
-    }
-
-    private void TrackProfileTelemetry(string eventName, Dictionary<string, string>? properties = null)
-    {
-        Dictionary<string, string>? mergedProperties = currentReport is null
-            ? properties
-            : BuildProfileTelemetryProperties(currentReport, properties);
-        telemetryService.Track(eventName, currentProfilePlayerKey, properties: mergedProperties);
-    }
-
-    private void TrackProfileActionClicked(string action, Dictionary<string, string>? properties = null)
-    {
-        Dictionary<string, string> result = properties is null
-            ? []
-            : new Dictionary<string, string>(properties, StringComparer.OrdinalIgnoreCase);
-
-        result["action"] = action;
-        result["view_mode"] = currentViewMode.ToString();
-        result["seconds_since_open"] = profileOpenedUtc is null
-            ? "0"
-            : ((int)Math.Max(0, (DateTime.UtcNow - profileOpenedUtc.Value).TotalSeconds))
-                .ToString(System.Globalization.CultureInfo.InvariantCulture);
-
-        TrackProfileTelemetry("profile_training_action_clicked", result);
-    }
-
-    private void TrackProfileClosed(string reason)
-    {
-        if (profileClosedTracked || profileOpenedUtc is null)
-        {
-            return;
-        }
-
-        profileClosedTracked = true;
-        int secondsOpen = (int)Math.Max(0, (DateTime.UtcNow - profileOpenedUtc.Value).TotalSeconds);
-        TrackProfileTelemetry("profile_coach_closed", new Dictionary<string, string>
-        {
-            ["reason"] = reason,
-            ["action_clicked"] = profileActionClicked.ToString().ToLowerInvariant(),
-            ["seconds_open"] = secondsOpen.ToString(System.Globalization.CultureInfo.InvariantCulture),
-            ["max_scroll_depth"] = maxProfileScrollDepth.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
-        });
-    }
-
     protected override void OnClosed(EventArgs e)
     {
-        TrackProfileClosed("window_closed");
+        profileSessionTracker.TrackClosed("window_closed");
         base.OnClosed(e);
     }
 
@@ -2345,10 +1232,4 @@ public partial class ProfilesWindow : Window
     {
         return VisualRoot is null || !IsVisible;
     }
-}
-
-internal enum ProfileViewMode
-{
-    Coach,
-    Evidence
 }
