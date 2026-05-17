@@ -5,17 +5,27 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using MoveMentorChess.App.Composition;
 using MoveMentorChess.App.Controls;
 using MoveMentorChess.App.ViewModels;
 using MoveMentorChess.Persistence;
-using MoveMentorChess.Profiles;
 
 namespace MoveMentorChess.App.Views;
 
 public partial class MainWindow : Window
 {
+    private readonly IAnalysisWindowFactory analysisWindowFactory;
+    private readonly IProfilesWindowFactory profilesWindowFactory;
+
     public MainWindow()
+        : this(new AnalysisWindowFactory(), new ProfilesWindowFactory(AnalysisStoreProvider.GetStore))
     {
+    }
+
+    public MainWindow(IAnalysisWindowFactory analysisWindowFactory, IProfilesWindowFactory profilesWindowFactory)
+    {
+        this.analysisWindowFactory = analysisWindowFactory ?? throw new ArgumentNullException(nameof(analysisWindowFactory));
+        this.profilesWindowFactory = profilesWindowFactory ?? throw new ArgumentNullException(nameof(profilesWindowFactory));
         InitializeComponent();
         Opened += (_, _) =>
         {
@@ -168,17 +178,10 @@ public partial class MainWindow : Window
             return;
         }
 
-        IAnalysisStore? store = AnalysisStoreProvider.GetStore();
-        if (store is null)
-        {
-            return;
-        }
-
-        ProfilesWindow dialog = new(
-            new PlayerProfileService(store),
+        ProfilesWindow dialog = profilesWindowFactory.Create(new ProfilesWindowRequest(
             viewModel.NavigateToProfileExampleAsync,
             viewModel.NavigateToOpeningExampleAsync,
-            viewModel.NavigateToOpeningPositionAsync);
+            viewModel.NavigateToOpeningPositionAsync));
         await dialog.ShowDialog(this);
     }
 
@@ -189,12 +192,13 @@ public partial class MainWindow : Window
             return;
         }
 
-        AnalysisWindow? dialog = viewModel.CreateAnalysisWindow();
-        if (dialog is null)
+        AnalysisWindowRequest? request = viewModel.CreateAnalysisWindowRequest();
+        if (request is null)
         {
             return;
         }
 
+        AnalysisWindow dialog = analysisWindowFactory.Create(request);
         await dialog.ShowDialog(this);
         if (dialog.CurrentResult is not null)
         {
@@ -226,9 +230,10 @@ public partial class MainWindow : Window
 
         if (dialog.RequestedAction == SavedAnalysisAction.OpenAnalysis)
         {
-            AnalysisWindow? analysisWindow = viewModel.CreateAnalysisWindow();
-            if (analysisWindow is not null)
+            AnalysisWindowRequest? request = viewModel.CreateAnalysisWindowRequest();
+            if (request is not null)
             {
+                AnalysisWindow analysisWindow = analysisWindowFactory.Create(request);
                 await analysisWindow.ShowDialog(this);
                 if (analysisWindow.CurrentResult is not null)
                 {

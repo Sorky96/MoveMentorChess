@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
-using System.Text.RegularExpressions;
 using Avalonia.Media;
+using static MoveMentorChess.App.ViewModels.OpeningTrainerPresentationText;
 using MoveMentorChess.Persistence;
 using MoveMentorChess.Training;
 
@@ -15,6 +15,8 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     private const int TotalPages = 4;
 
     private readonly OpeningTrainerWorkspaceService workspaceService;
+    private readonly OpeningStudyFeedbackAnimator studyFeedbackAnimator = new();
+    private readonly OpeningTrainerTelemetryAdapter telemetryAdapter = new();
     private readonly HashSet<string> studyAvailableTargets = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<OpeningTrainingAttemptResult> currentSessionAttempts = [];
     private readonly HashSet<string> completedNextActionIds = new(StringComparer.OrdinalIgnoreCase);
@@ -69,7 +71,6 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     private IBrush studyFeedbackBrush = Brushes.Transparent;
     private IBrush studyFeedbackBorderBrush = Brushes.Transparent;
     private double studyFeedbackOpacity;
-    private long studyFeedbackVersion;
     private string resultHeadline = "Finish practice to see your review plan.";
     private string resultRecommendation = "Your next review suggestion will appear here.";
     private bool isStudyReferenceVisible;
@@ -722,17 +723,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     public string ResultsNeedsReviewLabel => "To Revisit";
 
-    public string ResultsBiggestWeaknessText => wrongAttempts > 0
-        ? ResultTone switch
-        {
-            TrainingResultTone.SingleRepair => "1 position is worth a calmer repeat.",
-            TrainingResultTone.SeveralRepairs => $"{wrongAttempts} positions are worth a calmer repeat.",
-            TrainingResultTone.HeavyRepair => $"{wrongAttempts} positions need a shorter repair pass.",
-            _ => FormatPositionCount(wrongAttempts, "is worth", "are worth") + " a calmer repeat."
-        }
-        : ResultTone == TrainingResultTone.Assisted
-            ? "Recall is close. Repeat once after a short break to make it automatic."
-            : "No urgent repair point from this run.";
+    public string ResultsBiggestWeaknessText => OpeningTrainerResultPresentation.BuildBiggestWeaknessText(ResultTone, wrongAttempts);
 
     public string ResultsNextBestActionText => SelectedNextAction?.Title ?? "Finish practice to unlock the next best action.";
 
@@ -740,61 +731,13 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     public bool HasAdvancedResultDetails => ResultItems.Count > 0 || LearningPlanReviewItems.Count > 0;
 
-    public string ResultCelebrationTitle
-    {
-        get
-        {
-            return ResultTone switch
-            {
-                TrainingResultTone.NotStarted => "Review ready",
-                TrainingResultTone.Clean => "Great run. This line is stable.",
-                TrainingResultTone.Assisted => "Good session. The line is almost automatic.",
-                TrainingResultTone.SingleRepair => "Good session. One move needs a calmer repeat.",
-                TrainingResultTone.SeveralRepairs => $"Good session. {wrongAttempts} moves need a calmer repeat.",
-                TrainingResultTone.HeavyRepair => "Useful diagnostic session. Slow this line down.",
-                _ => "Review ready"
-            };
-        }
-    }
+    public string ResultCelebrationTitle => OpeningTrainerResultPresentation.BuildCelebrationTitle(ResultTone, wrongAttempts);
 
-    public string ResultCelebrationText
-    {
-        get
-        {
-            return ResultTone switch
-            {
-                TrainingResultTone.NotStarted => "Finish practice to see what improved and what comes next.",
-                TrainingResultTone.Clean => $"You completed all {completedSteps} positions without misses or hints. Let spacing do its work.",
-                TrainingResultTone.Assisted => $"You completed all {completedSteps} positions. Hints or alternatives helped, so a short-break repeat will make recall cleaner.",
-                TrainingResultTone.SingleRepair => "You can stop here, but one quick repeat will lock in the weak move while it is fresh.",
-                TrainingResultTone.SeveralRepairs => "You can stop here, but one quick repeat will lock in the weak moves while they are fresh.",
-                TrainingResultTone.HeavyRepair => "This was useful signal, not failure. Repeat fewer positions and focus on the first repair target.",
-                _ => "Finish practice to see what improved and what comes next."
-            };
-        }
-    }
+    public string ResultCelebrationText => OpeningTrainerResultPresentation.BuildCelebrationText(ResultTone, completedSteps);
 
-    public string ResultOutcomeBadge => ResultTone switch
-    {
-        TrainingResultTone.Clean => "Stable line",
-        TrainingResultTone.Assisted => "Almost automatic",
-        TrainingResultTone.SingleRepair => "1 repair target",
-        TrainingResultTone.SeveralRepairs => $"{wrongAttempts} repair targets",
-        TrainingResultTone.HeavyRepair => "Focused repair",
-        _ => "Review ready"
-    };
+    public string ResultOutcomeBadge => OpeningTrainerResultPresentation.BuildOutcomeBadge(ResultTone, wrongAttempts);
 
-    public string ResultNextStepSummary => PrimaryNextAction is null
-        ? "Next: finish practice to unlock a recommendation."
-        : ResultTone switch
-        {
-            TrainingResultTone.Clean => "Next: stop here or return tomorrow.",
-            TrainingResultTone.Assisted => "Next: train another opening while this repeat waits.",
-            TrainingResultTone.SingleRepair => "Next: repeat this line now.",
-            TrainingResultTone.SeveralRepairs => "Next: repeat this line now.",
-            TrainingResultTone.HeavyRepair => "Next: repeat a smaller repair pass.",
-            _ => $"Next: {PrimaryNextAction.ButtonText.ToLowerInvariant()}"
-        };
+    public string ResultNextStepSummary => OpeningTrainerResultPresentation.BuildNextStepSummary(ResultTone, PrimaryNextAction);
 
     public bool HasLearningPlanReviewItems => LearningPlanReviewItems.Count > 0;
 
@@ -818,27 +761,12 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     {
         get
         {
-            if (guidedSession is null)
-            {
-                return TrainingResultTone.NotStarted;
-            }
-
-            if (wrongAttempts == 0)
-            {
-                return hintUseCount == 0 && playableAnswers == 0
-                    ? TrainingResultTone.Clean
-                    : TrainingResultTone.Assisted;
-            }
-
-            double wrongRatio = completedSteps == 0 ? 0d : (double)wrongAttempts / completedSteps;
-            if (wrongAttempts >= 3 || wrongRatio >= 0.35)
-            {
-                return TrainingResultTone.HeavyRepair;
-            }
-
-            return wrongAttempts == 1
-                ? TrainingResultTone.SingleRepair
-                : TrainingResultTone.SeveralRepairs;
+            return OpeningTrainerResultPresentation.DetermineTone(
+                guidedSession is not null,
+                completedSteps,
+                playableAnswers,
+                wrongAttempts,
+                hintUseCount);
         }
     }
 
@@ -1557,39 +1485,6 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             : SelectedAnswerOption is not null;
     }
 
-    private static string BuildWrongMoveFeedback(
-        OpeningTrainingPosition position,
-        OpeningTrainingMoveOption? preferred)
-    {
-        OpeningMoveIdea? idea = preferred?.Idea;
-        if (idea?.IdeaTags.Contains(OpeningMoveIdeaTag.ControlCenter) == true)
-        {
-            return "Not this time. Think about the move that supports central control.";
-        }
-
-        if (idea?.IdeaTags.Contains(OpeningMoveIdeaTag.DevelopPiece) == true)
-        {
-            return "Not this time. Think about the move that improves piece activity.";
-        }
-
-        if (idea?.IdeaTags.Contains(OpeningMoveIdeaTag.KingSafety) == true)
-        {
-            return "Not this time. Think about the move that keeps your king and pieces coordinated.";
-        }
-
-        if (idea?.IdeaTags.Contains(OpeningMoveIdeaTag.TacticalResource) == true)
-        {
-            return "Not this time. Check for a forcing resource before moving quietly.";
-        }
-
-        return position.Mode switch
-        {
-            OpeningTrainingMode.BranchAwareness => "Not this time. Think about the opponent reply this branch is testing.",
-            OpeningTrainingMode.MistakeRepair => "Not this time. Think about what the old mistake left unresolved.",
-            _ => "Not this time. Use the plan hint before trying again."
-        };
-    }
-
     private static bool IsSubmittedMainRepertoireMove(
         OpeningTrainingAttemptResult result,
         OpeningTrainingMoveOption? mainMove)
@@ -1703,38 +1598,17 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         RaiseStudyNavigationStateChanged();
     }
 
-    private async void TriggerStudyFeedback(OpeningTrainingAttemptResult result)
+    private void TriggerStudyFeedback(OpeningTrainingAttemptResult result)
     {
-        long version = ++studyFeedbackVersion;
-        (string Text, Color Fill, Color Border) feedback = result.Score switch
-        {
-            OpeningTrainingScore.Correct => ("Good move", Color.Parse("#5BE37A"), Color.Parse("#9EF5AE")),
-            OpeningTrainingScore.Wrong => ("Needs review", Color.Parse("#EF5F5F"), Color.Parse("#FF9C9C")),
-            _ => result.Status == OpeningTrainingAttemptStatus.TransposedToKnownPosition
-                ? ("Known transposition", Color.Parse("#F2C94C"), Color.Parse("#FFE28A"))
-                : ("Useful alternative", Color.Parse("#F2C94C"), Color.Parse("#FFE28A"))
-        };
+        _ = studyFeedbackAnimator.AnimateAsync(result, ApplyStudyFeedbackFrame);
+    }
 
-        StudyFeedbackText = feedback.Text;
-        StudyFeedbackBrush = new SolidColorBrush(Color.FromArgb(210, feedback.Fill.R, feedback.Fill.G, feedback.Fill.B));
-        StudyFeedbackBorderBrush = new SolidColorBrush(feedback.Border);
-        StudyFeedbackOpacity = 0.88;
-
-        await Task.Delay(180);
-        if (version != studyFeedbackVersion)
-        {
-            return;
-        }
-
-        StudyFeedbackOpacity = 0.36;
-
-        await Task.Delay(420);
-        if (version != studyFeedbackVersion)
-        {
-            return;
-        }
-
-        StudyFeedbackOpacity = 0;
+    private void ApplyStudyFeedbackFrame(OpeningStudyFeedbackFrame frame)
+    {
+        StudyFeedbackText = frame.Text;
+        StudyFeedbackBrush = frame.Brush;
+        StudyFeedbackBorderBrush = frame.BorderBrush;
+        StudyFeedbackOpacity = frame.Opacity;
     }
 
     private void MovePrevious()
@@ -1808,14 +1682,13 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             LoadOverview();
         }
 
-        ResultHeadline = guidedSession is null
-            ? "Practice finished."
-            : $"Finished {guidedSession.Positions.Count} practice positions for {SelectedOpeningName}.";
-        ResultRecommendation = wrongAttempts > 0
-            ? "Repeat this line soon. One or more positions still need reinforcement."
-            : playableAnswers > 0 || transposedAnswers > 0
-                ? "The line is mostly stable. Review again after a short break to make the moves automatic."
-                : "This line looks stable. You can move on to another branch or opening.";
+        ResultHeadline = OpeningTrainerResultPresentation.BuildCompletionHeadline(
+            guidedSession?.Positions.Count,
+            SelectedOpeningName);
+        ResultRecommendation = OpeningTrainerResultPresentation.BuildCompletionRecommendation(
+            wrongAttempts,
+            playableAnswers,
+            transposedAnswers);
         ReplaceItems(NextActionItems, workspaceService.BuildNextActions(OutcomeSummary));
         RebuildNextActionCards();
         LearningPlan = workspaceService.BuildLearningPlan(OutcomeSummary, currentSessionAttempts, NextActionItems.ToList());
@@ -2414,22 +2287,19 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             string.Equals(attempt.SubmittedMoveText, "I do not know", StringComparison.OrdinalIgnoreCase));
 
     private Dictionary<string, string> BuildRecommendationTelemetryProperties(TrainingRecommendationCard recommendation)
-        => BuildBaseTelemetryProperties(new Dictionary<string, string>
-        {
-            ["reason_code"] = recommendation.ReasonCode.ToString(),
-            ["recommendation_type"] = recommendation.RecommendationType.ToString()
-        });
+        => telemetryAdapter.BuildRecommendationProperties(
+            recommendation,
+            SelectedProfileChoice,
+            SelectedSide,
+            AdvancedPlayerKey);
 
     private Dictionary<string, string> BuildBaseTelemetryProperties(Dictionary<string, string>? properties = null)
     {
-        Dictionary<string, string> result = properties is null
-            ? []
-            : new Dictionary<string, string>(properties, StringComparer.OrdinalIgnoreCase);
-
-        result["profile_choice"] = SelectedProfileChoice?.Id ?? "unknown";
-        result["side"] = SelectedSide.ToString();
-        result["advanced_history_key_active"] = (!string.IsNullOrWhiteSpace(AdvancedPlayerKey)).ToString().ToLowerInvariant();
-        return result;
+        return telemetryAdapter.BuildBaseProperties(
+            SelectedProfileChoice,
+            SelectedSide,
+            AdvancedPlayerKey,
+            properties);
     }
 
     private static string BuildRecommendationType(string startSource, SpecialTrainingModeDefinition? specialMode)
@@ -2576,69 +2446,6 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             RepertoireSide.Black => "Black",
             _ => "Both sides"
         };
-
-    private static string FormatOpponentSummary(string summary)
-    {
-        Match match = Regex.Match(summary, @"Tracked (?<count>\d+) opponent branch\(es\)", RegexOptions.IgnoreCase);
-        return match.Success
-            ? $"We track {match.Groups["count"].Value} common opponent replies for this opening."
-            : summary;
-    }
-
-    private static string FormatMainLine(IReadOnlyList<OpeningLineMove> moves, int maxPly)
-    {
-        string line = string.Join(" ", moves
-            .Take(maxPly)
-            .Select(move => move.Side == PlayerSide.White
-                ? $"{move.MoveNumber}.{move.San}"
-                : move.San));
-        return string.IsNullOrWhiteSpace(line) ? "the selected opening" : line;
-    }
-
-    private static string FormatMoveLabel(OpeningLineMove move)
-    {
-        string tag = move.Idea?.IdeaTags.FirstOrDefault() switch
-        {
-            OpeningMoveIdeaTag.ControlCenter => "center",
-            OpeningMoveIdeaTag.DevelopPiece => "development",
-            OpeningMoveIdeaTag.KingSafety => "king safety",
-            OpeningMoveIdeaTag.TacticalResource => "tactic",
-            _ => string.Empty
-        };
-        string suffix = string.IsNullOrWhiteSpace(tag) ? string.Empty : $"  {tag}";
-        return move.Side == PlayerSide.White
-            ? $"{move.MoveNumber}. {move.San}{suffix}"
-            : $"{move.San}{suffix}";
-    }
-
-    private static string FormatBranchFrequencyLabel(
-        OpeningTrainingBranch branch,
-        IReadOnlyList<OpeningTrainingBranch> branches)
-    {
-        if (branches.Count == 0)
-        {
-            return "reply";
-        }
-
-        int rank = branches
-            .OrderByDescending(item => item.Frequency)
-            .ThenBy(item => item.OpponentMove, StringComparer.OrdinalIgnoreCase)
-            .Select((item, index) => new { item, index })
-            .FirstOrDefault(pair => ReferenceEquals(pair.item, branch))?.index ?? 0;
-
-        return rank switch
-        {
-            0 => "most common reply",
-            1 or 2 => "common",
-            _ => "less common"
-        };
-    }
-
-    private static string PluralSuffix(int count)
-        => count == 1 ? string.Empty : "s";
-
-    private static string FormatPositionCount(int count, string singularVerb, string pluralVerb)
-        => count == 1 ? $"1 position {singularVerb}" : $"{count} positions {pluralVerb}";
 
     private static IReadOnlyList<BoardArrowViewModel> BuildArrows(OpeningTrainingPosition position)
     {
@@ -2787,16 +2594,6 @@ public sealed record OpeningTrainingIntensityChoice(
     string Title,
     string Description,
     OpeningTrainingStrictness Strictness);
-
-internal enum TrainingResultTone
-{
-    NotStarted,
-    Clean,
-    Assisted,
-    SingleRepair,
-    SeveralRepairs,
-    HeavyRepair
-}
 
 public sealed record TrainingNextActionCardViewModel(
     TrainingNextAction Action,

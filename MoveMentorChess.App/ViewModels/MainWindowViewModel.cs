@@ -1,9 +1,8 @@
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using Avalonia.Media;
 using MoveMentorChess.Analysis;
-using MoveMentorChess.App.Views;
+using MoveMentorChess.App.Composition;
 using MoveMentorChess.Engine;
 using MoveMentorChess.Opening;
 using MoveMentorChess.Persistence;
@@ -15,6 +14,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private static readonly IReadOnlyList<string> AnalysisFilterOptions = ["All", "Blunder", "Mistake", "Inaccuracy"];
     private static readonly IReadOnlyList<PlayerSide> AnalysisSides = [PlayerSide.White, PlayerSide.Black];
 
+    private readonly IStockfishPathResolver stockfishPathResolver;
+    private readonly Func<IAnalysisStore?> analysisStoreProvider;
     private readonly ChessGame chessGame = new();
     private readonly Stack<string> undoFenStack = new();
     private readonly HashSet<string> availableTargets = new(StringComparer.Ordinal);
@@ -45,7 +46,18 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private AnalysisMistakeItemViewModel? selectedAnalysisMistake;
 
     public MainWindowViewModel()
+        : this(
+            new DefaultStockfishPathResolver(),
+            AnalysisStoreProvider.GetStore)
     {
+    }
+
+    public MainWindowViewModel(
+        IStockfishPathResolver stockfishPathResolver,
+        Func<IAnalysisStore?> analysisStoreProvider)
+    {
+        this.stockfishPathResolver = stockfishPathResolver ?? throw new ArgumentNullException(nameof(stockfishPathResolver));
+        this.analysisStoreProvider = analysisStoreProvider ?? throw new ArgumentNullException(nameof(analysisStoreProvider));
         UndoCommand = new RelayCommand(UndoLastMove, () => undoFenStack.Count > 0 && !IsBusy);
         RotateBoardCommand = new RelayCommand(ToggleBoardRotation, () => !IsBusy);
         ApplyNextImportedMoveCommand = new RelayCommand(ApplyNextImportedMove, () => !IsBusy && importedCursor < importedReplay.Count);
@@ -560,7 +572,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        IAnalysisStore? store = AnalysisStoreProvider.GetStore();
+        IAnalysisStore? store = analysisStoreProvider();
         if (store is null || !store.TryLoadImportedGame(example.GameFingerprint, out ImportedGame? game) || game is null)
         {
             StatusMessage = "Could not find the selected game in local storage.";
@@ -644,7 +656,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         StatusMessage = "Could not open the selected opening position.";
     }
 
-    public AnalysisWindow? CreateAnalysisWindow()
+    public AnalysisWindowRequest? CreateAnalysisWindowRequest()
     {
         if (importedGame is null)
         {
@@ -665,7 +677,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             return null;
         }
 
-        return new AnalysisWindow(
+        return new AnalysisWindowRequest(
             importedGame,
             engine,
             NavigateToAnalysisMistakeAsync,
@@ -1010,7 +1022,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             return false;
         }
 
-        IAnalysisStore? store = AnalysisStoreProvider.GetStore();
+        IAnalysisStore? store = analysisStoreProvider();
         if (store is null || !store.TryLoadImportedGame(gameFingerprint, out ImportedGame? game) || game is null)
         {
             StatusMessage = "Could not find the selected game in local storage.";
@@ -1127,12 +1139,12 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     private void TryInitializeEngine()
     {
-        string? enginePath = ResolveStockfishPath();
+        string? enginePath = stockfishPathResolver.Resolve();
         try
         {
             if (string.IsNullOrWhiteSpace(enginePath))
             {
-                throw new FileNotFoundException("Could not locate the external chess engine executable.");
+                throw new InvalidOperationException("Could not locate the external chess engine executable.");
             }
 
             StockfishSettings stockfishSettings = StockfishSettingsStore.Load();
@@ -1456,9 +1468,9 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         ShowSelectedMistakeOnBoardCommand.RaiseCanExecuteChanged();
     }
 
-    private static void SaveImportedGame(ImportedGame parsedGame)
+    private void SaveImportedGame(ImportedGame parsedGame)
     {
-        IAnalysisStore? store = AnalysisStoreProvider.GetStore();
+        IAnalysisStore? store = analysisStoreProvider();
         if (store is null)
         {
             return;
@@ -1474,9 +1486,9 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private static void SaveImportedGames(IReadOnlyList<ImportedGame> games)
+    private void SaveImportedGames(IReadOnlyList<ImportedGame> games)
     {
-        IAnalysisStore? store = AnalysisStoreProvider.GetStore();
+        IAnalysisStore? store = analysisStoreProvider();
         if (store is null || games.Count == 0)
         {
             return;
@@ -1582,42 +1594,9 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         return (cp ?? 0) * sign;
     }
 
-    private static string? ResolveStockfishPath()
+    private OpeningTheoryQueryService? CreateOpeningTheory()
     {
-        string baseDirectory = AppContext.BaseDirectory;
-        string[] candidates =
-        [
-            Path.Combine(baseDirectory, "stockfish.exe"),
-            Path.Combine(baseDirectory, "..", "..", "..", "..", "MoveMentorChessServices", "bin", "Debug", "net8.0-windows", "stockfish.exe"),
-            Path.Combine(baseDirectory, "..", "..", "..", "..", "..", "MoveMentorChessServices", "bin", "Debug", "net8.0-windows", "stockfish.exe"),
-            Path.Combine(Environment.CurrentDirectory, "MoveMentorChessServices", "bin", "Debug", "net8.0-windows", "stockfish.exe"),
-            Path.Combine(Environment.CurrentDirectory, "stockfish.exe")
-        ];
-
-        foreach (string candidate in candidates)
-        {
-            string fullPath;
-            try
-            {
-                fullPath = Path.GetFullPath(candidate);
-            }
-            catch
-            {
-                continue;
-            }
-
-            if (File.Exists(fullPath))
-            {
-                return fullPath;
-            }
-        }
-
-        return null;
-    }
-
-    private static OpeningTheoryQueryService? CreateOpeningTheory()
-    {
-        IAnalysisStore? store = AnalysisStoreProvider.GetStore();
+        IAnalysisStore? store = analysisStoreProvider();
         return store is null ? null : OpeningTheorySourceResolver.Create(store);
     }
 
