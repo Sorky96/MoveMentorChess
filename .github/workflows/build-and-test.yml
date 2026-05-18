@@ -1,0 +1,46 @@
+name: Build and test
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - "feature/**"
+      - "bugfix/**"
+      - "architecture/**"
+      - "codex/**"
+  pull_request:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore MoveMentorChess.sln --verbosity minimal
+
+      - name: Build solution
+        run: dotnet build MoveMentorChess.sln --configuration Release --no-restore -m:1 --verbosity minimal
+
+      - name: Run tests
+        run: dotnet test MoveMentorChess.sln --configuration Release --no-build -m:1 --verbosity minimal
