@@ -11,6 +11,7 @@ internal static class AnalysisFeedbackService
         PlayerSide analyzedSide,
         EngineAnalysisOptions analysisOptions,
         SelectedMistakeViewItem item,
+        DateTime timestampUtc,
         AdviceFeedbackKind feedbackKind,
         string? correctedLabel,
         string? comment)
@@ -21,7 +22,7 @@ internal static class AnalysisFeedbackService
 
         return new MoveAdviceFeedback(
             Guid.NewGuid().ToString("N"),
-            DateTime.UtcNow,
+            timestampUtc,
             gameFingerprint,
             analyzedSide,
             key.Depth,
@@ -47,10 +48,13 @@ internal static class AnalysisFeedbackService
             "analysis-window");
     }
 
-    public static AdviceFeedbackEntry CreateFeedbackLogEntry(MoveAdviceFeedback feedback, SelectedMistakeViewItem item)
+    public static AdviceFeedbackEntry CreateFeedbackLogEntry(
+        MoveAdviceFeedback feedback,
+        SelectedMistakeViewItem item,
+        DateTime timestampUtc)
     {
         return new AdviceFeedbackEntry(
-            DateTime.UtcNow,
+            timestampUtc,
             feedback.GameFingerprint,
             feedback.Ply,
             feedback.FeedbackKind,

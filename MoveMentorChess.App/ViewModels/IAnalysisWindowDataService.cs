@@ -5,6 +5,8 @@ namespace MoveMentorChess.App.ViewModels;
 
 public interface IAnalysisWindowDataService
 {
+    DateTime UtcNow { get; }
+
     bool IsAnalysisForGame(GameAnalysisResult result, ImportedGame game);
 
     bool TryLoadExistingResult(

@@ -3,8 +3,24 @@ using MoveMentorChess.Persistence;
 
 namespace MoveMentorChess.App.ViewModels;
 
-internal sealed class DefaultAnalysisWindowDataService(Func<IAnalysisStore?> storeProvider) : IAnalysisWindowDataService
+internal sealed class DefaultAnalysisWindowDataService : IAnalysisWindowDataService
 {
+    private readonly Func<IAnalysisStore?> storeProvider;
+    private readonly IClock clock;
+
+    public DefaultAnalysisWindowDataService(Func<IAnalysisStore?> storeProvider)
+        : this(storeProvider, SystemClock.Instance)
+    {
+    }
+
+    public DefaultAnalysisWindowDataService(Func<IAnalysisStore?> storeProvider, IClock clock)
+    {
+        this.storeProvider = storeProvider ?? throw new ArgumentNullException(nameof(storeProvider));
+        this.clock = clock ?? throw new ArgumentNullException(nameof(clock));
+    }
+
+    public DateTime UtcNow => clock.UtcNow;
+
     public bool IsAnalysisForGame(GameAnalysisResult result, ImportedGame game)
         => AnalysisResultCacheLoader.IsAnalysisForGame(result, game);
 
