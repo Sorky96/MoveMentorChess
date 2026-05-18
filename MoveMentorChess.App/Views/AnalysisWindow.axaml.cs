@@ -12,7 +12,6 @@ namespace MoveMentorChess.App.Views;
 
 public partial class AnalysisWindow : Window
 {
-    private static readonly EngineAnalysisOptions DefaultAnalysisOptions = new();
     private static readonly string[] KnownMistakeLabels =
     [
         "hanging_piece",
@@ -26,33 +25,28 @@ public partial class AnalysisWindow : Window
     ];
 
     private readonly ImportedGame? importedGame;
-    private readonly IEngineAnalyzer? engineAnalyzer;
     private readonly Func<MoveAnalysisResult, Task>? navigateToMoveAsync;
-    private readonly Action<GameAnalysisProgress>? analysisProgress;
-    private readonly IAnalysisWindowDataService dataService;
-    private readonly PlayerSide initialSide;
-    private readonly Dictionary<PlayerSide, GameAnalysisResult> initialResultsBySide = [];
-    private readonly AnalysisExplanationService explanationService = new();
-    private readonly AnalysisSelectionState selectionState = new();
-    private AnalysisWindowRunCoordinator runCoordinator = null!;
+    private readonly AnalysisWindowViewModel viewModel;
     private AnalysisRunControlsRenderer runControlsRenderer = null!;
     private AnalysisTimelineRenderer timelineRenderer = null!;
     private AnalysisDetailsFeedbackRenderer detailsFeedbackRenderer = null!;
     private AnalysisSnapshotRenderer snapshotRenderer = null!;
+    private AnalysisSimilarMistakesRenderer similarMistakesRenderer = null!;
 
     public AnalysisWindow()
     {
         InitializeComponent();
-        dataService = new DefaultAnalysisWindowDataService(() => null);
-        InitializeRunCoordinator();
+        viewModel = new AnalysisWindowViewModel();
+        DataContext = viewModel;
         InitializeRunControlsRenderer();
         InitializeDetailsFeedbackRenderer();
         InitializeSnapshotRenderer();
+        InitializeSimilarMistakesRenderer();
         InitializeTimelineRenderer();
         InitializeResponsiveSnapshotSizing();
     }
 
-    public GameAnalysisResult? CurrentResult => selectionState.CurrentResult;
+    public GameAnalysisResult? CurrentResult => viewModel.CurrentResult;
 
     public AnalysisWindow(
         ImportedGame importedGame,
@@ -64,61 +58,38 @@ public partial class AnalysisWindow : Window
         IAnalysisWindowDataService? dataService = null)
     {
         this.importedGame = importedGame;
-        this.engineAnalyzer = engineAnalyzer;
         this.navigateToMoveAsync = navigateToMoveAsync;
-        this.analysisProgress = analysisProgress;
-        this.initialSide = initialSide;
-        this.dataService = dataService ?? new DefaultAnalysisWindowDataService(() => null);
-        if (initialResultsBySide is not null)
-        {
-            foreach ((PlayerSide side, GameAnalysisResult result) in initialResultsBySide)
-            {
-                if (this.dataService.IsAnalysisForGame(result, importedGame))
-                {
-                    this.initialResultsBySide[side] = result;
-                }
-            }
-        }
+        viewModel = new AnalysisWindowViewModel(
+            importedGame,
+            engineAnalyzer,
+            analysisProgress,
+            initialSide,
+            initialResultsBySide,
+            dataService ?? new DefaultAnalysisWindowDataService(() => null));
 
         InitializeComponent();
-        InitializeRunCoordinator();
+        DataContext = viewModel;
         InitializeRunControlsRenderer();
         InitializeDetailsFeedbackRenderer();
         InitializeSnapshotRenderer();
+        InitializeSimilarMistakesRenderer();
         InitializeTimelineRenderer();
         InitializeResponsiveSnapshotSizing();
-        SideComboBox.ItemsSource = new[]
-        {
-            new SideOption(PlayerSide.White, "Analyze White"),
-            new SideOption(PlayerSide.Black, "Analyze Black")
-        };
-        QualityFilterComboBox.ItemsSource = new[]
-        {
-            new AnalysisFilterOption("All highlights", null),
-            new AnalysisFilterOption("Not reviewed", null, AnalysisReviewFilter.NotReviewed),
-            new AnalysisFilterOption("Reviewed", null, AnalysisReviewFilter.Reviewed),
-            new AnalysisFilterOption("Blunders only", MoveQualityBucket.Blunder),
-            new AnalysisFilterOption("Mistakes only", MoveQualityBucket.Mistake),
-            new AnalysisFilterOption("Inaccuracies only", MoveQualityBucket.Inaccuracy)
-        };
         CorrectedLabelComboBox.ItemsSource = KnownMistakeLabels;
         CorrectedLabelComboBox.SelectedIndex = 0;
-        SideComboBox.SelectedIndex = initialSide == PlayerSide.Black ? 1 : 0;
-        QualityFilterComboBox.SelectedIndex = 0;
-        SideComboBox.SelectionChanged += (_, _) => TryLoadCachedResultForSelectedSide();
-        QualityFilterComboBox.SelectionChanged += (_, _) => ApplyFilter();
-        runControlsRenderer.SetAnalysisIdle(engineAnalyzer is not null);
-        runControlsRenderer.SetSelectionAvailable(false);
-        detailsFeedbackRenderer.SetFeedbackButtonsEnabled(false);
-        SetDetailsPlaceholder("Run analysis to inspect highlighted mistakes.");
+        SyncInteractionState();
+        SyncFeedbackState();
+        viewModel.ShowRunAnalysisPlaceholder();
+        RenderDetailsPlaceholder();
         RefreshAdviceRuntimeState();
 
-        if (this.dataService.TryGetWindowState(importedGame, out AnalysisWindowState? state) && state is not null)
+        if (viewModel.LoadWindowState() is AnalysisWindowState state)
         {
-            SideComboBox.SelectedIndex = state.SelectedSide == PlayerSide.Black ? 1 : 0;
-            QualityFilterComboBox.SelectedIndex = Math.Clamp(state.QualityFilterIndex, 0, QualityFilterComboBox.ItemCount - 1);
+            viewModel.ApplyWindowState(state);
         }
 
+        SideComboBox.SelectionChanged += (_, _) => TryLoadCachedResultForSelectedSide();
+        QualityFilterComboBox.SelectionChanged += (_, _) => ApplyFilter();
         TryLoadCachedResultForSelectedSide();
     }
 
@@ -130,14 +101,6 @@ public partial class AnalysisWindow : Window
             TimelineSelectedTextBlock,
             TimelineSummaryTextBlock,
             SelectTimelineMistake);
-    }
-
-    private void InitializeRunCoordinator()
-    {
-        runCoordinator = new AnalysisWindowRunCoordinator(
-            dataService,
-            initialResultsBySide,
-            analysisProgress);
     }
 
     private void InitializeRunControlsRenderer()
@@ -197,6 +160,15 @@ public partial class AnalysisWindow : Window
             SnapshotThreatButton);
     }
 
+    private void InitializeSimilarMistakesRenderer()
+    {
+        similarMistakesRenderer = new AnalysisSimilarMistakesRenderer(
+            SimilarMistakesHintTextBlock,
+            SimilarMistakesListBox,
+            GetVisibleMistakeItems,
+            SelectTimelineMistake);
+    }
+
     private void InitializeResponsiveSnapshotSizing()
     {
         PositionSnapshotPanel.SizeChanged += (_, _) => UpdateSnapshotBoardSize();
@@ -215,19 +187,19 @@ public partial class AnalysisWindow : Window
         AdviceRuntimeStatus status = AdviceRuntimeCatalog.GetStatus();
         if (!status.IsReady)
         {
-            StatusTextBlock.Text = status.InstallHint is null
+            viewModel.StatusText = status.InstallHint is null
                 ? status.StatusText
                 : $"{status.StatusText} {status.InstallHint}";
             return;
         }
 
         TestAdviceButton.IsEnabled = false;
-        StatusTextBlock.Text = "Testing local advice runtime...";
+        viewModel.StatusText = "Testing local advice runtime...";
 
         try
         {
             AdviceRuntimeSmokeTestResult result = await Task.Run(AdviceRuntimeSmokeTester.Run);
-            StatusTextBlock.Text = result.Message;
+            viewModel.StatusText = result.Message;
         }
         finally
         {
@@ -243,31 +215,27 @@ public partial class AnalysisWindow : Window
 
     private async void AnalyzeButton_Click(object? sender, RoutedEventArgs e)
     {
-        if (SideComboBox.SelectedItem is not SideOption selectedSide)
+        if (viewModel.SelectedSideOption is not AnalysisSideOption selectedSide)
         {
             return;
         }
 
-        runControlsRenderer.SetAnalysisRunning();
-        StatusTextBlock.Text = $"Analyzing imported game for {selectedSide.Side}...";
-        SummaryTextBlock.Text = string.Empty;
-        MistakesListBox.ItemsSource = null;
+        viewModel.BeginAnalysis(selectedSide.Side);
+        SyncInteractionState();
         timelineRenderer.Clear("Analysis timeline will appear here.");
-        SetDetailsPlaceholder("The analysis engine is reviewing the imported game. This may take a moment.");
-        detailsFeedbackRenderer.SetFeedbackButtonsEnabled(false);
+        RenderDetailsPlaceholder();
+        SyncFeedbackState();
 
         try
         {
-            AnalysisWindowRunOutcome outcome = await runCoordinator.AnalyzeAsync(
-                importedGame,
-                engineAnalyzer,
-                selectedSide.Side,
-                DefaultAnalysisOptions);
+            AnalysisWindowRunOutcome outcome = await viewModel.AnalyzeAsync(selectedSide.Side);
             ApplyRunOutcome(outcome);
         }
         finally
         {
-            runControlsRenderer.SetAnalysisIdle(engineAnalyzer is not null);
+            viewModel.EndAnalysis();
+            SyncInteractionState();
+            SyncFeedbackState();
             RefreshAdviceRuntimeState();
         }
     }
@@ -279,31 +247,22 @@ public partial class AnalysisWindow : Window
 
     private void UpdateDetails()
     {
-        if (MistakesListBox.SelectedItem is not SelectedMistakeViewItem item)
+        AnalysisWindowSelectedDetails? selectedDetails = viewModel.PrepareSelectedDetails();
+        if (selectedDetails is null)
         {
-            SetDetailsPlaceholder("Select a highlighted mistake to inspect details.");
-            runControlsRenderer.SetSelectionAvailable(false);
+            RenderDetailsPlaceholder();
+            SyncInteractionState();
             return;
         }
 
-        AnalysisPreparedExplanation preparedExplanation = explanationService.Prepare(item.LeadMove);
-
-        MoveAdviceFeedback? feedback = FindLatestFeedback(item.LeadMove);
-        SetSelectedDetails(
-            item.Mistake,
-            item.LeadMove,
-            selectionState.CurrentResult?.OpeningReview,
-            preparedExplanation.Explanation,
-            !preparedExplanation.IsCached,
-            feedback);
+        RenderSelectedDetails(selectedDetails);
         RefreshTimeline(GetVisibleMistakeItems());
-        runControlsRenderer.SetSelectionAvailable(true);
-        detailsFeedbackRenderer.SetFeedbackButtonsEnabled(true);
+        SyncInteractionState();
+        SyncFeedbackState();
 
-        if (!preparedExplanation.IsCached)
+        if (selectedDetails.ShouldLoadExplanation)
         {
-            int requestId = explanationService.BeginRequest();
-            _ = LoadExplanationAsync(item, item.LeadMove, preparedExplanation.Request, requestId);
+            _ = LoadExplanationAsync(selectedDetails);
         }
     }
 
@@ -319,37 +278,36 @@ public partial class AnalysisWindow : Window
 
     private void ApplyFilter()
     {
-        int? selectedPly = MistakesListBox.SelectedItem is SelectedMistakeViewItem selectedItem
+        int? selectedPly = viewModel.SelectedMistake is SelectedMistakeViewItem selectedItem
             ? selectedItem.LeadMove.Replay.Ply
             : null;
 
-        if (selectionState.CurrentResult is null)
+        if (viewModel.CurrentResult is null)
         {
-            SummaryTextBlock.Text = "Choose a side and run the analysis.";
-            MistakesListBox.ItemsSource = null;
+            viewModel.SummaryText = "Choose a side and run the analysis.";
+            viewModel.ClearVisibleMistakes();
             RefreshTimeline([]);
-            SetDetailsPlaceholder("Run analysis to inspect highlighted mistakes.");
-            runControlsRenderer.SetSelectionAvailable(false);
+            viewModel.ShowRunAnalysisPlaceholder();
+            RenderDetailsPlaceholder();
+            SyncInteractionState();
             return;
         }
 
-        AnalysisFilterResult filterResult = selectionState.BuildFilterResult(QualityFilterComboBox.SelectedItem as AnalysisFilterOption);
+        AnalysisFilterResult filterResult = viewModel.ApplyFilter(viewModel.SelectedFilterOption, selectedPly);
         IReadOnlyList<SelectedMistakeViewItem> items = filterResult.Items;
-        MistakesListBox.ItemsSource = items;
-        SummaryTextBlock.Text = filterResult.SummaryText;
 
         if (items.Count > 0)
         {
-            MistakesListBox.SelectedItem = selectedPly is int ply
-                ? items.FirstOrDefault(item => item.LeadMove.Replay.Ply == ply) ?? items[0]
-                : items[0];
             RefreshTimeline(items);
+            SyncInteractionState();
+            SyncFeedbackState();
         }
         else
         {
             RefreshTimeline(items);
-            SetDetailsPlaceholder("No items match the current filter.");
-            runControlsRenderer.SetSelectionAvailable(false);
+            viewModel.ShowNoFilterMatchesPlaceholder();
+            RenderDetailsPlaceholder();
+            SyncInteractionState();
         }
     }
 
@@ -357,17 +315,15 @@ public partial class AnalysisWindow : Window
     {
         if (outcome.HasResult && outcome.Result is not null)
         {
-            selectionState.SetCurrentResult(outcome.Result, outcome.IsCached);
+            viewModel.ApplyRunOutcome(outcome);
             ApplyFilter();
         }
         else
         {
-            selectionState.ClearCurrentResult();
-            SummaryTextBlock.Text = string.Empty;
-            SetDetailsPlaceholder(outcome.IsError ? "Analysis failed." : "Run analysis to inspect highlighted mistakes.");
+            viewModel.ApplyRunOutcome(outcome);
+            RenderDetailsPlaceholder();
+            SyncInteractionState();
         }
-
-        StatusTextBlock.Text = outcome.StatusText;
     }
 
     private void CorrectFeedbackButton_Click(object? sender, RoutedEventArgs e)
@@ -376,7 +332,7 @@ public partial class AnalysisWindow : Window
     private void WrongLabelFeedbackButton_Click(object? sender, RoutedEventArgs e)
     {
         detailsFeedbackRenderer.ShowManualCorrection(
-            MistakesListBox.SelectedItem as SelectedMistakeViewItem,
+            viewModel.SelectedMistake,
             KnownMistakeLabels);
     }
 
@@ -391,9 +347,9 @@ public partial class AnalysisWindow : Window
 
     private void SaveManualCorrectionButton_Click(object? sender, RoutedEventArgs e)
     {
-        if (!detailsFeedbackRenderer.TryReadManualCorrection(out string? correctedLabel, out string? comment))
+        detailsFeedbackRenderer.TryReadManualCorrection(out string? correctedLabel, out string? comment);
+        if (!viewModel.CanSaveManualCorrection(correctedLabel))
         {
-            StatusTextBlock.Text = "Choose or enter a corrected label first.";
             return;
         }
 
@@ -403,27 +359,22 @@ public partial class AnalysisWindow : Window
 
     private void RecordSelectedFeedback(AdviceFeedbackKind feedbackKind, string? correctedLabel = null, string? comment = null)
     {
-        if (MistakesListBox.SelectedItem is not SelectedMistakeViewItem item || importedGame is null)
+        if (viewModel.SelectedMistake is not SelectedMistakeViewItem item || importedGame is null)
         {
             return;
         }
 
-        PlayerSide analyzedSide = selectionState.CurrentResult?.AnalyzedSide ?? initialSide;
-        StatusTextBlock.Text = AnalysisFeedbackRecorder.Record(
-            dataService,
-            importedGame,
-            analyzedSide,
-            DefaultAnalysisOptions,
-            item,
-            feedbackKind,
-            correctedLabel,
-            comment);
+        string? statusText = viewModel.RecordFeedback(item, feedbackKind, correctedLabel, comment);
+        if (!string.IsNullOrWhiteSpace(statusText))
+        {
+            viewModel.StatusText = statusText;
+        }
         UpdateDetails();
     }
 
     private async Task ShowSelectedMistakeAsync()
     {
-        if (MistakesListBox.SelectedItem is not SelectedMistakeViewItem item || navigateToMoveAsync is null)
+        if (viewModel.SelectedMistake is not SelectedMistakeViewItem item || navigateToMoveAsync is null)
         {
             return;
         }
@@ -432,64 +383,29 @@ public partial class AnalysisWindow : Window
         Close();
     }
 
-    private async Task LoadExplanationAsync(
-        SelectedMistakeViewItem item,
-        MoveAnalysisResult lead,
-        AnalysisExplanationRequest request,
-        int requestId)
+    private async Task LoadExplanationAsync(AnalysisWindowSelectedDetails pendingDetails)
     {
-        if (importedGame is null)
+        AnalysisWindowSelectedDetails? selectedDetails = await viewModel.LoadGeneratedDetailsAsync(pendingDetails);
+        if (selectedDetails is not null)
         {
-            return;
+            RenderSelectedDetails(selectedDetails);
         }
-
-        MoveExplanation? explanation = await explanationService.GenerateAndCacheAsync(
-            importedGame,
-            lead,
-            selectionState.CurrentResult?.AnalyzedSide,
-            request,
-            requestId);
-        if (explanation is null)
-        {
-            return;
-        }
-
-        if (!ReferenceEquals(MistakesListBox.SelectedItem, item))
-        {
-            return;
-        }
-
-        SetSelectedDetails(item.Mistake, lead, selectionState.CurrentResult?.OpeningReview, explanation, false, FindLatestFeedback(lead));
     }
 
-    private void SetDetailsPlaceholder(string message)
+    private void RenderDetailsPlaceholder()
     {
-        detailsFeedbackRenderer.ShowPlaceholder(message);
+        detailsFeedbackRenderer.ShowPlaceholder(viewModel.DetailsPlaceholderText);
         snapshotRenderer.Reset();
-        SimilarMistakesHintTextBlock.Text = string.Empty;
-        SimilarMistakesListBox.ItemsSource = null;
+        similarMistakesRenderer.Clear();
         TimelineSelectedTextBlock.Text = string.Empty;
     }
 
-    private void SetSelectedDetails(
-        SelectedMistake mistake,
-        MoveAnalysisResult lead,
-        OpeningPhaseReview? openingReview,
-        MoveExplanation explanation,
-        bool isLoading,
-        MoveAdviceFeedback? feedback)
+    private void RenderSelectedDetails(AnalysisWindowSelectedDetails selectedDetails)
     {
-        AnalysisSelectedDetailsPresentation details = AnalysisSelectedDetailsPresenter.Build(
-            mistake,
-            lead,
-            openingReview,
-            explanation,
-            isLoading,
-            feedback);
-        detailsFeedbackRenderer.ShowDetails(details);
-        RefreshReviewStatus(lead);
-        snapshotRenderer.Show(lead, details.EffectiveLabel);
-        RefreshSimilarMistakes(lead, details.EffectiveLabel);
+        detailsFeedbackRenderer.ShowDetails(selectedDetails.Details);
+        RefreshReviewStatus(selectedDetails.Lead);
+        snapshotRenderer.Show(selectedDetails.Lead, selectedDetails.Details.EffectiveLabel);
+        similarMistakesRenderer.Refresh(selectedDetails.Lead, selectedDetails.Details.EffectiveLabel);
     }
 
     private void MarkReviewedButton_Click(object? sender, RoutedEventArgs e)
@@ -500,44 +416,29 @@ public partial class AnalysisWindow : Window
 
     private void MarkSelectedReviewed(bool moveToNext)
     {
-        if (MistakesListBox.SelectedItem is not SelectedMistakeViewItem item)
-        {
-            return;
-        }
-
-        int reviewedPly = item.LeadMove.Replay.Ply;
-        selectionState.MarkReviewed(item.LeadMove);
-        RefreshReviewStatus(item.LeadMove);
+        AnalysisReviewActionResult reviewResult = viewModel.MarkSelectedReviewed(moveToNext);
         ApplyFilter();
-        if (moveToNext)
+        if (reviewResult.ShouldRenderAllReviewedPlaceholder)
         {
-            SelectNextUnreviewed(reviewedPly);
+            viewModel.ShowAllReviewedPlaceholder();
+            RenderDetailsPlaceholder();
+        }
+        else if (reviewResult.NextSelection is not null)
+        {
+            SyncInteractionState();
+            MistakesListBox.ScrollIntoView(reviewResult.NextSelection);
+        }
+        else if (viewModel.SelectedMistake is not null)
+        {
+            RefreshReviewStatus(viewModel.SelectedMistake.LeadMove);
         }
 
         RefreshTimeline(GetVisibleMistakeItems());
     }
 
-    private void SelectNextUnreviewed(int afterPly)
-    {
-        SelectedMistakeViewItem? next = GetVisibleMistakeItems()
-            .Where(item => !selectionState.IsReviewed(item.LeadMove))
-            .OrderBy(item => item.LeadMove.Replay.Ply <= afterPly)
-            .ThenBy(item => item.LeadMove.Replay.Ply)
-            .FirstOrDefault();
-
-        if (next is null)
-        {
-            SetDetailsPlaceholder("All visible highlights are reviewed.");
-            return;
-        }
-
-        MistakesListBox.SelectedItem = next;
-        MistakesListBox.ScrollIntoView(next);
-    }
-
     private void RefreshReviewStatus(MoveAnalysisResult lead)
     {
-        bool isReviewed = selectionState.IsReviewed(lead);
+        bool isReviewed = viewModel.IsReviewed(lead);
         detailsFeedbackRenderer.ShowReviewStatus(isReviewed);
     }
 
@@ -550,115 +451,70 @@ public partial class AnalysisWindow : Window
     private void SnapshotThreatButton_Click(object? sender, RoutedEventArgs e)
         => snapshotRenderer.SetMode(AnalysisSnapshotMode.Threat);
 
-    private void RefreshSimilarMistakes(MoveAnalysisResult lead, string label)
-    {
-        IReadOnlyList<SimilarMistakeLink> similar = AnalysisTimelinePresentation.BuildSimilarMistakeLinks(
-            GetVisibleMistakeItems(),
-            lead,
-            label);
-
-        SimilarMistakesListBox.ItemsSource = similar;
-        SimilarMistakesHintTextBlock.Text = AnalysisTimelinePresentation.BuildSimilarMistakesHint(similar.Count, label);
-    }
-
     private void SimilarMistakesListBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
-    {
-        if (SimilarMistakesListBox.SelectedItem is not SimilarMistakeLink link)
-        {
-            return;
-        }
-
-        MistakesListBox.SelectedItem = link.Item;
-        MistakesListBox.ScrollIntoView(link.Item);
-        SimilarMistakesListBox.SelectedItem = null;
-    }
+        => similarMistakesRenderer.SelectCurrentLink();
 
     private void RefreshTimeline(IReadOnlyList<SelectedMistakeViewItem> visibleItems)
     {
         timelineRenderer.Render(
-            selectionState.CurrentResult,
+            viewModel.CurrentResult,
             visibleItems,
-            MistakesListBox.SelectedItem as SelectedMistakeViewItem,
-            selectionState.ReviewedPlies);
+            viewModel.SelectedMistake,
+            viewModel.ReviewedPlies);
     }
 
     private IReadOnlyList<SelectedMistakeViewItem> GetVisibleMistakeItems()
-        => MistakesListBox.ItemsSource is IEnumerable<SelectedMistakeViewItem> items ? items.ToList() : [];
+        => viewModel.VisibleMistakes;
 
     private void SelectTimelineMistake(SelectedMistakeViewItem item)
     {
-        MistakesListBox.SelectedItem = item;
+        viewModel.SelectedMistake = item;
+        SyncInteractionState();
         MistakesListBox.ScrollIntoView(item);
     }
 
     private void RefreshAdviceRuntimeState()
     {
-        AdviceRuntimeStatus status = explanationService.RefreshRuntimeState();
-        AdviceStatusTextBlock.Text = status.StatusText;
-    }
-
-    private MoveAdviceFeedback? FindLatestFeedback(MoveAnalysisResult lead)
-    {
-        if (importedGame is null)
-        {
-            return null;
-        }
-
-        return dataService.FindLatestFeedback(
-            importedGame,
-            selectionState.CurrentResult?.AnalyzedSide ?? initialSide,
-            DefaultAnalysisOptions,
-            lead);
+        viewModel.RefreshAdviceRuntimeState();
     }
 
     private bool TryLoadCachedResultForSelectedSide()
     {
-        MistakesListBox.ItemsSource = null;
-        selectionState.ClearCurrentResult();
+        AnalysisWindowRunOutcome outcome = viewModel.ResetAndTryLoadCachedSelectedSide();
         RefreshTimeline([]);
-        SetDetailsPlaceholder("Run analysis to inspect highlighted mistakes.");
-        runControlsRenderer.SetSelectionAvailable(false);
-        detailsFeedbackRenderer.SetFeedbackButtonsEnabled(false);
-        explanationService.InvalidatePendingRequests();
+        RenderDetailsPlaceholder();
+        SyncInteractionState();
+        SyncFeedbackState();
 
-        if (SideComboBox.SelectedItem is not SideOption selectedSide)
-        {
-            SummaryTextBlock.Text = "Choose a side and run the analysis.";
-            return false;
-        }
-
-        AnalysisWindowRunOutcome outcome = runCoordinator.TryLoadCached(
-            importedGame,
-            selectedSide.Side,
-            DefaultAnalysisOptions);
         if (outcome.HasResult && outcome.Result is not null)
         {
             ApplyRunOutcome(outcome);
             return true;
         }
 
-        SummaryTextBlock.Text = outcome.StatusText;
         return false;
     }
 
     protected override void OnClosed(EventArgs e)
     {
-        if (importedGame is not null && SideComboBox.SelectedItem is SideOption selectedSide)
+        if (importedGame is not null)
         {
-            dataService.StoreWindowState(
-                importedGame,
-                new AnalysisWindowState(
-                    selectedSide.Side,
-                    QualityFilterComboBox.SelectedIndex,
-                    1));
+            viewModel.StoreWindowState();
         }
 
         base.OnClosed(e);
     }
 
-    private sealed record SideOption(PlayerSide Side, string Label)
+    private void SyncInteractionState()
     {
-        public override string ToString() => Label;
+        runControlsRenderer.ApplyInteractionState(
+            viewModel.CanRunAnalysis,
+            viewModel.IsAnalysisRunning,
+            viewModel.CanUseSelectedMistake);
     }
 
+    private void SyncFeedbackState()
+    {
+        detailsFeedbackRenderer.SetFeedbackButtonsEnabled(viewModel.CanRecordFeedback);
+    }
 }

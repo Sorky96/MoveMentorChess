@@ -9,25 +9,12 @@ internal sealed class AnalysisRunControlsRenderer(
     ComboBox qualityFilterComboBox,
     Button showOnBoardButton)
 {
-    public void SetAnalysisRunning()
+    public void ApplyInteractionState(bool canRunAnalysis, bool isAnalysisRunning, bool canUseSelectedMistake)
     {
-        analyzeButton.IsEnabled = false;
-        testAdviceButton.IsEnabled = false;
-        sideComboBox.IsEnabled = false;
-        qualityFilterComboBox.IsEnabled = false;
-        showOnBoardButton.IsEnabled = false;
-    }
-
-    public void SetAnalysisIdle(bool canAnalyze)
-    {
-        analyzeButton.IsEnabled = canAnalyze;
-        testAdviceButton.IsEnabled = true;
-        sideComboBox.IsEnabled = true;
-        qualityFilterComboBox.IsEnabled = true;
-    }
-
-    public void SetSelectionAvailable(bool hasSelection)
-    {
-        showOnBoardButton.IsEnabled = hasSelection;
+        analyzeButton.IsEnabled = canRunAnalysis;
+        testAdviceButton.IsEnabled = !isAnalysisRunning;
+        sideComboBox.IsEnabled = !isAnalysisRunning;
+        qualityFilterComboBox.IsEnabled = !isAnalysisRunning;
+        showOnBoardButton.IsEnabled = canUseSelectedMistake;
     }
 }
