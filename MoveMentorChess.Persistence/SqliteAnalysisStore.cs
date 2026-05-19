@@ -283,13 +283,13 @@ public sealed class SqliteAnalysisStore :
         ArgumentNullException.ThrowIfNull(items);
 
         WithImmediateTransaction(database =>
-            SqliteOpeningTrainingStore.SaveReviewItems(database, playerKey, items));
+            SqliteOpeningReviewStore.SaveReviewItems(database, playerKey, items));
     }
 
     public IReadOnlyList<OpeningReviewItem> ListOpeningReviewItems(string? playerKey = null, int limit = 1000)
     {
         return WithDatabase(database =>
-            SqliteOpeningTrainingStore.ListReviewItems(database, playerKey, limit));
+            SqliteOpeningReviewStore.ListReviewItems(database, playerKey, limit));
     }
 
     public void SaveOpeningTrainingScheduledActions(string playerKey, IReadOnlyList<OpeningTrainingScheduledAction> actions)
@@ -298,13 +298,13 @@ public sealed class SqliteAnalysisStore :
         ArgumentNullException.ThrowIfNull(actions);
 
         WithImmediateTransaction(database =>
-            SqliteOpeningTrainingStore.SaveScheduledActions(database, playerKey, actions));
+            SqliteOpeningTrainingScheduleStore.SaveScheduledActions(database, playerKey, actions));
     }
 
     public IReadOnlyList<OpeningTrainingScheduledAction> ListDueOpeningTrainingScheduledActions(string? playerKey, DateTime nowUtc, int limit = 50)
     {
         return WithDatabase(database =>
-            SqliteOpeningTrainingStore.ListDueScheduledActions(database, playerKey, nowUtc, limit));
+            SqliteOpeningTrainingScheduleStore.ListDueScheduledActions(database, playerKey, nowUtc, limit));
     }
 
     public void MarkOpeningTrainingScheduledActionCompleted(string playerKey, string actionId, DateTime completedUtc)
@@ -313,7 +313,7 @@ public sealed class SqliteAnalysisStore :
         ArgumentException.ThrowIfNullOrWhiteSpace(actionId);
 
         WithDatabase(database =>
-            SqliteOpeningTrainingStore.MarkScheduledActionCompleted(database, playerKey, actionId, completedUtc));
+            SqliteOpeningTrainingScheduleStore.MarkScheduledActionCompleted(database, playerKey, actionId, completedUtc));
     }
 
     public void SaveOpeningTrainingTelemetryEvent(OpeningTrainingTelemetryEvent telemetryEvent)
