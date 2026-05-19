@@ -282,7 +282,7 @@ public sealed class SqliteAnalysisStore :
         ArgumentException.ThrowIfNullOrWhiteSpace(playerKey);
         ArgumentNullException.ThrowIfNull(items);
 
-        WithImmediateTransaction(database =>
+        WithDatabase(database =>
             SqliteOpeningReviewStore.SaveReviewItems(database, playerKey, items));
     }
 
@@ -297,7 +297,7 @@ public sealed class SqliteAnalysisStore :
         ArgumentException.ThrowIfNullOrWhiteSpace(playerKey);
         ArgumentNullException.ThrowIfNull(actions);
 
-        WithImmediateTransaction(database =>
+        WithDatabase(database =>
             SqliteOpeningTrainingScheduleStore.SaveScheduledActions(database, playerKey, actions));
     }
 

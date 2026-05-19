@@ -51,9 +51,7 @@ internal static class SqliteAnalysisResultStore
                 continue;
             }
 
-            GameAnalysisResult? item = JsonSerializer.Deserialize<GameAnalysisResult>(
-                payload,
-                SqliteAnalysisDataConverters.JsonOptions);
+            GameAnalysisResult? item = DeserializeResultOrNull(payload);
             if (item is not null)
             {
                 items.Add(SqliteAnalysisResultPayloadNormalizer.NormalizeLoadedResult(database, key, item));
@@ -256,15 +254,27 @@ internal static class SqliteAnalysisResultStore
             return false;
         }
 
-        result = JsonSerializer.Deserialize<GameAnalysisResult>(
-            payload,
-            SqliteAnalysisDataConverters.JsonOptions);
+        result = DeserializeResultOrNull(payload);
         if (result is not null)
         {
             result = SqliteAnalysisResultPayloadNormalizer.NormalizeLoadedResult(database, key, result);
         }
 
         return result is not null;
+    }
+
+    private static GameAnalysisResult? DeserializeResultOrNull(string payload)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<GameAnalysisResult>(
+                payload,
+                SqliteAnalysisDataConverters.JsonOptions);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     public static void SaveResult(

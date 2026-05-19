@@ -41,7 +41,13 @@ internal static class SqliteOpeningTrainingDataConverters
             return null;
         }
 
-        return ParseUtc(value);
+        return DateTime.TryParse(
+            value,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal,
+            out DateTime parsed)
+            ? parsed
+            : null;
     }
 
     public static double ParseDouble(string? value)

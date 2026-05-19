@@ -120,14 +120,16 @@ internal static class SqliteAnalysisResultPayloadNormalizer
 
             MoveExplanation? explanation = null;
             string? shortExplanation = statement.GetText(4);
+            string? detailedExplanation = statement.GetText(5);
             string? trainingHint = statement.GetText(6);
             if (!string.IsNullOrWhiteSpace(shortExplanation)
+                || !string.IsNullOrWhiteSpace(detailedExplanation)
                 || !string.IsNullOrWhiteSpace(trainingHint))
             {
                 explanation = new MoveExplanation(
                     shortExplanation ?? string.Empty,
                     trainingHint ?? string.Empty,
-                    statement.GetText(5) ?? string.Empty);
+                    detailedExplanation ?? string.Empty);
             }
 
             annotations[statement.GetInt(0)] = new StoredMoveAnnotation(tag, explanation);

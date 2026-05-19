@@ -7,62 +7,65 @@ internal static class SqliteOpeningReviewStore
     public static void SaveReviewItems(SqliteDatabase database, string playerKey, IReadOnlyList<OpeningReviewItem> items)
     {
         string normalizedPlayerKey = SqliteOpeningTrainingDataConverters.NormalizePlayerKey(playerKey);
-        foreach (OpeningReviewItem item in items)
+        SqliteTransaction.RunImmediate(database, () =>
         {
-            string branchKey = item.BranchKey.Value;
-            string positionKey = item.PositionKey.Value;
-            database.ExecuteNonQuery(
-                """
-                INSERT INTO opening_review_items (
-                    player_key,
-                    branch_key,
-                    position_key,
-                    last_reviewed_utc,
-                    next_review_utc,
-                    ease,
-                    correct_streak,
-                    wrong_streak,
-                    total_attempts,
-                    opening_key,
-                    opening_line_key)
-                VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
-                ON CONFLICT (player_key, branch_key, position_key)
-                DO UPDATE SET
-                    opening_key = coalesce(excluded.opening_key, opening_review_items.opening_key),
-                    opening_line_key = coalesce(excluded.opening_line_key, opening_review_items.opening_line_key),
-                    last_reviewed_utc = CASE
-                        WHEN excluded.last_reviewed_utc IS NULL THEN opening_review_items.last_reviewed_utc
-                        WHEN opening_review_items.last_reviewed_utc IS NULL THEN excluded.last_reviewed_utc
-                        WHEN excluded.last_reviewed_utc > opening_review_items.last_reviewed_utc THEN excluded.last_reviewed_utc
-                        ELSE opening_review_items.last_reviewed_utc
-                    END,
-                    next_review_utc = excluded.next_review_utc,
-                    ease = excluded.ease,
-                    correct_streak = CASE
-                        WHEN excluded.correct_streak > 0 THEN opening_review_items.correct_streak + excluded.correct_streak
-                        ELSE 0
-                    END,
-                    wrong_streak = CASE
-                        WHEN excluded.wrong_streak > 0 THEN opening_review_items.wrong_streak + excluded.wrong_streak
-                        ELSE 0
-                    END,
-                    total_attempts = opening_review_items.total_attempts + excluded.total_attempts;
-                """,
-                statement =>
-                {
-                    statement.BindText(1, normalizedPlayerKey);
-                    statement.BindText(2, branchKey);
-                    statement.BindText(3, positionKey);
-                    statement.BindNullableText(4, SqliteOpeningTrainingDataConverters.FormatNullableUtc(item.LastReviewedUtc));
-                    statement.BindText(5, SqliteOpeningTrainingDataConverters.FormatUtc(item.NextReviewUtc));
-                    statement.BindText(6, SqliteOpeningTrainingDataConverters.FormatDouble(item.Ease));
-                    statement.BindInt(7, item.CorrectStreak);
-                    statement.BindInt(8, item.WrongStreak);
-                    statement.BindInt(9, item.TotalAttempts);
-                    statement.BindNullableText(10, item.OpeningKey?.Value);
-                    statement.BindNullableText(11, item.OpeningLineKey?.Value);
-                });
-        }
+            foreach (OpeningReviewItem item in items)
+            {
+                string branchKey = item.BranchKey.Value;
+                string positionKey = item.PositionKey.Value;
+                database.ExecuteNonQuery(
+                    """
+                    INSERT INTO opening_review_items (
+                        player_key,
+                        branch_key,
+                        position_key,
+                        last_reviewed_utc,
+                        next_review_utc,
+                        ease,
+                        correct_streak,
+                        wrong_streak,
+                        total_attempts,
+                        opening_key,
+                        opening_line_key)
+                    VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
+                    ON CONFLICT (player_key, branch_key, position_key)
+                    DO UPDATE SET
+                        opening_key = coalesce(excluded.opening_key, opening_review_items.opening_key),
+                        opening_line_key = coalesce(excluded.opening_line_key, opening_review_items.opening_line_key),
+                        last_reviewed_utc = CASE
+                            WHEN excluded.last_reviewed_utc IS NULL THEN opening_review_items.last_reviewed_utc
+                            WHEN opening_review_items.last_reviewed_utc IS NULL THEN excluded.last_reviewed_utc
+                            WHEN excluded.last_reviewed_utc > opening_review_items.last_reviewed_utc THEN excluded.last_reviewed_utc
+                            ELSE opening_review_items.last_reviewed_utc
+                        END,
+                        next_review_utc = excluded.next_review_utc,
+                        ease = excluded.ease,
+                        correct_streak = CASE
+                            WHEN excluded.correct_streak > 0 THEN opening_review_items.correct_streak + excluded.correct_streak
+                            ELSE 0
+                        END,
+                        wrong_streak = CASE
+                            WHEN excluded.wrong_streak > 0 THEN opening_review_items.wrong_streak + excluded.wrong_streak
+                            ELSE 0
+                        END,
+                        total_attempts = opening_review_items.total_attempts + excluded.total_attempts;
+                    """,
+                    statement =>
+                    {
+                        statement.BindText(1, normalizedPlayerKey);
+                        statement.BindText(2, branchKey);
+                        statement.BindText(3, positionKey);
+                        statement.BindNullableText(4, SqliteOpeningTrainingDataConverters.FormatNullableUtc(item.LastReviewedUtc));
+                        statement.BindText(5, SqliteOpeningTrainingDataConverters.FormatUtc(item.NextReviewUtc));
+                        statement.BindText(6, SqliteOpeningTrainingDataConverters.FormatDouble(item.Ease));
+                        statement.BindInt(7, item.CorrectStreak);
+                        statement.BindInt(8, item.WrongStreak);
+                        statement.BindInt(9, item.TotalAttempts);
+                        statement.BindNullableText(10, item.OpeningKey?.Value);
+                        statement.BindNullableText(11, item.OpeningLineKey?.Value);
+                    });
+            }
+        });
     }
 
     public static IReadOnlyList<OpeningReviewItem> ListReviewItems(

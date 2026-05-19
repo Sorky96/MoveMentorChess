@@ -41,4 +41,16 @@ public sealed class OpeningLineCatalogBuilderTests
         Assert.Equal("King's Pawn Game (C20)", item.DisplayName);
         Assert.Equal(new OpeningKey("C20|"), item.OpeningKey);
     }
+
+    [Fact]
+    public void OpeningLineCatalogBuilder_EscapesLineGroupKeyParts()
+    {
+        string key = OpeningLineCatalogBuilder.BuildLineGroupKey(
+            "C|20",
+            "King\\Pawn",
+            "Main|Line",
+            RepertoireSide.White);
+
+        Assert.Equal("C\\|20|King\\\\Pawn|Main\\|Line|White", key);
+    }
 }

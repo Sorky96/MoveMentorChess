@@ -10,57 +10,60 @@ internal static class SqliteOpeningTrainingScheduleStore
         IReadOnlyList<OpeningTrainingScheduledAction> actions)
     {
         string normalizedPlayerKey = SqliteOpeningTrainingDataConverters.NormalizePlayerKey(playerKey);
-        foreach (OpeningTrainingScheduledAction action in actions)
+        SqliteTransaction.RunImmediate(database, () =>
         {
-            database.ExecuteNonQuery(
-                """
-                INSERT INTO opening_training_scheduled_actions (
-                    id,
-                    player_key,
-                    session_id,
-                    kind,
-                    line_key,
-                    branch_key,
-                    position_key,
-                    created_utc,
-                    due_utc,
-                    status,
-                    completed_utc,
-                    priority,
-                    source_action_id)
-                VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)
-                ON CONFLICT (id)
-                DO UPDATE SET
-                    player_key = excluded.player_key,
-                    session_id = excluded.session_id,
-                    kind = excluded.kind,
-                    line_key = excluded.line_key,
-                    branch_key = excluded.branch_key,
-                    position_key = excluded.position_key,
-                    created_utc = excluded.created_utc,
-                    due_utc = excluded.due_utc,
-                    status = excluded.status,
-                    completed_utc = excluded.completed_utc,
-                    priority = excluded.priority,
-                    source_action_id = excluded.source_action_id;
-                """,
-                statement =>
-                {
-                    statement.BindText(1, action.Id);
-                    statement.BindText(2, normalizedPlayerKey);
-                    statement.BindText(3, action.SessionId);
-                    statement.BindInt(4, (int)action.Kind);
-                    statement.BindNullableText(5, action.LineKey?.Value);
-                    statement.BindNullableText(6, action.BranchKey?.Value);
-                    statement.BindNullableText(7, action.PositionKey?.Value);
-                    statement.BindText(8, SqliteOpeningTrainingDataConverters.FormatUtc(action.CreatedUtc));
-                    statement.BindText(9, SqliteOpeningTrainingDataConverters.FormatUtc(action.DueUtc));
-                    statement.BindInt(10, (int)action.Status);
-                    statement.BindNullableText(11, SqliteOpeningTrainingDataConverters.FormatNullableUtc(action.CompletedUtc));
-                    statement.BindInt(12, action.Priority);
-                    statement.BindNullableText(13, action.SourceActionId);
-                });
-        }
+            foreach (OpeningTrainingScheduledAction action in actions)
+            {
+                database.ExecuteNonQuery(
+                    """
+                    INSERT INTO opening_training_scheduled_actions (
+                        id,
+                        player_key,
+                        session_id,
+                        kind,
+                        line_key,
+                        branch_key,
+                        position_key,
+                        created_utc,
+                        due_utc,
+                        status,
+                        completed_utc,
+                        priority,
+                        source_action_id)
+                    VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)
+                    ON CONFLICT (id)
+                    DO UPDATE SET
+                        player_key = excluded.player_key,
+                        session_id = excluded.session_id,
+                        kind = excluded.kind,
+                        line_key = excluded.line_key,
+                        branch_key = excluded.branch_key,
+                        position_key = excluded.position_key,
+                        created_utc = excluded.created_utc,
+                        due_utc = excluded.due_utc,
+                        status = excluded.status,
+                        completed_utc = excluded.completed_utc,
+                        priority = excluded.priority,
+                        source_action_id = excluded.source_action_id;
+                    """,
+                    statement =>
+                    {
+                        statement.BindText(1, action.Id);
+                        statement.BindText(2, normalizedPlayerKey);
+                        statement.BindText(3, action.SessionId);
+                        statement.BindInt(4, (int)action.Kind);
+                        statement.BindNullableText(5, action.LineKey?.Value);
+                        statement.BindNullableText(6, action.BranchKey?.Value);
+                        statement.BindNullableText(7, action.PositionKey?.Value);
+                        statement.BindText(8, SqliteOpeningTrainingDataConverters.FormatUtc(action.CreatedUtc));
+                        statement.BindText(9, SqliteOpeningTrainingDataConverters.FormatUtc(action.DueUtc));
+                        statement.BindInt(10, (int)action.Status);
+                        statement.BindNullableText(11, SqliteOpeningTrainingDataConverters.FormatNullableUtc(action.CompletedUtc));
+                        statement.BindInt(12, action.Priority);
+                        statement.BindNullableText(13, action.SourceActionId);
+                    });
+            }
+        });
     }
 
     public static IReadOnlyList<OpeningTrainingScheduledAction> ListDueScheduledActions(

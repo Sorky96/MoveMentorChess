@@ -126,10 +126,17 @@ internal static class SqliteOpeningTrainingTelemetryStore
             return new Dictionary<string, string>();
         }
 
-        return JsonSerializer.Deserialize<Dictionary<string, string>>(
-                payload,
-                SqliteOpeningTrainingDataConverters.JsonOptions)
-            ?? new Dictionary<string, string>();
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, string>>(
+                    payload,
+                    SqliteOpeningTrainingDataConverters.JsonOptions)
+                ?? new Dictionary<string, string>();
+        }
+        catch (JsonException)
+        {
+            return new Dictionary<string, string>();
+        }
     }
 
     private static string BuildTelemetryEventId(OpeningTrainingTelemetryEvent telemetryEvent)

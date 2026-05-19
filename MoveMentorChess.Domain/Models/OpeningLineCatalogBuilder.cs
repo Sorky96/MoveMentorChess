@@ -42,6 +42,20 @@ public static class OpeningLineCatalogBuilder
             : $"{opening}: {variationName} ({eco})";
     }
 
+    public static string BuildLineGroupKey(
+        string eco,
+        string openingName,
+        string variationName,
+        RepertoireSide side)
+    {
+        return string.Join(
+            CompositeKeySeparator,
+            SanitizeKeyPart(eco),
+            SanitizeKeyPart(openingName),
+            SanitizeKeyPart(variationName),
+            side.ToString());
+    }
+
     private static string BuildOpeningKey(string eco, string openingName)
     {
         return $"{SanitizeKeyPart(eco)}{CompositeKeySeparator}{SanitizeKeyPart(openingName)}";

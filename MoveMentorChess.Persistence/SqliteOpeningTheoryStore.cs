@@ -149,13 +149,7 @@ internal static class SqliteOpeningTheoryStore
                 continue;
             }
 
-            string dedupeKey = $"{eco}|{openingName}|{variationName}|{side}";
-            if (!seen.Add(dedupeKey))
-            {
-                continue;
-            }
-
-            items.Add(OpeningLineCatalogBuilder.CreateItem(
+            OpeningLineCatalogItem item = OpeningLineCatalogBuilder.CreateItem(
                 eco,
                 openingName,
                 variationName,
@@ -163,7 +157,15 @@ internal static class SqliteOpeningTheoryStore
                 rootPositionKey,
                 fen,
                 gameCount,
-                branchCount));
+                branchCount);
+
+            string dedupeKey = OpeningLineCatalogBuilder.BuildLineGroupKey(eco, openingName, variationName, side);
+            if (!seen.Add(dedupeKey))
+            {
+                continue;
+            }
+
+            items.Add(item);
 
             if (items.Count >= safeLimit)
             {
