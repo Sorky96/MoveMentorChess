@@ -275,8 +275,7 @@ internal static class SqliteAnalysisResultStore
     {
         string timestamp = timestampUtc.ToUniversalTime().ToString("O");
         string payload = JsonSerializer.Serialize(result, JsonOptions);
-        database.ExecuteNonQuery("BEGIN IMMEDIATE;");
-        try
+        SqliteTransaction.RunImmediate(database, () =>
         {
             using SqliteStatement statement = database.Prepare("""
                 INSERT INTO analysis_results (
@@ -306,13 +305,7 @@ internal static class SqliteAnalysisResultStore
             statement.StepUntilDone();
 
             ReplaceMoveAnalyses(database, key, result, ParseUtc(timestamp));
-            database.ExecuteNonQuery("COMMIT;");
-        }
-        catch
-        {
-            database.ExecuteNonQuery("ROLLBACK;");
-            throw;
-        }
+        });
     }
 
     private static GameAnalysisResult NormalizeLoadedResult(

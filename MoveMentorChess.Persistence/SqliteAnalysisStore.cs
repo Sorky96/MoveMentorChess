@@ -70,17 +70,9 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            database.ExecuteNonQuery("BEGIN IMMEDIATE;");
-            try
-            {
-                SqliteOpeningTreeStore.SaveOpeningTree(database, tree);
-                database.ExecuteNonQuery("COMMIT;");
-            }
-            catch
-            {
-                database.ExecuteNonQuery("ROLLBACK;");
-                throw;
-            }
+            SqliteTransaction.RunImmediate(
+                database,
+                () => SqliteOpeningTreeStore.SaveOpeningTree(database, tree));
         }
     }
 
@@ -91,17 +83,9 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            database.ExecuteNonQuery("BEGIN IMMEDIATE;");
-            try
-            {
-                SqliteOpeningTreeStore.ReplaceOpeningTree(database, tree);
-                database.ExecuteNonQuery("COMMIT;");
-            }
-            catch
-            {
-                database.ExecuteNonQuery("ROLLBACK;");
-                throw;
-            }
+            SqliteTransaction.RunImmediate(
+                database,
+                () => SqliteOpeningTreeStore.ReplaceOpeningTree(database, tree));
         }
     }
 
@@ -202,17 +186,9 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            database.ExecuteNonQuery("BEGIN IMMEDIATE;");
-            try
-            {
-                SqliteImportedGameStore.SaveImportedGames(database, [game], clock.UtcNow);
-                database.ExecuteNonQuery("COMMIT;");
-            }
-            catch
-            {
-                database.ExecuteNonQuery("ROLLBACK;");
-                throw;
-            }
+            SqliteTransaction.RunImmediate(
+                database,
+                () => SqliteImportedGameStore.SaveImportedGames(database, [game], clock.UtcNow));
         }
     }
 
@@ -227,17 +203,9 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            database.ExecuteNonQuery("BEGIN IMMEDIATE;");
-            try
-            {
-                SqliteImportedGameStore.SaveImportedGames(database, games, clock.UtcNow);
-                database.ExecuteNonQuery("COMMIT;");
-            }
-            catch
-            {
-                database.ExecuteNonQuery("ROLLBACK;");
-                throw;
-            }
+            SqliteTransaction.RunImmediate(
+                database,
+                () => SqliteImportedGameStore.SaveImportedGames(database, games, clock.UtcNow));
         }
     }
 
@@ -268,17 +236,9 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            database.ExecuteNonQuery("BEGIN IMMEDIATE;");
-            try
-            {
-                SqliteImportedGameStore.ClearImportedAnalysisData(database);
-                database.ExecuteNonQuery("COMMIT;");
-            }
-            catch
-            {
-                database.ExecuteNonQuery("ROLLBACK;");
-                throw;
-            }
+            SqliteTransaction.RunImmediate(
+                database,
+                () => SqliteImportedGameStore.ClearImportedAnalysisData(database));
         }
     }
 
@@ -287,18 +247,11 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            database.ExecuteNonQuery("BEGIN IMMEDIATE;");
-            try
+            SqliteTransaction.RunImmediate(database, () =>
             {
                 SqliteAnalysisMetadataStore.ClearDerivedAnalysisData(database);
                 SqliteAnalysisMetadataStore.SetMetadataValue(database, DerivedAnalysisDataVersionKey, derivedAnalysisDataVersion);
-                database.ExecuteNonQuery("COMMIT;");
-            }
-            catch
-            {
-                database.ExecuteNonQuery("ROLLBACK;");
-                throw;
-            }
+            });
         }
     }
 
@@ -434,17 +387,9 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            database.ExecuteNonQuery("BEGIN IMMEDIATE;");
-            try
-            {
-                SqliteOpeningTrainingStore.SaveReviewItems(database, playerKey, items);
-                database.ExecuteNonQuery("COMMIT;");
-            }
-            catch
-            {
-                database.ExecuteNonQuery("ROLLBACK;");
-                throw;
-            }
+            SqliteTransaction.RunImmediate(
+                database,
+                () => SqliteOpeningTrainingStore.SaveReviewItems(database, playerKey, items));
         }
     }
 
@@ -465,17 +410,9 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            database.ExecuteNonQuery("BEGIN IMMEDIATE;");
-            try
-            {
-                SqliteOpeningTrainingStore.SaveScheduledActions(database, playerKey, actions);
-                database.ExecuteNonQuery("COMMIT;");
-            }
-            catch
-            {
-                database.ExecuteNonQuery("ROLLBACK;");
-                throw;
-            }
+            SqliteTransaction.RunImmediate(
+                database,
+                () => SqliteOpeningTrainingStore.SaveScheduledActions(database, playerKey, actions));
         }
     }
 
@@ -545,18 +482,11 @@ public sealed class SqliteAnalysisStore :
             return;
         }
 
-        database.ExecuteNonQuery("BEGIN IMMEDIATE;");
-        try
+        SqliteTransaction.RunImmediate(database, () =>
         {
             SqliteAnalysisMetadataStore.ClearDerivedAnalysisData(database);
             SqliteAnalysisMetadataStore.SetMetadataValue(database, DerivedAnalysisDataVersionKey, derivedAnalysisDataVersion);
-            database.ExecuteNonQuery("COMMIT;");
-        }
-        catch
-        {
-            database.ExecuteNonQuery("ROLLBACK;");
-            throw;
-        }
+        });
     }
 
     private SqliteDatabase OpenDatabase() => new(databasePath);
