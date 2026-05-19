@@ -1,14 +1,8 @@
-using System.Globalization;
-using System.Text.Json;
-
 namespace MoveMentorChess.Persistence;
 
 internal static class SqliteMoveAdviceFeedbackStore
 {
     private const int SqliteRow = SqliteResult.Row;
-    private const int NoMoveTimeMs = -1;
-
-    private static readonly JsonSerializerOptions JsonOptions = new();
 
     public static IReadOnlyList<MoveAdviceFeedback> ListMoveAdviceFeedback(
         SqliteDatabase database,
@@ -100,12 +94,12 @@ internal static class SqliteMoveAdviceFeedbackStore
             """);
 
         statement.BindText(1, string.IsNullOrWhiteSpace(feedback.FeedbackId) ? Guid.NewGuid().ToString("N") : feedback.FeedbackId);
-        statement.BindText(2, feedback.TimestampUtc.ToUniversalTime().ToString("O"));
+        statement.BindText(2, SqliteAnalysisDataConverters.FormatUtc(feedback.TimestampUtc));
         statement.BindText(3, feedback.GameFingerprint);
         statement.BindInt(4, (int)feedback.AnalyzedSide);
         statement.BindInt(5, feedback.Depth);
         statement.BindInt(6, feedback.MultiPv);
-        statement.BindInt(7, NormalizeMoveTime(feedback.MoveTimeMs));
+        statement.BindInt(7, SqliteAnalysisDataConverters.NormalizeMoveTime(feedback.MoveTimeMs));
         statement.BindInt(8, feedback.Ply);
         statement.BindInt(9, feedback.MoveNumber);
         statement.BindText(10, feedback.PlayedSan);
@@ -116,8 +110,8 @@ internal static class SqliteMoveAdviceFeedbackStore
         statement.BindNullableInt(15, feedback.EvalAfterCp);
         statement.BindNullableText(16, feedback.BestMoveUci);
         statement.BindNullableText(17, feedback.OriginalLabel);
-        statement.BindNullableText(18, FormatNullableDouble(feedback.OriginalConfidence));
-        statement.BindText(19, SerializeEvidence(feedback.OriginalEvidence));
+        statement.BindNullableText(18, SqliteAnalysisDataConverters.FormatNullableDouble(feedback.OriginalConfidence));
+        statement.BindText(19, SqliteAnalysisDataConverters.SerializeEvidence(feedback.OriginalEvidence));
         statement.BindInt(20, (int)feedback.Quality);
         statement.BindNullableInt(21, feedback.CentipawnLoss);
         statement.BindText(22, feedback.FeedbackKind.ToString());
@@ -131,12 +125,12 @@ internal static class SqliteMoveAdviceFeedbackStore
     {
         return new MoveAdviceFeedback(
             statement.GetText(0) ?? string.Empty,
-            ParseUtc(statement.GetText(1)),
+            SqliteAnalysisDataConverters.ParseUtc(statement.GetText(1)),
             statement.GetText(2) ?? string.Empty,
             (PlayerSide)statement.GetInt(3),
             statement.GetInt(4),
             statement.GetInt(5),
-            ReadMoveTime(statement.GetInt(6)),
+            SqliteAnalysisDataConverters.ReadMoveTime(statement.GetInt(6)),
             statement.GetInt(7),
             statement.GetInt(8),
             statement.GetText(9) ?? string.Empty,
@@ -147,76 +141,13 @@ internal static class SqliteMoveAdviceFeedbackStore
             statement.GetNullableInt(14),
             statement.GetText(15),
             statement.GetText(16),
-            ParseNullableDouble(statement.GetText(17)),
-            DeserializeEvidence(statement.GetText(18)),
+            SqliteAnalysisDataConverters.ParseNullableDouble(statement.GetText(17)),
+            SqliteAnalysisDataConverters.DeserializeEvidence(statement.GetText(18)),
             (MoveQualityBucket)statement.GetInt(19),
             statement.GetNullableInt(20),
-            ParseNullableFeedbackKind(statement.GetText(21)) ?? AdviceFeedbackKind.NotUseful,
+            SqliteAnalysisDataConverters.ParseNullableFeedbackKind(statement.GetText(21)) ?? AdviceFeedbackKind.NotUseful,
             statement.GetText(22),
             statement.GetText(23),
             statement.GetText(24) ?? string.Empty);
-    }
-
-    private static int NormalizeMoveTime(int? moveTimeMs) => moveTimeMs ?? NoMoveTimeMs;
-
-    private static int? ReadMoveTime(int rawMoveTime) => rawMoveTime == NoMoveTimeMs ? null : rawMoveTime;
-
-    private static DateTime ParseUtc(string? value)
-    {
-        return DateTime.TryParse(
-            value,
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal,
-            out DateTime parsed)
-            ? parsed
-            : DateTime.MinValue;
-    }
-
-    private static AdviceFeedbackKind? ParseNullableFeedbackKind(string? value)
-    {
-        return Enum.TryParse(value, ignoreCase: true, out AdviceFeedbackKind parsed)
-            ? parsed
-            : null;
-    }
-
-    private static IReadOnlyList<string> DeserializeEvidence(string? payload)
-    {
-        if (string.IsNullOrWhiteSpace(payload))
-        {
-            return [];
-        }
-
-        try
-        {
-            return JsonSerializer.Deserialize<IReadOnlyList<string>>(payload, JsonOptions) ?? [];
-        }
-        catch
-        {
-            return [];
-        }
-    }
-
-    private static double? ParseNullableDouble(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        return double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double parsed)
-            ? parsed
-            : null;
-    }
-
-    private static string? FormatNullableDouble(double? value)
-    {
-        return value.HasValue
-            ? value.Value.ToString("0.####", CultureInfo.InvariantCulture)
-            : null;
-    }
-
-    private static string SerializeEvidence(IReadOnlyList<string>? evidence)
-    {
-        return JsonSerializer.Serialize(evidence ?? [], JsonOptions);
     }
 }

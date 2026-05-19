@@ -365,6 +365,53 @@ public sealed class SqliteAnalysisStoreTests
     }
 
     [Fact]
+    public void SqliteAnalysisStore_AppliesLatestManualLabelCorrectionWhenLoadingResult()
+    {
+        string databasePath = CreateTempDatabasePath();
+
+        try
+        {
+            SqliteAnalysisStore store = new(databasePath);
+            ImportedGame game = PgnGameParser.Parse(GameOnePgn);
+            GameAnalysisCacheKey key = GameAnalysisCache.CreateKey(game, PlayerSide.White, new EngineAnalysisOptions(Depth: 16, MultiPv: 2));
+            MoveAnalysisResult move = CreateMoveAnalysis(
+                ply: 3,
+                moveNumber: 2,
+                phase: GamePhase.Opening,
+                quality: MoveQualityBucket.Mistake,
+                centipawnLoss: 145,
+                label: "missed_tactic");
+            GameAnalysisResult result = new(
+                game,
+                PlayerSide.White,
+                [move.Replay],
+                [move],
+                [
+                    new SelectedMistake(
+                        [move],
+                        move.Quality,
+                        move.MistakeTag,
+                        move.Explanation!)
+                ]);
+
+            store.SaveResult(key, result);
+            store.SaveMoveAdviceFeedback(CreateFeedback(key, move, AdviceFeedbackKind.WrongLabel, "material_loss", "latest"));
+
+            bool found = store.TryLoadResult(key, out GameAnalysisResult? restored);
+
+            Assert.True(found);
+            Assert.NotNull(restored);
+            Assert.Equal("material_loss", restored!.MoveAnalyses[0].MistakeTag?.Label);
+            Assert.Equal("material_loss", restored.HighlightedMistakes[0].Moves[0].MistakeTag?.Label);
+            Assert.Equal("material_loss", restored.HighlightedMistakes[0].Tag?.Label);
+        }
+        finally
+        {
+            DeleteTempDatabase(databasePath);
+        }
+    }
+
+    [Fact]
     public void SqliteAnalysisStore_DeletesManualFeedbackWithImportedGame()
     {
         string databasePath = CreateTempDatabasePath();
@@ -865,6 +912,100 @@ public sealed class SqliteAnalysisStoreTests
     }
 
     [Fact]
+    public void SqliteAnalysisStore_ListsMoveAnalysesByAnalysisTimestamp()
+    {
+        string databasePath = CreateTempDatabasePath();
+
+        try
+        {
+            DateTime firstAnalysisUtc = new(2026, 4, 20, 10, 0, 0, DateTimeKind.Utc);
+            DateTime secondAnalysisUtc = firstAnalysisUtc.AddHours(1);
+            DateTime laterImportUtc = firstAnalysisUtc.AddHours(2);
+            ImportedGame firstGame = PgnGameParser.Parse(GameOnePgn);
+            ImportedGame secondGame = PgnGameParser.Parse(GameTwoPgn);
+            GameAnalysisCacheKey firstKey = GameAnalysisCache.CreateKey(firstGame, PlayerSide.White, new EngineAnalysisOptions());
+            GameAnalysisCacheKey secondKey = GameAnalysisCache.CreateKey(secondGame, PlayerSide.White, new EngineAnalysisOptions());
+            MoveAnalysisResult firstMove = CreateMoveAnalysis(
+                ply: 3,
+                moveNumber: 2,
+                phase: GamePhase.Opening,
+                quality: MoveQualityBucket.Mistake,
+                centipawnLoss: 145,
+                label: "first_analysis");
+            MoveAnalysisResult secondMove = CreateMoveAnalysis(
+                ply: 3,
+                moveNumber: 2,
+                phase: GamePhase.Opening,
+                quality: MoveQualityBucket.Blunder,
+                centipawnLoss: 245,
+                label: "second_analysis");
+
+            new SqliteAnalysisStore(databasePath, clock: new FixedClock(firstAnalysisUtc))
+                .SaveResult(firstKey, new GameAnalysisResult(firstGame, PlayerSide.White, [firstMove.Replay], [firstMove], []));
+            new SqliteAnalysisStore(databasePath, clock: new FixedClock(secondAnalysisUtc))
+                .SaveResult(secondKey, new GameAnalysisResult(secondGame, PlayerSide.White, [secondMove.Replay], [secondMove], []));
+            new SqliteAnalysisStore(databasePath, clock: new FixedClock(laterImportUtc))
+                .SaveImportedGame(firstGame);
+
+            IReadOnlyList<StoredMoveAnalysis> storedMoves = new SqliteAnalysisStore(databasePath).ListMoveAnalyses();
+
+            Assert.Equal(2, storedMoves.Count);
+            Assert.Equal("second_analysis", storedMoves[0].Advice.MistakeLabel);
+            Assert.Equal("first_analysis", storedMoves[1].Advice.MistakeLabel);
+        }
+        finally
+        {
+            DeleteTempDatabase(databasePath);
+        }
+    }
+
+    [Fact]
+    public void SqliteAnalysisStore_SaveResultRollsBackWhenMoveRowsFail()
+    {
+        string databasePath = CreateTempDatabasePath();
+
+        try
+        {
+            SqliteAnalysisStore store = new(databasePath);
+            ImportedGame game = PgnGameParser.Parse(GameOnePgn);
+            GameAnalysisCacheKey key = GameAnalysisCache.CreateKey(game, PlayerSide.White, new EngineAnalysisOptions());
+            MoveAnalysisResult originalMove = CreateMoveAnalysis(
+                ply: 3,
+                moveNumber: 2,
+                phase: GamePhase.Opening,
+                quality: MoveQualityBucket.Mistake,
+                centipawnLoss: 145,
+                label: "original_label");
+            MoveAnalysisResult invalidMove = CreateMoveAnalysis(
+                ply: 3,
+                moveNumber: 2,
+                phase: GamePhase.Opening,
+                quality: MoveQualityBucket.Blunder,
+                centipawnLoss: 245,
+                label: "invalid_label") with
+            {
+                Replay = originalMove.Replay with { San = null! }
+            };
+
+            store.SaveResult(key, new GameAnalysisResult(game, PlayerSide.White, [originalMove.Replay], [originalMove], []));
+
+            Assert.Throws<InvalidOperationException>(() =>
+                store.SaveResult(key, new GameAnalysisResult(game, PlayerSide.White, [invalidMove.Replay], [invalidMove], [])));
+
+            StoredMoveAnalysis storedMove = Assert.Single(store.ListMoveAnalyses());
+            bool found = store.TryLoadResult(key, out GameAnalysisResult? restored);
+
+            Assert.True(found);
+            Assert.Equal("original_label", storedMove.Advice.MistakeLabel);
+            Assert.Equal("original_label", restored!.MoveAnalyses[0].MistakeTag?.Label);
+        }
+        finally
+        {
+            DeleteTempDatabase(databasePath);
+        }
+    }
+
+    [Fact]
     public void SqliteAnalysisStore_ClearsOnlyDerivedAnalysisDataWhenVersionChanges()
     {
         string databasePath = CreateTempDatabasePath();
@@ -914,7 +1055,8 @@ public sealed class SqliteAnalysisStoreTests
             Assert.True(currentStore.TryLoadImportedGame(fingerprint, out ImportedGame? restoredGame));
             Assert.Equal(game.PgnText, restoredGame!.PgnText);
             Assert.False(currentStore.TryLoadResult(key, out _));
-            Assert.False(currentStore.TryLoadWindowState(fingerprint, out _));
+            Assert.True(currentStore.TryLoadWindowState(fingerprint, out AnalysisWindowState? restoredState));
+            Assert.Equal(new AnalysisWindowState(PlayerSide.White, 1, 2), restoredState);
             Assert.Empty(currentStore.ListResults());
             Assert.Empty(currentStore.ListMoveAnalyses());
             Assert.Equal(openingSummaryBefore, currentStore.GetOpeningTreeSummary());

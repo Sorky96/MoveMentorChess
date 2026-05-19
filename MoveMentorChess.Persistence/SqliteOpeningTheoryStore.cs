@@ -2,7 +2,6 @@ namespace MoveMentorChess.Persistence;
 
 internal static class SqliteOpeningTheoryStore
 {
-    private const char CompositeKeySeparator = '|';
     private const int SqliteRow = SqliteResult.Row;
 
     public static bool TryGetOpeningPositionByKey(
@@ -142,7 +141,7 @@ internal static class SqliteOpeningTheoryStore
                 continue;
             }
 
-            string displayName = BuildDisplayName(eco, openingName, variationName);
+            string displayName = OpeningLineCatalogBuilder.BuildDisplayName(eco, openingName, variationName);
             if (!string.IsNullOrWhiteSpace(filterText)
                 && displayName.Contains(filterText, StringComparison.OrdinalIgnoreCase) == false
                 && eco.Contains(filterText, StringComparison.OrdinalIgnoreCase) == false)
@@ -150,26 +149,23 @@ internal static class SqliteOpeningTheoryStore
                 continue;
             }
 
-            string dedupeKey = $"{eco}|{openingName}|{variationName}|{side}";
+            OpeningLineCatalogItem item = OpeningLineCatalogBuilder.CreateItem(
+                eco,
+                openingName,
+                variationName,
+                side,
+                rootPositionKey,
+                fen,
+                gameCount,
+                branchCount);
+
+            string dedupeKey = OpeningLineCatalogBuilder.BuildLineGroupKey(eco, openingName, variationName, side);
             if (!seen.Add(dedupeKey))
             {
                 continue;
             }
 
-            OpeningKey openingKey = new(BuildOpeningKey(eco, openingName));
-            OpeningLineKey lineKey = new(BuildOpeningLineKey(eco, openingName, variationName, side, rootPositionKey.Value));
-            items.Add(new OpeningLineCatalogItem(
-                openingKey,
-                lineKey,
-                side,
-                eco,
-                openingName,
-                variationName,
-                displayName,
-                rootPositionKey,
-                fen,
-                gameCount,
-                branchCount));
+            items.Add(item);
 
             if (items.Count >= safeLimit)
             {
@@ -407,35 +403,6 @@ internal static class SqliteOpeningTheoryStore
             || string.Equals(sideToMove, "b", StringComparison.OrdinalIgnoreCase)
             ? PlayerSide.Black
             : PlayerSide.White;
-    }
-
-    private static string BuildDisplayName(string eco, string openingName, string variationName)
-    {
-        string opening = string.IsNullOrWhiteSpace(openingName) ? OpeningCatalog.GetName(eco) : openingName;
-        return string.IsNullOrWhiteSpace(variationName)
-            ? $"{opening} ({eco})"
-            : $"{opening}: {variationName} ({eco})";
-    }
-
-    private static string BuildOpeningKey(string eco, string openingName)
-    {
-        return $"{SanitizeKeyPart(eco)}{CompositeKeySeparator}{SanitizeKeyPart(openingName)}";
-    }
-
-    private static string BuildOpeningLineKey(string eco, string openingName, string variationName, RepertoireSide side, string positionKey)
-    {
-        return string.Join(
-            CompositeKeySeparator,
-            SanitizeKeyPart(eco),
-            SanitizeKeyPart(openingName),
-            SanitizeKeyPart(variationName),
-            side.ToString(),
-            SanitizeKeyPart(positionKey));
-    }
-
-    private static string SanitizeKeyPart(string? value)
-    {
-        return (value ?? string.Empty).Replace("\\", "\\\\", StringComparison.Ordinal).Replace("|", "\\|", StringComparison.Ordinal);
     }
 
     private static Guid ParseGuid(string? value)
