@@ -33,6 +33,17 @@ internal sealed class SqliteStatement : IDisposable
         BindText(index, value);
     }
 
+    public void BindNullableInt(int index, int? value)
+    {
+        if (value.HasValue)
+        {
+            BindInt(index, value.Value);
+            return;
+        }
+
+        BindNull(index);
+    }
+
     public void BindNull(int index)
     {
         int bindNullResult = SqliteNativeMethods.BindNull(Handle, index);

@@ -16,7 +16,6 @@ public sealed class SqliteAnalysisStore :
     IOpeningTrainingHistoryStore,
     IOpeningTrainingTelemetryStore
 {
-    private const char CompositeKeySeparator = '|';
     private const string AppDataDirectoryName = "MoveMentorChessServices";
     private const string DatabaseFileName = "analysis-cache.db";
     private const string DerivedAnalysisDataVersionKey = "derived_analysis_data_version";
@@ -29,12 +28,14 @@ public sealed class SqliteAnalysisStore :
     private readonly string databasePath;
     private readonly string derivedAnalysisDataVersion;
     private readonly bool applyDerivedAnalysisDataVersionPolicy;
+    private readonly IClock clock;
     private readonly object sync = new();
 
     public SqliteAnalysisStore(
         string databasePath,
         string derivedAnalysisDataVersion = CurrentDerivedAnalysisDataVersion,
-        bool applyDerivedAnalysisDataVersionPolicy = true)
+        bool applyDerivedAnalysisDataVersionPolicy = true,
+        IClock? clock = null)
     {
         if (string.IsNullOrWhiteSpace(databasePath))
         {
@@ -46,6 +47,7 @@ public sealed class SqliteAnalysisStore :
         this.databasePath = databasePath;
         this.derivedAnalysisDataVersion = derivedAnalysisDataVersion;
         this.applyDerivedAnalysisDataVersionPolicy = applyDerivedAnalysisDataVersionPolicy;
+        this.clock = clock ?? SystemClock.Instance;
         string? directory = Path.GetDirectoryName(databasePath);
         if (!string.IsNullOrWhiteSpace(directory))
         {
@@ -78,7 +80,7 @@ public sealed class SqliteAnalysisStore :
             database.ExecuteNonQuery("BEGIN IMMEDIATE;");
             try
             {
-                SaveOpeningTree(database, tree);
+                SqliteOpeningTreeStore.SaveOpeningTree(database, tree);
                 database.ExecuteNonQuery("COMMIT;");
             }
             catch
@@ -99,10 +101,7 @@ public sealed class SqliteAnalysisStore :
             database.ExecuteNonQuery("BEGIN IMMEDIATE;");
             try
             {
-                database.ExecuteNonQuery("DELETE FROM opening_node_tags;");
-                database.ExecuteNonQuery("DELETE FROM opening_move_edges;");
-                database.ExecuteNonQuery("DELETE FROM opening_position_nodes;");
-                SaveOpeningTree(database, tree);
+                SqliteOpeningTreeStore.ReplaceOpeningTree(database, tree);
                 database.ExecuteNonQuery("COMMIT;");
             }
             catch
@@ -118,82 +117,7 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            Dictionary<string, Guid> nodeIdMap = new(StringComparer.OrdinalIgnoreCase);
-            List<OpeningPositionNode> nodes = new();
-            using (SqliteStatement statement = database.Prepare("""
-                SELECT id, position_key, fen, ply, move_number, side_to_move, occurrence_count, distinct_game_count
-                FROM opening_position_nodes
-                ORDER BY ply ASC, position_key ASC;
-                """))
-            {
-                while (statement.Step() == SqliteRow)
-                {
-                    OpeningPositionNode node = new()
-                    {
-                        Id = ParseGuid(statement.GetText(0)),
-                        PositionKey = statement.GetText(1) ?? string.Empty,
-                        Fen = statement.GetText(2) ?? string.Empty,
-                        Ply = statement.GetInt(3),
-                        MoveNumber = statement.GetInt(4),
-                        SideToMove = statement.GetText(5) ?? string.Empty,
-                        OccurrenceCount = statement.GetInt(6),
-                        DistinctGameCount = statement.GetInt(7)
-                    };
-                    nodes.Add(node);
-                    nodeIdMap[statement.GetText(0) ?? string.Empty] = node.Id;
-                }
-            }
-
-            List<OpeningMoveEdge> edges = new();
-            using (SqliteStatement statement = database.Prepare("""
-                SELECT id, from_node_id, to_node_id, move_uci, move_san, occurrence_count, distinct_game_count, is_main_move, is_playable_move, rank_within_position
-                FROM opening_move_edges
-                ORDER BY rank_within_position ASC, occurrence_count DESC, move_san ASC;
-                """))
-            {
-                while (statement.Step() == SqliteRow)
-                {
-                    string fromNodeId = statement.GetText(1) ?? string.Empty;
-                    string toNodeId = statement.GetText(2) ?? string.Empty;
-                    edges.Add(new OpeningMoveEdge
-                    {
-                        Id = ParseGuid(statement.GetText(0)),
-                        FromNodeId = nodeIdMap.TryGetValue(fromNodeId, out Guid fromGuid) ? fromGuid : Guid.Empty,
-                        ToNodeId = nodeIdMap.TryGetValue(toNodeId, out Guid toGuid) ? toGuid : Guid.Empty,
-                        MoveUci = statement.GetText(3) ?? string.Empty,
-                        MoveSan = statement.GetText(4) ?? string.Empty,
-                        OccurrenceCount = statement.GetInt(5),
-                        DistinctGameCount = statement.GetInt(6),
-                        IsMainMove = statement.GetInt(7) != 0,
-                        IsPlayableMove = statement.GetInt(8) != 0,
-                        RankWithinPosition = statement.GetInt(9)
-                    });
-                }
-            }
-
-            List<OpeningNodeTag> tags = new();
-            using (SqliteStatement statement = database.Prepare("""
-                SELECT id, node_id, eco, opening_name, variation_name, source_kind
-                FROM opening_node_tags
-                ORDER BY node_id ASC, eco ASC, opening_name ASC, variation_name ASC;
-                """))
-            {
-                while (statement.Step() == SqliteRow)
-                {
-                    string nodeId = statement.GetText(1) ?? string.Empty;
-                    tags.Add(new OpeningNodeTag
-                    {
-                        Id = ParseGuid(statement.GetText(0)),
-                        NodeId = nodeIdMap.TryGetValue(nodeId, out Guid nodeGuid) ? nodeGuid : Guid.Empty,
-                        Eco = statement.GetText(2) ?? string.Empty,
-                        OpeningName = statement.GetText(3) ?? string.Empty,
-                        VariationName = statement.GetText(4) ?? string.Empty,
-                        SourceKind = statement.GetText(5) ?? string.Empty
-                    });
-                }
-            }
-
-            return new OpeningTreeBuildResult(nodes, edges, tags);
+            return SqliteOpeningTreeStore.LoadOpeningTree(database);
         }
     }
 
@@ -202,14 +126,7 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            using SqliteStatement statement = database.Prepare("""
-                SELECT value
-                FROM app_metadata
-                WHERE key = 'opening_tree_seed_version'
-                LIMIT 1;
-                """);
-
-            return statement.Step() == SqliteRow ? statement.GetText(0) : null;
+            return SqliteOpeningTreeStore.GetOpeningSeedVersion(database);
         }
     }
 
@@ -220,14 +137,7 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            database.ExecuteNonQuery(
-                """
-                INSERT INTO app_metadata (key, value)
-                VALUES ('opening_tree_seed_version', ?1)
-                ON CONFLICT (key)
-                DO UPDATE SET value = excluded.value;
-                """,
-                statement => statement.BindText(1, version));
+            SqliteOpeningTreeStore.SetOpeningSeedVersion(database, version);
         }
     }
 
@@ -236,10 +146,7 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            return new OpeningTreeStoreSummary(
-                CountRows(database, "opening_position_nodes"),
-                CountRows(database, "opening_move_edges"),
-                CountRows(database, "opening_node_tags"));
+            return SqliteOpeningTreeStore.GetOpeningTreeSummary(database);
         }
     }
 
@@ -250,35 +157,7 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            using SqliteStatement statement = database.Prepare("""
-                SELECT
-                    opening_position_nodes.id,
-                    opening_position_nodes.position_key,
-                    opening_position_nodes.fen,
-                    opening_position_nodes.ply,
-                    opening_position_nodes.move_number,
-                    opening_position_nodes.side_to_move,
-                    opening_position_nodes.occurrence_count,
-                    opening_position_nodes.distinct_game_count,
-                    coalesce(opening_node_tags.eco, ''),
-                    coalesce(opening_node_tags.opening_name, ''),
-                    coalesce(opening_node_tags.variation_name, '')
-                FROM opening_position_nodes
-                LEFT JOIN opening_node_tags ON opening_node_tags.node_id = opening_position_nodes.id
-                WHERE opening_position_nodes.position_key = ?1
-                ORDER BY opening_node_tags.source_kind = 'pgn' DESC
-                LIMIT 1;
-                """);
-
-            statement.BindText(1, positionKey);
-            if (statement.Step() != SqliteRow)
-            {
-                position = null;
-                return false;
-            }
-
-            position = ReadOpeningTheoryPosition(statement);
-            return true;
+            return SqliteOpeningTheoryStore.TryGetOpeningPositionByKey(database, positionKey, out position);
         }
     }
 
@@ -289,141 +168,20 @@ public sealed class SqliteAnalysisStore :
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(positionKey);
 
-        int safeLimit = Math.Clamp(limit, 1, 100);
-        List<OpeningTheoryMove> moves = new();
-
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            using SqliteStatement statement = database.Prepare($"""
-                SELECT
-                    opening_move_edges.id,
-                    opening_move_edges.from_node_id,
-                    opening_move_edges.to_node_id,
-                    opening_move_edges.move_uci,
-                    opening_move_edges.move_san,
-                    opening_move_edges.occurrence_count,
-                    opening_move_edges.distinct_game_count,
-                    opening_move_edges.is_main_move,
-                    opening_move_edges.is_playable_move,
-                    opening_move_edges.rank_within_position,
-                    to_nodes.position_key,
-                    to_nodes.fen,
-                    coalesce(opening_node_tags.eco, ''),
-                    coalesce(opening_node_tags.opening_name, ''),
-                    coalesce(opening_node_tags.variation_name, '')
-                FROM opening_move_edges
-                INNER JOIN opening_position_nodes AS from_nodes
-                    ON from_nodes.id = opening_move_edges.from_node_id
-                INNER JOIN opening_position_nodes AS to_nodes
-                    ON to_nodes.id = opening_move_edges.to_node_id
-                LEFT JOIN opening_node_tags
-                    ON opening_node_tags.node_id = to_nodes.id
-                WHERE from_nodes.position_key = ?1
-                  {(playableOnly ? "AND opening_move_edges.is_playable_move = 1" : string.Empty)}
-                ORDER BY
-                    opening_move_edges.rank_within_position = 0 ASC,
-                    opening_move_edges.rank_within_position ASC,
-                    opening_move_edges.occurrence_count DESC,
-                    opening_move_edges.move_san ASC
-                LIMIT {safeLimit};
-                """);
-
-            statement.BindText(1, positionKey);
-            while (statement.Step() == SqliteRow)
-            {
-                moves.Add(ReadOpeningTheoryMove(statement));
-            }
+            return SqliteOpeningTheoryStore.GetOpeningMovesByPositionKey(database, positionKey, limit, playableOnly);
         }
-
-        return moves;
     }
 
     public IReadOnlyList<OpeningLineCatalogItem> ListOpeningLines(string? filterText = null, RepertoireSide? repertoireSide = null, int limit = 100)
     {
-        int safeLimit = Math.Clamp(limit, 1, 500);
-        List<OpeningLineCatalogItem> items = [];
-
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            using SqliteStatement statement = database.Prepare($"""
-                SELECT
-                    coalesce(tags.eco, ''),
-                    coalesce(tags.opening_name, ''),
-                    coalesce(tags.variation_name, ''),
-                    nodes.position_key,
-                    nodes.fen,
-                    nodes.side_to_move,
-                    nodes.distinct_game_count,
-                    (
-                        SELECT COUNT(*)
-                        FROM opening_move_edges edges
-                        WHERE edges.from_node_id = nodes.id
-                    ) AS branch_count
-                FROM opening_position_nodes nodes
-                INNER JOIN opening_node_tags tags ON tags.node_id = nodes.id
-                WHERE nodes.ply <= 12
-                ORDER BY nodes.distinct_game_count DESC, tags.eco ASC, tags.opening_name ASC, tags.variation_name ASC
-                LIMIT {safeLimit * 4};
-                """);
-
-            HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase);
-            while (statement.Step() == SqliteRow)
-            {
-                string eco = statement.GetText(0) ?? string.Empty;
-                string openingName = statement.GetText(1) ?? string.Empty;
-                string variationName = statement.GetText(2) ?? string.Empty;
-                OpeningPositionKey rootPositionKey = new(statement.GetText(3) ?? string.Empty);
-                string fen = statement.GetText(4) ?? string.Empty;
-                RepertoireSide side = ParseRepertoireSide(statement.GetText(5));
-                int gameCount = statement.GetInt(6);
-                int branchCount = statement.GetInt(7);
-
-                if (repertoireSide.HasValue
-                    && repertoireSide.Value != RepertoireSide.Both
-                    && side != repertoireSide.Value)
-                {
-                    continue;
-                }
-
-                string displayName = BuildDisplayName(eco, openingName, variationName);
-                if (!string.IsNullOrWhiteSpace(filterText)
-                    && displayName.Contains(filterText, StringComparison.OrdinalIgnoreCase) == false
-                    && eco.Contains(filterText, StringComparison.OrdinalIgnoreCase) == false)
-                {
-                    continue;
-                }
-
-                string dedupeKey = $"{eco}|{openingName}|{variationName}|{side}";
-                if (!seen.Add(dedupeKey))
-                {
-                    continue;
-                }
-
-                OpeningKey openingKey = new(BuildOpeningKey(eco, openingName));
-                OpeningLineKey lineKey = new(BuildOpeningLineKey(eco, openingName, variationName, side, rootPositionKey.Value));
-                items.Add(new OpeningLineCatalogItem(
-                    openingKey,
-                    lineKey,
-                    side,
-                    eco,
-                    openingName,
-                    variationName,
-                    displayName,
-                    rootPositionKey,
-                    fen,
-                    gameCount,
-                    branchCount));
-
-                if (items.Count >= safeLimit)
-                {
-                    break;
-                }
-            }
+            return SqliteOpeningTheoryStore.ListOpeningLines(database, filterText, repertoireSide, limit);
         }
-
-        return items;
     }
 
     public IReadOnlyList<string> GetOpeningValidationMoves(OpeningPositionKey rootPositionKey)
@@ -431,20 +189,8 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            return BuildOpeningValidationMoves(database, rootPositionKey);
+            return SqliteOpeningTheoryStore.GetOpeningValidationMoves(database, rootPositionKey);
         }
-    }
-
-    private static IReadOnlyList<string> BuildOpeningValidationMoves(SqliteDatabase database, OpeningPositionKey rootPositionKey)
-    {
-        List<string> pathMoves = BuildPathMovesToPosition(database, rootPositionKey);
-        if (pathMoves.Count >= 4)
-        {
-            return pathMoves;
-        }
-
-        IReadOnlyList<string> continuationMoves = BuildPrimaryContinuationMoves(database, rootPositionKey, 4 - pathMoves.Count);
-        return pathMoves.Concat(continuationMoves).ToList();
     }
 
     public IReadOnlyList<OpeningLineMove> GetOpeningPathLineMoves(OpeningPositionKey rootPositionKey)
@@ -452,148 +198,8 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            return BuildOpeningPathLineMoves(database, rootPositionKey);
+            return SqliteOpeningTheoryStore.GetOpeningPathLineMoves(database, rootPositionKey);
         }
-    }
-
-    private static IReadOnlyList<OpeningLineMove> BuildOpeningPathLineMoves(SqliteDatabase database, OpeningPositionKey rootPositionKey)
-    {
-        List<OpeningLineMove> reversedMoves = [];
-        string? currentNodeId = LoadOpeningNodeId(database, rootPositionKey.Value);
-        int guard = 0;
-
-        while (!string.IsNullOrWhiteSpace(currentNodeId) && guard++ < 16)
-        {
-            using SqliteStatement statement = database.Prepare("""
-                SELECT
-                    edges.from_node_id,
-                    edges.move_san,
-                    edges.move_uci,
-                    from_nodes.position_key,
-                    to_nodes.position_key,
-                    to_nodes.ply,
-                    to_nodes.move_number,
-                    to_nodes.side_to_move,
-                    edges.is_main_move
-                FROM opening_move_edges edges
-                INNER JOIN opening_position_nodes from_nodes ON from_nodes.id = edges.from_node_id
-                INNER JOIN opening_position_nodes to_nodes ON to_nodes.id = edges.to_node_id
-                WHERE edges.to_node_id = ?1
-                ORDER BY edges.occurrence_count DESC, edges.rank_within_position ASC, edges.move_san ASC
-                LIMIT 1;
-                """);
-
-            statement.BindText(1, currentNodeId);
-            if (statement.Step() != SqliteRow)
-            {
-                break;
-            }
-
-            currentNodeId = statement.GetText(0);
-            string moveSan = statement.GetText(1) ?? string.Empty;
-            string? moveUci = statement.GetText(2);
-            OpeningPositionKey fromPositionKey = new(statement.GetText(3) ?? string.Empty);
-            OpeningPositionKey toPositionKey = new(statement.GetText(4) ?? string.Empty);
-            PlayerSide side = ParsePlayerSide(statement.GetText(7)) == PlayerSide.White ? PlayerSide.Black : PlayerSide.White;
-
-            if (!string.IsNullOrWhiteSpace(moveSan))
-            {
-                reversedMoves.Add(new OpeningLineMove(
-                    statement.GetInt(5),
-                    statement.GetInt(6),
-                    side,
-                    moveSan,
-                    moveUci,
-                    fromPositionKey,
-                    toPositionKey,
-                    statement.GetInt(8) != 0));
-            }
-
-            if (fromPositionKey.Value == "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -")
-            {
-                break;
-            }
-        }
-
-        reversedMoves.Reverse();
-        return reversedMoves;
-    }
-
-    private static List<string> BuildPathMovesToPosition(SqliteDatabase database, OpeningPositionKey rootPositionKey)
-    {
-        List<string> reversedMoves = [];
-        string? currentNodeId = LoadOpeningNodeId(database, rootPositionKey.Value);
-        int guard = 0;
-
-        while (!string.IsNullOrWhiteSpace(currentNodeId) && guard++ < 16)
-        {
-            using SqliteStatement statement = database.Prepare("""
-                SELECT
-                    edges.from_node_id,
-                    edges.move_san,
-                    from_nodes.ply
-                FROM opening_move_edges edges
-                INNER JOIN opening_position_nodes from_nodes ON from_nodes.id = edges.from_node_id
-                WHERE edges.to_node_id = ?1
-                ORDER BY edges.occurrence_count DESC, edges.rank_within_position ASC, edges.move_san ASC
-                LIMIT 1;
-                """);
-
-            statement.BindText(1, currentNodeId);
-            if (statement.Step() != SqliteRow)
-            {
-                break;
-            }
-
-            currentNodeId = statement.GetText(0);
-            string moveSan = statement.GetText(1) ?? string.Empty;
-            if (!string.IsNullOrWhiteSpace(moveSan))
-            {
-                reversedMoves.Add(moveSan);
-            }
-
-            if (statement.GetInt(2) == 0)
-            {
-                break;
-            }
-        }
-
-        reversedMoves.Reverse();
-        return reversedMoves;
-    }
-
-    private static IReadOnlyList<string> BuildPrimaryContinuationMoves(SqliteDatabase database, OpeningPositionKey rootPositionKey, int maxPly)
-    {
-        List<string> moves = [];
-        string? currentNodeId = LoadOpeningNodeId(database, rootPositionKey.Value);
-
-        for (int ply = 0; ply < maxPly && !string.IsNullOrWhiteSpace(currentNodeId); ply++)
-        {
-            using SqliteStatement statement = database.Prepare("""
-                SELECT
-                    edges.to_node_id,
-                    edges.move_san
-                FROM opening_move_edges edges
-                WHERE edges.from_node_id = ?1
-                ORDER BY edges.rank_within_position ASC, edges.occurrence_count DESC, edges.move_san ASC
-                LIMIT 1;
-                """);
-
-            statement.BindText(1, currentNodeId);
-            if (statement.Step() != SqliteRow)
-            {
-                break;
-            }
-
-            currentNodeId = statement.GetText(0);
-            string moveSan = statement.GetText(1) ?? string.Empty;
-            if (!string.IsNullOrWhiteSpace(moveSan))
-            {
-                moves.Add(moveSan);
-            }
-        }
-
-        return moves;
     }
 
     public void SaveImportedGame(ImportedGame game)
@@ -606,7 +212,7 @@ public sealed class SqliteAnalysisStore :
             database.ExecuteNonQuery("BEGIN IMMEDIATE;");
             try
             {
-                SaveImportedGames(database, [game]);
+                SqliteImportedGameStore.SaveImportedGames(database, [game], clock.UtcNow);
                 database.ExecuteNonQuery("COMMIT;");
             }
             catch
@@ -631,7 +237,7 @@ public sealed class SqliteAnalysisStore :
             database.ExecuteNonQuery("BEGIN IMMEDIATE;");
             try
             {
-                SaveImportedGames(database, games);
+                SqliteImportedGameStore.SaveImportedGames(database, games, clock.UtcNow);
                 database.ExecuteNonQuery("COMMIT;");
             }
             catch
@@ -649,30 +255,7 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            using SqliteStatement statement = database.Prepare("""
-                SELECT pgn_text
-                FROM imported_games
-                WHERE game_fingerprint = ?1
-                LIMIT 1;
-                """);
-
-            statement.BindText(1, gameFingerprint);
-            int stepResult = statement.Step();
-            if (stepResult != SqliteRow)
-            {
-                game = null;
-                return false;
-            }
-
-            string? pgnText = statement.GetText(0);
-            if (string.IsNullOrWhiteSpace(pgnText))
-            {
-                game = null;
-                return false;
-            }
-
-            game = PgnGameParser.Parse(pgnText);
-            return true;
+            return SqliteImportedGameStore.TryLoadImportedGame(database, gameFingerprint, out game);
         }
     }
 
@@ -683,47 +266,7 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            bool exists = database.Exists(
-                """
-                SELECT 1
-                FROM imported_games
-                WHERE game_fingerprint = ?1
-                LIMIT 1;
-                """,
-                statement => statement.BindText(1, gameFingerprint));
-
-            database.ExecuteNonQuery(
-                """
-                DELETE FROM analysis_moves
-                WHERE game_fingerprint = ?1;
-                """,
-                statement => statement.BindText(1, gameFingerprint));
-            database.ExecuteNonQuery(
-                """
-                DELETE FROM analysis_results
-                WHERE game_fingerprint = ?1;
-                """,
-                statement => statement.BindText(1, gameFingerprint));
-            database.ExecuteNonQuery(
-                """
-                DELETE FROM analysis_window_states
-                WHERE game_fingerprint = ?1;
-                """,
-                statement => statement.BindText(1, gameFingerprint));
-            database.ExecuteNonQuery(
-                """
-                DELETE FROM move_advice_feedbacks
-                WHERE game_fingerprint = ?1;
-                """,
-                statement => statement.BindText(1, gameFingerprint));
-            database.ExecuteNonQuery(
-                """
-                DELETE FROM imported_games
-                WHERE game_fingerprint = ?1;
-                """,
-                statement => statement.BindText(1, gameFingerprint));
-
-            return exists;
+            return SqliteImportedGameStore.DeleteImportedGame(database, gameFingerprint);
         }
     }
 
@@ -735,11 +278,7 @@ public sealed class SqliteAnalysisStore :
             database.ExecuteNonQuery("BEGIN IMMEDIATE;");
             try
             {
-                database.ExecuteNonQuery("DELETE FROM move_advice_feedbacks;");
-                database.ExecuteNonQuery("DELETE FROM analysis_window_states;");
-                database.ExecuteNonQuery("DELETE FROM analysis_moves;");
-                database.ExecuteNonQuery("DELETE FROM analysis_results;");
-                database.ExecuteNonQuery("DELETE FROM imported_games;");
+                SqliteImportedGameStore.ClearImportedAnalysisData(database);
                 database.ExecuteNonQuery("COMMIT;");
             }
             catch
@@ -781,63 +320,11 @@ public sealed class SqliteAnalysisStore :
 
     public IReadOnlyList<SavedImportedGameSummary> ListImportedGames(string? filterText = null, int limit = 200)
     {
-        string normalizedFilter = filterText?.Trim().ToLowerInvariant() ?? string.Empty;
-        int safeLimit = Math.Clamp(limit, 1, 1000);
-        List<SavedImportedGameSummary> items = new();
-
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            using SqliteStatement statement = database.Prepare($"""
-                SELECT game_fingerprint, white_player, black_player, date_text, result_text, eco, site,
-                       white_elo, black_elo, time_control, time_control_category, updated_utc
-                FROM imported_games
-                {(string.IsNullOrWhiteSpace(normalizedFilter)
-                    ? string.Empty
-                    : "WHERE lower(coalesce(white_player, '')) LIKE ?1 OR lower(coalesce(black_player, '')) LIKE ?1 OR lower(coalesce(date_text, '')) LIKE ?1 OR lower(coalesce(result_text, '')) LIKE ?1 OR lower(coalesce(eco, '')) LIKE ?1 OR lower(coalesce(site, '')) LIKE ?1 OR lower(coalesce(time_control, '')) LIKE ?1")}
-                ORDER BY updated_utc DESC
-                LIMIT {safeLimit};
-                """);
-
-            if (!string.IsNullOrWhiteSpace(normalizedFilter))
-            {
-                statement.BindText(1, $"%{normalizedFilter}%");
-            }
-
-            while (statement.Step() == SqliteRow)
-            {
-                string fingerprint = statement.GetText(0) ?? string.Empty;
-                string? white = statement.GetText(1);
-                string? black = statement.GetText(2);
-                string? dateText = statement.GetText(3);
-                string? result = statement.GetText(4);
-                string? eco = statement.GetText(5);
-                string? site = statement.GetText(6);
-                int? whiteElo = statement.GetNullableInt(7);
-                int? blackElo = statement.GetNullableInt(8);
-                string? timeControl = statement.GetText(9);
-                GameTimeControlCategory category = ParseTimeControlCategory(statement.GetNullableInt(10), timeControl);
-                string? updatedUtcText = statement.GetText(11);
-                DateTime.TryParse(updatedUtcText, out DateTime updatedUtc);
-
-                items.Add(new SavedImportedGameSummary(
-                    fingerprint,
-                    BuildDisplayTitle(white, black, dateText, result, eco),
-                    white,
-                    black,
-                    dateText,
-                    result,
-                    eco,
-                    site,
-                    whiteElo,
-                    blackElo,
-                    timeControl,
-                    category,
-                    updatedUtc));
-            }
+            return SqliteImportedGameStore.ListImportedGames(database, filterText, limit);
         }
-
-        return items;
     }
 
     public IReadOnlyList<GameAnalysisResult> ListResults(string? filterText = null, int limit = 500)
@@ -1056,60 +543,11 @@ public sealed class SqliteAnalysisStore :
 
     public IReadOnlyList<MoveAdviceFeedback> ListMoveAdviceFeedback(string? filterText = null, int limit = 5000)
     {
-        string normalizedFilter = filterText?.Trim().ToLowerInvariant() ?? string.Empty;
-        int safeLimit = Math.Clamp(limit, 1, 20000);
-        List<MoveAdviceFeedback> items = [];
-
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            using SqliteStatement statement = database.Prepare($"""
-                SELECT
-                    feedback_id,
-                    timestamp_utc,
-                    game_fingerprint,
-                    analyzed_side,
-                    depth,
-                    multi_pv,
-                    move_time_ms,
-                    ply,
-                    move_number,
-                    played_san,
-                    played_uci,
-                    fen_before,
-                    fen_after,
-                    eval_before_cp,
-                    eval_after_cp,
-                    best_move_uci,
-                    original_label,
-                    original_confidence,
-                    original_evidence_json,
-                    quality,
-                    centipawn_loss,
-                    feedback_kind,
-                    corrected_label,
-                    comment,
-                    source
-                FROM move_advice_feedbacks
-                {(string.IsNullOrWhiteSpace(normalizedFilter)
-                    ? string.Empty
-                    : "WHERE lower(coalesce(original_label, '')) LIKE ?1 OR lower(coalesce(corrected_label, '')) LIKE ?1 OR lower(coalesce(comment, '')) LIKE ?1 OR lower(played_san) LIKE ?1 OR lower(played_uci) LIKE ?1")}
-                ORDER BY timestamp_utc DESC, feedback_id DESC
-                LIMIT {safeLimit};
-                """);
-
-            if (!string.IsNullOrWhiteSpace(normalizedFilter))
-            {
-                statement.BindText(1, $"%{normalizedFilter}%");
-            }
-
-            while (statement.Step() == SqliteRow)
-            {
-                items.Add(ReadMoveAdviceFeedback(statement));
-            }
+            return SqliteMoveAdviceFeedbackStore.ListMoveAdviceFeedback(database, filterText, limit);
         }
-
-        return items;
     }
 
     public void SaveMoveAdviceFeedback(MoveAdviceFeedback feedback)
@@ -1119,62 +557,7 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            using SqliteStatement statement = database.Prepare("""
-                INSERT INTO move_advice_feedbacks (
-                    feedback_id,
-                    timestamp_utc,
-                    game_fingerprint,
-                    analyzed_side,
-                    depth,
-                    multi_pv,
-                    move_time_ms,
-                    ply,
-                    move_number,
-                    played_san,
-                    played_uci,
-                    fen_before,
-                    fen_after,
-                    eval_before_cp,
-                    eval_after_cp,
-                    best_move_uci,
-                    original_label,
-                    original_confidence,
-                    original_evidence_json,
-                    quality,
-                    centipawn_loss,
-                    feedback_kind,
-                    corrected_label,
-                    comment,
-                    source)
-                VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25);
-                """);
-
-            statement.BindText(1, string.IsNullOrWhiteSpace(feedback.FeedbackId) ? Guid.NewGuid().ToString("N") : feedback.FeedbackId);
-            statement.BindText(2, feedback.TimestampUtc.ToUniversalTime().ToString("O"));
-            statement.BindText(3, feedback.GameFingerprint);
-            statement.BindInt(4, (int)feedback.AnalyzedSide);
-            statement.BindInt(5, feedback.Depth);
-            statement.BindInt(6, feedback.MultiPv);
-            statement.BindInt(7, NormalizeMoveTime(feedback.MoveTimeMs));
-            statement.BindInt(8, feedback.Ply);
-            statement.BindInt(9, feedback.MoveNumber);
-            statement.BindText(10, feedback.PlayedSan);
-            statement.BindText(11, feedback.PlayedUci);
-            statement.BindText(12, feedback.FenBefore);
-            statement.BindText(13, feedback.FenAfter);
-            BindNullableInt(statement, 14, feedback.EvalBeforeCp);
-            BindNullableInt(statement, 15, feedback.EvalAfterCp);
-            statement.BindNullableText(16, feedback.BestMoveUci);
-            statement.BindNullableText(17, feedback.OriginalLabel);
-            statement.BindNullableText(18, FormatNullableDouble(feedback.OriginalConfidence));
-            statement.BindText(19, SerializeEvidence(feedback.OriginalEvidence));
-            statement.BindInt(20, (int)feedback.Quality);
-            BindNullableInt(statement, 21, feedback.CentipawnLoss);
-            statement.BindText(22, feedback.FeedbackKind.ToString());
-            statement.BindNullableText(23, feedback.CorrectedLabel);
-            statement.BindNullableText(24, feedback.Comment);
-            statement.BindText(25, feedback.Source);
-            statement.StepUntilDone();
+            SqliteMoveAdviceFeedbackStore.SaveMoveAdviceFeedback(database, feedback);
         }
     }
 
@@ -1234,7 +617,7 @@ public sealed class SqliteAnalysisStore :
         SaveImportedGame(result.Game);
 
         string payload = JsonSerializer.Serialize(result, JsonOptions);
-        string timestamp = DateTime.UtcNow.ToString("O");
+        string timestamp = clock.UtcNow.ToString("O");
 
         lock (sync)
         {
@@ -1305,7 +688,7 @@ public sealed class SqliteAnalysisStore :
         ArgumentException.ThrowIfNullOrWhiteSpace(gameFingerprint);
         ArgumentNullException.ThrowIfNull(state);
 
-        string timestamp = DateTime.UtcNow.ToString("O");
+        string timestamp = clock.UtcNow.ToString("O");
 
         lock (sync)
         {
@@ -1339,102 +722,20 @@ public sealed class SqliteAnalysisStore :
     {
         ArgumentNullException.ThrowIfNull(result);
 
-        string payload = JsonSerializer.Serialize(result, JsonOptions);
-
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            using SqliteStatement statement = database.Prepare("""
-                INSERT INTO opening_training_session_results (
-                    session_id,
-                    player_key,
-                    display_name,
-                    created_utc,
-                    completed_utc,
-                    outcome,
-                    position_count,
-                    attempt_count,
-                    correct_count,
-                    playable_count,
-                    wrong_count,
-                    related_openings_json,
-                    theme_labels_json,
-                    payload_json)
-                VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)
-                ON CONFLICT (session_id)
-                DO UPDATE SET
-                    player_key = excluded.player_key,
-                    display_name = excluded.display_name,
-                    created_utc = excluded.created_utc,
-                    completed_utc = excluded.completed_utc,
-                    outcome = excluded.outcome,
-                    position_count = excluded.position_count,
-                    attempt_count = excluded.attempt_count,
-                    correct_count = excluded.correct_count,
-                    playable_count = excluded.playable_count,
-                    wrong_count = excluded.wrong_count,
-                    related_openings_json = excluded.related_openings_json,
-                    theme_labels_json = excluded.theme_labels_json,
-                    payload_json = excluded.payload_json;
-                """);
-
-            statement.BindText(1, result.SessionId);
-            statement.BindText(2, NormalizePlayerKey(result.PlayerKey));
-            statement.BindText(3, result.DisplayName);
-            statement.BindText(4, result.CreatedUtc.ToUniversalTime().ToString("O"));
-            statement.BindText(5, result.CompletedUtc.ToUniversalTime().ToString("O"));
-            statement.BindInt(6, (int)result.Outcome);
-            statement.BindInt(7, result.PositionCount);
-            statement.BindInt(8, result.AttemptCount);
-            statement.BindInt(9, result.CorrectCount);
-            statement.BindInt(10, result.PlayableCount);
-            statement.BindInt(11, result.WrongCount);
-            statement.BindText(12, JsonSerializer.Serialize(result.RelatedOpenings, JsonOptions));
-            statement.BindText(13, JsonSerializer.Serialize(result.ThemeLabels, JsonOptions));
-            statement.BindText(14, payload);
-            statement.StepUntilDone();
+            SqliteOpeningTrainingStore.SaveSessionResult(database, result);
         }
     }
 
     public IReadOnlyList<OpeningTrainingSessionResult> ListOpeningTrainingSessionResults(string? playerKey = null, int limit = 200)
     {
-        string normalizedPlayerKey = NormalizePlayerKey(playerKey);
-        int safeLimit = Math.Clamp(limit, 1, 1000);
-        List<OpeningTrainingSessionResult> results = [];
-
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            using SqliteStatement statement = database.Prepare($"""
-                SELECT payload_json
-                FROM opening_training_session_results
-                {(string.IsNullOrWhiteSpace(normalizedPlayerKey) ? string.Empty : "WHERE player_key = ?1")}
-                ORDER BY completed_utc DESC
-                LIMIT {safeLimit};
-                """);
-
-            if (!string.IsNullOrWhiteSpace(normalizedPlayerKey))
-            {
-                statement.BindText(1, normalizedPlayerKey);
-            }
-
-            while (statement.Step() == SqliteRow)
-            {
-                string? payload = statement.GetText(0);
-                if (string.IsNullOrWhiteSpace(payload))
-                {
-                    continue;
-                }
-
-                OpeningTrainingSessionResult? result = JsonSerializer.Deserialize<OpeningTrainingSessionResult>(payload, JsonOptions);
-                if (result is not null)
-                {
-                    results.Add(result);
-                }
-            }
+            return SqliteOpeningTrainingStore.ListSessionResults(database, playerKey, limit);
         }
-
-        return results;
     }
 
     public void SaveOpeningReviewItems(string playerKey, IReadOnlyList<OpeningReviewItem> items)
@@ -1448,63 +749,7 @@ public sealed class SqliteAnalysisStore :
             database.ExecuteNonQuery("BEGIN IMMEDIATE;");
             try
             {
-                foreach (OpeningReviewItem item in items)
-                {
-                    string branchKey = item.BranchKey.Value;
-                    string positionKey = item.PositionKey.Value;
-                    database.ExecuteNonQuery(
-                        """
-                        INSERT INTO opening_review_items (
-                            player_key,
-                            branch_key,
-                            position_key,
-                            last_reviewed_utc,
-                            next_review_utc,
-                            ease,
-                            correct_streak,
-                            wrong_streak,
-                            total_attempts,
-                            opening_key,
-                            opening_line_key)
-                        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
-                        ON CONFLICT (player_key, branch_key, position_key)
-                        DO UPDATE SET
-                            opening_key = coalesce(excluded.opening_key, opening_review_items.opening_key),
-                            opening_line_key = coalesce(excluded.opening_line_key, opening_review_items.opening_line_key),
-                            last_reviewed_utc = CASE
-                                WHEN excluded.last_reviewed_utc IS NULL THEN opening_review_items.last_reviewed_utc
-                                WHEN opening_review_items.last_reviewed_utc IS NULL THEN excluded.last_reviewed_utc
-                                WHEN excluded.last_reviewed_utc > opening_review_items.last_reviewed_utc THEN excluded.last_reviewed_utc
-                                ELSE opening_review_items.last_reviewed_utc
-                            END,
-                            next_review_utc = excluded.next_review_utc,
-                            ease = excluded.ease,
-                            correct_streak = CASE
-                                WHEN excluded.correct_streak > 0 THEN opening_review_items.correct_streak + excluded.correct_streak
-                                ELSE 0
-                            END,
-                            wrong_streak = CASE
-                                WHEN excluded.wrong_streak > 0 THEN opening_review_items.wrong_streak + excluded.wrong_streak
-                                ELSE 0
-                            END,
-                            total_attempts = opening_review_items.total_attempts + excluded.total_attempts;
-                        """,
-                        statement =>
-                        {
-                            statement.BindText(1, NormalizePlayerKey(playerKey));
-                            statement.BindText(2, branchKey);
-                            statement.BindText(3, positionKey);
-                            statement.BindNullableText(4, item.LastReviewedUtc?.ToString("O", CultureInfo.InvariantCulture));
-                            statement.BindText(5, item.NextReviewUtc.ToString("O", CultureInfo.InvariantCulture));
-                            statement.BindText(6, item.Ease.ToString(CultureInfo.InvariantCulture));
-                            statement.BindInt(7, item.CorrectStreak);
-                            statement.BindInt(8, item.WrongStreak);
-                            statement.BindInt(9, item.TotalAttempts);
-                            statement.BindNullableText(10, item.OpeningKey?.Value);
-                            statement.BindNullableText(11, item.OpeningLineKey?.Value);
-                        });
-                }
-
+                SqliteOpeningTrainingStore.SaveReviewItems(database, playerKey, items);
                 database.ExecuteNonQuery("COMMIT;");
             }
             catch
@@ -1517,43 +762,11 @@ public sealed class SqliteAnalysisStore :
 
     public IReadOnlyList<OpeningReviewItem> ListOpeningReviewItems(string? playerKey = null, int limit = 1000)
     {
-        string normalizedPlayerKey = NormalizePlayerKey(playerKey);
-        int safeLimit = Math.Clamp(limit, 1, 5000);
-        List<OpeningReviewItem> items = [];
-
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            using SqliteStatement statement = database.Prepare($"""
-                SELECT branch_key, position_key, last_reviewed_utc, next_review_utc, ease, correct_streak, wrong_streak, total_attempts, opening_key, opening_line_key
-                FROM opening_review_items
-                {(string.IsNullOrWhiteSpace(normalizedPlayerKey) ? string.Empty : "WHERE player_key = ?1")}
-                ORDER BY next_review_utc ASC
-                LIMIT {safeLimit};
-                """);
-
-            if (!string.IsNullOrWhiteSpace(normalizedPlayerKey))
-            {
-                statement.BindText(1, normalizedPlayerKey);
-            }
-
-            while (statement.Step() == SqliteRow)
-            {
-                items.Add(new OpeningReviewItem(
-                    new OpeningBranchKey(statement.GetText(0) ?? string.Empty),
-                    new OpeningPositionKey(statement.GetText(1) ?? string.Empty),
-                    ParseNullableUtc(statement.GetText(2)),
-                    ParseUtc(statement.GetText(3)),
-                    ParseDouble(statement.GetText(4)),
-                    statement.GetInt(5),
-                    statement.GetInt(6),
-                    statement.GetInt(7),
-                    string.IsNullOrWhiteSpace(statement.GetText(8)) ? null : new OpeningKey(statement.GetText(8)!),
-                    string.IsNullOrWhiteSpace(statement.GetText(9)) ? null : new OpeningLineKey(statement.GetText(9)!)));
-            }
+            return SqliteOpeningTrainingStore.ListReviewItems(database, playerKey, limit);
         }
-
-        return items;
     }
 
     public void SaveOpeningTrainingScheduledActions(string playerKey, IReadOnlyList<OpeningTrainingScheduledAction> actions)
@@ -1561,65 +774,13 @@ public sealed class SqliteAnalysisStore :
         ArgumentException.ThrowIfNullOrWhiteSpace(playerKey);
         ArgumentNullException.ThrowIfNull(actions);
 
-        string normalizedPlayerKey = NormalizePlayerKey(playerKey);
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
             database.ExecuteNonQuery("BEGIN IMMEDIATE;");
             try
             {
-                foreach (OpeningTrainingScheduledAction action in actions)
-                {
-                    database.ExecuteNonQuery(
-                        """
-                        INSERT INTO opening_training_scheduled_actions (
-                            id,
-                            player_key,
-                            session_id,
-                            kind,
-                            line_key,
-                            branch_key,
-                            position_key,
-                            created_utc,
-                            due_utc,
-                            status,
-                            completed_utc,
-                            priority,
-                            source_action_id)
-                        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)
-                        ON CONFLICT (id)
-                        DO UPDATE SET
-                            player_key = excluded.player_key,
-                            session_id = excluded.session_id,
-                            kind = excluded.kind,
-                            line_key = excluded.line_key,
-                            branch_key = excluded.branch_key,
-                            position_key = excluded.position_key,
-                            created_utc = excluded.created_utc,
-                            due_utc = excluded.due_utc,
-                            status = excluded.status,
-                            completed_utc = excluded.completed_utc,
-                            priority = excluded.priority,
-                            source_action_id = excluded.source_action_id;
-                        """,
-                        statement =>
-                        {
-                            statement.BindText(1, action.Id);
-                            statement.BindText(2, normalizedPlayerKey);
-                            statement.BindText(3, action.SessionId);
-                            statement.BindInt(4, (int)action.Kind);
-                            statement.BindNullableText(5, action.LineKey?.Value);
-                            statement.BindNullableText(6, action.BranchKey?.Value);
-                            statement.BindNullableText(7, action.PositionKey?.Value);
-                            statement.BindText(8, action.CreatedUtc.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
-                            statement.BindText(9, action.DueUtc.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
-                            statement.BindInt(10, (int)action.Status);
-                            statement.BindNullableText(11, action.CompletedUtc?.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
-                            statement.BindInt(12, action.Priority);
-                            statement.BindNullableText(13, action.SourceActionId);
-                        });
-                }
-
+                SqliteOpeningTrainingStore.SaveScheduledActions(database, playerKey, actions);
                 database.ExecuteNonQuery("COMMIT;");
             }
             catch
@@ -1632,37 +793,11 @@ public sealed class SqliteAnalysisStore :
 
     public IReadOnlyList<OpeningTrainingScheduledAction> ListDueOpeningTrainingScheduledActions(string? playerKey, DateTime nowUtc, int limit = 50)
     {
-        string normalizedPlayerKey = NormalizePlayerKey(playerKey);
-        int safeLimit = Math.Clamp(limit, 1, 500);
-        List<OpeningTrainingScheduledAction> actions = [];
-
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            using SqliteStatement statement = database.Prepare($"""
-                SELECT id, player_key, session_id, kind, line_key, branch_key, position_key, created_utc, due_utc, status, completed_utc, priority, source_action_id
-                FROM opening_training_scheduled_actions
-                WHERE status = ?1
-                  AND due_utc <= ?2
-                  {(string.IsNullOrWhiteSpace(normalizedPlayerKey) ? string.Empty : "AND player_key = ?3")}
-                ORDER BY priority DESC, due_utc ASC
-                LIMIT {safeLimit};
-                """);
-
-            statement.BindInt(1, (int)OpeningTrainingScheduledActionStatus.Pending);
-            statement.BindText(2, nowUtc.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
-            if (!string.IsNullOrWhiteSpace(normalizedPlayerKey))
-            {
-                statement.BindText(3, normalizedPlayerKey);
-            }
-
-            while (statement.Step() == SqliteRow)
-            {
-                actions.Add(ReadOpeningTrainingScheduledAction(statement));
-            }
+            return SqliteOpeningTrainingStore.ListDueScheduledActions(database, playerKey, nowUtc, limit);
         }
-
-        return actions;
     }
 
     public void MarkOpeningTrainingScheduledActionCompleted(string playerKey, string actionId, DateTime completedUtc)
@@ -1673,21 +808,7 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            database.ExecuteNonQuery(
-                """
-                UPDATE opening_training_scheduled_actions
-                SET status = ?1,
-                    completed_utc = ?2
-                WHERE player_key = ?3
-                  AND id = ?4;
-                """,
-                statement =>
-                {
-                    statement.BindInt(1, (int)OpeningTrainingScheduledActionStatus.Completed);
-                    statement.BindText(2, completedUtc.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
-                    statement.BindText(3, NormalizePlayerKey(playerKey));
-                    statement.BindText(4, actionId);
-                });
+            SqliteOpeningTrainingStore.MarkScheduledActionCompleted(database, playerKey, actionId, completedUtc);
         }
     }
 
@@ -1695,49 +816,10 @@ public sealed class SqliteAnalysisStore :
     {
         ArgumentNullException.ThrowIfNull(telemetryEvent);
 
-        string eventId = BuildTelemetryEventId(telemetryEvent);
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            database.ExecuteNonQuery(
-                """
-                INSERT INTO opening_training_telemetry_events (
-                    event_id,
-                    event_name,
-                    occurred_utc,
-                    player_key,
-                    line_key,
-                    opening_key,
-                    session_id,
-                    recommendation_id,
-                    special_mode,
-                    properties_json)
-                VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)
-                ON CONFLICT (event_id)
-                DO UPDATE SET
-                    event_name = excluded.event_name,
-                    occurred_utc = excluded.occurred_utc,
-                    player_key = excluded.player_key,
-                    line_key = excluded.line_key,
-                    opening_key = excluded.opening_key,
-                    session_id = excluded.session_id,
-                    recommendation_id = excluded.recommendation_id,
-                    special_mode = excluded.special_mode,
-                    properties_json = excluded.properties_json;
-                """,
-                statement =>
-                {
-                    statement.BindText(1, eventId);
-                    statement.BindText(2, telemetryEvent.EventName);
-                    statement.BindText(3, telemetryEvent.CreatedUtc.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
-                    statement.BindNullableText(4, NormalizeNullablePlayerKey(telemetryEvent.PlayerKey));
-                    statement.BindNullableText(5, telemetryEvent.LineKey?.Value);
-                    statement.BindNullableText(6, telemetryEvent.OpeningKey?.Value);
-                    statement.BindNullableText(7, telemetryEvent.SessionId);
-                    statement.BindNullableText(8, telemetryEvent.RecommendationId);
-                    statement.BindNullableText(9, telemetryEvent.SpecialMode?.ToString());
-                    statement.BindText(10, JsonSerializer.Serialize(telemetryEvent.Properties ?? new Dictionary<string, string>(), JsonOptions));
-                });
+            SqliteOpeningTrainingStore.SaveTelemetryEvent(database, telemetryEvent);
         }
     }
 
@@ -1747,49 +829,11 @@ public sealed class SqliteAnalysisStore :
         DateTime? toUtc = null,
         int limit = 500)
     {
-        string normalizedPlayerKey = NormalizeNullablePlayerKey(playerKey) ?? string.Empty;
-        int safeLimit = Math.Clamp(limit, 1, 5000);
-        List<OpeningTrainingTelemetryEvent> events = [];
-
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            using SqliteStatement statement = database.Prepare($"""
-                SELECT event_name, occurred_utc, player_key, line_key, opening_key, session_id, recommendation_id, special_mode, properties_json
-                FROM opening_training_telemetry_events
-                WHERE (?1 = '' OR player_key = ?1)
-                  AND (?2 IS NULL OR occurred_utc >= ?2)
-                  AND (?3 IS NULL OR occurred_utc <= ?3)
-                ORDER BY occurred_utc DESC
-                LIMIT {safeLimit};
-                """);
-
-            statement.BindText(1, normalizedPlayerKey);
-            if (fromUtc.HasValue)
-            {
-                statement.BindText(2, fromUtc.Value.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
-            }
-            else
-            {
-                statement.BindNull(2);
-            }
-
-            if (toUtc.HasValue)
-            {
-                statement.BindText(3, toUtc.Value.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
-            }
-            else
-            {
-                statement.BindNull(3);
-            }
-
-            while (statement.Step() == SqliteRow)
-            {
-                events.Add(ReadOpeningTrainingTelemetryEvent(statement));
-            }
+            return SqliteOpeningTrainingStore.ListTelemetryEvents(database, playerKey, fromUtc, toUtc, limit);
         }
-
-        return events;
     }
 
     private void InitializeSchema()
@@ -2238,36 +1282,6 @@ public sealed class SqliteAnalysisStore :
             : null;
     }
 
-    private static MoveAdviceFeedback ReadMoveAdviceFeedback(SqliteStatement statement)
-    {
-        return new MoveAdviceFeedback(
-            statement.GetText(0) ?? string.Empty,
-            ParseUtc(statement.GetText(1)),
-            statement.GetText(2) ?? string.Empty,
-            (PlayerSide)statement.GetInt(3),
-            statement.GetInt(4),
-            statement.GetInt(5),
-            ReadMoveTime(statement.GetInt(6)),
-            statement.GetInt(7),
-            statement.GetInt(8),
-            statement.GetText(9) ?? string.Empty,
-            statement.GetText(10) ?? string.Empty,
-            statement.GetText(11) ?? string.Empty,
-            statement.GetText(12) ?? string.Empty,
-            statement.GetNullableInt(13),
-            statement.GetNullableInt(14),
-            statement.GetText(15),
-            statement.GetText(16),
-            ParseNullableDouble(statement.GetText(17)),
-            DeserializeEvidence(statement.GetText(18)),
-            (MoveQualityBucket)statement.GetInt(19),
-            statement.GetNullableInt(20),
-            ParseNullableFeedbackKind(statement.GetText(21)) ?? AdviceFeedbackKind.NotUseful,
-            statement.GetText(22),
-            statement.GetText(23),
-            statement.GetText(24) ?? string.Empty);
-    }
-
     private static IReadOnlyList<string> DeserializeEvidence(string? payload)
     {
         if (string.IsNullOrWhiteSpace(payload))
@@ -2307,17 +1321,6 @@ public sealed class SqliteAnalysisStore :
     private static string SerializeEvidence(IReadOnlyList<string>? evidence)
     {
         return JsonSerializer.Serialize(evidence ?? [], JsonOptions);
-    }
-
-    private static void BindNullableInt(SqliteStatement statement, int index, int? value)
-    {
-        if (value.HasValue)
-        {
-            statement.BindInt(index, value.Value);
-            return;
-        }
-
-        statement.BindNull(index);
     }
 
     private static void ReplaceMoveAnalyses(
@@ -2392,11 +1395,11 @@ public sealed class SqliteAnalysisStore :
                     statement.BindText(10, move.FenBefore);
                     statement.BindText(11, move.FenAfter);
                     statement.BindInt(12, (int)move.Phase);
-                    BindNullableInt(statement, 13, move.EvalBeforeCp);
-                    BindNullableInt(statement, 14, move.EvalAfterCp);
-                    BindNullableInt(statement, 15, move.BestMateIn);
-                    BindNullableInt(statement, 16, move.PlayedMateIn);
-                    BindNullableInt(statement, 17, move.CentipawnLoss);
+                    statement.BindNullableInt(13, move.EvalBeforeCp);
+                    statement.BindNullableInt(14, move.EvalAfterCp);
+                    statement.BindNullableInt(15, move.BestMateIn);
+                    statement.BindNullableInt(16, move.PlayedMateIn);
+                    statement.BindNullableInt(17, move.CentipawnLoss);
                     statement.BindInt(18, (int)move.Quality);
                     statement.BindInt(19, move.MaterialDeltaCp);
                     statement.BindNullableText(20, move.BestMoveUci);
@@ -2469,252 +1472,6 @@ public sealed class SqliteAnalysisStore :
             """);
     }
 
-    private static string? LoadOpeningNodeId(SqliteDatabase database, string positionKey)
-    {
-        using SqliteStatement statement = database.Prepare("""
-            SELECT id
-            FROM opening_position_nodes
-            WHERE position_key = ?1
-            LIMIT 1;
-            """);
-
-        statement.BindText(1, positionKey);
-        return statement.Step() == SqliteRow ? statement.GetText(0) : null;
-    }
-
-    private static string? LoadOpeningEdgeId(SqliteDatabase database, string fromNodeId, string moveUci, string toNodeId)
-    {
-        using SqliteStatement statement = database.Prepare("""
-            SELECT id
-            FROM opening_move_edges
-            WHERE from_node_id = ?1
-              AND move_uci = ?2
-              AND to_node_id = ?3
-            LIMIT 1;
-            """);
-
-        statement.BindText(1, fromNodeId);
-        statement.BindText(2, moveUci);
-        statement.BindText(3, toNodeId);
-        return statement.Step() == SqliteRow ? statement.GetText(0) : null;
-    }
-
-    private static void UpsertOpeningNode(SqliteDatabase database, OpeningPositionNode node, string nodeId)
-    {
-        database.ExecuteNonQuery(
-            """
-            INSERT INTO opening_position_nodes (
-                id,
-                position_key,
-                fen,
-                ply,
-                move_number,
-                side_to_move,
-                occurrence_count,
-                distinct_game_count)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
-            ON CONFLICT (position_key)
-            DO UPDATE SET
-                fen = excluded.fen,
-                ply = excluded.ply,
-                move_number = excluded.move_number,
-                side_to_move = excluded.side_to_move,
-                occurrence_count = excluded.occurrence_count,
-                distinct_game_count = excluded.distinct_game_count;
-            """,
-            statement =>
-            {
-                statement.BindText(1, nodeId);
-                statement.BindText(2, node.PositionKey);
-                statement.BindText(3, node.Fen);
-                statement.BindInt(4, node.Ply);
-                statement.BindInt(5, node.MoveNumber);
-                statement.BindText(6, node.SideToMove);
-                statement.BindInt(7, node.OccurrenceCount);
-                statement.BindInt(8, node.DistinctGameCount);
-            });
-    }
-
-    private static void UpsertOpeningEdge(
-        SqliteDatabase database,
-        OpeningMoveEdge edge,
-        string edgeId,
-        string fromNodeId,
-        string toNodeId)
-    {
-        database.ExecuteNonQuery(
-            """
-            INSERT INTO opening_move_edges (
-                id,
-                from_node_id,
-                to_node_id,
-                move_uci,
-                move_san,
-                occurrence_count,
-                distinct_game_count,
-                is_main_move,
-                is_playable_move,
-                rank_within_position)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)
-            ON CONFLICT (from_node_id, move_uci, to_node_id)
-            DO UPDATE SET
-                move_san = excluded.move_san,
-                occurrence_count = excluded.occurrence_count,
-                distinct_game_count = excluded.distinct_game_count,
-                is_main_move = excluded.is_main_move,
-                is_playable_move = excluded.is_playable_move,
-                rank_within_position = excluded.rank_within_position;
-            """,
-            statement =>
-            {
-                statement.BindText(1, edgeId);
-                statement.BindText(2, fromNodeId);
-                statement.BindText(3, toNodeId);
-                statement.BindText(4, edge.MoveUci);
-                statement.BindText(5, edge.MoveSan);
-                statement.BindInt(6, edge.OccurrenceCount);
-                statement.BindInt(7, edge.DistinctGameCount);
-                statement.BindInt(8, edge.IsMainMove ? 1 : 0);
-                statement.BindInt(9, edge.IsPlayableMove ? 1 : 0);
-                statement.BindInt(10, edge.RankWithinPosition);
-            });
-    }
-
-    private static void DeleteOpeningNodeTags(SqliteDatabase database, string nodeId)
-    {
-        database.ExecuteNonQuery(
-            """
-            DELETE FROM opening_node_tags
-            WHERE node_id = ?1;
-            """,
-            statement => statement.BindText(1, nodeId));
-    }
-
-    private static void UpsertOpeningNodeTag(SqliteDatabase database, OpeningNodeTag tag, string nodeId)
-    {
-        database.ExecuteNonQuery(
-            """
-            INSERT INTO opening_node_tags (
-                id,
-                node_id,
-                eco,
-                opening_name,
-                variation_name,
-                source_kind)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6)
-            ON CONFLICT (node_id, eco, opening_name, variation_name, source_kind)
-            DO UPDATE SET
-                eco = excluded.eco,
-                opening_name = excluded.opening_name,
-                variation_name = excluded.variation_name,
-                source_kind = excluded.source_kind;
-            """,
-            statement =>
-            {
-                statement.BindText(1, tag.Id.ToString("D"));
-                statement.BindText(2, nodeId);
-                statement.BindText(3, tag.Eco);
-                statement.BindText(4, tag.OpeningName);
-                statement.BindText(5, tag.VariationName);
-                statement.BindText(6, tag.SourceKind);
-            });
-    }
-
-    private static void SaveImportedGames(SqliteDatabase database, IReadOnlyList<ImportedGame> games)
-    {
-        string timestamp = DateTime.UtcNow.ToString("O");
-        using SqliteStatement statement = database.Prepare("""
-            INSERT INTO imported_games (
-                game_fingerprint,
-                pgn_text,
-                white_player,
-                black_player,
-                white_elo,
-                black_elo,
-                date_text,
-                result_text,
-                eco,
-                site,
-                round_text,
-                current_position,
-                timezone,
-                eco_url,
-                utc_date,
-                utc_time,
-                time_control,
-                time_control_category,
-                termination,
-                start_time,
-                end_date,
-                end_time,
-                link,
-                updated_utc)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24)
-            ON CONFLICT (game_fingerprint)
-            DO UPDATE SET
-                pgn_text = excluded.pgn_text,
-                white_player = excluded.white_player,
-                black_player = excluded.black_player,
-                white_elo = excluded.white_elo,
-                black_elo = excluded.black_elo,
-                date_text = excluded.date_text,
-                result_text = excluded.result_text,
-                eco = excluded.eco,
-                site = excluded.site,
-                round_text = excluded.round_text,
-                current_position = excluded.current_position,
-                timezone = excluded.timezone,
-                eco_url = excluded.eco_url,
-                utc_date = excluded.utc_date,
-                utc_time = excluded.utc_time,
-                time_control = excluded.time_control,
-                time_control_category = excluded.time_control_category,
-                termination = excluded.termination,
-                start_time = excluded.start_time,
-                end_date = excluded.end_date,
-                end_time = excluded.end_time,
-                link = excluded.link,
-                updated_utc = excluded.updated_utc;
-            """);
-
-        foreach (ImportedGame game in games)
-        {
-            string gameFingerprint = GameFingerprint.Compute(game.PgnText);
-            statement.Reset();
-            statement.BindText(1, gameFingerprint);
-            statement.BindText(2, game.PgnText);
-            statement.BindNullableText(3, game.WhitePlayer);
-            statement.BindNullableText(4, game.BlackPlayer);
-            BindNullableInt(statement, 5, game.WhiteElo);
-            BindNullableInt(statement, 6, game.BlackElo);
-            statement.BindNullableText(7, game.DateText);
-            statement.BindNullableText(8, game.Result);
-            statement.BindNullableText(9, game.Eco);
-            statement.BindNullableText(10, game.Site);
-            statement.BindNullableText(11, game.Metadata?.Round);
-            statement.BindNullableText(12, game.Metadata?.CurrentPosition);
-            statement.BindNullableText(13, game.Metadata?.Timezone);
-            statement.BindNullableText(14, game.Metadata?.EcoUrl);
-            statement.BindNullableText(15, game.Metadata?.UtcDate);
-            statement.BindNullableText(16, game.Metadata?.UtcTime);
-            statement.BindNullableText(17, game.Metadata?.TimeControl);
-            statement.BindInt(18, (int)(game.Metadata?.TimeControlCategory ?? GameTimeControlCategory.Unknown));
-            statement.BindNullableText(19, game.Metadata?.Termination);
-            statement.BindNullableText(20, game.Metadata?.StartTime);
-            statement.BindNullableText(21, game.Metadata?.EndDate);
-            statement.BindNullableText(22, game.Metadata?.EndTime);
-            statement.BindNullableText(23, game.Metadata?.Link);
-            statement.BindText(24, timestamp);
-            statement.StepUntilDone();
-        }
-    }
-
-    private static int CountRows(SqliteDatabase database, string tableName)
-    {
-        using SqliteStatement statement = database.Prepare($"SELECT COUNT(*) FROM {tableName};");
-        return statement.Step() == SqliteRow ? statement.GetInt(0) : 0;
-    }
-
     private static string? GetMetadataValue(SqliteDatabase database, string key)
     {
         using SqliteStatement statement = database.Prepare("""
@@ -2744,207 +1501,9 @@ public sealed class SqliteAnalysisStore :
             });
     }
 
-    private static void SaveOpeningTree(SqliteDatabase database, OpeningTreeBuildResult tree)
-    {
-        Dictionary<Guid, string> persistedNodeIds = new();
-
-        foreach (OpeningPositionNode node in tree.Nodes)
-        {
-            string nodeId = LoadOpeningNodeId(database, node.PositionKey) ?? node.Id.ToString("D");
-            UpsertOpeningNode(database, node, nodeId);
-            persistedNodeIds[node.Id] = nodeId;
-        }
-
-        foreach (OpeningMoveEdge edge in tree.Edges)
-        {
-            if (!persistedNodeIds.TryGetValue(edge.FromNodeId, out string? fromNodeId)
-                || !persistedNodeIds.TryGetValue(edge.ToNodeId, out string? toNodeId))
-            {
-                throw new InvalidOperationException("Opening edge references a node that was not saved.");
-            }
-
-            string edgeId = LoadOpeningEdgeId(database, fromNodeId, edge.MoveUci, toNodeId)
-                ?? edge.Id.ToString("D");
-            UpsertOpeningEdge(database, edge, edgeId, fromNodeId, toNodeId);
-        }
-
-        foreach (string persistedNodeId in persistedNodeIds.Values)
-        {
-            DeleteOpeningNodeTags(database, persistedNodeId);
-        }
-
-        foreach (OpeningNodeTag tag in tree.Tags)
-        {
-            if (!persistedNodeIds.TryGetValue(tag.NodeId, out string? nodeId))
-            {
-                throw new InvalidOperationException("Opening tag references a node that was not saved.");
-            }
-
-            UpsertOpeningNodeTag(database, tag, nodeId);
-        }
-    }
-
-    private static OpeningTheoryPosition ReadOpeningTheoryPosition(SqliteStatement statement)
-    {
-        return new OpeningTheoryPosition(
-            ParseGuid(statement.GetText(0)),
-            statement.GetText(1) ?? string.Empty,
-            new OpeningPositionKey(statement.GetText(1) ?? string.Empty),
-            statement.GetText(2) ?? string.Empty,
-            statement.GetInt(3),
-            statement.GetInt(4),
-            statement.GetText(5) ?? string.Empty,
-            statement.GetInt(6),
-            statement.GetInt(7),
-            new OpeningGameMetadata(
-                statement.GetText(8) ?? string.Empty,
-                statement.GetText(9) ?? string.Empty,
-                statement.GetText(10) ?? string.Empty));
-    }
-
-    private static OpeningTheoryMove ReadOpeningTheoryMove(SqliteStatement statement)
-    {
-        string moveSan = statement.GetText(4) ?? string.Empty;
-        bool isMainMove = statement.GetInt(7) != 0;
-        return new OpeningTheoryMove(
-            ParseGuid(statement.GetText(0)),
-            ParseGuid(statement.GetText(1)),
-            ParseGuid(statement.GetText(2)),
-            statement.GetText(3) ?? string.Empty,
-            moveSan,
-            statement.GetInt(5),
-            statement.GetInt(6),
-            isMainMove,
-            statement.GetInt(8) != 0,
-            statement.GetInt(9),
-            statement.GetText(10) ?? string.Empty,
-            new OpeningPositionKey(statement.GetText(10) ?? string.Empty),
-            statement.GetText(11) ?? string.Empty,
-            new OpeningGameMetadata(
-                statement.GetText(12) ?? string.Empty,
-                statement.GetText(13) ?? string.Empty,
-                statement.GetText(14) ?? string.Empty),
-            "opening_book");
-    }
-
-    private static OpeningTrainingScheduledAction ReadOpeningTrainingScheduledAction(SqliteStatement statement)
-    {
-        string? lineKey = statement.GetText(4);
-        string? branchKey = statement.GetText(5);
-        string? positionKey = statement.GetText(6);
-        return new OpeningTrainingScheduledAction(
-            statement.GetText(0) ?? string.Empty,
-            statement.GetText(1) ?? string.Empty,
-            statement.GetText(2) ?? string.Empty,
-            (TrainingNextActionKind)statement.GetInt(3),
-            string.IsNullOrWhiteSpace(lineKey) ? null : new OpeningLineKey(lineKey),
-            string.IsNullOrWhiteSpace(branchKey) ? null : new OpeningBranchKey(branchKey),
-            string.IsNullOrWhiteSpace(positionKey) ? null : new OpeningPositionKey(positionKey),
-            ParseUtc(statement.GetText(7)),
-            ParseUtc(statement.GetText(8)),
-            (OpeningTrainingScheduledActionStatus)statement.GetInt(9),
-            ParseNullableUtc(statement.GetText(10)),
-            statement.GetInt(11),
-            statement.GetText(12));
-    }
-
-    private static OpeningTrainingTelemetryEvent ReadOpeningTrainingTelemetryEvent(SqliteStatement statement)
-    {
-        string? lineKey = statement.GetText(3);
-        string? openingKey = statement.GetText(4);
-        string? specialModeText = statement.GetText(7);
-        IReadOnlyDictionary<string, string> properties = DeserializeTelemetryProperties(statement.GetText(8));
-
-        return new OpeningTrainingTelemetryEvent(
-            statement.GetText(0) ?? string.Empty,
-            ParseUtc(statement.GetText(1)),
-            statement.GetText(2),
-            string.IsNullOrWhiteSpace(lineKey) ? null : new OpeningLineKey(lineKey),
-            string.IsNullOrWhiteSpace(openingKey) ? null : new OpeningKey(openingKey),
-            statement.GetText(5),
-            statement.GetText(6),
-            Enum.TryParse(specialModeText, out SpecialTrainingModeKind specialMode) ? (SpecialTrainingModeKind?)specialMode : null,
-            properties);
-    }
-
-    private static IReadOnlyDictionary<string, string> DeserializeTelemetryProperties(string? payload)
-    {
-        if (string.IsNullOrWhiteSpace(payload))
-        {
-            return new Dictionary<string, string>();
-        }
-
-        return JsonSerializer.Deserialize<Dictionary<string, string>>(payload, JsonOptions)
-            ?? new Dictionary<string, string>();
-    }
-
-    private static string BuildTelemetryEventId(OpeningTrainingTelemetryEvent telemetryEvent)
-    {
-        return Guid.NewGuid().ToString("N");
-    }
-
-    private static string? NormalizeNullablePlayerKey(string? playerKey)
-    {
-        return string.IsNullOrWhiteSpace(playerKey)
-            ? null
-            : playerKey.Trim().ToLowerInvariant();
-    }
-
     private static Guid ParseGuid(string? value)
     {
         return Guid.TryParse(value, out Guid parsed) ? parsed : Guid.Empty;
-    }
-
-    private static double ParseDouble(string? value)
-    {
-        return double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double parsed)
-            ? parsed
-            : 0;
-    }
-
-    private static RepertoireSide ParseRepertoireSide(string? sideToMove)
-    {
-        return string.Equals(sideToMove, "Black", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(sideToMove, "b", StringComparison.OrdinalIgnoreCase)
-            ? RepertoireSide.Black
-            : RepertoireSide.White;
-    }
-
-    private static PlayerSide ParsePlayerSide(string? sideToMove)
-    {
-        return string.Equals(sideToMove, "Black", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(sideToMove, "b", StringComparison.OrdinalIgnoreCase)
-            ? PlayerSide.Black
-            : PlayerSide.White;
-    }
-
-    private static string BuildDisplayName(string eco, string openingName, string variationName)
-    {
-        string opening = string.IsNullOrWhiteSpace(openingName) ? OpeningCatalog.GetName(eco) : openingName;
-        return string.IsNullOrWhiteSpace(variationName)
-            ? $"{opening} ({eco})"
-            : $"{opening}: {variationName} ({eco})";
-    }
-
-    private static string BuildOpeningKey(string eco, string openingName)
-    {
-        return $"{SanitizeKeyPart(eco)}{CompositeKeySeparator}{SanitizeKeyPart(openingName)}";
-    }
-
-    private static string BuildOpeningLineKey(string eco, string openingName, string variationName, RepertoireSide side, string positionKey)
-    {
-        return string.Join(
-            CompositeKeySeparator,
-            SanitizeKeyPart(eco),
-            SanitizeKeyPart(openingName),
-            SanitizeKeyPart(variationName),
-            side.ToString(),
-            SanitizeKeyPart(positionKey));
-    }
-
-    private static string SanitizeKeyPart(string? value)
-    {
-        return (value ?? string.Empty).Replace("\\", "\\\\", StringComparison.Ordinal).Replace("|", "\\|", StringComparison.Ordinal);
     }
 
     private static void EnsureColumnExists(SqliteDatabase database, string tableName, string columnName, string definition)
@@ -2959,15 +1518,6 @@ public sealed class SqliteAnalysisStore :
         }
 
         database.ExecuteNonQuery($"ALTER TABLE {tableName} ADD COLUMN {columnName} {definition};");
-    }
-
-    private static string BuildDisplayTitle(string? whitePlayer, string? blackPlayer, string? dateText, string? result, string? eco)
-    {
-        string players = $"{whitePlayer ?? "White"} vs {blackPlayer ?? "Black"}";
-        string datePart = string.IsNullOrWhiteSpace(dateText) ? string.Empty : $" | {dateText}";
-        string resultPart = string.IsNullOrWhiteSpace(result) ? string.Empty : $" | {result}";
-        string ecoPart = string.IsNullOrWhiteSpace(eco) ? string.Empty : $" | {OpeningCatalog.Describe(eco)}";
-        return players + datePart + resultPart + ecoPart;
     }
 
     private sealed record StoredMoveAnnotation(MistakeTag? Tag, MoveExplanation? Explanation);
