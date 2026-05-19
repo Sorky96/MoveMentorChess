@@ -15,7 +15,6 @@ public sealed class SqliteAnalysisStore :
 {
     private const string AppDataDirectoryName = "MoveMentorChessServices";
     private const string DatabaseFileName = "analysis-cache.db";
-    private const string DerivedAnalysisDataVersionKey = "derived_analysis_data_version";
     public const string CurrentDerivedAnalysisDataVersion = "derived-analysis-v1";
 
     private readonly string databasePath;
@@ -184,20 +183,13 @@ public sealed class SqliteAnalysisStore :
 
     public void ClearDerivedAnalysisData()
     {
-        WithImmediateTransaction(database =>
-        {
-            SqliteAnalysisMetadataStore.ClearDerivedAnalysisData(database);
-            SqliteAnalysisMetadataStore.SetMetadataValue(
-                database,
-                DerivedAnalysisDataVersionKey,
-                derivedAnalysisDataVersion);
-        });
+        WithDatabase(database =>
+            SqliteAnalysisMetadataStore.ResetDerivedAnalysisData(database, derivedAnalysisDataVersion));
     }
 
     public string? GetDerivedAnalysisDataVersion()
     {
-        return WithDatabase(database =>
-            SqliteAnalysisMetadataStore.GetMetadataValue(database, DerivedAnalysisDataVersionKey));
+        return WithDatabase(SqliteAnalysisMetadataStore.GetDerivedAnalysisDataVersion);
     }
 
     public IReadOnlyList<SavedImportedGameSummary> ListImportedGames(string? filterText = null, int limit = 200)
@@ -348,26 +340,10 @@ public sealed class SqliteAnalysisStore :
             SqliteSchemaInitializer.Initialize(database);
             if (applyDerivedAnalysisDataVersionPolicy)
             {
-                ApplyDerivedAnalysisDataVersionPolicy(database);
+                SqliteAnalysisMetadataStore.ApplyDerivedAnalysisDataVersionPolicy(
+                    database,
+                    derivedAnalysisDataVersion);
             }
-        });
-    }
-
-    private void ApplyDerivedAnalysisDataVersionPolicy(SqliteDatabase database)
-    {
-        string? storedVersion = SqliteAnalysisMetadataStore.GetMetadataValue(database, DerivedAnalysisDataVersionKey);
-        if (string.Equals(storedVersion, derivedAnalysisDataVersion, StringComparison.Ordinal))
-        {
-            return;
-        }
-
-        SqliteTransaction.RunImmediate(database, () =>
-        {
-            SqliteAnalysisMetadataStore.ClearDerivedAnalysisData(database);
-            SqliteAnalysisMetadataStore.SetMetadataValue(
-                database,
-                DerivedAnalysisDataVersionKey,
-                derivedAnalysisDataVersion);
         });
     }
 

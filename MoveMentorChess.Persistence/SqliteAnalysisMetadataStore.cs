@@ -2,15 +2,41 @@ namespace MoveMentorChess.Persistence;
 
 internal static class SqliteAnalysisMetadataStore
 {
+    private const string DerivedAnalysisDataVersionKey = "derived_analysis_data_version";
     private const int SqliteRow = SqliteResult.Row;
 
-    public static void ClearDerivedAnalysisData(SqliteDatabase database)
+    public static void ResetDerivedAnalysisData(SqliteDatabase database, string derivedAnalysisDataVersion)
+    {
+        SqliteTransaction.RunImmediate(database, () =>
+        {
+            ClearDerivedAnalysisData(database);
+            SetMetadataValue(database, DerivedAnalysisDataVersionKey, derivedAnalysisDataVersion);
+        });
+    }
+
+    public static string? GetDerivedAnalysisDataVersion(SqliteDatabase database)
+    {
+        return GetMetadataValue(database, DerivedAnalysisDataVersionKey);
+    }
+
+    public static void ApplyDerivedAnalysisDataVersionPolicy(SqliteDatabase database, string derivedAnalysisDataVersion)
+    {
+        string? storedVersion = GetDerivedAnalysisDataVersion(database);
+        if (string.Equals(storedVersion, derivedAnalysisDataVersion, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        ResetDerivedAnalysisData(database, derivedAnalysisDataVersion);
+    }
+
+    private static void ClearDerivedAnalysisData(SqliteDatabase database)
     {
         database.ExecuteNonQuery("DELETE FROM analysis_moves;");
         database.ExecuteNonQuery("DELETE FROM analysis_results;");
     }
 
-    public static string? GetMetadataValue(SqliteDatabase database, string key)
+    private static string? GetMetadataValue(SqliteDatabase database, string key)
     {
         using SqliteStatement statement = database.Prepare("""
             SELECT value
@@ -23,7 +49,7 @@ internal static class SqliteAnalysisMetadataStore
         return statement.Step() == SqliteRow ? statement.GetText(0) : null;
     }
 
-    public static void SetMetadataValue(SqliteDatabase database, string key, string value)
+    private static void SetMetadataValue(SqliteDatabase database, string key, string value)
     {
         database.ExecuteNonQuery(
             """
