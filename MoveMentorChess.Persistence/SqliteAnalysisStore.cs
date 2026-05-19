@@ -320,7 +320,7 @@ public sealed class SqliteAnalysisStore :
     {
         ArgumentNullException.ThrowIfNull(telemetryEvent);
 
-        WithDatabase(database => SqliteOpeningTrainingStore.SaveTelemetryEvent(database, telemetryEvent));
+        WithDatabase(database => SqliteOpeningTrainingTelemetryStore.SaveTelemetryEvent(database, telemetryEvent));
     }
 
     public IReadOnlyList<OpeningTrainingTelemetryEvent> ListOpeningTrainingTelemetryEvents(
@@ -330,7 +330,7 @@ public sealed class SqliteAnalysisStore :
         int limit = 500)
     {
         return WithDatabase(database =>
-            SqliteOpeningTrainingStore.ListTelemetryEvents(database, playerKey, fromUtc, toUtc, limit));
+            SqliteOpeningTrainingTelemetryStore.ListTelemetryEvents(database, playerKey, fromUtc, toUtc, limit));
     }
 
     private void InitializeSchema()
