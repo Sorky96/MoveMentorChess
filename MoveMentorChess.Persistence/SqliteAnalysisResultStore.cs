@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.Json;
 
 namespace MoveMentorChess.Persistence;
@@ -6,9 +5,6 @@ namespace MoveMentorChess.Persistence;
 internal static class SqliteAnalysisResultStore
 {
     private const int SqliteRow = SqliteResult.Row;
-    private const int NoMoveTimeMs = -1;
-
-    private static readonly JsonSerializerOptions JsonOptions = new();
 
     public static IReadOnlyList<GameAnalysisResult> ListResults(
         SqliteDatabase database,
@@ -48,14 +44,16 @@ internal static class SqliteAnalysisResultStore
                 (PlayerSide)statement.GetInt(1),
                 statement.GetInt(2),
                 statement.GetInt(3),
-                ReadMoveTime(statement.GetInt(4)));
+                SqliteAnalysisDataConverters.ReadMoveTime(statement.GetInt(4)));
             string? payload = statement.GetText(5);
             if (string.IsNullOrWhiteSpace(payload))
             {
                 continue;
             }
 
-            GameAnalysisResult? item = JsonSerializer.Deserialize<GameAnalysisResult>(payload, JsonOptions);
+            GameAnalysisResult? item = JsonSerializer.Deserialize<GameAnalysisResult>(
+                payload,
+                SqliteAnalysisDataConverters.JsonOptions);
             if (item is not null)
             {
                 items.Add(NormalizeLoadedResult(database, key, item));
@@ -160,8 +158,8 @@ internal static class SqliteAnalysisResultStore
             string? timeControl = statement.GetText(14);
             string? originalLabel = statement.GetText(37);
             string? correctedLabel = statement.GetText(45);
-            AdviceFeedbackKind? manualFeedbackKind = ParseNullableFeedbackKind(statement.GetText(44));
-            DateTime? manualCorrectedUtc = ParseNullableUtc(statement.GetText(47));
+            AdviceFeedbackKind? manualFeedbackKind = SqliteAnalysisDataConverters.ParseNullableFeedbackKind(statement.GetText(44));
+            DateTime? manualCorrectedUtc = SqliteAnalysisDataConverters.ParseNullableUtc(statement.GetText(47));
             items.Add(StoredMoveAnalysisMapper.FromSqliteRow(
                 new StoredGameContext(
                     statement.GetText(0) ?? string.Empty,
@@ -185,8 +183,8 @@ internal static class SqliteAnalysisResultStore
                     (PlayerSide)statement.GetInt(1),
                     statement.GetInt(2),
                     statement.GetInt(3),
-                    ReadMoveTime(statement.GetInt(4)),
-                    ParseUtc(statement.GetText(5))),
+                    SqliteAnalysisDataConverters.ReadMoveTime(statement.GetInt(4)),
+                    SqliteAnalysisDataConverters.ParseUtc(statement.GetText(5))),
                 new StoredMoveContext(
                     statement.GetInt(22),
                     statement.GetInt(23),
@@ -205,8 +203,8 @@ internal static class SqliteAnalysisResultStore
                     statement.GetText(36)),
                 new StoredMoveAdviceContext(
                     string.IsNullOrWhiteSpace(correctedLabel) ? originalLabel : correctedLabel,
-                    ParseNullableDouble(statement.GetText(38)),
-                    DeserializeEvidence(statement.GetText(39)),
+                    SqliteAnalysisDataConverters.ParseNullableDouble(statement.GetText(38)),
+                    SqliteAnalysisDataConverters.DeserializeEvidence(statement.GetText(39)),
                     statement.GetText(40),
                     statement.GetText(41),
                     statement.GetText(42),
@@ -242,7 +240,7 @@ internal static class SqliteAnalysisResultStore
         statement.BindInt(2, (int)key.Side);
         statement.BindInt(3, key.Depth);
         statement.BindInt(4, key.MultiPv);
-        statement.BindInt(5, NormalizeMoveTime(key.MoveTimeMs));
+        statement.BindInt(5, SqliteAnalysisDataConverters.NormalizeMoveTime(key.MoveTimeMs));
 
         int stepResult = statement.Step();
         if (stepResult != SqliteRow)
@@ -258,7 +256,9 @@ internal static class SqliteAnalysisResultStore
             return false;
         }
 
-        result = JsonSerializer.Deserialize<GameAnalysisResult>(payload, JsonOptions);
+        result = JsonSerializer.Deserialize<GameAnalysisResult>(
+            payload,
+            SqliteAnalysisDataConverters.JsonOptions);
         if (result is not null)
         {
             result = NormalizeLoadedResult(database, key, result);
@@ -273,8 +273,8 @@ internal static class SqliteAnalysisResultStore
         GameAnalysisResult result,
         DateTime timestampUtc)
     {
-        string timestamp = timestampUtc.ToUniversalTime().ToString("O");
-        string payload = JsonSerializer.Serialize(result, JsonOptions);
+        string timestamp = SqliteAnalysisDataConverters.FormatUtc(timestampUtc);
+        string payload = JsonSerializer.Serialize(result, SqliteAnalysisDataConverters.JsonOptions);
         SqliteTransaction.RunImmediate(database, () =>
         {
             using SqliteStatement statement = database.Prepare("""
@@ -298,13 +298,13 @@ internal static class SqliteAnalysisResultStore
             statement.BindInt(2, (int)key.Side);
             statement.BindInt(3, key.Depth);
             statement.BindInt(4, key.MultiPv);
-            statement.BindInt(5, NormalizeMoveTime(key.MoveTimeMs));
+            statement.BindInt(5, SqliteAnalysisDataConverters.NormalizeMoveTime(key.MoveTimeMs));
             statement.BindText(6, payload);
             statement.BindText(7, timestamp);
             statement.BindText(8, timestamp);
             statement.StepUntilDone();
 
-            ReplaceMoveAnalyses(database, key, result, ParseUtc(timestamp));
+            ReplaceMoveAnalyses(database, key, result, SqliteAnalysisDataConverters.ParseUtc(timestamp));
         });
     }
 
@@ -408,7 +408,7 @@ internal static class SqliteAnalysisResultStore
         statement.BindInt(2, (int)key.Side);
         statement.BindInt(3, key.Depth);
         statement.BindInt(4, key.MultiPv);
-        statement.BindInt(5, NormalizeMoveTime(key.MoveTimeMs));
+        statement.BindInt(5, SqliteAnalysisDataConverters.NormalizeMoveTime(key.MoveTimeMs));
 
         while (statement.Step() == SqliteRow)
         {
@@ -418,8 +418,8 @@ internal static class SqliteAnalysisResultStore
             {
                 tag = new MistakeTag(
                     label,
-                    ParseNullableDouble(statement.GetText(2)) ?? 0,
-                    DeserializeEvidence(statement.GetText(3)));
+                    SqliteAnalysisDataConverters.ParseNullableDouble(statement.GetText(2)) ?? 0,
+                    SqliteAnalysisDataConverters.DeserializeEvidence(statement.GetText(3)));
             }
 
             MoveExplanation? explanation = null;
@@ -440,10 +440,6 @@ internal static class SqliteAnalysisResultStore
         return annotations;
     }
 
-    private static int NormalizeMoveTime(int? moveTimeMs) => moveTimeMs ?? NoMoveTimeMs;
-
-    private static int? ReadMoveTime(int rawMoveTime) => rawMoveTime == NoMoveTimeMs ? null : rawMoveTime;
-
     private static GameTimeControlCategory ParseTimeControlCategory(int? storedValue, string? timeControl)
     {
         if (storedValue.HasValue
@@ -453,75 +449,6 @@ internal static class SqliteAnalysisResultStore
         }
 
         return PgnGameParser.ClassifyTimeControl(timeControl);
-    }
-
-    private static DateTime ParseUtc(string? value)
-    {
-        return DateTime.TryParse(
-            value,
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal,
-            out DateTime parsed)
-            ? parsed
-            : DateTime.MinValue;
-    }
-
-    private static DateTime? ParseNullableUtc(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        return ParseUtc(value);
-    }
-
-    private static AdviceFeedbackKind? ParseNullableFeedbackKind(string? value)
-    {
-        return Enum.TryParse(value, ignoreCase: true, out AdviceFeedbackKind parsed)
-            ? parsed
-            : null;
-    }
-
-    private static IReadOnlyList<string> DeserializeEvidence(string? payload)
-    {
-        if (string.IsNullOrWhiteSpace(payload))
-        {
-            return [];
-        }
-
-        try
-        {
-            return JsonSerializer.Deserialize<IReadOnlyList<string>>(payload, JsonOptions) ?? [];
-        }
-        catch
-        {
-            return [];
-        }
-    }
-
-    private static double? ParseNullableDouble(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        return double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double parsed)
-            ? parsed
-            : null;
-    }
-
-    private static string? FormatNullableDouble(double? value)
-    {
-        return value.HasValue
-            ? value.Value.ToString("0.####", CultureInfo.InvariantCulture)
-            : null;
-    }
-
-    private static string SerializeEvidence(IReadOnlyList<string>? evidence)
-    {
-        return JsonSerializer.Serialize(evidence ?? [], JsonOptions);
     }
 
     private static void ReplaceMoveAnalyses(
@@ -545,7 +472,7 @@ internal static class SqliteAnalysisResultStore
                 statement.BindInt(2, (int)key.Side);
                 statement.BindInt(3, key.Depth);
                 statement.BindInt(4, key.MultiPv);
-                statement.BindInt(5, NormalizeMoveTime(key.MoveTimeMs));
+                statement.BindInt(5, SqliteAnalysisDataConverters.NormalizeMoveTime(key.MoveTimeMs));
             });
 
         foreach (StoredMoveAnalysis move in StoredMoveAnalysisMapper.FromAnalysisResult(key, result, analysisUpdatedUtc))
@@ -588,7 +515,7 @@ internal static class SqliteAnalysisResultStore
                     statement.BindInt(2, (int)move.AnalyzedSide);
                     statement.BindInt(3, move.Depth);
                     statement.BindInt(4, move.MultiPv);
-                    statement.BindInt(5, NormalizeMoveTime(move.MoveTimeMs));
+                    statement.BindInt(5, SqliteAnalysisDataConverters.NormalizeMoveTime(move.MoveTimeMs));
                     statement.BindInt(6, move.Ply);
                     statement.BindInt(7, move.MoveNumber);
                     statement.BindText(8, move.San);
@@ -605,8 +532,8 @@ internal static class SqliteAnalysisResultStore
                     statement.BindInt(19, move.MaterialDeltaCp);
                     statement.BindNullableText(20, move.BestMoveUci);
                     statement.BindNullableText(21, move.MistakeLabel);
-                    statement.BindNullableText(22, FormatNullableDouble(move.MistakeConfidence));
-                    statement.BindText(23, SerializeEvidence(move.Evidence));
+                    statement.BindNullableText(22, SqliteAnalysisDataConverters.FormatNullableDouble(move.MistakeConfidence));
+                    statement.BindText(23, SqliteAnalysisDataConverters.SerializeEvidence(move.Evidence));
                     statement.BindNullableText(24, move.ShortExplanation);
                     statement.BindNullableText(25, move.DetailedExplanation);
                     statement.BindNullableText(26, move.TrainingHint);
