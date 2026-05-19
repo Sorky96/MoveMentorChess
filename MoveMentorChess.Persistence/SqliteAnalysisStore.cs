@@ -609,7 +609,7 @@ public sealed class SqliteAnalysisStore :
             database.ExecuteNonQuery("BEGIN IMMEDIATE;");
             try
             {
-                SaveImportedGames(database, [game], clock.UtcNow);
+                SqliteImportedGameStore.SaveImportedGames(database, [game], clock.UtcNow);
                 database.ExecuteNonQuery("COMMIT;");
             }
             catch
@@ -634,7 +634,7 @@ public sealed class SqliteAnalysisStore :
             database.ExecuteNonQuery("BEGIN IMMEDIATE;");
             try
             {
-                SaveImportedGames(database, games, clock.UtcNow);
+                SqliteImportedGameStore.SaveImportedGames(database, games, clock.UtcNow);
                 database.ExecuteNonQuery("COMMIT;");
             }
             catch
@@ -652,30 +652,7 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            using SqliteStatement statement = database.Prepare("""
-                SELECT pgn_text
-                FROM imported_games
-                WHERE game_fingerprint = ?1
-                LIMIT 1;
-                """);
-
-            statement.BindText(1, gameFingerprint);
-            int stepResult = statement.Step();
-            if (stepResult != SqliteRow)
-            {
-                game = null;
-                return false;
-            }
-
-            string? pgnText = statement.GetText(0);
-            if (string.IsNullOrWhiteSpace(pgnText))
-            {
-                game = null;
-                return false;
-            }
-
-            game = PgnGameParser.Parse(pgnText);
-            return true;
+            return SqliteImportedGameStore.TryLoadImportedGame(database, gameFingerprint, out game);
         }
     }
 
@@ -686,47 +663,7 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            bool exists = database.Exists(
-                """
-                SELECT 1
-                FROM imported_games
-                WHERE game_fingerprint = ?1
-                LIMIT 1;
-                """,
-                statement => statement.BindText(1, gameFingerprint));
-
-            database.ExecuteNonQuery(
-                """
-                DELETE FROM analysis_moves
-                WHERE game_fingerprint = ?1;
-                """,
-                statement => statement.BindText(1, gameFingerprint));
-            database.ExecuteNonQuery(
-                """
-                DELETE FROM analysis_results
-                WHERE game_fingerprint = ?1;
-                """,
-                statement => statement.BindText(1, gameFingerprint));
-            database.ExecuteNonQuery(
-                """
-                DELETE FROM analysis_window_states
-                WHERE game_fingerprint = ?1;
-                """,
-                statement => statement.BindText(1, gameFingerprint));
-            database.ExecuteNonQuery(
-                """
-                DELETE FROM move_advice_feedbacks
-                WHERE game_fingerprint = ?1;
-                """,
-                statement => statement.BindText(1, gameFingerprint));
-            database.ExecuteNonQuery(
-                """
-                DELETE FROM imported_games
-                WHERE game_fingerprint = ?1;
-                """,
-                statement => statement.BindText(1, gameFingerprint));
-
-            return exists;
+            return SqliteImportedGameStore.DeleteImportedGame(database, gameFingerprint);
         }
     }
 
@@ -738,11 +675,7 @@ public sealed class SqliteAnalysisStore :
             database.ExecuteNonQuery("BEGIN IMMEDIATE;");
             try
             {
-                database.ExecuteNonQuery("DELETE FROM move_advice_feedbacks;");
-                database.ExecuteNonQuery("DELETE FROM analysis_window_states;");
-                database.ExecuteNonQuery("DELETE FROM analysis_moves;");
-                database.ExecuteNonQuery("DELETE FROM analysis_results;");
-                database.ExecuteNonQuery("DELETE FROM imported_games;");
+                SqliteImportedGameStore.ClearImportedAnalysisData(database);
                 database.ExecuteNonQuery("COMMIT;");
             }
             catch
@@ -784,63 +717,11 @@ public sealed class SqliteAnalysisStore :
 
     public IReadOnlyList<SavedImportedGameSummary> ListImportedGames(string? filterText = null, int limit = 200)
     {
-        string normalizedFilter = filterText?.Trim().ToLowerInvariant() ?? string.Empty;
-        int safeLimit = Math.Clamp(limit, 1, 1000);
-        List<SavedImportedGameSummary> items = new();
-
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            using SqliteStatement statement = database.Prepare($"""
-                SELECT game_fingerprint, white_player, black_player, date_text, result_text, eco, site,
-                       white_elo, black_elo, time_control, time_control_category, updated_utc
-                FROM imported_games
-                {(string.IsNullOrWhiteSpace(normalizedFilter)
-                    ? string.Empty
-                    : "WHERE lower(coalesce(white_player, '')) LIKE ?1 OR lower(coalesce(black_player, '')) LIKE ?1 OR lower(coalesce(date_text, '')) LIKE ?1 OR lower(coalesce(result_text, '')) LIKE ?1 OR lower(coalesce(eco, '')) LIKE ?1 OR lower(coalesce(site, '')) LIKE ?1 OR lower(coalesce(time_control, '')) LIKE ?1")}
-                ORDER BY updated_utc DESC
-                LIMIT {safeLimit};
-                """);
-
-            if (!string.IsNullOrWhiteSpace(normalizedFilter))
-            {
-                statement.BindText(1, $"%{normalizedFilter}%");
-            }
-
-            while (statement.Step() == SqliteRow)
-            {
-                string fingerprint = statement.GetText(0) ?? string.Empty;
-                string? white = statement.GetText(1);
-                string? black = statement.GetText(2);
-                string? dateText = statement.GetText(3);
-                string? result = statement.GetText(4);
-                string? eco = statement.GetText(5);
-                string? site = statement.GetText(6);
-                int? whiteElo = statement.GetNullableInt(7);
-                int? blackElo = statement.GetNullableInt(8);
-                string? timeControl = statement.GetText(9);
-                GameTimeControlCategory category = ParseTimeControlCategory(statement.GetNullableInt(10), timeControl);
-                string? updatedUtcText = statement.GetText(11);
-                DateTime.TryParse(updatedUtcText, out DateTime updatedUtc);
-
-                items.Add(new SavedImportedGameSummary(
-                    fingerprint,
-                    BuildDisplayTitle(white, black, dateText, result, eco),
-                    white,
-                    black,
-                    dateText,
-                    result,
-                    eco,
-                    site,
-                    whiteElo,
-                    blackElo,
-                    timeControl,
-                    category,
-                    updatedUtc));
-            }
+            return SqliteImportedGameStore.ListImportedGames(database, filterText, limit);
         }
-
-        return items;
     }
 
     public IReadOnlyList<GameAnalysisResult> ListResults(string? filterText = null, int limit = 500)
@@ -1165,14 +1046,14 @@ public sealed class SqliteAnalysisStore :
             statement.BindText(11, feedback.PlayedUci);
             statement.BindText(12, feedback.FenBefore);
             statement.BindText(13, feedback.FenAfter);
-            BindNullableInt(statement, 14, feedback.EvalBeforeCp);
-            BindNullableInt(statement, 15, feedback.EvalAfterCp);
+            statement.BindNullableInt(14, feedback.EvalBeforeCp);
+            statement.BindNullableInt(15, feedback.EvalAfterCp);
             statement.BindNullableText(16, feedback.BestMoveUci);
             statement.BindNullableText(17, feedback.OriginalLabel);
             statement.BindNullableText(18, FormatNullableDouble(feedback.OriginalConfidence));
             statement.BindText(19, SerializeEvidence(feedback.OriginalEvidence));
             statement.BindInt(20, (int)feedback.Quality);
-            BindNullableInt(statement, 21, feedback.CentipawnLoss);
+            statement.BindNullableInt(21, feedback.CentipawnLoss);
             statement.BindText(22, feedback.FeedbackKind.ToString());
             statement.BindNullableText(23, feedback.CorrectedLabel);
             statement.BindNullableText(24, feedback.Comment);
@@ -2312,17 +2193,6 @@ public sealed class SqliteAnalysisStore :
         return JsonSerializer.Serialize(evidence ?? [], JsonOptions);
     }
 
-    private static void BindNullableInt(SqliteStatement statement, int index, int? value)
-    {
-        if (value.HasValue)
-        {
-            statement.BindInt(index, value.Value);
-            return;
-        }
-
-        statement.BindNull(index);
-    }
-
     private static void ReplaceMoveAnalyses(
         SqliteDatabase database,
         GameAnalysisCacheKey key,
@@ -2395,11 +2265,11 @@ public sealed class SqliteAnalysisStore :
                     statement.BindText(10, move.FenBefore);
                     statement.BindText(11, move.FenAfter);
                     statement.BindInt(12, (int)move.Phase);
-                    BindNullableInt(statement, 13, move.EvalBeforeCp);
-                    BindNullableInt(statement, 14, move.EvalAfterCp);
-                    BindNullableInt(statement, 15, move.BestMateIn);
-                    BindNullableInt(statement, 16, move.PlayedMateIn);
-                    BindNullableInt(statement, 17, move.CentipawnLoss);
+                    statement.BindNullableInt(13, move.EvalBeforeCp);
+                    statement.BindNullableInt(14, move.EvalAfterCp);
+                    statement.BindNullableInt(15, move.BestMateIn);
+                    statement.BindNullableInt(16, move.PlayedMateIn);
+                    statement.BindNullableInt(17, move.CentipawnLoss);
                     statement.BindInt(18, (int)move.Quality);
                     statement.BindInt(19, move.MaterialDeltaCp);
                     statement.BindNullableText(20, move.BestMoveUci);
@@ -2621,95 +2491,6 @@ public sealed class SqliteAnalysisStore :
                 statement.BindText(5, tag.VariationName);
                 statement.BindText(6, tag.SourceKind);
             });
-    }
-
-    private static void SaveImportedGames(SqliteDatabase database, IReadOnlyList<ImportedGame> games, DateTime timestampUtc)
-    {
-        string timestamp = timestampUtc.ToUniversalTime().ToString("O");
-        using SqliteStatement statement = database.Prepare("""
-            INSERT INTO imported_games (
-                game_fingerprint,
-                pgn_text,
-                white_player,
-                black_player,
-                white_elo,
-                black_elo,
-                date_text,
-                result_text,
-                eco,
-                site,
-                round_text,
-                current_position,
-                timezone,
-                eco_url,
-                utc_date,
-                utc_time,
-                time_control,
-                time_control_category,
-                termination,
-                start_time,
-                end_date,
-                end_time,
-                link,
-                updated_utc)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24)
-            ON CONFLICT (game_fingerprint)
-            DO UPDATE SET
-                pgn_text = excluded.pgn_text,
-                white_player = excluded.white_player,
-                black_player = excluded.black_player,
-                white_elo = excluded.white_elo,
-                black_elo = excluded.black_elo,
-                date_text = excluded.date_text,
-                result_text = excluded.result_text,
-                eco = excluded.eco,
-                site = excluded.site,
-                round_text = excluded.round_text,
-                current_position = excluded.current_position,
-                timezone = excluded.timezone,
-                eco_url = excluded.eco_url,
-                utc_date = excluded.utc_date,
-                utc_time = excluded.utc_time,
-                time_control = excluded.time_control,
-                time_control_category = excluded.time_control_category,
-                termination = excluded.termination,
-                start_time = excluded.start_time,
-                end_date = excluded.end_date,
-                end_time = excluded.end_time,
-                link = excluded.link,
-                updated_utc = excluded.updated_utc;
-            """);
-
-        foreach (ImportedGame game in games)
-        {
-            string gameFingerprint = GameFingerprint.Compute(game.PgnText);
-            statement.Reset();
-            statement.BindText(1, gameFingerprint);
-            statement.BindText(2, game.PgnText);
-            statement.BindNullableText(3, game.WhitePlayer);
-            statement.BindNullableText(4, game.BlackPlayer);
-            BindNullableInt(statement, 5, game.WhiteElo);
-            BindNullableInt(statement, 6, game.BlackElo);
-            statement.BindNullableText(7, game.DateText);
-            statement.BindNullableText(8, game.Result);
-            statement.BindNullableText(9, game.Eco);
-            statement.BindNullableText(10, game.Site);
-            statement.BindNullableText(11, game.Metadata?.Round);
-            statement.BindNullableText(12, game.Metadata?.CurrentPosition);
-            statement.BindNullableText(13, game.Metadata?.Timezone);
-            statement.BindNullableText(14, game.Metadata?.EcoUrl);
-            statement.BindNullableText(15, game.Metadata?.UtcDate);
-            statement.BindNullableText(16, game.Metadata?.UtcTime);
-            statement.BindNullableText(17, game.Metadata?.TimeControl);
-            statement.BindInt(18, (int)(game.Metadata?.TimeControlCategory ?? GameTimeControlCategory.Unknown));
-            statement.BindNullableText(19, game.Metadata?.Termination);
-            statement.BindNullableText(20, game.Metadata?.StartTime);
-            statement.BindNullableText(21, game.Metadata?.EndDate);
-            statement.BindNullableText(22, game.Metadata?.EndTime);
-            statement.BindNullableText(23, game.Metadata?.Link);
-            statement.BindText(24, timestamp);
-            statement.StepUntilDone();
-        }
     }
 
     private static int CountRows(SqliteDatabase database, string tableName)
@@ -2962,15 +2743,6 @@ public sealed class SqliteAnalysisStore :
         }
 
         database.ExecuteNonQuery($"ALTER TABLE {tableName} ADD COLUMN {columnName} {definition};");
-    }
-
-    private static string BuildDisplayTitle(string? whitePlayer, string? blackPlayer, string? dateText, string? result, string? eco)
-    {
-        string players = $"{whitePlayer ?? "White"} vs {blackPlayer ?? "Black"}";
-        string datePart = string.IsNullOrWhiteSpace(dateText) ? string.Empty : $" | {dateText}";
-        string resultPart = string.IsNullOrWhiteSpace(result) ? string.Empty : $" | {result}";
-        string ecoPart = string.IsNullOrWhiteSpace(eco) ? string.Empty : $" | {OpeningCatalog.Describe(eco)}";
-        return players + datePart + resultPart + ecoPart;
     }
 
     private sealed record StoredMoveAnnotation(MistakeTag? Tag, MoveExplanation? Explanation);
