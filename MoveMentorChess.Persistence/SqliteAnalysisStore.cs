@@ -67,75 +67,47 @@ public sealed class SqliteAnalysisStore :
     {
         ArgumentNullException.ThrowIfNull(tree);
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            SqliteTransaction.RunImmediate(
-                database,
-                () => SqliteOpeningTreeStore.SaveOpeningTree(database, tree));
-        }
+        WithImmediateTransaction(database => SqliteOpeningTreeStore.SaveOpeningTree(database, tree));
     }
 
     public void ReplaceOpeningTree(OpeningTreeBuildResult tree)
     {
         ArgumentNullException.ThrowIfNull(tree);
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            SqliteTransaction.RunImmediate(
-                database,
-                () => SqliteOpeningTreeStore.ReplaceOpeningTree(database, tree));
-        }
+        WithImmediateTransaction(database => SqliteOpeningTreeStore.ReplaceOpeningTree(database, tree));
     }
 
     public OpeningTreeBuildResult LoadOpeningTree()
     {
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteOpeningTreeStore.LoadOpeningTree(database);
-        }
+        return WithDatabase(SqliteOpeningTreeStore.LoadOpeningTree);
     }
 
     public string? GetOpeningSeedVersion()
     {
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteOpeningTreeStore.GetOpeningSeedVersion(database);
-        }
+        return WithDatabase(SqliteOpeningTreeStore.GetOpeningSeedVersion);
     }
 
     public void SetOpeningSeedVersion(string version)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(version);
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            SqliteOpeningTreeStore.SetOpeningSeedVersion(database, version);
-        }
+        WithDatabase(database => SqliteOpeningTreeStore.SetOpeningSeedVersion(database, version));
     }
 
     public OpeningTreeStoreSummary GetOpeningTreeSummary()
     {
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteOpeningTreeStore.GetOpeningTreeSummary(database);
-        }
+        return WithDatabase(SqliteOpeningTreeStore.GetOpeningTreeSummary);
     }
 
     public bool TryGetOpeningPositionByKey(string positionKey, out OpeningTheoryPosition? position)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(positionKey);
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteOpeningTheoryStore.TryGetOpeningPositionByKey(database, positionKey, out position);
-        }
+        OpeningTheoryPosition? loadedPosition = null;
+        bool found = WithDatabase(database =>
+            SqliteOpeningTheoryStore.TryGetOpeningPositionByKey(database, positionKey, out loadedPosition));
+        position = loadedPosition;
+        return found;
     }
 
     public IReadOnlyList<OpeningTheoryMove> GetOpeningMovesByPositionKey(
@@ -145,51 +117,34 @@ public sealed class SqliteAnalysisStore :
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(positionKey);
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteOpeningTheoryStore.GetOpeningMovesByPositionKey(database, positionKey, limit, playableOnly);
-        }
+        return WithDatabase(database =>
+            SqliteOpeningTheoryStore.GetOpeningMovesByPositionKey(database, positionKey, limit, playableOnly));
     }
 
     public IReadOnlyList<OpeningLineCatalogItem> ListOpeningLines(string? filterText = null, RepertoireSide? repertoireSide = null, int limit = 100)
     {
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteOpeningTheoryStore.ListOpeningLines(database, filterText, repertoireSide, limit);
-        }
+        return WithDatabase(database =>
+            SqliteOpeningTheoryStore.ListOpeningLines(database, filterText, repertoireSide, limit));
     }
 
     public IReadOnlyList<string> GetOpeningValidationMoves(OpeningPositionKey rootPositionKey)
     {
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteOpeningTheoryStore.GetOpeningValidationMoves(database, rootPositionKey);
-        }
+        return WithDatabase(database =>
+            SqliteOpeningTheoryStore.GetOpeningValidationMoves(database, rootPositionKey));
     }
 
     public IReadOnlyList<OpeningLineMove> GetOpeningPathLineMoves(OpeningPositionKey rootPositionKey)
     {
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteOpeningTheoryStore.GetOpeningPathLineMoves(database, rootPositionKey);
-        }
+        return WithDatabase(database =>
+            SqliteOpeningTheoryStore.GetOpeningPathLineMoves(database, rootPositionKey));
     }
 
     public void SaveImportedGame(ImportedGame game)
     {
         ArgumentNullException.ThrowIfNull(game);
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            SqliteTransaction.RunImmediate(
-                database,
-                () => SqliteImportedGameStore.SaveImportedGames(database, [game], clock.UtcNow));
-        }
+        WithImmediateTransaction(database =>
+            SqliteImportedGameStore.SaveImportedGames(database, [game], clock.UtcNow));
     }
 
     public void SaveImportedGames(IReadOnlyList<ImportedGame> games)
@@ -200,126 +155,91 @@ public sealed class SqliteAnalysisStore :
             return;
         }
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            SqliteTransaction.RunImmediate(
-                database,
-                () => SqliteImportedGameStore.SaveImportedGames(database, games, clock.UtcNow));
-        }
+        WithImmediateTransaction(database =>
+            SqliteImportedGameStore.SaveImportedGames(database, games, clock.UtcNow));
     }
 
     public bool TryLoadImportedGame(string gameFingerprint, out ImportedGame? game)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(gameFingerprint);
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteImportedGameStore.TryLoadImportedGame(database, gameFingerprint, out game);
-        }
+        ImportedGame? loadedGame = null;
+        bool found = WithDatabase(database =>
+            SqliteImportedGameStore.TryLoadImportedGame(database, gameFingerprint, out loadedGame));
+        game = loadedGame;
+        return found;
     }
 
     public bool DeleteImportedGame(string gameFingerprint)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(gameFingerprint);
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteImportedGameStore.DeleteImportedGame(database, gameFingerprint);
-        }
+        return WithDatabase(database => SqliteImportedGameStore.DeleteImportedGame(database, gameFingerprint));
     }
 
     public void ClearImportedAnalysisData()
     {
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            SqliteTransaction.RunImmediate(
-                database,
-                () => SqliteImportedGameStore.ClearImportedAnalysisData(database));
-        }
+        WithImmediateTransaction(SqliteImportedGameStore.ClearImportedAnalysisData);
     }
 
     public void ClearDerivedAnalysisData()
     {
-        lock (sync)
+        WithImmediateTransaction(database =>
         {
-            using SqliteDatabase database = OpenDatabase();
-            SqliteTransaction.RunImmediate(database, () =>
-            {
-                SqliteAnalysisMetadataStore.ClearDerivedAnalysisData(database);
-                SqliteAnalysisMetadataStore.SetMetadataValue(database, DerivedAnalysisDataVersionKey, derivedAnalysisDataVersion);
-            });
-        }
+            SqliteAnalysisMetadataStore.ClearDerivedAnalysisData(database);
+            SqliteAnalysisMetadataStore.SetMetadataValue(
+                database,
+                DerivedAnalysisDataVersionKey,
+                derivedAnalysisDataVersion);
+        });
     }
 
     public string? GetDerivedAnalysisDataVersion()
     {
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteAnalysisMetadataStore.GetMetadataValue(database, DerivedAnalysisDataVersionKey);
-        }
+        return WithDatabase(database =>
+            SqliteAnalysisMetadataStore.GetMetadataValue(database, DerivedAnalysisDataVersionKey));
     }
 
     public IReadOnlyList<SavedImportedGameSummary> ListImportedGames(string? filterText = null, int limit = 200)
     {
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteImportedGameStore.ListImportedGames(database, filterText, limit);
-        }
+        return WithDatabase(database =>
+            SqliteImportedGameStore.ListImportedGames(database, filterText, limit));
     }
 
     public IReadOnlyList<GameAnalysisResult> ListResults(string? filterText = null, int limit = 500)
     {
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteAnalysisResultStore.ListResults(database, filterText, limit);
-        }
+        return WithDatabase(database =>
+            SqliteAnalysisResultStore.ListResults(database, filterText, limit));
     }
 
     public IReadOnlyList<StoredMoveAnalysis> ListMoveAnalyses(string? filterText = null, int limit = 5000)
     {
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteAnalysisResultStore.ListMoveAnalyses(database, filterText, limit);
-        }
+        return WithDatabase(database =>
+            SqliteAnalysisResultStore.ListMoveAnalyses(database, filterText, limit));
     }
 
     public IReadOnlyList<MoveAdviceFeedback> ListMoveAdviceFeedback(string? filterText = null, int limit = 5000)
     {
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteMoveAdviceFeedbackStore.ListMoveAdviceFeedback(database, filterText, limit);
-        }
+        return WithDatabase(database =>
+            SqliteMoveAdviceFeedbackStore.ListMoveAdviceFeedback(database, filterText, limit));
     }
 
     public void SaveMoveAdviceFeedback(MoveAdviceFeedback feedback)
     {
         ArgumentNullException.ThrowIfNull(feedback);
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            SqliteMoveAdviceFeedbackStore.SaveMoveAdviceFeedback(database, feedback);
-        }
+        WithDatabase(database => SqliteMoveAdviceFeedbackStore.SaveMoveAdviceFeedback(database, feedback));
     }
 
     public bool TryLoadResult(GameAnalysisCacheKey key, out GameAnalysisResult? result)
     {
         ArgumentNullException.ThrowIfNull(key);
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteAnalysisResultStore.TryLoadResult(database, key, out result);
-        }
+        GameAnalysisResult? loadedResult = null;
+        bool found = WithDatabase(database =>
+            SqliteAnalysisResultStore.TryLoadResult(database, key, out loadedResult));
+        result = loadedResult;
+        return found;
     }
 
     public void SaveResult(GameAnalysisCacheKey key, GameAnalysisResult result)
@@ -329,22 +249,18 @@ public sealed class SqliteAnalysisStore :
 
         SaveImportedGame(result.Game);
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            SqliteAnalysisResultStore.SaveResult(database, key, result, clock.UtcNow);
-        }
+        WithDatabase(database => SqliteAnalysisResultStore.SaveResult(database, key, result, clock.UtcNow));
     }
 
     public bool TryLoadWindowState(string gameFingerprint, out AnalysisWindowState? state)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(gameFingerprint);
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteAnalysisWindowStateStore.TryLoadWindowState(database, gameFingerprint, out state);
-        }
+        AnalysisWindowState? loadedState = null;
+        bool found = WithDatabase(database =>
+            SqliteAnalysisWindowStateStore.TryLoadWindowState(database, gameFingerprint, out loadedState));
+        state = loadedState;
+        return found;
     }
 
     public void SaveWindowState(string gameFingerprint, AnalysisWindowState state)
@@ -352,31 +268,21 @@ public sealed class SqliteAnalysisStore :
         ArgumentException.ThrowIfNullOrWhiteSpace(gameFingerprint);
         ArgumentNullException.ThrowIfNull(state);
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            SqliteAnalysisWindowStateStore.SaveWindowState(database, gameFingerprint, state, clock.UtcNow);
-        }
+        WithDatabase(database =>
+            SqliteAnalysisWindowStateStore.SaveWindowState(database, gameFingerprint, state, clock.UtcNow));
     }
 
     public void SaveOpeningTrainingSessionResult(OpeningTrainingSessionResult result)
     {
         ArgumentNullException.ThrowIfNull(result);
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            SqliteOpeningTrainingStore.SaveSessionResult(database, result);
-        }
+        WithDatabase(database => SqliteOpeningTrainingStore.SaveSessionResult(database, result));
     }
 
     public IReadOnlyList<OpeningTrainingSessionResult> ListOpeningTrainingSessionResults(string? playerKey = null, int limit = 200)
     {
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteOpeningTrainingStore.ListSessionResults(database, playerKey, limit);
-        }
+        return WithDatabase(database =>
+            SqliteOpeningTrainingStore.ListSessionResults(database, playerKey, limit));
     }
 
     public void SaveOpeningReviewItems(string playerKey, IReadOnlyList<OpeningReviewItem> items)
@@ -384,22 +290,14 @@ public sealed class SqliteAnalysisStore :
         ArgumentException.ThrowIfNullOrWhiteSpace(playerKey);
         ArgumentNullException.ThrowIfNull(items);
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            SqliteTransaction.RunImmediate(
-                database,
-                () => SqliteOpeningTrainingStore.SaveReviewItems(database, playerKey, items));
-        }
+        WithImmediateTransaction(database =>
+            SqliteOpeningTrainingStore.SaveReviewItems(database, playerKey, items));
     }
 
     public IReadOnlyList<OpeningReviewItem> ListOpeningReviewItems(string? playerKey = null, int limit = 1000)
     {
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteOpeningTrainingStore.ListReviewItems(database, playerKey, limit);
-        }
+        return WithDatabase(database =>
+            SqliteOpeningTrainingStore.ListReviewItems(database, playerKey, limit));
     }
 
     public void SaveOpeningTrainingScheduledActions(string playerKey, IReadOnlyList<OpeningTrainingScheduledAction> actions)
@@ -407,22 +305,14 @@ public sealed class SqliteAnalysisStore :
         ArgumentException.ThrowIfNullOrWhiteSpace(playerKey);
         ArgumentNullException.ThrowIfNull(actions);
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            SqliteTransaction.RunImmediate(
-                database,
-                () => SqliteOpeningTrainingStore.SaveScheduledActions(database, playerKey, actions));
-        }
+        WithImmediateTransaction(database =>
+            SqliteOpeningTrainingStore.SaveScheduledActions(database, playerKey, actions));
     }
 
     public IReadOnlyList<OpeningTrainingScheduledAction> ListDueOpeningTrainingScheduledActions(string? playerKey, DateTime nowUtc, int limit = 50)
     {
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteOpeningTrainingStore.ListDueScheduledActions(database, playerKey, nowUtc, limit);
-        }
+        return WithDatabase(database =>
+            SqliteOpeningTrainingStore.ListDueScheduledActions(database, playerKey, nowUtc, limit));
     }
 
     public void MarkOpeningTrainingScheduledActionCompleted(string playerKey, string actionId, DateTime completedUtc)
@@ -430,22 +320,15 @@ public sealed class SqliteAnalysisStore :
         ArgumentException.ThrowIfNullOrWhiteSpace(playerKey);
         ArgumentException.ThrowIfNullOrWhiteSpace(actionId);
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            SqliteOpeningTrainingStore.MarkScheduledActionCompleted(database, playerKey, actionId, completedUtc);
-        }
+        WithDatabase(database =>
+            SqliteOpeningTrainingStore.MarkScheduledActionCompleted(database, playerKey, actionId, completedUtc));
     }
 
     public void SaveOpeningTrainingTelemetryEvent(OpeningTrainingTelemetryEvent telemetryEvent)
     {
         ArgumentNullException.ThrowIfNull(telemetryEvent);
 
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            SqliteOpeningTrainingStore.SaveTelemetryEvent(database, telemetryEvent);
-        }
+        WithDatabase(database => SqliteOpeningTrainingStore.SaveTelemetryEvent(database, telemetryEvent));
     }
 
     public IReadOnlyList<OpeningTrainingTelemetryEvent> ListOpeningTrainingTelemetryEvents(
@@ -454,24 +337,20 @@ public sealed class SqliteAnalysisStore :
         DateTime? toUtc = null,
         int limit = 500)
     {
-        lock (sync)
-        {
-            using SqliteDatabase database = OpenDatabase();
-            return SqliteOpeningTrainingStore.ListTelemetryEvents(database, playerKey, fromUtc, toUtc, limit);
-        }
+        return WithDatabase(database =>
+            SqliteOpeningTrainingStore.ListTelemetryEvents(database, playerKey, fromUtc, toUtc, limit));
     }
 
     private void InitializeSchema()
     {
-        lock (sync)
+        WithDatabase(database =>
         {
-            using SqliteDatabase database = OpenDatabase();
             SqliteSchemaInitializer.Initialize(database);
             if (applyDerivedAnalysisDataVersionPolicy)
             {
                 ApplyDerivedAnalysisDataVersionPolicy(database);
             }
-        }
+        });
     }
 
     private void ApplyDerivedAnalysisDataVersionPolicy(SqliteDatabase database)
@@ -485,9 +364,35 @@ public sealed class SqliteAnalysisStore :
         SqliteTransaction.RunImmediate(database, () =>
         {
             SqliteAnalysisMetadataStore.ClearDerivedAnalysisData(database);
-            SqliteAnalysisMetadataStore.SetMetadataValue(database, DerivedAnalysisDataVersionKey, derivedAnalysisDataVersion);
+            SqliteAnalysisMetadataStore.SetMetadataValue(
+                database,
+                DerivedAnalysisDataVersionKey,
+                derivedAnalysisDataVersion);
         });
     }
 
     private SqliteDatabase OpenDatabase() => new(databasePath);
+
+    private void WithDatabase(Action<SqliteDatabase> action)
+    {
+        lock (sync)
+        {
+            using SqliteDatabase database = OpenDatabase();
+            action(database);
+        }
+    }
+
+    private T WithDatabase<T>(Func<SqliteDatabase, T> action)
+    {
+        lock (sync)
+        {
+            using SqliteDatabase database = OpenDatabase();
+            return action(database);
+        }
+    }
+
+    private void WithImmediateTransaction(Action<SqliteDatabase> action)
+    {
+        WithDatabase(database => SqliteTransaction.RunImmediate(database, () => action(database)));
+    }
 }
