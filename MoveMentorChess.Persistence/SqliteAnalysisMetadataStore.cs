@@ -6,7 +6,6 @@ internal static class SqliteAnalysisMetadataStore
 
     public static void ClearDerivedAnalysisData(SqliteDatabase database)
     {
-        database.ExecuteNonQuery("DELETE FROM analysis_window_states;");
         database.ExecuteNonQuery("DELETE FROM analysis_moves;");
         database.ExecuteNonQuery("DELETE FROM analysis_results;");
     }

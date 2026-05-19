@@ -146,7 +146,7 @@ internal static class SqliteAnalysisResultStore
             {(string.IsNullOrWhiteSpace(normalizedFilter)
                 ? string.Empty
                 : "WHERE lower(coalesce(imported_games.white_player, '')) LIKE ?1 OR lower(coalesce(imported_games.black_player, '')) LIKE ?1 OR lower(coalesce(imported_games.date_text, '')) LIKE ?1 OR lower(coalesce(imported_games.result_text, '')) LIKE ?1 OR lower(coalesce(imported_games.eco, '')) LIKE ?1 OR lower(coalesce(imported_games.site, '')) LIKE ?1 OR lower(coalesce(latest_feedback.corrected_label, analysis_moves.mistake_label, '')) LIKE ?1 OR lower(coalesce(analysis_moves.mistake_label, '')) LIKE ?1 OR lower(coalesce(analysis_moves.san, '')) LIKE ?1 OR lower(coalesce(analysis_moves.move_uci, '')) LIKE ?1")}
-            ORDER BY imported_games.updated_utc DESC, analysis_moves.ply ASC
+            ORDER BY analysis_results.updated_utc DESC, analysis_moves.ply ASC
             LIMIT {safeLimit};
             """);
 
@@ -275,34 +275,44 @@ internal static class SqliteAnalysisResultStore
     {
         string timestamp = timestampUtc.ToUniversalTime().ToString("O");
         string payload = JsonSerializer.Serialize(result, JsonOptions);
-        using SqliteStatement statement = database.Prepare("""
-            INSERT INTO analysis_results (
-                game_fingerprint,
-                analyzed_side,
-                depth,
-                multi_pv,
-                move_time_ms,
-                payload_json,
-                created_utc,
-                updated_utc)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
-            ON CONFLICT (game_fingerprint, analyzed_side, depth, multi_pv, move_time_ms)
-            DO UPDATE SET
-                payload_json = excluded.payload_json,
-                updated_utc = excluded.updated_utc;
-            """);
+        database.ExecuteNonQuery("BEGIN IMMEDIATE;");
+        try
+        {
+            using SqliteStatement statement = database.Prepare("""
+                INSERT INTO analysis_results (
+                    game_fingerprint,
+                    analyzed_side,
+                    depth,
+                    multi_pv,
+                    move_time_ms,
+                    payload_json,
+                    created_utc,
+                    updated_utc)
+                VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+                ON CONFLICT (game_fingerprint, analyzed_side, depth, multi_pv, move_time_ms)
+                DO UPDATE SET
+                    payload_json = excluded.payload_json,
+                    updated_utc = excluded.updated_utc;
+                """);
 
-        statement.BindText(1, key.GameFingerprint);
-        statement.BindInt(2, (int)key.Side);
-        statement.BindInt(3, key.Depth);
-        statement.BindInt(4, key.MultiPv);
-        statement.BindInt(5, NormalizeMoveTime(key.MoveTimeMs));
-        statement.BindText(6, payload);
-        statement.BindText(7, timestamp);
-        statement.BindText(8, timestamp);
-        statement.StepUntilDone();
+            statement.BindText(1, key.GameFingerprint);
+            statement.BindInt(2, (int)key.Side);
+            statement.BindInt(3, key.Depth);
+            statement.BindInt(4, key.MultiPv);
+            statement.BindInt(5, NormalizeMoveTime(key.MoveTimeMs));
+            statement.BindText(6, payload);
+            statement.BindText(7, timestamp);
+            statement.BindText(8, timestamp);
+            statement.StepUntilDone();
 
-        ReplaceMoveAnalyses(database, key, result, ParseUtc(timestamp));
+            ReplaceMoveAnalyses(database, key, result, ParseUtc(timestamp));
+            database.ExecuteNonQuery("COMMIT;");
+        }
+        catch
+        {
+            database.ExecuteNonQuery("ROLLBACK;");
+            throw;
+        }
     }
 
     private static GameAnalysisResult NormalizeLoadedResult(
@@ -339,8 +349,8 @@ internal static class SqliteAnalysisResultStore
 
         return move with
         {
-            MistakeTag = move.MistakeTag ?? annotation.Tag,
-            Explanation = move.Explanation ?? annotation.Explanation
+            MistakeTag = annotation.Tag ?? move.MistakeTag,
+            Explanation = annotation.Explanation ?? move.Explanation
         };
     }
 
@@ -362,7 +372,7 @@ internal static class SqliteAnalysisResultStore
         return mistake with
         {
             Moves = moves,
-            Tag = mistake.Tag ?? lead?.MistakeTag,
+            Tag = lead?.MistakeTag ?? mistake.Tag,
             Explanation = lead?.Explanation ?? mistake.Explanation
         };
     }
