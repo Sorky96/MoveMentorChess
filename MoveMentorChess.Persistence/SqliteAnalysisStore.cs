@@ -297,8 +297,8 @@ public sealed class SqliteAnalysisStore :
             database.ExecuteNonQuery("BEGIN IMMEDIATE;");
             try
             {
-                ClearDerivedAnalysisData(database);
-                SetMetadataValue(database, DerivedAnalysisDataVersionKey, derivedAnalysisDataVersion);
+                SqliteAnalysisMetadataStore.ClearDerivedAnalysisData(database);
+                SqliteAnalysisMetadataStore.SetMetadataValue(database, DerivedAnalysisDataVersionKey, derivedAnalysisDataVersion);
                 database.ExecuteNonQuery("COMMIT;");
             }
             catch
@@ -314,7 +314,7 @@ public sealed class SqliteAnalysisStore :
         lock (sync)
         {
             using SqliteDatabase database = OpenDatabase();
-            return GetMetadataValue(database, DerivedAnalysisDataVersionKey);
+            return SqliteAnalysisMetadataStore.GetMetadataValue(database, DerivedAnalysisDataVersionKey);
         }
     }
 
@@ -1033,7 +1033,7 @@ public sealed class SqliteAnalysisStore :
 
     private void ApplyDerivedAnalysisDataVersionPolicy(SqliteDatabase database)
     {
-        string? storedVersion = GetMetadataValue(database, DerivedAnalysisDataVersionKey);
+        string? storedVersion = SqliteAnalysisMetadataStore.GetMetadataValue(database, DerivedAnalysisDataVersionKey);
         if (string.Equals(storedVersion, derivedAnalysisDataVersion, StringComparison.Ordinal))
         {
             return;
@@ -1042,8 +1042,8 @@ public sealed class SqliteAnalysisStore :
         database.ExecuteNonQuery("BEGIN IMMEDIATE;");
         try
         {
-            ClearDerivedAnalysisData(database);
-            SetMetadataValue(database, DerivedAnalysisDataVersionKey, derivedAnalysisDataVersion);
+            SqliteAnalysisMetadataStore.ClearDerivedAnalysisData(database);
+            SqliteAnalysisMetadataStore.SetMetadataValue(database, DerivedAnalysisDataVersionKey, derivedAnalysisDataVersion);
             database.ExecuteNonQuery("COMMIT;");
         }
         catch
@@ -1051,13 +1051,6 @@ public sealed class SqliteAnalysisStore :
             database.ExecuteNonQuery("ROLLBACK;");
             throw;
         }
-    }
-
-    private static void ClearDerivedAnalysisData(SqliteDatabase database)
-    {
-        database.ExecuteNonQuery("DELETE FROM analysis_window_states;");
-        database.ExecuteNonQuery("DELETE FROM analysis_moves;");
-        database.ExecuteNonQuery("DELETE FROM analysis_results;");
     }
 
     private static GameAnalysisResult NormalizeLoadedResult(
@@ -1428,35 +1421,6 @@ public sealed class SqliteAnalysisStore :
             CREATE INDEX IF NOT EXISTS idx_opening_node_tags_node_id
             ON opening_node_tags (node_id);
             """);
-    }
-
-    private static string? GetMetadataValue(SqliteDatabase database, string key)
-    {
-        using SqliteStatement statement = database.Prepare("""
-            SELECT value
-            FROM app_metadata
-            WHERE key = ?1
-            LIMIT 1;
-            """);
-
-        statement.BindText(1, key);
-        return statement.Step() == SqliteRow ? statement.GetText(0) : null;
-    }
-
-    private static void SetMetadataValue(SqliteDatabase database, string key, string value)
-    {
-        database.ExecuteNonQuery(
-            """
-            INSERT INTO app_metadata (key, value)
-            VALUES (?1, ?2)
-            ON CONFLICT (key)
-            DO UPDATE SET value = excluded.value;
-            """,
-            statement =>
-            {
-                statement.BindText(1, key);
-                statement.BindText(2, value);
-            });
     }
 
     private static Guid ParseGuid(string? value)
