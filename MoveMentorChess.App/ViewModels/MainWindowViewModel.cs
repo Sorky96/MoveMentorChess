@@ -1005,6 +1005,11 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
+        if (SelectedAnalysisMistake.LeadMove is null)
+        {
+            return;
+        }
+
         ReplayPly replayPly = SelectedAnalysisMistake.LeadMove.Replay;
         if (!chessGame.TryLoadFen(replayPly.FenAfter, out string? error))
         {

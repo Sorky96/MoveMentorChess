@@ -12,7 +12,7 @@ public sealed class AnalysisMistakeItemViewModel
 
         if (mistake.Moves == null || mistake.Moves.Count == 0)
         {
-            LeadMove = null!;
+            LeadMove = null;
             DisplayText = "No moves";
             Details = "No moves available";
             return;
@@ -41,7 +41,7 @@ public sealed class AnalysisMistakeItemViewModel
 
     public SelectedMistake Mistake { get; }
 
-    public MoveAnalysisResult LeadMove { get; }
+    public MoveAnalysisResult? LeadMove { get; }
 
     public string DisplayText { get; }
 
