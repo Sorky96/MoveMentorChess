@@ -95,7 +95,7 @@ jobs:
 
       # ── restore & publish ──────────────────────────────────────────────────
       - name: Restore dependencies
-        run: dotnet restore ${{ env.APP_PROJECT }} --verbosity minimal
+        run: dotnet restore ${{ env.APP_PROJECT }} --runtime ${{ env.RID }} --verbosity minimal
 
       - name: Publish application
         shell: pwsh
