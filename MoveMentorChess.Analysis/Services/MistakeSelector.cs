@@ -81,7 +81,7 @@ public sealed class MistakeSelector
         return new SelectedMistake(group, lead.Quality, lead.MistakeTag, explanation);
     }
 
-    private static bool CanMergeIntoCurrentGroup(IReadOnlyList<MoveAnalysisResult> currentGroup, MoveAnalysisResult candidate)
+    private static bool CanMergeIntoCurrentGroup(List<MoveAnalysisResult> currentGroup, MoveAnalysisResult candidate)
     {
         MoveAnalysisResult last = currentGroup[^1];
         int gap = candidate.Replay.Ply - last.Replay.Ply;
@@ -113,7 +113,7 @@ public sealed class MistakeSelector
         return !HasMeaningfulRecovery(last, candidate);
     }
 
-    private static List<SelectedMistake> SelectTopInaccuracies(IReadOnlyList<RankedMistake> rankedInaccuracies)
+    private static List<SelectedMistake> SelectTopInaccuracies(List<RankedMistake> rankedInaccuracies)
     {
         List<SelectedMistake> selected = new();
         HashSet<string> labels = new(StringComparer.OrdinalIgnoreCase);

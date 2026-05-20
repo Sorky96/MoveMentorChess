@@ -1,4 +1,5 @@
 using System.Text;
+using System.Globalization;
 
 namespace MoveMentorChess.Analysis;
 
@@ -18,7 +19,7 @@ public static class OpeningPhaseReviewBuilder
     public static OpeningPhaseReview? Build(
         ImportedGame game,
         PlayerSide analyzedSide,
-        IReadOnlyList<ReplayPly> replay,
+        List<ReplayPly> replay,
         IReadOnlyList<MoveAnalysisResult> moveAnalyses)
     {
         ArgumentNullException.ThrowIfNull(game);
@@ -149,10 +150,10 @@ public static class OpeningPhaseReviewBuilder
     {
         if (!string.IsNullOrWhiteSpace(analysis.MistakeTag?.Label))
         {
-            return $"{analysis.MistakeTag!.Label} at {(analysis.CentipawnLoss?.ToString() ?? "n/a")} cp";
+            return $"{analysis.MistakeTag!.Label} at {(analysis.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a")} cp";
         }
 
-        return $"{analysis.Quality} at {(analysis.CentipawnLoss?.ToString() ?? "n/a")} cp";
+        return $"{analysis.Quality} at {(analysis.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a")} cp";
     }
 
     private static string BuildLineText(IReadOnlyList<ReplayPly> replay)

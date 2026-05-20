@@ -3,16 +3,17 @@ using System.Text.RegularExpressions;
 
 namespace MoveMentorChess.Domain;
 
-public static class PgnGameParser
+public static partial class PgnGameParser
 {
-    private static readonly Regex HeaderRegex = new(@"^\[(?<key>[A-Za-z0-9_]+)\s+""(?<value>.*)""\]\s*$", RegexOptions.Multiline | RegexOptions.Compiled);
+    [GeneratedRegex(@"^\[(?<key>[A-Za-z0-9_]+)\s+""(?<value>.*)""\]\s*$", RegexOptions.Multiline)]
+    private static partial Regex HeaderRegex();
 
     public static ImportedGame Parse(string pgn)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(pgn);
 
         Dictionary<string, string> headers = new(StringComparer.OrdinalIgnoreCase);
-        foreach (Match match in HeaderRegex.Matches(pgn))
+        foreach (Match match in HeaderRegex().Matches(pgn))
         {
             string key = match.Groups["key"].Value;
             string value = match.Groups["value"].Value;
@@ -69,7 +70,9 @@ public static class PgnGameParser
             {
                 games.Add(Parse(gameText));
             }
+#pragma warning disable CA1031
             catch (Exception ex)
+#pragma warning restore CA1031
             {
                 errors.Add(new PgnBatchParseError(ordinal, ex.Message));
             }
@@ -114,16 +117,16 @@ public static class PgnGameParser
 
     private static bool IsHeaderLine(string trimmedLine)
     {
-        return trimmedLine.StartsWith("[", StringComparison.Ordinal)
-            && trimmedLine.EndsWith("]", StringComparison.Ordinal);
+        return trimmedLine.StartsWith('[')
+            && trimmedLine.EndsWith(']');
     }
 
-    private static string? GetValue(IReadOnlyDictionary<string, string> headers, string key)
+    private static string? GetValue(Dictionary<string, string> headers, string key)
     {
         return headers.TryGetValue(key, out string? value) ? value : null;
     }
 
-    private static int? ParseNullableInt(IReadOnlyDictionary<string, string> headers, string key)
+    private static int? ParseNullableInt(Dictionary<string, string> headers, string key)
     {
         return headers.TryGetValue(key, out string? value) && int.TryParse(value, out int parsed)
             ? parsed

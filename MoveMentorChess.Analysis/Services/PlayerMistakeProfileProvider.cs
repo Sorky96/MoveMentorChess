@@ -48,7 +48,7 @@ public static class PlayerMistakeProfileProvider
             return null;
         }
 
-        IReadOnlyList<PlayerMistakePatternEntry> topPatterns = playerResults
+        List<PlayerMistakePatternEntry> topPatterns = playerResults
             .SelectMany(result => result.HighlightedMistakes)
             .Where(mistake => mistake.Tag is not null)
             .GroupBy(mistake => mistake.Tag!.Label)

@@ -9,7 +9,7 @@ internal static class SqliteAnalysisResultPayloadNormalizer
         GameAnalysisCacheKey key,
         GameAnalysisResult result)
     {
-        IReadOnlyDictionary<int, StoredMoveAnnotation> annotations = LoadMoveAnnotations(database, key);
+        Dictionary<int, StoredMoveAnnotation> annotations = LoadMoveAnnotations(database, key);
         Dictionary<int, MoveAnalysisResult> normalizedMoves = result.MoveAnalyses
             .Select(move => NormalizeMove(move, annotations))
             .ToDictionary(move => move.Replay.Ply);
@@ -29,7 +29,7 @@ internal static class SqliteAnalysisResultPayloadNormalizer
 
     private static MoveAnalysisResult NormalizeMove(
         MoveAnalysisResult move,
-        IReadOnlyDictionary<int, StoredMoveAnnotation> annotations)
+        Dictionary<int, StoredMoveAnnotation> annotations)
     {
         if (!annotations.TryGetValue(move.Replay.Ply, out StoredMoveAnnotation? annotation))
         {
@@ -45,8 +45,8 @@ internal static class SqliteAnalysisResultPayloadNormalizer
 
     private static SelectedMistake NormalizeMistake(
         SelectedMistake mistake,
-        IReadOnlyDictionary<int, MoveAnalysisResult> normalizedMoves,
-        IReadOnlyDictionary<int, StoredMoveAnnotation> annotations)
+        Dictionary<int, MoveAnalysisResult> normalizedMoves,
+        Dictionary<int, StoredMoveAnnotation> annotations)
     {
         IReadOnlyList<MoveAnalysisResult> moves = mistake.Moves
             .Select(move => normalizedMoves.TryGetValue(move.Replay.Ply, out MoveAnalysisResult? normalized)
@@ -66,7 +66,7 @@ internal static class SqliteAnalysisResultPayloadNormalizer
         };
     }
 
-    private static IReadOnlyDictionary<int, StoredMoveAnnotation> LoadMoveAnnotations(
+    private static Dictionary<int, StoredMoveAnnotation> LoadMoveAnnotations(
         SqliteDatabase database,
         GameAnalysisCacheKey key)
     {

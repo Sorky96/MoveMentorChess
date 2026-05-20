@@ -2,6 +2,8 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using Tesseract;
 
+namespace MoveMentorChess.Tracking.Interop;
+
 public static class PixConverter
 {
     public static Pix ToPix(Bitmap image)

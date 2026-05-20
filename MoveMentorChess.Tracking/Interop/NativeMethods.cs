@@ -14,9 +14,9 @@ internal static class NativeMethods
             return null;
         }
 
-        StringBuilder titleBuilder = new(512);
-        _ = GetWindowText(handle, titleBuilder, titleBuilder.Capacity);
-        string title = titleBuilder.ToString().Trim();
+        char[] titleBuffer = new char[512];
+        int titleLen = GetWindowText(handle, titleBuffer, titleBuffer.Length);
+        string title = new string(titleBuffer, 0, titleLen).Trim();
         return string.IsNullOrWhiteSpace(title) ? null : new WindowCaptureInfo(handle, title);
     }
 
@@ -25,8 +25,8 @@ internal static class NativeMethods
     [DllImport("user32.dll")]
     private static extern nint GetForegroundWindow();
 
-    [DllImport("user32.dll", CharSet = CharSet.Auto)]
-    private static extern int GetWindowText(nint hWnd, StringBuilder text, int maxCount);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern int GetWindowText(nint hWnd, [Out] char[] lpString, int nMaxCount);
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]

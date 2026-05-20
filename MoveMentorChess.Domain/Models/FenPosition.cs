@@ -65,7 +65,7 @@ public sealed class FenPosition
 
                 if (empty > 0)
                 {
-                    row += empty.ToString();
+                    row += empty.ToString(System.Globalization.CultureInfo.InvariantCulture);
                     empty = 0;
                 }
 
@@ -74,7 +74,7 @@ public sealed class FenPosition
 
             if (empty > 0)
             {
-                row += empty.ToString();
+                row += empty.ToString(System.Globalization.CultureInfo.InvariantCulture);
             }
 
             rows.Add(row);

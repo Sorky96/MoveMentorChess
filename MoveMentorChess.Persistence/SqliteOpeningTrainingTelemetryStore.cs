@@ -105,7 +105,7 @@ internal static class SqliteOpeningTrainingTelemetryStore
         string? lineKey = statement.GetText(3);
         string? openingKey = statement.GetText(4);
         string? specialModeText = statement.GetText(7);
-        IReadOnlyDictionary<string, string> properties = DeserializeTelemetryProperties(statement.GetText(8));
+        Dictionary<string, string> properties = DeserializeTelemetryProperties(statement.GetText(8));
 
         return new OpeningTrainingTelemetryEvent(
             statement.GetText(0) ?? string.Empty,
@@ -119,7 +119,7 @@ internal static class SqliteOpeningTrainingTelemetryStore
             properties);
     }
 
-    private static IReadOnlyDictionary<string, string> DeserializeTelemetryProperties(string? payload)
+    private static Dictionary<string, string> DeserializeTelemetryProperties(string? payload)
     {
         if (string.IsNullOrWhiteSpace(payload))
         {

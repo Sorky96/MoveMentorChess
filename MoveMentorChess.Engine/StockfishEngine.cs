@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -115,7 +116,7 @@ public sealed class StockfishEngine : IEngineAnalyzer, IDisposable
             SendCommand("isready");
             WaitForToken("readyok", 3000);
 
-            IReadOnlyList<string> lines = Analyze(options);
+            List<string> lines = Analyze(options);
             return ParseAnalysis(fen, lines);
         }
     }
@@ -139,7 +140,7 @@ public sealed class StockfishEngine : IEngineAnalyzer, IDisposable
             string score = line.MateIn is int mate
                 ? $"mate {mate}"
                 : $"cp {line.Centipawns ?? 0}";
-            builder.AppendLine($"{line.MoveUci}: {score} | {string.Join(' ', line.Pv)}");
+            builder.AppendLine(CultureInfo.InvariantCulture, $"{line.MoveUci}: {score} | {string.Join(' ', line.Pv)}");
         }
 
         return builder.ToString().TrimEnd();
@@ -148,7 +149,7 @@ public sealed class StockfishEngine : IEngineAnalyzer, IDisposable
     public EvaluationSummary? GetEvaluationSummary(int depth = 12)
     {
         EngineAnalysis analysis = AnalyzeCurrentPosition(new EngineAnalysisOptions(Depth: depth, MultiPv: 1));
-        EngineLine? bestLine = analysis.Lines.FirstOrDefault();
+        EngineLine? bestLine = analysis.Lines.Count > 0 ? analysis.Lines[0] : null;
         if (bestLine is null)
         {
             return null;
@@ -187,12 +188,12 @@ public sealed class StockfishEngine : IEngineAnalyzer, IDisposable
             SendCommand("isready");
             WaitForToken("readyok", 3000);
 
-            IReadOnlyList<string> lines = Analyze(options);
+            List<string> lines = Analyze(options);
             return ParseAnalysis(currentFen, lines);
         }
     }
 
-    private IReadOnlyList<string> Analyze(EngineAnalysisOptions options)
+    private List<string> Analyze(EngineAnalysisOptions options)
     {
         string goCommand = options.MoveTimeMs is int moveTimeMs && moveTimeMs > 0
             ? $"go movetime {moveTimeMs}"
@@ -354,7 +355,9 @@ public sealed class StockfishEngine : IEngineAnalyzer, IDisposable
                     engineProcess.Kill(true);
                 }
             }
+#pragma warning disable CA1031
             catch
+#pragma warning restore CA1031
             {
                 if (!engineProcess.HasExited)
                 {

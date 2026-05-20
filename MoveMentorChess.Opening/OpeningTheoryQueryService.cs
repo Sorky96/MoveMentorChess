@@ -117,7 +117,7 @@ public sealed class OpeningTheoryQueryService
         {
             OpeningTrainingMoveOption? recommended = null;
             IReadOnlyList<OpeningTheoryMove> replies = GetTopMovesForPositionKey(move.ToPositionKey, 1, playableOnly: false);
-            OpeningTheoryMove? bestReply = replies.FirstOrDefault();
+            OpeningTheoryMove? bestReply = replies.Count > 0 ? replies[0] : null;
             if (bestReply is not null)
             {
                 recommended = new OpeningTrainingMoveOption(
@@ -232,14 +232,15 @@ public sealed class OpeningTheoryQueryService
             : [];
     }
 
-    private IReadOnlyList<string> BuildPrimaryContinuationMoves(OpeningPositionKey rootPositionKey, int maxPly)
+    private List<string> BuildPrimaryContinuationMoves(OpeningPositionKey rootPositionKey, int maxPly)
     {
         List<string> moves = [];
         OpeningPositionKey currentPositionKey = rootPositionKey;
 
         for (int ply = 0; ply < maxPly; ply++)
         {
-            OpeningTheoryMove? move = GetTopMovesForPositionKey(currentPositionKey.Value, 1, playableOnly: false).FirstOrDefault();
+            var topMoves = GetTopMovesForPositionKey(currentPositionKey.Value, 1, playableOnly: false);
+            OpeningTheoryMove? move = topMoves.Count > 0 ? topMoves[0] : null;
             if (move is null)
             {
                 break;
@@ -252,7 +253,7 @@ public sealed class OpeningTheoryQueryService
         return moves;
     }
 
-    private static IReadOnlyList<OpeningTheoryMove> AddMoveIdeas(IReadOnlyList<OpeningTheoryMove> moves)
+    private static List<OpeningTheoryMove> AddMoveIdeas(IReadOnlyList<OpeningTheoryMove> moves)
     {
         return moves
             .Select(move => move.Idea is null

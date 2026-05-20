@@ -2,16 +2,17 @@ using System.Text.RegularExpressions;
 
 namespace MoveMentorChess.Opening;
 
-public static class OpeningPgnMetadataParser
+public static partial class OpeningPgnMetadataParser
 {
-    private static readonly Regex HeaderRegex = new(@"^\[(?<key>[A-Za-z0-9_]+)\s+""(?<value>.*)""\]\s*$", RegexOptions.Multiline | RegexOptions.Compiled);
+    [GeneratedRegex(@"^\[(?<key>[A-Za-z0-9_]+)\s+""(?<value>.*)""\]\s*$", RegexOptions.Multiline)]
+    private static partial Regex GetHeaderRegex();
 
     public static OpeningGameMetadata Parse(string pgn)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(pgn);
 
         Dictionary<string, string> headers = new(StringComparer.OrdinalIgnoreCase);
-        foreach (Match match in HeaderRegex.Matches(pgn))
+        foreach (Match match in GetHeaderRegex().Matches(pgn))
         {
             headers[match.Groups["key"].Value] = match.Groups["value"].Value;
         }
@@ -23,7 +24,7 @@ public static class OpeningPgnMetadataParser
         return new OpeningGameMetadata(eco, opening, variation);
     }
 
-    private static string GetValue(IReadOnlyDictionary<string, string> headers, string key)
+    private static string GetValue(Dictionary<string, string> headers, string key)
     {
         return headers.TryGetValue(key, out string? value) ? value : string.Empty;
     }

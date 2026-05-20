@@ -61,7 +61,9 @@ internal static class SqliteAnalysisDataConverters
         {
             return JsonSerializer.Deserialize<IReadOnlyList<string>>(payload, JsonOptions) ?? [];
         }
+#pragma warning disable CA1031
         catch
+#pragma warning restore CA1031
         {
             return [];
         }
