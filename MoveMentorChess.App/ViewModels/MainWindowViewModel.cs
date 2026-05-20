@@ -1,3 +1,5 @@
+#pragma warning disable CA1031
+
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
@@ -1293,7 +1295,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         RefreshBoard();
     }
 
-    private void UpdatePieceMoveOptions(string fromSquare, string pieceName, IReadOnlyList<LegalMoveInfo> movesForPiece)
+    private void UpdatePieceMoveOptions(string fromSquare, string pieceName, List<LegalMoveInfo> movesForPiece)
     {
         PieceMoveOptions.Clear();
         PieceMoveOptionsHeader = $"Selected piece: {pieceName} from {fromSquare} | legal moves: {movesForPiece.Count}";
@@ -1377,7 +1379,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             }
 
             EngineAnalysis moveAnalysis = engine.AnalyzePosition(appliedMove.FenAfter, new EngineAnalysisOptions(Depth: 10, MultiPv: 1, MoveTimeMs: 90));
-            EngineLine? moveLine = moveAnalysis.Lines.FirstOrDefault();
+            EngineLine? moveLine = moveAnalysis.Lines.Count > 0 ? moveAnalysis.Lines[0] : null;
             int moveCp = NormalizePerspectiveScore(moveLine?.Centipawns, perspectiveSide, perspectiveSide == "White" ? "Black" : "White");
             int? moveMate = moveLine?.MateIn is int mate ? -mate : null;
             string scoreText = FormatEvalScore(moveLine?.Centipawns is null ? null : moveCp, moveMate);
@@ -1443,7 +1445,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             : fen;
     }
 
-    private async Task<string?> SelectMoveToApplyAsync(IReadOnlyList<LegalMoveInfo> matchingMoves)
+    private async Task<string?> SelectMoveToApplyAsync(List<LegalMoveInfo> matchingMoves)
     {
         if (matchingMoves.Count == 0)
         {

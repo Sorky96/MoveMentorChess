@@ -75,10 +75,10 @@ public sealed class OpeningTrainingRecommendationService
 
     private static ScoredRecommendation ScoreLine(
         OpeningLineCatalogItem line,
-        IReadOnlyDictionary<OpeningLineKey, HashSet<string>> reviewedBranchesByLine,
+        Dictionary<OpeningLineKey, HashSet<string>> reviewedBranchesByLine,
         HashSet<string> legacyReviewedBranchKeys,
-        IReadOnlyDictionary<string, int> wrongByEco,
-        IReadOnlyDictionary<string, DateTime> lastCompletedByEco,
+        Dictionary<string, int> wrongByEco,
+        Dictionary<string, DateTime> lastCompletedByEco,
         DateTime now,
         string? playerKey)
     {
@@ -220,7 +220,7 @@ public sealed class OpeningTrainingRecommendationService
 
     private static int GetReviewedCountForLine(
         OpeningLineCatalogItem line,
-        IReadOnlyDictionary<OpeningLineKey, HashSet<string>> reviewedBranchesByLine,
+        Dictionary<OpeningLineKey, HashSet<string>> reviewedBranchesByLine,
         HashSet<string> legacyReviewedBranchKeys)
     {
         if (reviewedBranchesByLine.TryGetValue(line.LineKey, out HashSet<string>? branchKeys))

@@ -34,7 +34,7 @@ internal static class AnalysisExplanationRuntime
 internal sealed class AnalysisExplanationService
 {
     private readonly Dictionary<string, MoveExplanation> explanationCache = [];
-    private IAdviceGenerator adviceGenerator = new SettingsBackedAdviceGenerator(AdviceGeneratorFactory.CreateInteractiveGenerator());
+    private SettingsBackedAdviceGenerator adviceGenerator = new SettingsBackedAdviceGenerator(AdviceGeneratorFactory.CreateInteractiveGenerator());
     private int requestId;
 
     public AdviceRuntimeStatus RefreshRuntimeState()
@@ -90,7 +90,9 @@ internal sealed class AnalysisExplanationService
                     analyzedSide,
                     NarrationStyle: request.NarrationStyle)));
         }
+#pragma warning disable CA1031 // Broad catch is intentional for top-level advice generation wrapper
         catch (Exception ex)
+#pragma warning restore CA1031
         {
             explanation = new MoveExplanation(
                 "Local advice generation failed.",

@@ -1,3 +1,4 @@
+#pragma warning disable SYSLIB1045
 using System.Text.RegularExpressions;
 using MoveMentorChessServices;
 using Xunit;

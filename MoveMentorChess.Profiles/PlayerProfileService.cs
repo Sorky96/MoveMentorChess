@@ -210,7 +210,7 @@ public sealed partial class PlayerProfileService
             topLabels);
     }
 
-    private static IReadOnlyList<PriorityLabelStat> BuildPriorityLabels(
+    private static List<PriorityLabelStat> BuildPriorityLabels(
         IReadOnlyList<ProfileLabelStat> topLabels,
         IReadOnlyList<ProfileCostlyLabelStat> costliestLabels,
         IReadOnlyList<HighlightedGroup> highlightedGroups,
@@ -305,7 +305,7 @@ public sealed partial class PlayerProfileService
         return new ProfileProgressSignal(direction, summary, recentPeriod, previousPeriod);
     }
 
-    private static IReadOnlyList<ProfileLabelTrend> BuildLabelTrends(IReadOnlyList<PlayerProfileSnapshot> snapshots)
+    private static List<ProfileLabelTrend> BuildLabelTrends(IReadOnlyList<PlayerProfileSnapshot> snapshots)
     {
         if (!TrySelectProgressWindows(snapshots, out ProgressWindowSelection? selection) || selection is null)
         {
@@ -473,7 +473,7 @@ public sealed partial class PlayerProfileService
             highlightsPerGame);
     }
 
-    private IReadOnlyList<PlayerRatingTrendReport> BuildRatingTrendsByTimeControl(IReadOnlyList<PlayerProfileSnapshot> snapshots)
+    private List<PlayerRatingTrendReport> BuildRatingTrendsByTimeControl(IReadOnlyList<PlayerProfileSnapshot> snapshots)
     {
         return snapshots
             .Where(snapshot => snapshot.TimeControlCategory != GameTimeControlCategory.Unknown)
@@ -1053,7 +1053,7 @@ public sealed partial class PlayerProfileService
             ]);
     }
 
-    private static IReadOnlyList<RecommendationOccurrence> BuildRecommendationOccurrences(PlayerProfileSnapshot snapshot, string label)
+    private static List<RecommendationOccurrence> BuildRecommendationOccurrences(PlayerProfileSnapshot snapshot, string label)
     {
         List<RecommendationOccurrence> highlightedOccurrences = GetHighlightedGroups(snapshot)
             .Where(group => string.Equals(group.Label, label, StringComparison.Ordinal))
@@ -1195,7 +1195,7 @@ public sealed partial class PlayerProfileService
             return fallback;
         }
 
-        IReadOnlyList<string> formattedOpenings = openings
+        List<string> formattedOpenings = openings
             .Select(OpeningCatalog.Describe)
             .ToList();
 
@@ -1225,7 +1225,7 @@ public sealed partial class PlayerProfileService
         };
     }
 
-    private static TrainingRecommendation GetRecommendation(IReadOnlyList<TrainingRecommendation> recommendations, int index)
+    private static TrainingRecommendation GetRecommendation(List<TrainingRecommendation> recommendations, int index)
     {
         return recommendations[Math.Min(index, recommendations.Count - 1)];
     }
@@ -1454,7 +1454,7 @@ public sealed partial class PlayerProfileService
         };
     }
 
-    private static IReadOnlyList<ProfileMistakeExample> BuildMistakeExamples(
+    private static List<ProfileMistakeExample> BuildMistakeExamples(
         IReadOnlyList<PlayerProfileSnapshot> snapshots,
         string label,
         RecommendationContext context,
@@ -1508,7 +1508,7 @@ public sealed partial class PlayerProfileService
             .ToList();
     }
 
-    private static IReadOnlyList<ProfileMistakeExample> BuildAllMistakeExamples(
+    private static List<ProfileMistakeExample> BuildAllMistakeExamples(
         IReadOnlyList<PlayerProfileSnapshot> snapshots,
         IReadOnlyList<ProfileLabelStat> topLabels,
         int maxTotal)
@@ -1554,7 +1554,7 @@ public sealed partial class PlayerProfileService
 
     private static MistakeExampleCandidate? SelectMostFrequentExample(
         IReadOnlyList<MistakeExampleCandidate> candidates,
-        IReadOnlySet<string> excludedKeys)
+        HashSet<string> excludedKeys)
     {
         if (candidates.Count == 0)
         {
@@ -1579,7 +1579,7 @@ public sealed partial class PlayerProfileService
 
     private static MistakeExampleCandidate? SelectMostCostlyExample(
         IReadOnlyList<MistakeExampleCandidate> candidates,
-        IReadOnlySet<string> excludedKeys)
+        HashSet<string> excludedKeys)
     {
         return candidates
             .OrderByDescending(candidate => candidate.Move.CentipawnLoss ?? 0)
@@ -1593,7 +1593,7 @@ public sealed partial class PlayerProfileService
     private static MistakeExampleCandidate? SelectMostRepresentativeExample(
         IReadOnlyList<MistakeExampleCandidate> candidates,
         RecommendationContext context,
-        IReadOnlySet<string> excludedKeys)
+        HashSet<string> excludedKeys)
     {
         if (candidates.Count == 0)
         {
@@ -1711,7 +1711,7 @@ public sealed partial class PlayerProfileService
 
     private static string BuildSeveritySummary(PriorityLabelStat labelStat)
     {
-        string averageCpl = labelStat.AverageCentipawnLoss?.ToString() ?? "n/a";
+        string averageCpl = labelStat.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a";
         return $"It appeared {labelStat.Count} times and cost about {labelStat.TotalCentipawnLoss} centipawns in total (avg {averageCpl}).";
     }
 

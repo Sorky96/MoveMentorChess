@@ -59,7 +59,7 @@ public sealed class HeuristicPlayerStrengthEstimator : IPlayerStrengthEstimator
             BuildReasonSummary(averageCpl, moveCount, input.ActualScore, input.ExpectedScore));
     }
 
-    private static int AverageCpl(IReadOnlyList<StoredMoveAnalysis> moves)
+    private static int AverageCpl(List<StoredMoveAnalysis> moves)
     {
         List<int> values = moves
             .Select(move => move.CentipawnLoss)
@@ -69,7 +69,7 @@ public sealed class HeuristicPlayerStrengthEstimator : IPlayerStrengthEstimator
         return values.Count == 0 ? 100 : (int)Math.Round(values.Average());
     }
 
-    private static int MedianCpl(IReadOnlyList<StoredMoveAnalysis> moves)
+    private static int MedianCpl(List<StoredMoveAnalysis> moves)
     {
         List<int> values = moves
             .Select(move => move.CentipawnLoss)
@@ -88,7 +88,7 @@ public sealed class HeuristicPlayerStrengthEstimator : IPlayerStrengthEstimator
             : (int)Math.Round((values[middle - 1] + values[middle]) / 2.0);
     }
 
-    private static double BuildQualityScore(IReadOnlyList<StoredMoveAnalysis> moves)
+    private static double BuildQualityScore(List<StoredMoveAnalysis> moves)
     {
         if (moves.Count == 0)
         {

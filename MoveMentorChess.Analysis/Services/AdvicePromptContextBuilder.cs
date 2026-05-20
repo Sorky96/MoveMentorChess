@@ -50,7 +50,7 @@ public static class AdvicePromptContextBuilder
         return ChessMoveDisplayHelper.FormatSanAndUci(appliedMove.San, appliedMove.Uci);
     }
 
-    private static IReadOnlyList<string> BuildEvidence(MistakeTag? tag)
+    private static List<string> BuildEvidence(MistakeTag? tag)
     {
         if (tag?.Evidence is null || tag.Evidence.Count == 0)
         {
@@ -82,7 +82,7 @@ public static class AdvicePromptContextBuilder
         return evidence;
     }
 
-    private static IReadOnlyList<string> BuildHeuristicNotes(ReplayPly replay, MoveHeuristicContext heuristicContext)
+    private static List<string> BuildHeuristicNotes(ReplayPly replay, MoveHeuristicContext heuristicContext)
     {
         List<string> notes = new();
 

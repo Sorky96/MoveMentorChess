@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text.Json;
 
 namespace MoveMentorChess.Analysis;
@@ -23,7 +24,7 @@ public static class StockfishSettingsStore
                 StockfishSettings? settings = JsonSerializer.Deserialize<StockfishSettings>(json, JsonOptions);
                 return Normalize(settings);
             }
-            catch
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
             {
                 return StockfishSettings.Default;
             }

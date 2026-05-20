@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using Avalonia.Media;
 using static MoveMentorChess.App.ViewModels.OpeningTrainerPresentationText;
 using MoveMentorChess.Persistence;
@@ -749,13 +750,13 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         ? "0/0"
         : $"{completedSteps}/{guidedSession.Positions.Count}";
 
-    public string ResultsClearMetricText => correctAnswers.ToString();
+    public string ResultsClearMetricText => correctAnswers.ToString(CultureInfo.InvariantCulture);
 
-    public string ResultsAlternativesMetricText => playableAnswers.ToString();
+    public string ResultsAlternativesMetricText => playableAnswers.ToString(CultureInfo.InvariantCulture);
 
-    public string ResultsHintsMetricText => hintUseCount.ToString();
+    public string ResultsHintsMetricText => hintUseCount.ToString(CultureInfo.InvariantCulture);
 
-    public string ResultsRevisitMetricText => wrongAttempts.ToString();
+    public string ResultsRevisitMetricText => wrongAttempts.ToString(CultureInfo.InvariantCulture);
 
     private TrainingResultTone ResultTone
     {
@@ -1330,7 +1331,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             properties: BuildBaseTelemetryProperties(new Dictionary<string, string>
             {
                 ["start_source"] = startSource,
-                ["position_count"] = guidedSession.Positions.Count.ToString(),
+                ["position_count"] = guidedSession.Positions.Count.ToString(CultureInfo.InvariantCulture),
                 ["target_fallback"] = (target is not null && !guidedSession.Positions.Any(position => IsTargetedPosition(position, target))).ToString().ToLowerInvariant(),
                 ["recommendation_type"] = BuildRecommendationType(startSource, specialMode),
                 ["reason_code"] = TodayRecommendation is not null && string.Equals(recommendationId, TodayRecommendation.OpeningLine.LineKey.Value, StringComparison.Ordinal)
@@ -1347,8 +1348,8 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
                 specialMode: specialMode.Kind,
                 properties: BuildBaseTelemetryProperties(new Dictionary<string, string>
                 {
-                    ["time_limit_minutes"] = specialMode.TimeLimitMinutes.ToString(),
-                    ["max_positions"] = specialMode.MaxPositions.ToString()
+                    ["time_limit_minutes"] = specialMode.TimeLimitMinutes.ToString(CultureInfo.InvariantCulture),
+                    ["max_positions"] = specialMode.MaxPositions.ToString(CultureInfo.InvariantCulture)
                 }));
         }
         currentStepIndex = 0;
@@ -1412,7 +1413,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         OpeningTrainingAttemptResult result = workspaceService.Evaluate(position, submittedAnswer);
         currentSessionAttempts.Add(result);
         OpeningTrainingMoveOption? mainMove = position.CandidateMoves.FirstOrDefault(option => option.IsPreferred)
-            ?? position.CandidateMoves.FirstOrDefault();
+            ?? (position.CandidateMoves.Count > 0 ? position.CandidateMoves[0] : null);
         ResultText = result.Score switch
         {
             OpeningTrainingScore.Correct => "Good. This keeps your repertoire plan on track.",
@@ -1712,11 +1713,11 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         Dictionary<string, string> completionProperties = BuildBaseTelemetryProperties(new Dictionary<string, string>
         {
             ["start_source"] = currentStartSource ?? "unknown",
-            ["completed_steps"] = completedSteps.ToString(),
-            ["wrong_attempts"] = wrongAttempts.ToString(),
-            ["hint_count"] = hintUseCount.ToString(),
-            ["not_known_count"] = CountDontKnowAttempts().ToString(),
-            ["time_to_first_move_seconds"] = GetTimeToFirstMoveSeconds().ToString()
+            ["completed_steps"] = completedSteps.ToString(CultureInfo.InvariantCulture),
+            ["wrong_attempts"] = wrongAttempts.ToString(CultureInfo.InvariantCulture),
+            ["hint_count"] = hintUseCount.ToString(CultureInfo.InvariantCulture),
+            ["not_known_count"] = CountDontKnowAttempts().ToString(CultureInfo.InvariantCulture),
+            ["time_to_first_move_seconds"] = GetTimeToFirstMoveSeconds().ToString(CultureInfo.InvariantCulture)
         });
         workspaceService.TrackTelemetry(
             OpeningTrainingTelemetryEvents.GuidedSessionCompleted,
@@ -1946,7 +1947,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             {
                 ["next_action_id"] = action.Id,
                 ["next_action_kind"] = action.Kind.ToString(),
-                ["delay_minutes"] = action.DelayMinutes.ToString()
+                ["delay_minutes"] = action.DelayMinutes.ToString(CultureInfo.InvariantCulture)
             }));
 
         switch (action.Kind)
@@ -2070,9 +2071,9 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             properties: BuildBaseTelemetryProperties(new Dictionary<string, string>
             {
                 ["start_source"] = currentStartSource ?? "unknown",
-                ["completed_steps"] = completedSteps.ToString(),
-                ["position_count"] = guidedSession.Positions.Count.ToString(),
-                ["time_to_first_move_seconds"] = GetTimeToFirstMoveSeconds().ToString()
+                ["completed_steps"] = completedSteps.ToString(CultureInfo.InvariantCulture),
+                ["position_count"] = guidedSession.Positions.Count.ToString(CultureInfo.InvariantCulture),
+                ["time_to_first_move_seconds"] = GetTimeToFirstMoveSeconds().ToString(CultureInfo.InvariantCulture)
             }));
     }
 
@@ -2147,15 +2148,15 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             properties: BuildBaseTelemetryProperties(new Dictionary<string, string>
             {
                 ["position_id"] = position.PositionId,
-                ["step_index"] = currentStepIndex.ToString(),
-                ["hint_count"] = hintUseCount.ToString(),
-                ["not_known_count"] = CountDontKnowAttempts().ToString()
+                ["step_index"] = currentStepIndex.ToString(CultureInfo.InvariantCulture),
+                ["hint_count"] = hintUseCount.ToString(CultureInfo.InvariantCulture),
+                ["not_known_count"] = CountDontKnowAttempts().ToString(CultureInfo.InvariantCulture)
             }));
     }
 
     private static OpeningTrainingAttemptResult BuildDontKnowAttempt(OpeningTrainingPosition position)
     {
-        IReadOnlyList<OpeningTrainingMoveOption> preferredReferences = position.CandidateMoves
+        List<OpeningTrainingMoveOption> preferredReferences = position.CandidateMoves
             .Where(option => option.IsPreferred)
             .ToList();
 
@@ -2203,10 +2204,10 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             properties: BuildBaseTelemetryProperties(new Dictionary<string, string>
             {
                 ["position_id"] = CurrentPosition?.PositionId ?? string.Empty,
-                ["step_index"] = currentStepIndex.ToString(),
+                ["step_index"] = currentStepIndex.ToString(CultureInfo.InvariantCulture),
                 ["reference_revealed_before_attempt"] = currentSessionAttempts.All(attempt => attempt.PositionId != CurrentPosition?.PositionId).ToString().ToLowerInvariant(),
-                ["hint_count"] = hintUseCount.ToString(),
-                ["not_known_count"] = CountDontKnowAttempts().ToString()
+                ["hint_count"] = hintUseCount.ToString(CultureInfo.InvariantCulture),
+                ["not_known_count"] = CountDontKnowAttempts().ToString(CultureInfo.InvariantCulture)
             }));
         RaiseStudyNavigationStateChanged();
     }
@@ -2267,7 +2268,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
                 ["hint_level"] = hint.Level.ToString(),
                 ["position_id"] = position.PositionId,
                 ["source"] = trackAsDontKnow ? "dont_know" : "hint_button",
-                ["hint_count"] = hintUseCount.ToString()
+                ["hint_count"] = hintUseCount.ToString(CultureInfo.InvariantCulture)
             }));
         RaiseResultsStateChanged();
         RaiseStudyNavigationStateChanged();
@@ -2450,7 +2451,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     private static IReadOnlyList<BoardArrowViewModel> BuildArrows(OpeningTrainingPosition position)
     {
         OpeningTrainingMoveOption? expected = position.CandidateMoves.FirstOrDefault(option => option.IsPreferred)
-            ?? position.CandidateMoves.FirstOrDefault();
+            ?? (position.CandidateMoves.Count > 0 ? position.CandidateMoves[0] : null);
         if (expected is null || string.IsNullOrWhiteSpace(expected.Uci))
         {
             return [];
@@ -2519,7 +2520,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     }
 
     private static string? SelectStudyMoveToApply(
-        IReadOnlyList<LegalMoveInfo> matchingMoves,
+        List<LegalMoveInfo> matchingMoves,
         OpeningTrainingPosition position)
     {
         if (matchingMoves.Count == 0)

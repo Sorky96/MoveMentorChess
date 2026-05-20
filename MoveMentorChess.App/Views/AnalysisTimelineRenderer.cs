@@ -44,7 +44,7 @@ internal sealed class AnalysisTimelineRenderer(
         RenderSummary(result, segments, reviewedPlies);
     }
 
-    private void RenderPhaseBands(IReadOnlyList<PhaseSegment> segments)
+    private void RenderPhaseBands(List<PhaseSegment> segments)
     {
         for (int i = 0; i < segments.Count; i++)
         {

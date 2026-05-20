@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace MoveMentorChess.Analysis;
 
 /// <summary>
@@ -27,9 +29,14 @@ public static class PlayerMistakeProfileProvider
 
             return TryBuildFromStore(store, playerName.Trim());
         }
-        catch
+        catch (InvalidOperationException)
         {
             // Store not available (e.g., during tests or first run).
+            return null;
+        }
+        catch (IOException)
+        {
+            // Store access issue.
             return null;
         }
     }

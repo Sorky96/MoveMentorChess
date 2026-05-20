@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace MoveMentorChess.App.ViewModels;
 
 public sealed class ImportedMoveItemViewModel : ViewModelBase
@@ -102,8 +104,8 @@ public sealed class ImportedMoveItemViewModel : ViewModelBase
 
     private static string FormatMateChange(int? beforeMate, int? afterMate)
     {
-        string before = beforeMate?.ToString() ?? "?";
-        string after = afterMate?.ToString() ?? "?";
+        string before = beforeMate?.ToString(CultureInfo.InvariantCulture) ?? "?";
+        string after = afterMate?.ToString(CultureInfo.InvariantCulture) ?? "?";
         return $"{before}->{after}";
     }
 

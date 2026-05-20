@@ -17,9 +17,9 @@ public sealed class PlayerOpeningPlanService
         string normalizedKey = string.IsNullOrWhiteSpace(playerKey) ? "theory" : playerKey.Trim().ToLowerInvariant();
         string displayName = string.IsNullOrWhiteSpace(playerKey) ? "Theory profile" : playerKey.Trim();
         TrainingProgressSnapshot progress = BuildProgress(sessionResults);
-        IReadOnlyList<PlayerOpeningPlanItem> today = BuildToday(recommendation, progress, dueActions);
-        IReadOnlyList<PlayerOpeningPlanItem> thisWeek = BuildThisWeek(availableLines, sessionResults, reviewItems);
-        IReadOnlyList<PlayerOpeningPlanItem> longTermGaps = BuildLongTermGaps(availableLines, reviewItems, sessionResults);
+        List<PlayerOpeningPlanItem> today = BuildToday(recommendation, progress, dueActions);
+        List<PlayerOpeningPlanItem> thisWeek = BuildThisWeek(availableLines, sessionResults, reviewItems);
+        List<PlayerOpeningPlanItem> longTermGaps = BuildLongTermGaps(availableLines, reviewItems, sessionResults);
         string summary = progress.SessionCount == 0
             ? "No completed repertoire sessions yet. Today's plan starts from high-value theory and will personalize as history grows."
             : $"Based on your last session: {progress.AttemptCount} moves practiced, {progress.AccuracyPercent:0.#}% accepted.";
@@ -36,7 +36,7 @@ public sealed class PlayerOpeningPlanService
 
     private static TrainingProgressSnapshot BuildProgress(IReadOnlyList<OpeningTrainingSessionResult> history)
     {
-        IReadOnlyList<OpeningTrainingSessionResult> completed = history
+        List<OpeningTrainingSessionResult> completed = history
             .Where(result => result.Outcome == OpeningTrainingSessionOutcome.Completed)
             .ToList();
         int attempts = completed.Sum(result => result.AttemptCount);
@@ -57,12 +57,12 @@ public sealed class PlayerOpeningPlanService
             completed.Count == 0 ? null : completed.Max(result => result.CompletedUtc));
     }
 
-    private static IReadOnlyList<PlayerOpeningPlanItem> BuildToday(
+    private static List<PlayerOpeningPlanItem> BuildToday(
         TrainingRecommendationCard? recommendation,
         TrainingProgressSnapshot progress,
         IReadOnlyList<OpeningTrainingScheduledAction>? dueActions)
     {
-        IReadOnlyList<PlayerOpeningPlanItem> dueItems = (dueActions ?? [])
+        List<PlayerOpeningPlanItem> dueItems = (dueActions ?? [])
             .OrderByDescending(action => action.Priority)
             .ThenBy(action => action.DueUtc)
             .Take(3)
@@ -131,7 +131,7 @@ public sealed class PlayerOpeningPlanService
         return count == 1 ? $"1 scheduled due item; {dueSince}" : $"{count} scheduled due items; earliest {dueSince}";
     }
 
-    private static IReadOnlyList<PlayerOpeningPlanItem> BuildThisWeek(
+    private static List<PlayerOpeningPlanItem> BuildThisWeek(
         IReadOnlyList<OpeningLineCatalogItem> availableLines,
         IReadOnlyList<OpeningTrainingSessionResult> history,
         IReadOnlyList<OpeningReviewItem> reviewItems)
@@ -180,7 +180,7 @@ public sealed class PlayerOpeningPlanService
             .ToList();
     }
 
-    private static IReadOnlyList<PlayerOpeningPlanItem> BuildLongTermGaps(
+    private static List<PlayerOpeningPlanItem> BuildLongTermGaps(
         IReadOnlyList<OpeningLineCatalogItem> availableLines,
         IReadOnlyList<OpeningReviewItem> reviewItems,
         IReadOnlyList<OpeningTrainingSessionResult> history)
@@ -251,7 +251,7 @@ public sealed class PlayerOpeningPlanService
 
     private static int GetReviewedCountForLine(
         OpeningLineCatalogItem line,
-        IReadOnlyDictionary<OpeningLineKey, HashSet<string>> reviewedBranchesByLine,
+        Dictionary<OpeningLineKey, HashSet<string>> reviewedBranchesByLine,
         HashSet<string> legacyReviewedBranches)
     {
         if (reviewedBranchesByLine.TryGetValue(line.LineKey, out HashSet<string>? branchKeys))

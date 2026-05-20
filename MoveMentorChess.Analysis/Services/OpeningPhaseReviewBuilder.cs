@@ -19,7 +19,7 @@ public static class OpeningPhaseReviewBuilder
     public static OpeningPhaseReview? Build(
         ImportedGame game,
         PlayerSide analyzedSide,
-        List<ReplayPly> replay,
+        IReadOnlyList<ReplayPly> replay,
         IReadOnlyList<MoveAnalysisResult> moveAnalyses)
     {
         ArgumentNullException.ThrowIfNull(game);
@@ -156,7 +156,7 @@ public static class OpeningPhaseReviewBuilder
         return $"{analysis.Quality} at {(analysis.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a")} cp";
     }
 
-    private static string BuildLineText(IReadOnlyList<ReplayPly> replay)
+    private static string BuildLineText(List<ReplayPly> replay)
     {
         if (replay.Count == 0)
         {

@@ -62,7 +62,9 @@ internal static class Program
             Console.WriteLine("Copy the generated seed database into the GUI app under OpeningSeed\\opening-seed.db.");
             return 0;
         }
+#pragma warning disable CA1031 // Entrypoint main catches all unhandled exceptions
         catch (Exception ex)
+#pragma warning restore CA1031
         {
             Console.Error.WriteLine(ex.Message);
             return 1;

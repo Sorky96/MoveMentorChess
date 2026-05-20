@@ -13,7 +13,7 @@ public sealed class OpeningTrainingResultPlanService
         ArgumentNullException.ThrowIfNull(attempts);
         ArgumentNullException.ThrowIfNull(nextActions);
 
-        IReadOnlyList<TrainingResultReviewItem> reviewItems = BuildReviewItems(attempts);
+        List<TrainingResultReviewItem> reviewItems = BuildReviewItems(attempts);
         TrainingNextAction? primaryAction = nextActions
             .OrderByDescending(action => action.Priority)
             .FirstOrDefault();
@@ -26,7 +26,7 @@ public sealed class OpeningTrainingResultPlanService
             reviewItems);
     }
 
-    private static IReadOnlyList<TrainingResultReviewItem> BuildReviewItems(IReadOnlyList<OpeningTrainingAttemptResult> attempts)
+    private static List<TrainingResultReviewItem> BuildReviewItems(IReadOnlyList<OpeningTrainingAttemptResult> attempts)
     {
         return attempts
             .Where(attempt => attempt.Score == OpeningTrainingScore.Wrong || attempt.ShouldRepeatImmediately)
@@ -52,7 +52,7 @@ public sealed class OpeningTrainingResultPlanService
             .ToList();
     }
 
-    private static string BuildRepeatText(IReadOnlyList<TrainingResultReviewItem> reviewItems)
+    private static string BuildRepeatText(List<TrainingResultReviewItem> reviewItems)
     {
         if (reviewItems.Count == 0)
         {
@@ -151,9 +151,26 @@ public sealed class OpeningTrainingResultPlanService
 
     private static string BuildPreparedMoveText(OpeningTrainingAttemptResult attempt)
     {
-        OpeningTrainingMoveOption? preferred = attempt.PreferredReferences.FirstOrDefault()
-            ?? attempt.ExpectedMoves.FirstOrDefault(move => move.IsPreferred)
-            ?? attempt.ExpectedMoves.FirstOrDefault();
+        OpeningTrainingMoveOption? preferred = null;
+        if (attempt.PreferredReferences.Count > 0)
+        {
+            preferred = attempt.PreferredReferences[0];
+        }
+        else
+        {
+            for (int i = 0; i < attempt.ExpectedMoves.Count; i++)
+            {
+                if (attempt.ExpectedMoves[i].IsPreferred)
+                {
+                    preferred = attempt.ExpectedMoves[i];
+                    break;
+                }
+            }
+            if (preferred is null && attempt.ExpectedMoves.Count > 0)
+            {
+                preferred = attempt.ExpectedMoves[0];
+            }
+        }
         return preferred?.DisplayText ?? preferred?.Uci ?? "not available";
     }
 

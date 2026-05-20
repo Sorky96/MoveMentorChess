@@ -86,7 +86,7 @@ public sealed class LocalModelAdviceGenerator : IAdviceGenerator, IAdviceGenerat
             FallbackReason = null;
             return candidate;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             return GenerateFallback(replay, quality, tag, bestMoveUci, centipawnLoss, level, context, $"Local model '{localModel.Name}' failed: {ex.Message}");
         }

@@ -1,4 +1,6 @@
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 
 namespace MoveMentorChess.Analysis;
@@ -157,9 +159,9 @@ public sealed class LlamaCppAdviceModel : ILocalAdviceModel
             "-m",
             modelPath,
             "-c",
-            Math.Max(512, contextSize).ToString(),
+            Math.Max(512, contextSize).ToString(CultureInfo.InvariantCulture),
             "-n",
-            Math.Max(32, maxTokens).ToString(),
+            Math.Max(32, maxTokens).ToString(CultureInfo.InvariantCulture),
             "--single-turn",
             "--simple-io",
             "--no-display-prompt",
@@ -242,7 +244,7 @@ hex ::= [0-9a-fA-F]
         {
             process.Kill(entireProcessTree: true);
         }
-        catch
+        catch (Exception ex) when (ex is Win32Exception or NotSupportedException or InvalidOperationException)
         {
             // Best effort cleanup only.
         }

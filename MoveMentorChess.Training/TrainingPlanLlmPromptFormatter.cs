@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -76,7 +77,7 @@ public static class TrainingPlanLlmPromptFormatter
         StringBuilder builder = new();
 
         builder.AppendLine(BuildSystemBlock(audienceLevel));
-        builder.AppendLine($"Trainer style: {TrainingTextFormatter.BuildTrainerDescription(trainerStyle)}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Trainer style: {TrainingTextFormatter.BuildTrainerDescription(trainerStyle)}");
         builder.AppendLine();
         builder.AppendLine("Task: Format this completed chess weekly training plan for the player. Do not change priorities, topics, days, minutes, or training logic.");
         builder.AppendLine("Use only facts present in the JSON input. If a fact is not present, omit it.");

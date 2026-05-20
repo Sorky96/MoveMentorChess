@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using MoveMentorChess.Domain;
 using MoveMentorChess.Persistence;
@@ -23,8 +24,8 @@ public static class ManualReviewSetBuilder
         StringBuilder sb = new();
         sb.AppendLine("# Manual Advice Review Set");
         sb.AppendLine();
-        sb.AppendLine($"Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC");
-        sb.AppendLine($"Positions: {selected.Count}");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"Positions: {selected.Count}");
         sb.AppendLine();
         sb.AppendLine("Review questions for every position:");
         sb.AppendLine("- Czy rozumiem blad?");
@@ -39,16 +40,16 @@ public static class ManualReviewSetBuilder
             StoredMoveContext played = move.Move;
             StoredMoveAdviceContext advice = move.Advice;
 
-            sb.AppendLine($"## {i + 1}. {played.MoveNumber}{(move.Analysis.AnalyzedSide == PlayerSide.White ? "." : "...")} {played.San}");
-            sb.AppendLine($"- Game: `{move.Game.GameFingerprint}`");
-            sb.AppendLine($"- Ply: {played.Ply}");
-            sb.AppendLine($"- Phase: {played.Phase}");
-            sb.AppendLine($"- Quality: {played.Quality}");
-            sb.AppendLine($"- Label: {advice.MistakeLabel ?? "unclassified"}");
-            sb.AppendLine($"- CPL: {played.CentipawnLoss?.ToString() ?? "n/a"}");
-            sb.AppendLine($"- Played: {played.San} ({played.Uci})");
-            sb.AppendLine($"- Best move: {played.BestMoveUci ?? "n/a"}");
-            sb.AppendLine($"- FEN before: `{played.FenBefore}`");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"## {i + 1}. {played.MoveNumber}{(move.Analysis.AnalyzedSide == PlayerSide.White ? "." : "...")} {played.San}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"- Game: `{move.Game.GameFingerprint}`");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"- Ply: {played.Ply}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"- Phase: {played.Phase}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"- Quality: {played.Quality}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"- Label: {advice.MistakeLabel ?? "unclassified"}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"- CPL: {played.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"- Played: {played.San} ({played.Uci})");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"- Best move: {played.BestMoveUci ?? "n/a"}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"- FEN before: `{played.FenBefore}`");
             sb.AppendLine();
             sb.AppendLine("Advice:");
             AppendAdviceLine(sb, "Short", advice.ShortExplanation);
@@ -132,7 +133,7 @@ public static class ManualReviewSetBuilder
     {
         if (!string.IsNullOrWhiteSpace(text))
         {
-            sb.AppendLine($"- {label}: {text.Trim()}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"- {label}: {text.Trim()}");
         }
     }
 }

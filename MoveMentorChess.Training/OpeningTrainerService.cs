@@ -159,7 +159,7 @@ public sealed class OpeningTrainerService
             .ThenBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
             .Select(group => group.Key)
             .First();
-        IReadOnlyList<SavedOpeningReplay> savedReplays = LoadSavedOpeningReplays(snapshots);
+        List<SavedOpeningReplay> savedReplays = LoadSavedOpeningReplays(snapshots);
 
         Dictionary<SnapshotKey, OpeningTrainerSnapshot> snapshotIndex = snapshots
             .ToDictionary(snapshot => new SnapshotKey(snapshot.GameFingerprint, snapshot.Side));
@@ -168,7 +168,7 @@ public sealed class OpeningTrainerService
 
         foreach (OpeningTrainingSourceKind source in effectiveOptions.Sources!)
         {
-            IReadOnlyList<OpeningTrainingPosition> built = source switch
+            List<OpeningTrainingPosition> built = source switch
             {
                 OpeningTrainingSourceKind.ExampleGame => BuildExampleGamePositions(weaknessReport, snapshotIndex, linesById, effectiveOptions, openingTheory),
                 OpeningTrainingSourceKind.OpeningWeakness => BuildOpeningWeaknessPositions(weaknessReport, snapshotIndex, savedReplays, linesById, effectiveOptions, openingTheory),
@@ -202,13 +202,13 @@ public sealed class OpeningTrainerService
             .Where(lineId => !string.IsNullOrWhiteSpace(lineId))
             .Select(lineId => lineId!)
             .ToHashSet(StringComparer.Ordinal);
-        IReadOnlyList<OpeningTrainingLine> lines = linesById.Values
+        List<OpeningTrainingLine> lines = linesById.Values
             .Where(line => usedLineIds.Contains(line.LineId))
             .OrderBy(line => line.SourceKind)
             .ThenBy(line => line.OpeningName, StringComparer.OrdinalIgnoreCase)
             .ThenBy(line => line.AnchorPly)
             .ToList();
-        IReadOnlyList<OpeningTrainingSourceSummary> sourceSummaries = BuildSourceSummaries(positions, lines);
+        List<OpeningTrainingSourceSummary> sourceSummaries = BuildSourceSummaries(positions, lines);
 
         DateTime createdUtc = clock.UtcNow;
         session = new OpeningTrainingSession(
@@ -236,8 +236,8 @@ public sealed class OpeningTrainerService
             return EvaluateAnswer(position, submittedMoveText);
         }
 
-        IReadOnlyList<OpeningTrainingMoveOption> preferredReferences = GetPreferredReferences(position);
-        IReadOnlyList<OpeningTrainingMoveOption> playableReferences = GetPlayableReferences(position, preferredReferences);
+        List<OpeningTrainingMoveOption> preferredReferences = GetPreferredReferences(position);
+        List<OpeningTrainingMoveOption> playableReferences = GetPlayableReferences(position, preferredReferences);
         IReadOnlyList<OpeningTrainingMoveOption> expectedMoves = preferredReferences
             .Concat(playableReferences)
             .DistinctBy(option => BuildMoveKey(option.Uci, option.DisplayText))
@@ -267,10 +267,10 @@ public sealed class OpeningTrainerService
         }
 
         OpeningPositionKey resolvedPositionKey = OpeningPositionKeyBuilder.BuildKey(resolvedMove.FenAfter);
-        IReadOnlyList<OpeningTrainingMoveOption> matchingReferences = position.CandidateMoves
+        List<OpeningTrainingMoveOption> matchingReferences = position.CandidateMoves
             .Where(option => MovesMatch(option, resolvedMove))
             .ToList();
-        IReadOnlyList<OpeningTrainingMoveOption> transposedReferences = position.CandidateMoves
+        List<OpeningTrainingMoveOption> transposedReferences = position.CandidateMoves
             .Where(option => option.ToPositionKey.HasValue
                 && option.ToPositionKey.Value.Equals(resolvedPositionKey))
             .ToList();
@@ -471,7 +471,7 @@ public sealed class OpeningTrainerService
         Dictionary<string, OpeningTrainingPosition> positionsById = session.Positions
             .ToDictionary(position => position.PositionId, StringComparer.Ordinal);
         DateTime finishedUtc = completedUtc?.ToUniversalTime() ?? clock.UtcNow;
-        IReadOnlyList<OpeningTrainingRecordedAttempt> recordedAttempts = attempts
+        List<OpeningTrainingRecordedAttempt> recordedAttempts = attempts
             .Select(attempt =>
             {
                 positionsById.TryGetValue(attempt.PositionId, out OpeningTrainingPosition? position);
@@ -494,7 +494,7 @@ public sealed class OpeningTrainerService
                     position?.OpeningLineKey);
             })
             .ToList();
-        IReadOnlyList<OpeningReviewItem> reviewItems = BuildReviewItems(recordedAttempts, finishedUtc);
+        List<OpeningReviewItem> reviewItems = BuildReviewItems(recordedAttempts, finishedUtc);
 
         return new OpeningTrainingSessionResult(
             session.SessionId,
@@ -572,7 +572,7 @@ public sealed class OpeningTrainerService
         return result;
     }
 
-    private static IReadOnlyList<OpeningTrainingMoveOption> GetPreferredReferences(OpeningTrainingPosition position)
+    private static List<OpeningTrainingMoveOption> GetPreferredReferences(OpeningTrainingPosition position)
     {
         if (position.Mode != OpeningTrainingMode.BranchAwareness)
         {
@@ -597,9 +597,9 @@ public sealed class OpeningTrainerService
         return primaryOption is null ? [] : [primaryOption];
     }
 
-    private static IReadOnlyList<OpeningTrainingMoveOption> GetPlayableReferences(
+    private static List<OpeningTrainingMoveOption> GetPlayableReferences(
         OpeningTrainingPosition position,
-        IReadOnlyList<OpeningTrainingMoveOption> preferredReferences)
+        List<OpeningTrainingMoveOption> preferredReferences)
     {
         IEnumerable<OpeningTrainingMoveOption> playable = position.Mode switch
         {
@@ -835,7 +835,7 @@ public sealed class OpeningTrainerService
             return null;
         }
 
-        IReadOnlyList<StoredMoveAnalysis> openingMoves = StoredMoveAnalysisMapper
+        List<StoredMoveAnalysis> openingMoves = StoredMoveAnalysisMapper
             .FromAnalysisResult(
                 new GameAnalysisCacheKey(GameFingerprint.Compute(result.Game.PgnText), result.AnalyzedSide, 0, 0, null),
                 result,
@@ -866,10 +866,10 @@ public sealed class OpeningTrainerService
             openingMoves);
     }
 
-    private static IReadOnlyList<OpeningTrainingPosition> BuildExampleGamePositions(
+    private static List<OpeningTrainingPosition> BuildExampleGamePositions(
         OpeningWeaknessReport weaknessReport,
         IReadOnlyDictionary<SnapshotKey, OpeningTrainerSnapshot> snapshotIndex,
-        IDictionary<string, OpeningTrainingLine> linesById,
+        Dictionary<string, OpeningTrainingLine> linesById,
         OpeningTrainingSessionOptions options,
         OpeningTheoryQueryService? openingTheory)
     {
@@ -894,14 +894,14 @@ public sealed class OpeningTrainerService
                 .Where(move => move.Ply < (firstIssue?.Move.Ply ?? int.MaxValue) && !IsOpeningIssue(move))
                 .LastOrDefault()
                 ?? snapshot.OpeningMoves.Where(move => move.Ply < (firstIssue?.Move.Ply ?? int.MaxValue)).LastOrDefault()
-                ?? snapshot.OpeningMoves.First();
+                ?? snapshot.OpeningMoves[0];
 
             IReadOnlyList<StoredMoveAnalysis> lineMoves = snapshot.OpeningMoves
                 .Where(move => move.Ply >= anchorMove.Ply)
                 .Take(options.MaxContinuationMoves)
                 .ToList();
             string lineId = BuildLineId(OpeningTrainingSourceKind.ExampleGame, snapshot.GameFingerprint, anchorMove.Ply);
-            IReadOnlyList<OpeningTrainingMoveOption> candidateMoves = BuildLineRecallOptions(anchorMove, openingTheory);
+            List<OpeningTrainingMoveOption> candidateMoves = BuildLineRecallOptions(anchorMove, openingTheory);
             if (!candidateMoves.Any(option => option.IsPreferred))
             {
                 continue;
@@ -949,11 +949,11 @@ public sealed class OpeningTrainerService
         return positions;
     }
 
-    private static IReadOnlyList<OpeningTrainingPosition> BuildOpeningWeaknessPositions(
+    private static List<OpeningTrainingPosition> BuildOpeningWeaknessPositions(
         OpeningWeaknessReport weaknessReport,
         IReadOnlyDictionary<SnapshotKey, OpeningTrainerSnapshot> snapshotIndex,
-        IReadOnlyList<SavedOpeningReplay> savedReplays,
-        IDictionary<string, OpeningTrainingLine> linesById,
+        List<SavedOpeningReplay> savedReplays,
+        Dictionary<string, OpeningTrainingLine> linesById,
         OpeningTrainingSessionOptions options,
         OpeningTheoryQueryService? openingTheory)
     {
@@ -967,7 +967,7 @@ public sealed class OpeningTrainerService
 
         foreach ((OpeningWeaknessEntry entry, BranchRoot root) in roots)
         {
-            IReadOnlyList<OpeningTrainingBranch> theoryBranches = BuildTheoryBranches(root.RootFen, openingTheory);
+            List<OpeningTrainingBranch> theoryBranches = BuildTheoryBranches(root.RootFen, openingTheory);
             if (theoryBranches.Count == 0)
             {
                 continue;
@@ -976,7 +976,7 @@ public sealed class OpeningTrainerService
             OpeningTrainingMoveOption? primaryRecommendedResponse = theoryBranches
                 .Select(branch => branch.RecommendedResponse)
                 .FirstOrDefault(option => option is not null);
-            IReadOnlyList<OpeningTrainingMoveOption> candidateMoves = theoryBranches
+            List<OpeningTrainingMoveOption> candidateMoves = theoryBranches
                 .Select(branch => new OpeningTrainingMoveOption(
                     branch.OpponentMove,
                     branch.OpponentMoveUci,
@@ -1038,9 +1038,9 @@ public sealed class OpeningTrainerService
         return positions;
     }
 
-    private static IReadOnlyList<OpeningTrainingPosition> BuildFirstMistakePositions(
+    private static List<OpeningTrainingPosition> BuildFirstMistakePositions(
         IReadOnlyList<OpeningTrainerSnapshot> snapshots,
-        IDictionary<string, OpeningTrainingLine> linesById,
+        Dictionary<string, OpeningTrainingLine> linesById,
         OpeningTrainingSessionOptions options,
         OpeningTheoryQueryService? openingTheory)
     {
@@ -1057,7 +1057,7 @@ public sealed class OpeningTrainerService
         foreach ((OpeningTrainerSnapshot snapshot, OpeningIssue issue) in issues)
         {
             string lineId = BuildLineId(OpeningTrainingSourceKind.FirstOpeningMistake, snapshot.GameFingerprint, issue.Move.Ply);
-            IReadOnlyList<OpeningTrainingMoveOption> candidateMoves = BuildRepairOptions(issue.Move, openingTheory);
+            List<OpeningTrainingMoveOption> candidateMoves = BuildRepairOptions(issue.Move, openingTheory);
             if (!candidateMoves.Any(option => option.Role == OpeningTrainingMoveRole.Repair))
             {
                 continue;
@@ -1132,7 +1132,7 @@ public sealed class OpeningTrainerService
             ToRepertoireSide(snapshot.Side));
     }
 
-    private static IReadOnlyList<OpeningTrainingMoveOption> BuildLineRecallOptions(
+    private static List<OpeningTrainingMoveOption> BuildLineRecallOptions(
         StoredMoveAnalysis anchorMove,
         OpeningTheoryQueryService? openingTheory)
     {
@@ -1174,7 +1174,7 @@ public sealed class OpeningTrainerService
     }
 
     private static void AddOrUpgradeOption(
-        IDictionary<string, OpeningTrainingMoveOption> options,
+        Dictionary<string, OpeningTrainingMoveOption> options,
         OpeningTrainingMoveOption candidate)
     {
         string key = BuildMoveKey(candidate.Uci, candidate.DisplayText);
@@ -1213,7 +1213,7 @@ public sealed class OpeningTrainerService
             move.Advice.MistakeLabel);
     }
 
-    private static IReadOnlyList<OpeningTrainingMoveOption> BuildRepairOptions(
+    private static List<OpeningTrainingMoveOption> BuildRepairOptions(
         StoredMoveAnalysis move,
         OpeningTheoryQueryService? openingTheory)
     {
@@ -1263,7 +1263,7 @@ public sealed class OpeningTrainerService
             .ToList();
     }
 
-    private IReadOnlyList<SavedOpeningReplay> LoadSavedOpeningReplays(IReadOnlyList<OpeningTrainerSnapshot> snapshots)
+    private List<SavedOpeningReplay> LoadSavedOpeningReplays(IReadOnlyList<OpeningTrainerSnapshot> snapshots)
     {
         GameReplayService replayService = new();
         List<SavedOpeningReplay> replays = [];
@@ -1287,10 +1287,10 @@ public sealed class OpeningTrainerService
         return replays;
     }
 
-    private static IReadOnlyList<(OpeningWeaknessEntry Entry, BranchRoot root)> BuildBranchRoots(
+    private static List<(OpeningWeaknessEntry Entry, BranchRoot root)> BuildBranchRoots(
         OpeningWeaknessEntry entry,
         IReadOnlyDictionary<SnapshotKey, OpeningTrainerSnapshot> snapshotIndex,
-        IReadOnlyList<SavedOpeningReplay> savedReplays)
+        List<SavedOpeningReplay> savedReplays)
     {
         HashSet<string> exampleGameFingerprints = entry.ExampleGames
             .Select(example => example.GameFingerprint)
@@ -1314,11 +1314,11 @@ public sealed class OpeningTrainerService
             .ToList();
     }
 
-    private static IReadOnlyList<BranchOccurrence> BuildBranchOccurrences(
+    private static List<BranchOccurrence> BuildBranchOccurrences(
         SavedOpeningReplay replay,
         IReadOnlyDictionary<SnapshotKey, OpeningTrainerSnapshot> snapshotIndex,
-        IReadOnlySet<string> exampleGameFingerprints,
-        IReadOnlySet<string> recurringLabels)
+        HashSet<string> exampleGameFingerprints,
+        HashSet<string> recurringLabels)
     {
         List<BranchOccurrence> occurrences = [];
         IReadOnlyList<ReplayPly> openingPlies = replay.Replay
@@ -1372,7 +1372,7 @@ public sealed class OpeningTrainerService
             .ThenByDescending(item => item.PlayerIssue?.CentipawnLoss ?? 0)
             .ThenBy(item => item.AnchorMove.Ply)
             .First();
-        IReadOnlyList<OpeningTrainingBranch> branches = occurrences
+        List<OpeningTrainingBranch> branches = occurrences
             .GroupBy(item => BuildMoveKey(item.OpponentMove.Uci, item.OpponentMove.San), StringComparer.OrdinalIgnoreCase)
             .Select(group => CreateBranch(group.ToList()))
             .OrderByDescending(branch => branch.Frequency)
@@ -1409,7 +1409,7 @@ public sealed class OpeningTrainerService
 
         return new BranchRoot(
             sample.Snapshot,
-            sample.Snapshot.OpeningMoves.FirstOrDefault(move => move.Ply == sample.AnchorMove.Ply) ?? sample.Snapshot.OpeningMoves.First(),
+            sample.Snapshot.OpeningMoves.FirstOrDefault(move => move.Ply == sample.AnchorMove.Ply) ?? sample.Snapshot.OpeningMoves[0],
             sample.AnchorMove.FenAfter,
             sample.AnchorMove.Ply,
             sample.AnchorMove.San,
@@ -1603,7 +1603,7 @@ public sealed class OpeningTrainerService
         return string.Join(" | ", parts);
     }
 
-    private static string BuildTheoryBranchSelectionSummary(IReadOnlyList<OpeningTrainingBranch> branches)
+    private static string BuildTheoryBranchSelectionSummary(List<OpeningTrainingBranch> branches)
     {
         if (branches.Count == 0)
         {
@@ -1613,7 +1613,7 @@ public sealed class OpeningTrainerService
         return $"Showing {branches.Count} imported opponent branch(es). Ordered by imported-game frequency.";
     }
 
-    private static string BuildBranchSelectionSummary(IReadOnlyList<OpeningTrainingBranch> branches)
+    private static string BuildBranchSelectionSummary(List<OpeningTrainingBranch> branches)
     {
         if (branches.Count == 0)
         {
@@ -1639,7 +1639,7 @@ public sealed class OpeningTrainerService
             : openingTheory.GetTopMovesForFen(fen, limit);
     }
 
-    private static IReadOnlyList<OpeningTrainingBranch> BuildTheoryBranches(
+    private static List<OpeningTrainingBranch> BuildTheoryBranches(
         string rootFen,
         OpeningTheoryQueryService? openingTheory)
     {
@@ -1655,7 +1655,7 @@ public sealed class OpeningTrainerService
             .Select((move, index) =>
             {
                 IReadOnlyList<OpeningTheoryMove> replyMoves = GetTheoryMoves(openingTheory, move.ToFen, limit: 1);
-                OpeningTheoryMove? reply = replyMoves.FirstOrDefault();
+                OpeningTheoryMove? reply = replyMoves.Count > 0 ? replyMoves[0] : null;
                 OpeningTrainingMoveOption? recommendedResponse = reply is null
                     ? null
                     : new OpeningTrainingMoveOption(
@@ -1730,9 +1730,9 @@ public sealed class OpeningTrainerService
         return first is null ? null : new OpeningIssue(snapshot, first);
     }
 
-    private static IReadOnlyList<OpeningTrainingSourceSummary> BuildSourceSummaries(
-        IReadOnlyList<OpeningTrainingPosition> positions,
-        IReadOnlyList<OpeningTrainingLine> lines)
+    private static List<OpeningTrainingSourceSummary> BuildSourceSummaries(
+        List<OpeningTrainingPosition> positions,
+        List<OpeningTrainingLine> lines)
     {
         Dictionary<OpeningTrainingSourceKind, int> lineCounts = lines
             .GroupBy(line => line.SourceKind)
@@ -1959,7 +1959,7 @@ public sealed class OpeningTrainerService
         };
     }
 
-    private static OpeningCoverageSummary BuildCoverageSummary(IReadOnlyList<OpeningTrainingBranch> branches)
+    private static OpeningCoverageSummary BuildCoverageSummary(List<OpeningTrainingBranch> branches)
     {
         int totalBranches = branches.Count;
         return new OpeningCoverageSummary(
@@ -1976,7 +1976,7 @@ public sealed class OpeningTrainerService
     private static OpponentReplyProfile BuildOpponentReplyProfile(
         OpeningLineKey lineKey,
         RepertoireSide side,
-        IReadOnlyList<OpeningTrainingBranch> branches)
+        List<OpeningTrainingBranch> branches)
     {
         return new OpponentReplyProfile(
             lineKey,
@@ -1996,8 +1996,8 @@ public sealed class OpeningTrainerService
                 : $"Prepared {branches.Count} opponent branch(es) from theory.");
     }
 
-    private static IReadOnlyList<OpeningReviewItem> BuildReviewItems(
-        IReadOnlyList<OpeningTrainingRecordedAttempt> attempts,
+    private static List<OpeningReviewItem> BuildReviewItems(
+        List<OpeningTrainingRecordedAttempt> attempts,
         DateTime finishedUtc)
     {
         return attempts
@@ -2070,7 +2070,7 @@ public sealed class OpeningTrainerService
     {
         return options
             .FirstOrDefault(option => option.IsPreferred)?.DisplayText
-            ?? options.FirstOrDefault()?.DisplayText;
+            ?? (options.Count > 0 ? options[0] : null)?.DisplayText;
     }
 
     private static string BuildWhyBetterSummary(
@@ -2112,7 +2112,7 @@ public sealed class OpeningTrainerService
         return string.Join(", ", options.Select(option => option.DisplayText).Distinct(StringComparer.OrdinalIgnoreCase));
     }
 
-    private static IReadOnlyList<string> BuildTags(string eco, string? label, params string[] tags)
+    private static List<string> BuildTags(string eco, string? label, params string[] tags)
     {
         return tags
             .Append(eco)

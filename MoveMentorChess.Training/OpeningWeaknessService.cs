@@ -170,7 +170,7 @@ public sealed class OpeningWeaknessService
             return null;
         }
 
-        IReadOnlyList<StoredMoveAnalysis> openingMoves = StoredMoveAnalysisMapper
+        List<StoredMoveAnalysis> openingMoves = StoredMoveAnalysisMapper
             .FromAnalysisResult(
                 new GameAnalysisCacheKey(GameFingerprint.Compute(result.Game.PgnText), result.AnalyzedSide, 0, 0, null),
                 result,
@@ -368,7 +368,7 @@ public sealed class OpeningWeaknessService
             betterMoves);
     }
 
-    private static IReadOnlyList<StoredMoveAnalysis> BuildIssues(OpeningSnapshot snapshot)
+    private static List<StoredMoveAnalysis> BuildIssues(OpeningSnapshot snapshot)
     {
         return snapshot.OpeningMoves
             .Where(IsOpeningIssue)
@@ -561,7 +561,7 @@ public sealed class OpeningWeaknessService
         int firstRecurringMistakeCount,
         ProfileProgressDirection trendDirection)
     {
-        string cpl = averageOpeningCentipawnLoss?.ToString() ?? "n/a";
+        string cpl = averageOpeningCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a";
         string trend = trendDirection == ProfileProgressDirection.InsufficientData
             ? "trend unavailable"
             : $"trend {trendDirection.ToString().ToLowerInvariant()}";
@@ -640,8 +640,9 @@ public sealed class OpeningWeaknessService
             return null;
         }
 
+        IReadOnlyList<OpeningTheoryMove> topMoves = openingTheory.GetTopMovesForFen(fenBefore, limit: 1, playableOnly: false);
         OpeningTheoryMove? theoryMove = openingTheory.GetMainMoveForFen(fenBefore)
-            ?? openingTheory.GetTopMovesForFen(fenBefore, limit: 1, playableOnly: false).FirstOrDefault();
+            ?? (topMoves.Count > 0 ? topMoves[0] : null);
         if (theoryMove is null || string.IsNullOrWhiteSpace(theoryMove.MoveUci))
         {
             return null;

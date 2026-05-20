@@ -25,7 +25,9 @@ internal sealed class DefaultMainWindowAnalysisDataService : IMainWindowAnalysis
         {
             store.SaveImportedGame(game);
         }
-        catch
+#pragma warning disable CA1031 // Silent broad catch is intentional to allow gameplay/importing even if DB fails
+        catch (Exception)
+#pragma warning restore CA1031
         {
             // Import should still succeed even if local persistence is temporarily unavailable.
         }
@@ -43,7 +45,9 @@ internal sealed class DefaultMainWindowAnalysisDataService : IMainWindowAnalysis
         {
             store.SaveImportedGames(games);
         }
-        catch
+#pragma warning disable CA1031 // Silent broad catch is intentional to allow gameplay/importing even if DB fails
+        catch (Exception)
+#pragma warning restore CA1031
         {
             // Import should still succeed even if local persistence is temporarily unavailable.
         }

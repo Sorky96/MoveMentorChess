@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Globalization;
 using System.IO;
 
 namespace MoveMentorChess.Tracking;
@@ -595,7 +596,7 @@ public sealed class BoardPositionRecognizer
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is IOException or OutOfMemoryException or ArgumentException or System.Runtime.InteropServices.ExternalException)
         {
             Trace.TraceWarning(
                 "BoardPositionRecognizer: failed to load image template '{0}' from '{1}' ({2}: {3})",
@@ -1038,7 +1039,7 @@ public sealed class BoardPositionRecognizer
                     bestPlacement = snapshot.PlacementFen;
                 }
             }
-            catch
+            catch (Exception ex) when (ex is IOException or ArgumentException or OutOfMemoryException)
             {
             }
         }
@@ -1083,7 +1084,7 @@ public sealed class BoardPositionRecognizer
                     bestPlacement = snapshot.PlacementFen;
                 }
             }
-            catch
+            catch (Exception ex) when (ex is IOException or ArgumentException or OutOfMemoryException)
             {
             }
         }
@@ -1203,7 +1204,7 @@ public sealed class BoardPositionRecognizer
 
                 if (screenX == 0)
                 {
-                    string rank = (boardY + 1).ToString();
+                    string rank = (boardY + 1).ToString(CultureInfo.InvariantCulture);
                     graphics.DrawString(
                         rank,
                         coordFont,

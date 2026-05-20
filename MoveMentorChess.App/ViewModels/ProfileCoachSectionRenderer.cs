@@ -1,3 +1,4 @@
+using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
@@ -65,10 +66,10 @@ internal static class ProfileCoachSectionRenderer
             ItemWidth = 220
         };
 
-        wrap.Children.Add(CreateMetricTile("Games analyzed", report.GamesAnalyzed.ToString()));
-        wrap.Children.Add(CreateMetricTile("Moves analyzed", report.TotalAnalyzedMoves.ToString()));
-        wrap.Children.Add(CreateMetricTile("Highlighted mistakes", report.HighlightedMistakes.ToString()));
-        wrap.Children.Add(CreateMetricTile("Average CPL", report.AverageCentipawnLoss?.ToString() ?? "n/a"));
+        wrap.Children.Add(CreateMetricTile("Games analyzed", report.GamesAnalyzed.ToString(CultureInfo.InvariantCulture)));
+        wrap.Children.Add(CreateMetricTile("Moves analyzed", report.TotalAnalyzedMoves.ToString(CultureInfo.InvariantCulture)));
+        wrap.Children.Add(CreateMetricTile("Highlighted mistakes", report.HighlightedMistakes.ToString(CultureInfo.InvariantCulture)));
+        wrap.Children.Add(CreateMetricTile("Average CPL", report.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"));
         if (report.RatingTrend.CurrentStrength is not null)
         {
             MoveMentorStrengthPoint strength = report.RatingTrend.CurrentStrength;
@@ -153,7 +154,7 @@ internal static class ProfileCoachSectionRenderer
         yield return CreateBodyText("Costliest patterns", "#9EB5C5");
         foreach (ProfileCostlyLabelStat item in report.CostliestMistakeLabels.Take(6))
         {
-            yield return CreateBulletText($"{FormatMistakeLabel(item.Label)}: total CPL {item.TotalCentipawnLoss}, avg {item.AverageCentipawnLoss?.ToString() ?? "n/a"}");
+            yield return CreateBulletText($"{FormatMistakeLabel(item.Label)}: total CPL {item.TotalCentipawnLoss}, avg {item.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"}");
         }
     }
 
@@ -253,7 +254,7 @@ internal static class ProfileCoachSectionRenderer
 
         foreach (ProfileCostlyLabelStat item in report.CostliestMistakeLabels.Take(8))
         {
-            yield return CreateBulletText($"{FormatMistakeLabel(item.Label)}: total CPL {item.TotalCentipawnLoss}, avg {item.AverageCentipawnLoss?.ToString() ?? "n/a"}");
+            yield return CreateBulletText($"{FormatMistakeLabel(item.Label)}: total CPL {item.TotalCentipawnLoss}, avg {item.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"}");
         }
     }
 
@@ -274,7 +275,7 @@ internal static class ProfileCoachSectionRenderer
 
         foreach (ProfileMonthlyTrend month in report.MonthlyTrend.Take(6))
         {
-            yield return CreateBulletText($"{month.MonthKey}: {month.GamesAnalyzed} games, mistakes {month.HighlightedMistakes}, CPL {month.AverageCentipawnLoss?.ToString() ?? "n/a"}");
+            yield return CreateBulletText($"{month.MonthKey}: {month.GamesAnalyzed} games, mistakes {month.HighlightedMistakes}, CPL {month.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"}");
         }
     }
 
@@ -354,7 +355,7 @@ internal static class ProfileCoachSectionRenderer
         yield return CreateBodyText("Costliest mistakes", "#9EB5C5");
         foreach (ProfileCostlyLabelStat item in report.CostliestMistakeLabels.Take(5))
         {
-            yield return CreateBulletText($"{FormatMistakeLabel(item.Label)}: total CPL {item.TotalCentipawnLoss}, avg {item.AverageCentipawnLoss?.ToString() ?? "n/a"}");
+            yield return CreateBulletText($"{FormatMistakeLabel(item.Label)}: total CPL {item.TotalCentipawnLoss}, avg {item.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"}");
         }
 
         if (report.MistakesByPhase.Count > 0)
@@ -391,7 +392,7 @@ internal static class ProfileCoachSectionRenderer
             foreach (ProfileLabelTrend trend in report.LabelTrends.Take(6))
             {
                 yield return CreateBulletText(
-                    $"{FormatMistakeLabel(trend.Label)}: {trend.Direction}, recent {trend.RecentCount}, previous {trend.PreviousCount}, recent CPL {trend.RecentAverageCentipawnLoss?.ToString() ?? "n/a"}");
+                    $"{FormatMistakeLabel(trend.Label)}: {trend.Direction}, recent {trend.RecentCount}, previous {trend.PreviousCount}, recent CPL {trend.RecentAverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"}");
             }
         }
 
@@ -400,7 +401,7 @@ internal static class ProfileCoachSectionRenderer
             yield return CreateBodyText("Monthly trend", "#9EB5C5");
             foreach (ProfileMonthlyTrend item in report.MonthlyTrend.Take(6))
             {
-                yield return CreateBulletText($"{item.MonthKey}: {item.GamesAnalyzed} games, mistakes {item.HighlightedMistakes}, CPL {item.AverageCentipawnLoss?.ToString() ?? "n/a"}");
+                yield return CreateBulletText($"{item.MonthKey}: {item.GamesAnalyzed} games, mistakes {item.HighlightedMistakes}, CPL {item.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"}");
             }
         }
 
@@ -409,7 +410,7 @@ internal static class ProfileCoachSectionRenderer
             yield return CreateBodyText("Quarterly trend", "#9EB5C5");
             foreach (ProfileQuarterlyTrend item in report.QuarterlyTrend.Take(4))
             {
-                yield return CreateBulletText($"{item.QuarterKey}: {item.GamesAnalyzed} games, mistakes {item.HighlightedMistakes}, CPL {item.AverageCentipawnLoss?.ToString() ?? "n/a"}");
+                yield return CreateBulletText($"{item.QuarterKey}: {item.GamesAnalyzed} games, mistakes {item.HighlightedMistakes}, CPL {item.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"}");
             }
         }
 
@@ -469,7 +470,7 @@ internal static class ProfileCoachSectionRenderer
         yield return CreateInsightCard(
             "Opening signal",
             $"Across {report.OpeningGamesAnalyzed} opening samples, the sharpest problems cluster in {report.WeakOpenings.Count} recurring openings.",
-            $"Average opening CPL: {report.AverageOpeningCentipawnLoss?.ToString() ?? "n/a"}. Use the example game and position shortcuts to jump straight into the board view.");
+            $"Average opening CPL: {report.AverageOpeningCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"}. Use the example game and position shortcuts to jump straight into the board view.");
 
         foreach (OpeningWeaknessEntry opening in report.WeakOpenings.Take(5))
         {
@@ -483,7 +484,7 @@ internal static class ProfileCoachSectionRenderer
         }
     }
 
-    private static Control CreateOpeningWeaknessCard(
+    private static Border CreateOpeningWeaknessCard(
         OpeningWeaknessEntry opening,
         int openingGamesAnalyzed,
         bool canPracticeOpening,
@@ -509,7 +510,7 @@ internal static class ProfileCoachSectionRenderer
             TextWrapping = TextWrapping.Wrap
         });
         panel.Children.Add(CreateBodyText(
-            $"{opening.Eco} | {FormatOpeningFrequency(opening.Count, openingGamesAnalyzed)} | Avg opening CPL {opening.AverageOpeningCentipawnLoss?.ToString() ?? "n/a"}",
+            $"{opening.Eco} | {FormatOpeningFrequency(opening.Count, openingGamesAnalyzed)} | Avg opening CPL {opening.AverageOpeningCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"}",
             "#D7E2EA"));
         panel.Children.Add(CreateBodyText(
             $"{FormatOpeningWeaknessCategory(opening.Category)} | {FormatTrendHeadline(opening.TrendDirection)}",
@@ -710,7 +711,7 @@ internal static class ProfileCoachSectionRenderer
         }
     }
 
-    private static Control CreateWeeklyDayCard(
+    private static Border CreateWeeklyDayCard(
         WeeklyTrainingDay day,
         bool includeGoalInSummary,
         Func<string, Task> practiceOpeningAsync)
@@ -771,7 +772,7 @@ internal static class ProfileCoachSectionRenderer
         return dayCard;
     }
 
-    private static Control CreateChartCard(string title, IReadOnlyList<ProfileTrendChartSeries> series)
+    private static Border CreateChartCard(string title, IReadOnlyList<ProfileTrendChartSeries> series)
     {
         Border card = new()
         {
@@ -793,7 +794,7 @@ internal static class ProfileCoachSectionRenderer
         return card;
     }
 
-    private static Control CreateInsightCard(string label, string value, string? detail = null)
+    private static Border CreateInsightCard(string label, string value, string? detail = null)
     {
         Border card = new()
         {
@@ -843,7 +844,7 @@ internal static class ProfileCoachSectionRenderer
         };
     }
 
-    private static Control CreateMetricTile(string label, string value, double? width = null)
+    private static Border CreateMetricTile(string label, string value, double? width = null)
     {
         Border tile = new()
         {
@@ -899,6 +900,6 @@ internal static class ProfileCoachSectionRenderer
 
     private static string FormatPeriod(ProfileProgressPeriod period)
     {
-        return $"{period.GamesAnalyzed} games, CPL {period.AverageCentipawnLoss?.ToString() ?? "n/a"}, highlighted mistakes/game {period.HighlightedMistakesPerGame:F2}";
+        return $"{period.GamesAnalyzed.ToString(CultureInfo.InvariantCulture)} games, CPL {period.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"}, highlighted mistakes/game {period.HighlightedMistakesPerGame.ToString("F2", CultureInfo.InvariantCulture)}";
     }
 }

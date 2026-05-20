@@ -131,7 +131,7 @@ public partial class MainWindow : Window
             ]
         });
 
-        IStorageFile? file = files.FirstOrDefault();
+        IStorageFile? file = files.Count > 0 ? files[0] : null;
         if (file is null)
         {
             return;
@@ -149,7 +149,9 @@ public partial class MainWindow : Window
         {
             parseResult = await Task.Run(() => PgnGameParser.ParseMany(pgnText));
         }
+#pragma warning disable CA1031 // Broad catch is intentional for UI action to report error dialog instead of crashing
         catch (Exception ex)
+#pragma warning restore CA1031
         {
             await ShowInfoDialogAsync("Load PGN file", $"Could not read PGN file.\n{ex.Message}");
             return;

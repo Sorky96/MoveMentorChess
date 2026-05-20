@@ -90,7 +90,9 @@ internal sealed class AnalysisWindowRunCoordinator(
             dataService.StoreResult(cacheKey, result);
             return AnalysisWindowRunOutcome.Completed(result, side);
         }
+#pragma warning disable CA1031 // Broad catch is intentional for top-level async coordinator to report failure cleanly
         catch (Exception ex)
+#pragma warning restore CA1031
         {
             return AnalysisWindowRunOutcome.Failed(ex);
         }

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using MoveMentorChess.Analysis;
 using MoveMentorChess.Engine;
@@ -18,46 +19,46 @@ public static class AnalysisDetailsTextFormatter
         StringBuilder builder = new();
         string effectiveLabel = feedback?.CorrectedLabel ?? mistake.Tag?.Label ?? "unclassified";
         builder.AppendLine("Move facts:");
-        builder.AppendLine($"Quality: {mistake.Quality}");
-        builder.AppendLine($"Label: {AnalysisMistakePresentation.FormatMistakeLabel(effectiveLabel)}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Quality: {mistake.Quality}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Label: {AnalysisMistakePresentation.FormatMistakeLabel(effectiveLabel)}");
         if (feedback is not null)
         {
-            builder.AppendLine($"Original label: {AnalysisMistakePresentation.FormatMistakeLabel(feedback.OriginalLabel ?? "unclassified")}");
-            builder.AppendLine($"Manual feedback: {feedback.FeedbackKind}");
+            builder.AppendLine(CultureInfo.InvariantCulture, $"Original label: {AnalysisMistakePresentation.FormatMistakeLabel(feedback.OriginalLabel ?? "unclassified")}");
+            builder.AppendLine(CultureInfo.InvariantCulture, $"Manual feedback: {feedback.FeedbackKind}");
             if (!string.IsNullOrWhiteSpace(feedback.CorrectedLabel))
             {
-                builder.AppendLine($"Manual/effective label: {AnalysisMistakePresentation.FormatMistakeLabel(feedback.CorrectedLabel)}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"Manual/effective label: {AnalysisMistakePresentation.FormatMistakeLabel(feedback.CorrectedLabel)}");
             }
 
             if (!string.IsNullOrWhiteSpace(feedback.Comment))
             {
-                builder.AppendLine($"Manual comment: {feedback.Comment}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"Manual comment: {feedback.Comment}");
             }
         }
 
-        builder.AppendLine($"Confidence: {(mistake.Tag?.Confidence ?? 0):0.00}");
-        builder.AppendLine($"Phase: {lead.Replay.Phase}");
-        builder.AppendLine($"Played move: {FormatSanAndUci(lead.Replay.San, lead.Replay.Uci)}");
-        builder.AppendLine($"Best move: {FormatMoveFromFen(lead.Replay.FenBefore, lead.BeforeAnalysis.BestMoveUci)}");
-        builder.AppendLine($"Eval before: {FormatScore(lead.EvalBeforeCp, lead.BestMateIn)}");
-        builder.AppendLine($"Eval after: {FormatScore(lead.EvalAfterCp, lead.PlayedMateIn)}");
-        builder.AppendLine($"Centipawn loss: {(lead.CentipawnLoss?.ToString() ?? "n/a")}");
-        builder.AppendLine($"Material delta: {lead.MaterialDeltaCp}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Confidence: {(mistake.Tag?.Confidence ?? 0):0.00}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Phase: {lead.Replay.Phase}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Played move: {FormatSanAndUci(lead.Replay.San, lead.Replay.Uci)}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Best move: {FormatMoveFromFen(lead.Replay.FenBefore, lead.BeforeAnalysis.BestMoveUci)}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Eval before: {FormatScore(lead.EvalBeforeCp, lead.BestMateIn)}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Eval after: {FormatScore(lead.EvalAfterCp, lead.PlayedMateIn)}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Centipawn loss: {(lead.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a")}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Material delta: {lead.MaterialDeltaCp}");
 
         if (openingReview is not null && lead.Replay.Phase == GamePhase.Opening)
         {
             builder.AppendLine();
             builder.AppendLine("Opening review:");
-            builder.AppendLine($"Branch: {openingReview.Branch.BranchLabel}");
+            builder.AppendLine(CultureInfo.InvariantCulture, $"Branch: {openingReview.Branch.BranchLabel}");
 
             if (openingReview.TheoryExit?.Ply == lead.Replay.Ply)
             {
-                builder.AppendLine($"This move is marked as the theory exit: {openingReview.TheoryExit.Trigger}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"This move is marked as the theory exit: {openingReview.TheoryExit.Trigger}");
             }
 
             if (openingReview.FirstSignificantMistake?.Ply == lead.Replay.Ply)
             {
-                builder.AppendLine($"This move is the first significant opening mistake: {openingReview.FirstSignificantMistake.Trigger}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"This move is the first significant opening mistake: {openingReview.FirstSignificantMistake.Trigger}");
             }
         }
 
@@ -73,7 +74,7 @@ public static class AnalysisDetailsTextFormatter
             builder.AppendLine("Evidence:");
             foreach (string evidence in mistake.Tag.Evidence)
             {
-                builder.AppendLine($"- {evidence}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"- {evidence}");
             }
         }
 
@@ -84,12 +85,12 @@ public static class AnalysisDetailsTextFormatter
             builder.AppendLine(FormatEngineCandidates(lead.Replay.FenBefore, lead.BeforeAnalysis.Lines));
         }
 
-        EngineLine? playedContinuation = lead.AfterAnalysis.Lines.FirstOrDefault();
+        EngineLine? playedContinuation = lead.AfterAnalysis.Lines.Count > 0 ? lead.AfterAnalysis.Lines[0] : null;
         if (playedContinuation is not null && playedContinuation.Pv.Count > 0)
         {
             builder.AppendLine();
             builder.AppendLine("Likely continuation after played move:");
-            builder.AppendLine($"Score: {FormatScore(lead.EvalAfterCp, lead.PlayedMateIn)}");
+            builder.AppendLine(CultureInfo.InvariantCulture, $"Score: {FormatScore(lead.EvalAfterCp, lead.PlayedMateIn)}");
             builder.AppendLine(FormatPrincipalVariation(lead.Replay.FenAfter, playedContinuation.Pv, maxHalfMoves: 8));
         }
 
@@ -133,10 +134,10 @@ public static class AnalysisDetailsTextFormatter
             EngineLine line = lines[i];
             string moveLabel = FormatMoveFromFen(fenBefore, line.MoveUci);
             string pv = FormatPrincipalVariation(fenBefore, line.Pv, maxHalfMoves: 8);
-            builder.AppendLine($"{i + 1}. {moveLabel} | {FormatScore(line.Centipawns, line.MateIn)}");
+            builder.AppendLine(CultureInfo.InvariantCulture, $"{i + 1}. {moveLabel} | {FormatScore(line.Centipawns, line.MateIn)}");
             if (!string.IsNullOrWhiteSpace(pv))
             {
-                builder.AppendLine($"   PV: {pv}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"   PV: {pv}");
             }
         }
 
