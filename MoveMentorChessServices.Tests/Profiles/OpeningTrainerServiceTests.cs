@@ -611,7 +611,7 @@ public sealed class OpeningTrainerServiceTests
             "Local");
 
         IReadOnlyList<ReplayPly> replay = new GameReplayService().Replay(game);
-        IReadOnlyDictionary<int, ReplayPly> replayIndex = replay.ToDictionary(item => item.Ply);
+        Dictionary<int, ReplayPly> replayIndex = replay.ToDictionary(item => item.Ply);
         IReadOnlyList<MoveAnalysisResult> moveAnalyses = moveSpecs
             .Select(spec => CreateMoveAnalysis(replayIndex[spec.Ply], spec.Cpl, spec.Label, spec.BestMoveUci, spec.QualityOverride))
             .ToList();
@@ -1053,7 +1053,7 @@ public sealed class OpeningTrainerServiceTests
         public HashSet<string> DistinctGameFingerprints { get; } = new(StringComparer.Ordinal);
     }
 
-    private static IReadOnlyList<StoredMoveAnalysis> BuildStoredMoves(IReadOnlyList<GameAnalysisResult> results)
+    private static List<StoredMoveAnalysis> BuildStoredMoves(IReadOnlyList<GameAnalysisResult> results)
     {
         return results
             .SelectMany(result =>

@@ -107,8 +107,8 @@ public sealed class LocalProcessAdviceModel : ILocalAdviceModel
     }
 
     private static bool HasExplicitPath(string command)
-        => command.IndexOf(Path.DirectorySeparatorChar) >= 0
-            || command.IndexOf(Path.AltDirectorySeparatorChar) >= 0;
+        => command.Contains(Path.DirectorySeparatorChar)
+            || command.Contains(Path.AltDirectorySeparatorChar);
 
     private static void TryKillProcess(Process process)
     {
@@ -116,10 +116,12 @@ public sealed class LocalProcessAdviceModel : ILocalAdviceModel
         {
             process.Kill(entireProcessTree: true);
         }
+#pragma warning disable CA1031 // Do not catch general exception types
         catch
         {
             // Best effort cleanup only.
         }
+#pragma warning restore CA1031
     }
 
     private static string NormalizeOutput(string? stdout)

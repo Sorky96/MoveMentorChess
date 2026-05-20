@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text.Json;
 
 namespace MoveMentorChess.Analysis;
@@ -23,7 +24,7 @@ public static class LlamaGpuSettingsStore
                 LlamaGpuSettings? settings = JsonSerializer.Deserialize<LlamaGpuSettings>(json, JsonOptions);
                 return settings ?? LlamaGpuSettings.Default;
             }
-            catch
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
             {
                 return LlamaGpuSettings.Default;
             }

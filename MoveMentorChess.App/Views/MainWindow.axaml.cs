@@ -131,7 +131,7 @@ public partial class MainWindow : Window
             ]
         });
 
-        IStorageFile? file = files.FirstOrDefault();
+        IStorageFile? file = files.Count > 0 ? files[0] : null;
         if (file is null)
         {
             return;
@@ -149,7 +149,7 @@ public partial class MainWindow : Window
         {
             parseResult = await Task.Run(() => PgnGameParser.ParseMany(pgnText));
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             await ShowInfoDialogAsync("Load PGN file", $"Could not read PGN file.\n{ex.Message}");
             return;

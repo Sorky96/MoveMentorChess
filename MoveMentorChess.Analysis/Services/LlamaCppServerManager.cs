@@ -1,4 +1,6 @@
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -62,7 +64,7 @@ public sealed class LlamaCppServerManager : IDisposable
             DisposeProcess();
 
             int port = config.Port > 0 ? config.Port : FindFreePort();
-            if (port <= 0)
+            if (port <= 0 || port > 65535)
             {
                 return false;
             }
@@ -127,9 +129,9 @@ public sealed class LlamaCppServerManager : IDisposable
             startInfo.ArgumentList.Add("--host");
             startInfo.ArgumentList.Add("127.0.0.1");
             startInfo.ArgumentList.Add("--port");
-            startInfo.ArgumentList.Add(port.ToString());
+            startInfo.ArgumentList.Add(port.ToString(CultureInfo.InvariantCulture));
             startInfo.ArgumentList.Add("-c");
-            startInfo.ArgumentList.Add(Math.Max(512, config.ContextSize).ToString());
+            startInfo.ArgumentList.Add(Math.Max(512, config.ContextSize).ToString(CultureInfo.InvariantCulture));
             startInfo.ArgumentList.Add("-ngl");
             startInfo.ArgumentList.Add(string.IsNullOrWhiteSpace(config.GpuLayersArgument) ? LlamaGpuSettingsResolver.BalancedGpuLayersArgument : config.GpuLayersArgument);
             startInfo.ArgumentList.Add("--log-disable");
@@ -148,7 +150,7 @@ public sealed class LlamaCppServerManager : IDisposable
             serverProcess = process;
             return true;
         }
-        catch
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or IOException)
         {
             return false;
         }
@@ -183,7 +185,7 @@ public sealed class LlamaCppServerManager : IDisposable
                     }
                 }
             }
-            catch
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException or UriFormatException or ArgumentException)
             {
                 // Server not ready yet, keep polling.
             }
@@ -212,7 +214,7 @@ public sealed class LlamaCppServerManager : IDisposable
                 serverProcess.WaitForExit(5000);
             }
         }
-        catch
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or NotSupportedException)
         {
             // Best effort cleanup only.
         }
@@ -234,7 +236,7 @@ public sealed class LlamaCppServerManager : IDisposable
             listener.Stop();
             return port;
         }
-        catch
+        catch (Exception ex) when (ex is SocketException or IOException)
         {
             return -1;
         }

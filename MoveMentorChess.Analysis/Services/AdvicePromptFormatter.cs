@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 
 namespace MoveMentorChess.Analysis;
@@ -17,16 +18,16 @@ public static class AdvicePromptFormatter
 
         // Position context.
         builder.AppendLine("Position:");
-        builder.AppendLine($"  FEN: {request.Replay.FenBefore}");
-        builder.AppendLine($"  Move number: {request.Replay.MoveNumber}");
-        builder.AppendLine($"  Side to move: {request.Replay.Side}");
-        builder.AppendLine($"  Phase: {request.Replay.Phase}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"  FEN: {request.Replay.FenBefore}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"  Move number: {request.Replay.MoveNumber}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"  Side to move: {request.Replay.Side}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"  Phase: {request.Replay.Phase}");
         builder.AppendLine();
 
         // What happened.
         builder.AppendLine("Played move:");
-        builder.AppendLine($"  SAN: {request.Replay.San}");
-        builder.AppendLine($"  UCI: {request.Replay.Uci}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"  SAN: {request.Replay.San}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"  UCI: {request.Replay.Uci}");
 
         if (request.Replay.IsCapture)
         {
@@ -37,14 +38,14 @@ public static class AdvicePromptFormatter
 
         // Engine verdict.
         builder.AppendLine("Engine verdict:");
-        builder.AppendLine($"  Quality: {request.Quality}");
-        builder.AppendLine($"  Pattern: {request.Tag?.Label ?? "general"}");
-        builder.AppendLine($"  Centipawn loss: {(request.CentipawnLoss?.ToString() ?? "unknown")}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"  Quality: {request.Quality}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"  Pattern: {request.Tag?.Label ?? "general"}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"  Centipawn loss: {(request.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "unknown")}");
 
         string bestMove = request.Context?.PromptContext?.BestMoveSan
             ?? request.BestMoveUci
             ?? "unknown";
-        builder.AppendLine($"  Best move: {bestMove}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"  Best move: {bestMove}");
         builder.AppendLine();
 
         // Game context (optional fields).
@@ -58,7 +59,7 @@ public static class AdvicePromptFormatter
                 hasGameContext = true;
             }
 
-            builder.AppendLine($"  Opening: {request.Context!.PromptContext!.OpeningName}");
+            builder.AppendLine(CultureInfo.InvariantCulture, $"  Opening: {request.Context!.PromptContext!.OpeningName}");
         }
 
         if (!string.IsNullOrWhiteSpace(request.Context?.PromptContext?.AnalyzedPlayer))
@@ -69,7 +70,7 @@ public static class AdvicePromptFormatter
                 hasGameContext = true;
             }
 
-            builder.AppendLine($"  Player: {request.Context!.PromptContext!.AnalyzedPlayer}");
+            builder.AppendLine(CultureInfo.InvariantCulture, $"  Player: {request.Context!.PromptContext!.AnalyzedPlayer}");
         }
 
         if (request.Context?.PromptContext?.Evidence is { Count: > 0 } evidence)
@@ -82,7 +83,7 @@ public static class AdvicePromptFormatter
 
             foreach (string item in evidence)
             {
-                builder.AppendLine($"  - {item}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"  - {item}");
             }
         }
 
@@ -96,7 +97,7 @@ public static class AdvicePromptFormatter
 
             foreach (string item in notes)
             {
-                builder.AppendLine($"  - {item}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"  - {item}");
             }
         }
 
@@ -109,16 +110,16 @@ public static class AdvicePromptFormatter
         if (request.Context?.PromptContext?.PlayerProfile is { } profile)
         {
             builder.AppendLine("Player history (from past analyses):");
-            builder.AppendLine($"  Games analyzed: {profile.GamesAnalyzed}");
+            builder.AppendLine(CultureInfo.InvariantCulture, $"  Games analyzed: {profile.GamesAnalyzed}");
 
             if (profile.AverageCentipawnLoss.HasValue)
             {
-                builder.AppendLine($"  Average centipawn loss: {profile.AverageCentipawnLoss.Value}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"  Average centipawn loss: {profile.AverageCentipawnLoss.Value}");
             }
 
             if (profile.WeakestPhase.HasValue)
             {
-                builder.AppendLine($"  Weakest phase: {profile.WeakestPhase.Value}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"  Weakest phase: {profile.WeakestPhase.Value}");
             }
 
             if (profile.TopPatterns.Count > 0)
@@ -126,7 +127,7 @@ public static class AdvicePromptFormatter
                 builder.AppendLine("  Recurring mistakes:");
                 foreach (PlayerMistakePatternEntry pattern in profile.TopPatterns)
                 {
-                    builder.AppendLine($"    - {pattern.Label.Replace('_', ' ')}: {pattern.Count} times");
+                    builder.AppendLine(CultureInfo.InvariantCulture, $"    - {pattern.Label.Replace('_', ' ')}: {pattern.Count} times");
                 }
             }
 
@@ -142,7 +143,7 @@ public static class AdvicePromptFormatter
         builder.AppendLine("referenced_best_move_uci must exactly equal the input best move UCI. referenced_label must exactly equal the input pattern. confidence must be a number from 0 to 1.");
         builder.AppendLine();
         builder.AppendLine("IMPORTANT: You must write about THIS specific position. Generate NEW text.");
-        builder.AppendLine($"Refer to the actual move ({request.Replay.San}), the actual best move ({request.Context?.PromptContext?.BestMoveSan ?? request.BestMoveUci ?? "unknown"}), and the actual pattern ({request.Tag?.Label ?? "general"}).");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Refer to the actual move ({request.Replay.San}), the actual best move ({request.Context?.PromptContext?.BestMoveSan ?? request.BestMoveUci ?? "unknown"}), and the actual pattern ({request.Tag?.Label ?? "general"}).");
         builder.AppendLine();
         builder.AppendLine("Example format (DO NOT copy these values, write your own analysis):");
         builder.AppendLine("""

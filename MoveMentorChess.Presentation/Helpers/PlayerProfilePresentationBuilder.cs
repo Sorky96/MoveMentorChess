@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace MoveMentorChess.Presentation.Helpers;
 
 internal static class PlayerProfilePresentationBuilder
@@ -40,7 +42,7 @@ internal static class PlayerProfilePresentationBuilder
         TrainingPlanTopic? core = report.TrainingPlan.Topics
             .FirstOrDefault(topic => topic.Category == TrainingPlanTopicCategory.CoreWeakness);
 
-        core ??= report.TrainingPlan.Topics.FirstOrDefault();
+        core ??= report.TrainingPlan.Topics.Count > 0 ? report.TrainingPlan.Topics[0] : null;
 
         return core is null
             ? "Not enough data yet"
@@ -80,7 +82,7 @@ internal static class PlayerProfilePresentationBuilder
         return $"{PlayerProfileTextFormatter.FormatOpening(opening.Eco)} ({PlayerProfileTextFormatter.FormatMistakeCount(opening.Count)})";
     }
 
-    private static IReadOnlyList<string> BuildFixFirstItems(PlayerProfileReport report)
+    private static List<string> BuildFixFirstItems(PlayerProfileReport report)
     {
         List<string> items = [];
 
@@ -138,7 +140,7 @@ internal static class PlayerProfilePresentationBuilder
         items.Add(action + ".");
     }
 
-    private static IReadOnlyList<PlayerProfileStatItem> BuildKeyMistakes(PlayerProfileReport report)
+    private static List<PlayerProfileStatItem> BuildKeyMistakes(PlayerProfileReport report)
     {
         if (report.TopMistakeLabels.Count == 0)
         {
@@ -152,7 +154,7 @@ internal static class PlayerProfilePresentationBuilder
             .ToList();
     }
 
-    private static IReadOnlyList<PlayerProfileStatItem> BuildCostliestMistakes(PlayerProfileReport report)
+    private static List<PlayerProfileStatItem> BuildCostliestMistakes(PlayerProfileReport report)
     {
         if (report.CostliestMistakeLabels.Count == 0)
         {
@@ -162,11 +164,11 @@ internal static class PlayerProfilePresentationBuilder
         return report.CostliestMistakeLabels
             .Select(item => new PlayerProfileStatItem(
                 PlayerProfileTextFormatter.FormatMistakeLabel(item.Label),
-                $"Total CPL {item.TotalCentipawnLoss} | avg {item.AverageCentipawnLoss?.ToString() ?? "n/a"}"))
+                $"Total CPL {item.TotalCentipawnLoss} | avg {item.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"}"))
             .ToList();
     }
 
-    private static IReadOnlyList<PlayerProfileWorkItem> BuildWorkOnItems(PlayerProfileReport report)
+    private static List<PlayerProfileWorkItem> BuildWorkOnItems(PlayerProfileReport report)
     {
         if (report.TrainingPlan.Topics.Count == 0)
         {
@@ -229,13 +231,13 @@ internal static class PlayerProfilePresentationBuilder
 
     private static string BuildPeriodSummary(ProfileProgressPeriod period)
     {
-        string cpl = period.AverageCentipawnLoss?.ToString() ?? "n/a";
+        string cpl = period.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a";
         return $"{period.GamesAnalyzed} games, CPL {cpl}, highlighted mistakes/game {period.HighlightedMistakesPerGame:F2}.";
     }
 
     private static PlayerProfileTrainingPlanViewModel BuildTrainingPlan(PlayerProfileReport report)
     {
-        IReadOnlyList<PlayerProfileTrainingTopicViewModel> topics = report.TrainingPlan.Topics
+        List<PlayerProfileTrainingTopicViewModel> topics = report.TrainingPlan.Topics
             .OrderBy(topic => topic.Priority)
             .Select(topic => new PlayerProfileTrainingTopicViewModel(
                 BuildRoleLabel(topic.Category),
@@ -331,7 +333,7 @@ internal static class PlayerProfilePresentationBuilder
         };
     }
 
-    private static IReadOnlyList<PlayerProfileStatItem> BuildWhyThisPlanItems(TrainingPlanReport report)
+    private static List<PlayerProfileStatItem> BuildWhyThisPlanItems(TrainingPlanReport report)
     {
         IReadOnlyList<TrainingPlanDashboardItem> dashboard = report.WhyThisIsYourCurrentPlan ?? [];
         if (dashboard.Count == 0)

@@ -413,7 +413,7 @@ public sealed class TrackingTests
                 {
                     if (screenX == 0)
                     {
-                        string rank = (boardY + 1).ToString();
+                        string rank = (boardY + 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
                         graphics.DrawString(
                             rank,
                             coordFont,

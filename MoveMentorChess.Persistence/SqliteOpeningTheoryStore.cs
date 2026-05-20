@@ -184,7 +184,7 @@ internal static class SqliteOpeningTheoryStore
             return pathMoves;
         }
 
-        IReadOnlyList<string> continuationMoves = BuildPrimaryContinuationMoves(database, rootPositionKey, 4 - pathMoves.Count);
+        List<string> continuationMoves = BuildPrimaryContinuationMoves(database, rootPositionKey, 4 - pathMoves.Count);
         return pathMoves.Concat(continuationMoves).ToList();
     }
 
@@ -296,7 +296,7 @@ internal static class SqliteOpeningTheoryStore
         return reversedMoves;
     }
 
-    private static IReadOnlyList<string> BuildPrimaryContinuationMoves(
+    private static List<string> BuildPrimaryContinuationMoves(
         SqliteDatabase database,
         OpeningPositionKey rootPositionKey,
         int maxPly)

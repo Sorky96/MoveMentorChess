@@ -107,7 +107,7 @@ public sealed class PlayerOpeningPlanServiceTests
         Assert.NotEmpty(plan.Today);
         Assert.Contains("Main line review", plan.Today[0].Title, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("session", plan.Today[0].Detail, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains(dueAction.DueUtc.ToLocalTime().ToString("HH:mm"), plan.Today[0].Detail, StringComparison.Ordinal);
+        Assert.Contains(dueAction.DueUtc.ToLocalTime().ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture), plan.Today[0].Detail, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -143,7 +143,7 @@ public sealed class PlayerOpeningPlanServiceTests
         PlayerOpeningPlanItem item = Assert.Single(plan.Today);
         Assert.Equal("Main line review", item.Title);
         Assert.Contains("2 scheduled due items", item.Detail, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains(firstDueUtc.ToLocalTime().ToString("HH:mm"), item.Detail, StringComparison.Ordinal);
+        Assert.Contains(firstDueUtc.ToLocalTime().ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture), item.Detail, StringComparison.Ordinal);
     }
 
     private static OpeningLineCatalogItem CreateLine(string eco, string displayName, int branchCount, int gameCount)

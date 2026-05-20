@@ -230,7 +230,7 @@ public sealed class OpeningTreeBuilder
         counts[key] = currentCount + 1;
     }
 
-    private IReadOnlyList<OpeningNodeTag> BuildTags()
+    private List<OpeningNodeTag> BuildTags()
     {
         List<OpeningNodeTag> tags = new();
         foreach ((Guid nodeId, Dictionary<OpeningNodeTagKey, int> counts) in tagCountsByNodeId)

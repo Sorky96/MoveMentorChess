@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -50,7 +51,7 @@ public static class PlayerProfileLlmPromptFormatter
                 .ToList(),
             report.CostliestMistakeLabels
                 .Take(5)
-                .Select(item => $"{PlayerProfileTextFormatter.FormatMistakeLabel(item.Label)}: total CPL {item.TotalCentipawnLoss}, avg CPL {item.AverageCentipawnLoss?.ToString() ?? "n/a"}")
+                .Select(item => $"{PlayerProfileTextFormatter.FormatMistakeLabel(item.Label)}: total CPL {item.TotalCentipawnLoss}, avg CPL {item.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"}")
                 .ToList(),
             report.MistakesByPhase
                 .Take(3)
@@ -96,7 +97,7 @@ public static class PlayerProfileLlmPromptFormatter
         return builder.ToString().Trim();
     }
 
-    private static IReadOnlyList<string> BuildNextActions(PlayerProfileReport report)
+    private static List<string> BuildNextActions(PlayerProfileReport report)
     {
         List<string> actions = [];
 

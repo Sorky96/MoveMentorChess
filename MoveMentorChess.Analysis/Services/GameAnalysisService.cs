@@ -75,8 +75,8 @@ public sealed class GameAnalysisService
             EngineAnalysis afterAnalysis = AnalyzeCached(ply.FenAfter, options, analysisCache);
             cancellationToken.ThrowIfCancellationRequested();
 
-            EngineLine? bestLine = beforeAnalysis.Lines.FirstOrDefault();
-            EngineLine? playedLine = afterAnalysis.Lines.FirstOrDefault();
+            EngineLine? bestLine = beforeAnalysis.Lines.Count > 0 ? beforeAnalysis.Lines[0] : null;
+            EngineLine? playedLine = afterAnalysis.Lines.Count > 0 ? afterAnalysis.Lines[0] : null;
 
             ScoreSnapshot bestScore = NormalizeScore(bestLine, analyzedSide, ply.Side);
             ScoreSnapshot playedScore = NormalizeScore(playedLine, analyzedSide, Opponent(ply.Side));
@@ -189,11 +189,11 @@ public sealed class GameAnalysisService
         PositionInspector.MaterialSwingSummary? bestLineSwing = PositionInspector.AnalyzeMaterialSwingAlongLine(
             replay.FenBefore,
             analyzedSide,
-            beforeAnalysis.Lines.FirstOrDefault()?.Pv);
+            beforeAnalysis.Lines.Count > 0 ? beforeAnalysis.Lines[0].Pv : null);
         PositionInspector.MaterialSwingSummary? playedLineSwing = PositionInspector.AnalyzeMaterialSwingAlongLine(
             replay.FenAfter,
             analyzedSide,
-            afterAnalysis.Lines.FirstOrDefault()?.Pv);
+            afterAnalysis.Lines.Count > 0 ? afterAnalysis.Lines[0].Pv : null);
 
         int? bestMoveMaterialSwing = bestLineSwing?.BestDeltaCp
             ?? (bestMove is null

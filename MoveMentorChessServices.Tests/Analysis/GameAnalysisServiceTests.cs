@@ -159,8 +159,8 @@ Kxa2 62. Qb2# 1-0
 
         IReadOnlyList<ReplayPly> replay = replayService.Replay(game);
 
-        Assert.Equal(GamePhase.Opening, replay.First().Phase);
-        Assert.Equal(GamePhase.Endgame, replay.Last().Phase);
+        Assert.Equal(GamePhase.Opening, replay[0].Phase);
+        Assert.Equal(GamePhase.Endgame, replay[replay.Count - 1].Phase);
     }
 
     [Fact]
@@ -2539,7 +2539,7 @@ confidence: 0.82
 
     private static EngineAnalysis AnalysisFor(string fen, IReadOnlyList<EngineLine> lines)
     {
-        EngineLine? bestLine = lines.FirstOrDefault();
+        EngineLine? bestLine = lines.Count > 0 ? lines[0] : null;
         return new EngineAnalysis(fen, lines, bestLine?.MoveUci);
     }
 

@@ -63,7 +63,7 @@ public sealed class OpeningPgnImportService
     }
 
     private OpeningPgnImportResult ImportFiles(
-        IReadOnlyList<string> files,
+        string[] files,
         int maxFullMoves,
         Action<OpeningPgnImportProgress>? progress)
     {
@@ -75,9 +75,9 @@ public sealed class OpeningPgnImportService
         long totalBytesRead = 0;
         Stopwatch stopwatch = Stopwatch.StartNew();
         int processorCount = Math.Max(1, Environment.ProcessorCount);
-        int fileParallelism = files.Count <= 1
+        int fileParallelism = files.Length <= 1
             ? 1
-            : Math.Min(files.Count, Math.Min(4, Math.Max(1, processorCount / 2)));
+            : Math.Min(files.Length, Math.Min(4, Math.Max(1, processorCount / 2)));
         int chunkParallelism = Math.Max(1, processorCount / fileParallelism);
 
         Parallel.ForEach(
@@ -90,7 +90,7 @@ public sealed class OpeningPgnImportService
             {
                 FileImportResult result = ProcessFile(
                     indexedFile,
-                    files.Count,
+                    files.Length,
                     maxFullMoves,
                     chunkParallelism,
                     progress,
@@ -118,13 +118,13 @@ public sealed class OpeningPgnImportService
         OpeningTreeBuildResult tree = postProcessor.Process(treeBuilder.ToResult());
         treeStore?.SaveOpeningTree(tree);
 
-        if (files.Count > 0)
+        if (files.Length > 0)
         {
             string lastFile = files[^1];
             progress?.Invoke(new OpeningPgnImportProgress(
                 lastFile,
-                files.Count,
-                files.Count,
+                files.Length,
+                files.Length,
                 0,
                 totalGames,
                 skippedGames,
@@ -137,7 +137,7 @@ public sealed class OpeningPgnImportService
                 DateTime.UtcNow));
         }
 
-        return new OpeningPgnImportResult(files.Count, totalGames, skippedGames, totalPlies, tree, parsedGames);
+        return new OpeningPgnImportResult(files.Length, totalGames, skippedGames, totalPlies, tree, parsedGames);
     }
 
     private FileImportResult ProcessFile(
@@ -430,8 +430,8 @@ public sealed class OpeningPgnImportService
 
     private static bool IsHeaderLine(string trimmedLine)
     {
-        return trimmedLine.StartsWith("[", StringComparison.Ordinal)
-            && trimmedLine.EndsWith("]", StringComparison.Ordinal);
+        return trimmedLine.StartsWith('[')
+            && trimmedLine.EndsWith(']');
     }
 
     private static string DescribeGameForDiagnostics(string pgn)
@@ -462,7 +462,7 @@ public sealed class OpeningPgnImportService
         while (reader.ReadLine() is { } line)
         {
             string trimmed = line.Trim();
-            if (!trimmed.StartsWith("[", StringComparison.Ordinal))
+            if (!trimmed.StartsWith('['))
             {
                 if (!string.IsNullOrWhiteSpace(trimmed))
                 {

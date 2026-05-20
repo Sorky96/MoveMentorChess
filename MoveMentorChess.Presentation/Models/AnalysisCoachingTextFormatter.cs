@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using MoveMentorChess.Analysis;
 
@@ -82,7 +83,7 @@ public static class AnalysisCoachingTextFormatter
             string note = index == 0
                 ? $"best: {BuildCandidateCoachNote(lead, line, isBest: true)}"
                 : BuildCandidateCoachNote(lead, line, isBest: false);
-            builder.AppendLine($"{index + 1}. {moveLabel} ({score}) - {note}");
+            builder.AppendLine(CultureInfo.InvariantCulture, $"{index + 1}. {moveLabel} ({score}) - {note}");
         }
 
         return builder.ToString().TrimEnd();
@@ -183,7 +184,7 @@ public static class AnalysisCoachingTextFormatter
             return isBest ? "forces the most concrete result" : "playable, but less forcing";
         }
 
-        int? bestScore = lead.BeforeAnalysis.Lines.FirstOrDefault()?.Centipawns;
+        int? bestScore = lead.BeforeAnalysis.Lines.Count > 0 ? lead.BeforeAnalysis.Lines[0]?.Centipawns : null;
         int? scoreGap = bestScore is int best && line.Centipawns is int cp ? Math.Abs(best - cp) : null;
         string move = line.MoveUci;
         if (move.Length >= 4)

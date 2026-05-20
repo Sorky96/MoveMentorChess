@@ -247,7 +247,7 @@ public sealed class ChessBoardView : Control
         if (drawPoint.X == 0)
         {
             FormattedText rankText = new(
-                (8 - boardY).ToString(),
+                (8 - boardY).ToString(System.Globalization.CultureInfo.InvariantCulture),
                 System.Globalization.CultureInfo.InvariantCulture,
                 FlowDirection.LeftToRight,
                 typeface,

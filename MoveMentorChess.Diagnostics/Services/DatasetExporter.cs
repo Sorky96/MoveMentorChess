@@ -25,7 +25,7 @@ public static class DatasetExporter
             throw new ArgumentException("Output path is required.", nameof(outputPath));
         }
 
-        IReadOnlyList<DatasetRow> rows = BuildRows(store);
+        List<DatasetRow> rows = BuildRows(store);
         string? dir = Path.GetDirectoryName(outputPath);
         if (!string.IsNullOrWhiteSpace(dir))
         {
@@ -53,7 +53,7 @@ public static class DatasetExporter
             throw new ArgumentException("Output path is required.", nameof(outputPath));
         }
 
-        IReadOnlyList<DatasetRow> rows = BuildRows(store);
+        List<DatasetRow> rows = BuildRows(store);
         string? dir = Path.GetDirectoryName(outputPath);
         if (!string.IsNullOrWhiteSpace(dir))
         {
@@ -88,7 +88,7 @@ public static class DatasetExporter
         Console.WriteLine("Export complete. Use these files for offline model experiments.");
     }
 
-    private static IReadOnlyList<DatasetRow> BuildRows(IStoredMoveAnalysisStore store)
+    private static List<DatasetRow> BuildRows(IStoredMoveAnalysisStore store)
     {
         IReadOnlyList<StoredMoveAnalysis> storedMoves = store.ListMoveAnalyses(null, 200_000);
         return storedMoves

@@ -2,6 +2,7 @@ namespace MoveMentorChess.Analysis;
 
 public static class MoveBrilliancyDetector
 {
+#pragma warning disable CA1826 // Avoid using Enumerable methods on indexable collections
     private const int MaxCentipawnLoss = 20;
     private const int MinimumMaterialSacrificeCp = 300;
     private const int MinimumCompensationCp = -50;
@@ -185,5 +186,6 @@ public static class MoveBrilliancyDetector
             false,
             false,
             false);
-    }
+#pragma warning restore CA1826 // Restore warnings
+}
 }

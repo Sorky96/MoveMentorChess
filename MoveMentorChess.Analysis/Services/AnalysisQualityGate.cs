@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace MoveMentorChess.Analysis;
 
 public sealed class AnalysisQualityGate
@@ -190,7 +192,7 @@ public sealed class AnalysisQualityGate
                 findings.Add(CreateFinding(
                     "centipawn_loss_mismatch",
                     QualityGateSeverity.Warning,
-                    $"CentipawnLoss {result.CentipawnLoss?.ToString() ?? "n/a"} does not match EvalBefore - EvalAfter ({expected}).",
+                    $"CentipawnLoss {result.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"} does not match EvalBefore - EvalAfter ({expected.ToString(CultureInfo.InvariantCulture)}).",
                     result,
                     gameFingerprint,
                     "reported_in_quality_gate"));
@@ -346,7 +348,7 @@ public sealed class AnalysisQualityGate
         return false;
     }
 
-    private static IReadOnlyList<string> BuildCorrectedEvidence(MistakeTag original, string correctionCode)
+    private static List<string> BuildCorrectedEvidence(MistakeTag original, string correctionCode)
     {
         List<string> evidence = [..original.Evidence];
         evidence.Add($"quality_gate_{correctionCode}");

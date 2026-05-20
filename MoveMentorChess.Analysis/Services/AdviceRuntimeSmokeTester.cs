@@ -60,7 +60,7 @@ public static class AdviceRuntimeSmokeTester
                 $"Advice runtime test failed: {ex.Message}{Environment.NewLine}{Environment.NewLine}Diagnostic log:{Environment.NewLine}{ex.DiagnosticPath}",
                 DiagnosticPath: ex.DiagnosticPath);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             return new AdviceRuntimeSmokeTestResult(
                 false,

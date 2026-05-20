@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -101,7 +102,7 @@ public partial class SavedAnalysesWindow : Window
                 result.AnalyzedSide == PlayerSide.White ? "White" : "Black",
                 string.IsNullOrWhiteSpace(result.Game.DateText) ? "?" : result.Game.DateText!,
                 OpeningCatalog.GetName(result.Game.Eco),
-                result.HighlightedMistakes.Count.ToString()))
+                result.HighlightedMistakes.Count.ToString(CultureInfo.InvariantCulture)))
             .ToList();
 
         if (AnalysesListBox.ItemCount > 0)
@@ -134,7 +135,7 @@ public partial class SavedAnalysesWindow : Window
         int blunders = result.HighlightedMistakes.Count(mistake => mistake.Quality == MoveQualityBucket.Blunder);
         int mistakes = result.HighlightedMistakes.Count(mistake => mistake.Quality == MoveQualityBucket.Mistake);
         int inaccuracies = result.HighlightedMistakes.Count(mistake => mistake.Quality == MoveQualityBucket.Inaccuracy);
-        IReadOnlyList<string> topLabels = result.HighlightedMistakes
+        List<string> topLabels = result.HighlightedMistakes
             .Select(mistake => mistake.Tag?.Label ?? "unclassified")
             .GroupBy(label => label, StringComparer.OrdinalIgnoreCase)
             .OrderByDescending(group => group.Count())
@@ -144,14 +145,14 @@ public partial class SavedAnalysesWindow : Window
             .ToList();
 
         StringBuilder builder = new();
-        builder.AppendLine($"{result.Game.WhitePlayer ?? "White"} vs {result.Game.BlackPlayer ?? "Black"}");
-        builder.AppendLine($"Side: {result.AnalyzedSide}");
-        builder.AppendLine($"Date: {result.Game.DateText ?? "?"}");
-        builder.AppendLine($"Result: {result.Game.Result ?? "?"}");
-        builder.AppendLine($"Opening: {OpeningCatalog.GetName(result.Game.Eco)}");
-        builder.AppendLine($"Move labels: {BuildQualityBreakdown(result.MoveAnalyses)}");
-        builder.AppendLine($"Highlights: {result.HighlightedMistakes.Count} total");
-        builder.AppendLine($"Breakdown: {blunders} blunders, {mistakes} mistakes, {inaccuracies} inaccuracies");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"{result.Game.WhitePlayer ?? "White"} vs {result.Game.BlackPlayer ?? "Black"}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Side: {result.AnalyzedSide}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Date: {result.Game.DateText ?? "?"}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Result: {result.Game.Result ?? "?"}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Opening: {OpeningCatalog.GetName(result.Game.Eco)}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Move labels: {BuildQualityBreakdown(result.MoveAnalyses)}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Highlights: {result.HighlightedMistakes.Count} total");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Breakdown: {blunders} blunders, {mistakes} mistakes, {inaccuracies} inaccuracies");
 
         if (topLabels.Count > 0)
         {
@@ -159,7 +160,7 @@ public partial class SavedAnalysesWindow : Window
             builder.AppendLine("Top labels:");
             foreach (string label in topLabels)
             {
-                builder.AppendLine($"- {label}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"- {label}");
             }
         }
 
@@ -180,7 +181,7 @@ public partial class SavedAnalysesWindow : Window
                 }
 
                 string moveLabel = $"{lead.Replay.MoveNumber}{(lead.Replay.Side == PlayerSide.White ? "." : "...")} {lead.Replay.San}";
-                builder.AppendLine($"- {moveLabel} | {mistake.Quality} | {FormatMistakeLabel(mistake.Tag?.Label ?? "unclassified")} | CPL {lead.CentipawnLoss?.ToString() ?? "n/a"}");
+                builder.AppendLine(CultureInfo.InvariantCulture, $"- {moveLabel} | {mistake.Quality} | {FormatMistakeLabel(mistake.Tag?.Label ?? "unclassified")} | CPL {lead.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"}");
             }
         }
 

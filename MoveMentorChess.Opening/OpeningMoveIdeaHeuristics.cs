@@ -49,8 +49,8 @@ public static class OpeningMoveIdeaHeuristics
             explanation = "This improves coordination without creating new weaknesses.";
         }
 
-        if (normalized.Contains("+", StringComparison.Ordinal)
-            || normalized.Contains("x", StringComparison.Ordinal))
+        if (normalized.Contains('+')
+            || normalized.Contains('x'))
         {
             tags.Add(OpeningMoveIdeaTag.TacticalResource);
         }

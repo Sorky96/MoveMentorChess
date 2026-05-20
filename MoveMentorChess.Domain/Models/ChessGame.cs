@@ -5,8 +5,16 @@ using System.Text.RegularExpressions;
 
 namespace MoveMentorChess.Domain;
 
-public sealed class ChessGame
+public sealed partial class ChessGame
 {
+    [GeneratedRegex(@"([a-h][1-8])", RegexOptions.IgnoreCase)]
+    private static partial Regex DestinationRegex();
+
+    [GeneratedRegex(@"[+#]+$")]
+    private static partial Regex CheckSuffixRegex();
+
+    [GeneratedRegex(@"=([QRBN])")]
+    private static partial Regex PromotionRegex();
     private readonly string?[,] board = new string?[8, 8];
 
     private bool whiteToMove;
@@ -284,7 +292,7 @@ public sealed class ChessGame
             return false;
         }
 
-        Match destinationMatch = Regex.Match(normalizedSan, @"([a-h][1-8])", RegexOptions.IgnoreCase);
+        Match destinationMatch = DestinationRegex().Match(normalizedSan);
         if (!destinationMatch.Success)
         {
             candidate = default;
@@ -293,11 +301,11 @@ public sealed class ChessGame
         }
 
         Point target = ParseSquare(destinationMatch.Groups[1].Value);
-        string sanWithoutSuffix = Regex.Replace(normalizedSan, @"[+#]+$", string.Empty);
-        string sanWithoutPromotion = Regex.Replace(sanWithoutSuffix, @"=([QRBN])", string.Empty);
+        string sanWithoutSuffix = CheckSuffixRegex().Replace(normalizedSan, string.Empty);
+        string sanWithoutPromotion = PromotionRegex().Replace(sanWithoutSuffix, string.Empty);
 
         string promotionPiece = string.Empty;
-        Match promotionMatch = Regex.Match(normalizedSan, @"=([QRBN])");
+        Match promotionMatch = PromotionRegex().Match(normalizedSan);
         if (promotionMatch.Success)
         {
             promotionPiece = whiteToMove ? promotionMatch.Groups[1].Value : promotionMatch.Groups[1].Value.ToLowerInvariant();

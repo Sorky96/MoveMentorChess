@@ -22,7 +22,7 @@ public static class OpeningTheorySourceResolver
         return new OpeningTheoryQueryService(theoryStore);
     }
 
-    private static IOpeningTheoryStore? TryCreateBundledSeedStore()
+    private static SqliteAnalysisStore? TryCreateBundledSeedStore()
     {
         string seedPath = OpeningSeedBootstrapper.GetDefaultBundledSeedPath();
         if (!File.Exists(seedPath))

@@ -61,8 +61,8 @@ public static class AnalysisMistakePresentation
 
     public static string BuildMoveRange(SelectedMistake mistake)
     {
-        MoveAnalysisResult first = mistake.Moves.First();
-        MoveAnalysisResult last = mistake.Moves.Last();
+        MoveAnalysisResult first = mistake.Moves[0];
+        MoveAnalysisResult last = mistake.Moves[mistake.Moves.Count - 1];
         string firstMove = $"{first.Replay.MoveNumber}{(first.Replay.Side == PlayerSide.White ? "." : "...")} {first.Replay.San}";
         if (mistake.Moves.Count == 1)
         {
@@ -116,7 +116,7 @@ public static class AnalysisMistakePresentation
             return "mate route changed";
         }
 
-        return $"evaluation loss {lead.CentipawnLoss?.ToString() ?? "n/a"} cp";
+        return $"evaluation loss {lead.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"} cp";
     }
 
     public static (string Text, string Reason, string Brush) BuildPriorityInfo(

@@ -8,7 +8,7 @@ namespace MoveMentorChess.Analysis;
 /// Advice model that communicates with a running llama-server via HTTP POST /completion.
 /// The server process is managed by <see cref="LlamaCppServerManager"/>.
 /// </summary>
-public sealed class LlamaCppHttpAdviceModel : ILocalAdviceModel
+public sealed class LlamaCppHttpAdviceModel : ILocalAdviceModel, IDisposable
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -18,6 +18,7 @@ public sealed class LlamaCppHttpAdviceModel : ILocalAdviceModel
     private readonly LlamaCppServerConfig config;
     private readonly LlamaCppServerManager serverManager;
     private readonly HttpClient httpClient;
+    private bool _disposed;
 
     public LlamaCppHttpAdviceModel(LlamaCppServerConfig config, LlamaCppServerManager? serverManager = null)
     {
@@ -36,6 +37,7 @@ public sealed class LlamaCppHttpAdviceModel : ILocalAdviceModel
 
     public string? Generate(LocalModelAdviceRequest request)
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(request);
         if (!IsAvailable)
         {
@@ -78,10 +80,21 @@ public sealed class LlamaCppHttpAdviceModel : ILocalAdviceModel
             string responseJson = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
             return ExtractContent(responseJson);
         }
-        catch
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException or InvalidOperationException)
         {
             return null;
         }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        httpClient.Dispose();
     }
 
     /// <summary>

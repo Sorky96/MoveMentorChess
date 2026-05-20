@@ -715,7 +715,7 @@ public sealed class PlayerProfileServiceTests
         }
     }
 
-    private static IReadOnlyList<StoredMoveAnalysis> BuildStoredMoves(IReadOnlyList<GameAnalysisResult> results)
+    private static List<StoredMoveAnalysis> BuildStoredMoves(IReadOnlyList<GameAnalysisResult> results)
     {
         return results
             .SelectMany(result =>

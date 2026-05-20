@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MoveMentorChess.Analysis\MoveMentorChess.Analysis.csproj" />
+    <ProjectReference Include="..\MoveMentorChess.App\MoveMentorChess.App.csproj" />
     <ProjectReference Include="..\MoveMentorChess.Diagnostics\MoveMentorChess.Diagnostics.csproj" />
     <ProjectReference Include="..\MoveMentorChess.Domain\MoveMentorChess.Domain.csproj" />
     <ProjectReference Include="..\MoveMentorChess.Engine\MoveMentorChess.Engine.csproj" />

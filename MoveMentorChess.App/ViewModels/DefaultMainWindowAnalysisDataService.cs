@@ -25,7 +25,7 @@ internal sealed class DefaultMainWindowAnalysisDataService : IMainWindowAnalysis
         {
             store.SaveImportedGame(game);
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             // Import should still succeed even if local persistence is temporarily unavailable.
         }
@@ -43,7 +43,7 @@ internal sealed class DefaultMainWindowAnalysisDataService : IMainWindowAnalysis
         {
             store.SaveImportedGames(games);
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             // Import should still succeed even if local persistence is temporarily unavailable.
         }

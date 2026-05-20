@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using MoveMentorChess.Analysis;
 using MoveMentorChess.Domain;
@@ -222,13 +223,13 @@ public static class AnalysisQualityReporter
     {
         System.Text.StringBuilder sb = new();
         sb.AppendLine("# Analysis Quality Report");
-        sb.AppendLine($"Generated: {r.GeneratedUtc:yyyy-MM-dd HH:mm} UTC");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"Generated: {r.GeneratedUtc:yyyy-MM-dd HH:mm} UTC");
         sb.AppendLine();
         sb.AppendLine("## Classifier");
-        sb.AppendLine($"- Logged entries (low-confidence + generic fallback): **{r.TotalClassifiedMoves}**");
-        sb.AppendLine($"- Low confidence (< 0.70): **{r.LowConfidenceMoves}** ({r.LowConfidenceRate:P1})");
-        sb.AppendLine($"- Generic fallback `missed_tactic`: **{r.GenericFallbackMoves}** ({r.GenericFallbackRate:P1})");
-        sb.AppendLine($"- Unclassified pattern: **{r.UnclassifiedMoves}** ({r.UnclassifiedRate:P1})");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Logged entries (low-confidence + generic fallback): **{r.TotalClassifiedMoves}**");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Low confidence (< 0.70): **{r.LowConfidenceMoves}** ({r.LowConfidenceRate:P1})");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Generic fallback `missed_tactic`: **{r.GenericFallbackMoves}** ({r.GenericFallbackRate:P1})");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Unclassified pattern: **{r.UnclassifiedMoves}** ({r.UnclassifiedRate:P1})");
         sb.AppendLine();
 
         if (r.LabelStats.Count > 0)
@@ -238,15 +239,15 @@ public static class AnalysisQualityReporter
             sb.AppendLine("|-------|------:|---------------:|---------:|");
             foreach (LabelQualityStat stat in r.LabelStats)
             {
-                sb.AppendLine($"| {stat.Label} | {stat.Count} | {stat.AverageConfidence:F2} | {stat.LowConfidenceCount} |");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"| {stat.Label} | {stat.Count} | {stat.AverageConfidence:F2} | {stat.LowConfidenceCount} |");
             }
 
             sb.AppendLine();
         }
 
         sb.AppendLine("## Advice Generator");
-        sb.AppendLine($"- Total advice traces: **{r.TotalAdviceTraces}**");
-        sb.AppendLine($"- Fallback advice: **{r.FallbackAdviceCount}** ({r.FallbackAdviceRate:P1})");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Total advice traces: **{r.TotalAdviceTraces}**");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Fallback advice: **{r.FallbackAdviceCount}** ({r.FallbackAdviceRate:P1})");
 
         if (r.FallbackReasonBreakdown.Count > 0)
         {
@@ -254,20 +255,20 @@ public static class AnalysisQualityReporter
             sb.AppendLine("### Fallback reason breakdown");
             foreach (KeyValuePair<string, int> pair in r.FallbackReasonBreakdown.OrderByDescending(p => p.Value))
             {
-                sb.AppendLine($"- `{pair.Key}`: {pair.Value}");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"- `{pair.Key}`: {pair.Value}");
             }
         }
 
         sb.AppendLine();
         sb.AppendLine("## User feedback");
-        sb.AppendLine($"- Manual feedback events: **{r.ManualFeedbackCount}**");
-        sb.AppendLine($"- Diagnostic cases (`WrongLabel`, `NotUseful`, `TooGeneric`): **{r.ManualDiagnosticCaseCount}**");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Manual feedback events: **{r.ManualFeedbackCount}**");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Diagnostic cases (`WrongLabel`, `NotUseful`, `TooGeneric`): **{r.ManualDiagnosticCaseCount}**");
 
         if (r.ManualFeedbackKindBreakdown is { Count: > 0 })
         {
             foreach (KeyValuePair<string, int> pair in r.ManualFeedbackKindBreakdown.OrderByDescending(item => item.Value))
             {
-                sb.AppendLine($"- `{pair.Key}`: {pair.Value}");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"- `{pair.Key}`: {pair.Value}");
             }
         }
 
@@ -279,7 +280,7 @@ public static class AnalysisQualityReporter
             sb.AppendLine("|-------|------:|---------:|--------------:|");
             foreach (LabelFeedbackStat stat in r.LabelFeedbackStats.Take(10))
             {
-                sb.AppendLine($"| {stat.Label} | {stat.Total} | {stat.NegativeCount} | {stat.NegativeRate:P1} |");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"| {stat.Label} | {stat.Total} | {stat.NegativeCount} | {stat.NegativeRate:P1} |");
             }
         }
 
@@ -291,16 +292,16 @@ public static class AnalysisQualityReporter
             sb.AppendLine("|----------|-----------|------:|");
             foreach (ManualLabelCorrectionStat stat in r.ManualLabelCorrectionStats)
             {
-                sb.AppendLine($"| {stat.OriginalLabel} | {stat.CorrectedLabel} | {stat.Count} |");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"| {stat.OriginalLabel} | {stat.CorrectedLabel} | {stat.Count} |");
             }
         }
 
         sb.AppendLine();
         sb.AppendLine("## Quality Gate");
-        sb.AppendLine($"- Findings: **{r.QualityGateFindingCount}**");
-        sb.AppendLine($"- Failures: **{r.QualityGateFailureCount}**");
-        sb.AppendLine($"- Corrected: **{r.QualityGateCorrectedCount}**");
-        sb.AppendLine($"- Advice fallbacks: **{r.QualityGateFallbackCount}**");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Findings: **{r.QualityGateFindingCount}**");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Failures: **{r.QualityGateFailureCount}**");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Corrected: **{r.QualityGateCorrectedCount}**");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"- Advice fallbacks: **{r.QualityGateFallbackCount}**");
 
         if (r.QualityGateCodeBreakdown is { Count: > 0 })
         {
@@ -308,7 +309,7 @@ public static class AnalysisQualityReporter
             sb.AppendLine("### Finding code breakdown");
             foreach (KeyValuePair<string, int> pair in r.QualityGateCodeBreakdown.OrderByDescending(p => p.Value))
             {
-                sb.AppendLine($"- `{pair.Key}`: {pair.Value}");
+                sb.AppendLine(CultureInfo.InvariantCulture, $"- `{pair.Key}`: {pair.Value}");
             }
         }
 

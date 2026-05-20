@@ -220,7 +220,7 @@ public static class LocalModelAdviceResponseParser
         return true;
     }
 
-    private static void FlushCurrent(IDictionary<string, string> values, string? currentKey, List<string> currentLines)
+    private static void FlushCurrent(Dictionary<string, string> values, string? currentKey, List<string> currentLines)
     {
         if (currentKey is null)
         {
