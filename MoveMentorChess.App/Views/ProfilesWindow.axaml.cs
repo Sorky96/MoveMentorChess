@@ -125,9 +125,7 @@ public partial class ProfilesWindow : Window
 
             RenderProfile(result.Report, result.OpeningReport, renderVersion);
         }
-#pragma warning disable CA1031
-        catch
-#pragma warning restore CA1031
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             ShowStatus("Could not load the selected player profile.");
         }
@@ -405,9 +403,7 @@ public partial class ProfilesWindow : Window
                 }
             });
         }
-#pragma warning disable CA1031
-        catch
-#pragma warning restore CA1031
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -1187,9 +1183,7 @@ public partial class ProfilesWindow : Window
             appliedMove = game.ApplySanWithResult(san);
             return true;
         }
-#pragma warning disable CA1031
-        catch
-#pragma warning restore CA1031
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             return false;
         }

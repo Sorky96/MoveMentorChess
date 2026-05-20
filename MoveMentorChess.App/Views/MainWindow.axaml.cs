@@ -149,9 +149,7 @@ public partial class MainWindow : Window
         {
             parseResult = await Task.Run(() => PgnGameParser.ParseMany(pgnText));
         }
-#pragma warning disable CA1031 // Broad catch is intentional for UI action to report error dialog instead of crashing
-        catch (Exception ex)
-#pragma warning restore CA1031
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             await ShowInfoDialogAsync("Load PGN file", $"Could not read PGN file.\n{ex.Message}");
             return;

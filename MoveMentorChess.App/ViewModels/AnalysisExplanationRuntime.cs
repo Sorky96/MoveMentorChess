@@ -90,9 +90,7 @@ internal sealed class AnalysisExplanationService
                     analyzedSide,
                     NarrationStyle: request.NarrationStyle)));
         }
-#pragma warning disable CA1031 // Broad catch is intentional for top-level advice generation wrapper
-        catch (Exception ex)
-#pragma warning restore CA1031
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             explanation = new MoveExplanation(
                 "Local advice generation failed.",

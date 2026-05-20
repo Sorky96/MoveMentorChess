@@ -1,5 +1,3 @@
-#pragma warning disable CA1031
-
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
@@ -387,7 +385,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 ? "PGN loaded, but no SAN moves were found."
                 : $"Imported {importedReplay.Count} plies from PGN.";
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             StatusMessage = $"Could not parse PGN: {ex.Message}";
         }
@@ -535,7 +533,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 {
                     throw;
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ex is not OutOfMemoryException)
                 {
                     failed++;
                     if (failureMessages.Count < 5)
@@ -815,7 +813,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 LoadImportedGameCore(game);
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OutOfMemoryException)
             {
                 Trace.TraceWarning(
                     "MainWindowViewModel: skipped imported game '{0}' because replay loading failed ({1}: {2})",
@@ -859,7 +857,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             ApplyAnalysisFilter();
             StatusMessage = $"Analysis finished for {SelectedAnalysisSide}.";
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             cachedAnalysisResult = null;
             cachedAnalysisResultsBySide.Remove(SelectedAnalysisSide);
@@ -1163,7 +1161,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             engine.SendCommand("setoption name MultiPV value 3");
             StatusMessage = $"MoveMentor Chess is ready. External chess engine loaded from {enginePath}.";
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             engine = null;
             StatusMessage = $"MoveMentor Chess is ready, but the analysis engine is unavailable. {ex.Message}";
@@ -1234,7 +1232,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                         : $"Evaluation: Black +{Math.Abs(pawns):0.0}";
             }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             SuggestionText = "Engine suggestions: unavailable";
             EvaluationText = "Evaluation: unavailable";
@@ -1320,7 +1318,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 baselineAnalysis = engine.AnalyzePosition(currentFen, new EngineAnalysisOptions(Depth: 10, MultiPv: 1, MoveTimeMs: 90));
                 bestMove = baselineAnalysis.BestMoveUci;
             }
-            catch
+            catch (Exception ex) when (ex is not OutOfMemoryException)
             {
                 baselineAnalysis = null;
                 bestMove = null;
@@ -1386,7 +1384,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             string evalBrush = GetEvalBrush(moveLine?.Centipawns is null ? null : moveCp, moveMate);
             return new PieceMovePresentation(moveText, scoreText, evalBrush);
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             return new PieceMovePresentation(moveText, string.Empty, "#657386");
         }
