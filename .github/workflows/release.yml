@@ -1,0 +1,168 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_mode:
+        description: "Publish mode"
+        required: true
+        default: "self-contained"
+        type: choice
+        options:
+          - self-contained
+          - framework-dependent
+      version_tag:
+        description: "Version label for the ZIP (e.g. v1.0.0). Leave empty to use the short commit SHA."
+        required: false
+        default: ""
+  push:
+    tags:
+      - "v[0-9]*.[0-9]*.[0-9]*"     # stable:     v1.2.3, v10.20.300
+      - "v[0-9]*.[0-9]*.[0-9]*-*"   # pre-release: v1.2.3-beta.1, v0.1.0-rc.2
+
+permissions:
+  contents: write   # needed to create GitHub Releases
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+  APP_PROJECT: MoveMentorChess.App/MoveMentorChess.App.csproj
+  RID: win-x64
+
+jobs:
+  publish:
+    name: Publish & package
+    runs-on: windows-latest
+
+    steps:
+      # ── resolve version label ──────────────────────────────────────────────
+      - name: Resolve version label
+        id: version
+        shell: pwsh
+        env:
+          INPUT_VERSION_TAG: ${{ inputs.version_tag }}
+        run: |
+          $rawTag = ($env:INPUT_VERSION_TAG).Trim()
+          if ($rawTag -ne "") {
+            if ($rawTag -notmatch '^[a-zA-Z0-9.\-_]+$') {
+              Write-Error "Invalid characters in version_tag input: $rawTag"
+              exit 1
+            }
+          }
+          if ($env:GITHUB_REF_TYPE -eq "tag") {
+            $label = $env:GITHUB_REF_NAME
+          } elseif ($rawTag -ne "") {
+            $label = $rawTag
+          } else {
+            $label = "sha-$($env:GITHUB_SHA.Substring(0,7))"
+          }
+          echo "label=$label" >> $env:GITHUB_OUTPUT
+
+      # ── resolve publish mode ───────────────────────────────────────────────
+      - name: Resolve publish mode
+        id: mode
+        shell: pwsh
+        env:
+          INPUT_PUBLISH_MODE: ${{ inputs.publish_mode }}
+        run: |
+          $rawMode = ($env:INPUT_PUBLISH_MODE).Trim()
+          if ($rawMode -ne "self-contained" -and $rawMode -ne "framework-dependent") {
+            $rawMode = "self-contained"
+          }
+          if ($env:GITHUB_REF_TYPE -eq "tag") {
+            $mode = "self-contained"
+          } else {
+            $mode = $rawMode
+          }
+          if ($mode -eq "self-contained") {
+            echo "self_contained=true" >> $env:GITHUB_OUTPUT
+            echo "suffix=self-contained" >> $env:GITHUB_OUTPUT
+          } else {
+            echo "self_contained=false" >> $env:GITHUB_OUTPUT
+            echo "suffix=framework-dependent" >> $env:GITHUB_OUTPUT
+          }
+
+      # ── checkout & SDK ─────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # pin v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # pin v4.3.1
+        with:
+          dotnet-version: "8.0.x"
+
+      # ── restore & publish ──────────────────────────────────────────────────
+      - name: Restore dependencies
+        run: dotnet restore ${{ env.APP_PROJECT }} --verbosity minimal
+
+      - name: Publish application
+        shell: pwsh
+        env:
+          SELF_CONTAINED: ${{ steps.mode.outputs.self_contained }}
+        run: |
+          $selfContained = $env:SELF_CONTAINED
+          if ($selfContained -ne "true" -and $selfContained -ne "false") {
+            $selfContained = "true"
+          }
+          dotnet publish ${{ env.APP_PROJECT }} `
+            --configuration Release `
+            --runtime ${{ env.RID }} `
+            --self-contained $selfContained `
+            --no-restore `
+            --output publish/app `
+            -p:PublishSingleFile=false `
+            -p:DebugType=none `
+            -p:DebugSymbols=false `
+            --verbosity minimal
+
+      # ── zip ───────────────────────────────────────────────────────────────
+      - name: Create ZIP archive
+        shell: pwsh
+        env:
+          VERSION_LABEL: ${{ steps.version.outputs.label }}
+          PUBLISH_SUFFIX: ${{ steps.mode.outputs.suffix }}
+        run: |
+          $label = $env:VERSION_LABEL
+          $suffix = $env:PUBLISH_SUFFIX
+          if ($label -notmatch '^[a-zA-Z0-9.\-_]+$') {
+            Write-Error "Invalid version label: $label"
+            exit 1
+          }
+          if ($suffix -ne "self-contained" -and $suffix -ne "framework-dependent") {
+            Write-Error "Invalid suffix: $suffix"
+            exit 1
+          }
+          $zipName = "MoveMentorChess-$label-win-x64-$suffix.zip"
+          Compress-Archive -Path publish/app/* -DestinationPath $zipName
+          echo "ZIP_NAME=$zipName" >> $env:GITHUB_ENV
+
+      # ── upload artifact (always available in Actions UI) ──────────────────
+      - name: Upload build artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin v4.6.2
+        with:
+          name: ${{ env.ZIP_NAME }}
+          path: ${{ env.ZIP_NAME }}
+          retention-days: 30
+
+      # ── create GitHub Release (tag-triggered runs only) ───────────────────
+      - name: Create GitHub Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # pin v2.2.2
+        with:
+          tag_name: ${{ steps.version.outputs.label }}
+          name: "MoveMentorChess ${{ steps.version.outputs.label }}"
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.label, '-') }}
+          files: ${{ env.ZIP_NAME }}
+          generate_release_notes: true
+          body: |
+            ## Installation
+
+            ### Self-contained (no .NET required)
+            Unzip and run `MoveMentorChess.App.exe` — the .NET runtime is bundled.
+
+            ### Framework-dependent (requires .NET 8)
+            Install [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0),
+            then unzip and run `MoveMentorChess.App.exe`.
