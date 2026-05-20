@@ -1,0 +1,54 @@
+name: CodeQL
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - "feature/**"
+      - "bugfix/**"
+      - "architecture/**"
+      - "codex/**"
+  pull_request:
+    branches:
+      - master
+      - main
+  schedule:
+    - cron: "23 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  security-events: write
+  packages: read
+  actions: read
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze C#
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: csharp
+          queries: security-and-quality
+          build-mode: manual
+
+      - name: Restore dependencies
+        run: dotnet restore MoveMentorChess.sln --verbosity minimal
+
+      - name: Build solution
+        run: dotnet build MoveMentorChess.sln --configuration Release --no-restore -m:1 --verbosity minimal
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
