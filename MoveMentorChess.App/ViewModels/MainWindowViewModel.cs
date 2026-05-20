@@ -72,7 +72,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         ApplySelectedImportedMoveCommand = new RelayCommand(ApplySelectedImportedMove, () => !IsBusy && SelectedImportedMove is not null);
         AnalyzeImportedGameCommand = new RelayCommand(async () => await AnalyzeImportedGameAsync(), () => !IsBusy && importedGame is not null && engine is not null);
         StopImportCommand = new RelayCommand(StopImport, () => IsImportCancellationAvailable);
-        ShowSelectedMistakeOnBoardCommand = new RelayCommand(ShowSelectedMistakeOnBoard, () => !IsBusy && SelectedAnalysisMistake is not null);
+        ShowSelectedMistakeOnBoardCommand = new RelayCommand(ShowSelectedMistakeOnBoard, () => !IsBusy && SelectedAnalysisMistake?.LeadMove is not null);
 
         TryInitializeEngine();
         ClearPieceMoveOptions();
@@ -1007,6 +1007,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
         if (SelectedAnalysisMistake.LeadMove is null)
         {
+            StatusMessage = "Selected mistake has no associated moves and cannot be shown on the board.";
             return;
         }
 
