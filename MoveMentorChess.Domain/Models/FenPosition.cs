@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace MoveMentorChess.Domain;
 
@@ -49,11 +50,15 @@ public sealed class FenPosition
 
     public string GetPlacementFen()
     {
-        List<string> rows = new();
+        StringBuilder builder = new();
         for (int y = 0; y < 8; y++)
         {
+            if (y > 0)
+            {
+                builder.Append('/');
+            }
+
             int empty = 0;
-            string row = string.Empty;
             for (int x = 0; x < 8; x++)
             {
                 string? piece = Board[x, y];
@@ -65,22 +70,20 @@ public sealed class FenPosition
 
                 if (empty > 0)
                 {
-                    row += empty.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    builder.Append(empty.ToString(System.Globalization.CultureInfo.InvariantCulture));
                     empty = 0;
                 }
 
-                row += piece;
+                builder.Append(piece);
             }
 
             if (empty > 0)
             {
-                row += empty.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                builder.Append(empty.ToString(System.Globalization.CultureInfo.InvariantCulture));
             }
-
-            rows.Add(row);
         }
 
-        return string.Join("/", rows);
+        return builder.ToString();
     }
 
     public string GetFen()

@@ -9,16 +9,30 @@ public sealed class AnalysisMistakeItemViewModel
     public AnalysisMistakeItemViewModel(SelectedMistake mistake)
     {
         Mistake = mistake;
+
+        if (mistake.Moves == null || mistake.Moves.Count == 0)
+        {
+            LeadMove = null!;
+            DisplayText = "No moves";
+            Details = "No moves available";
+            return;
+        }
+
         LeadMove = mistake.Moves
             .OrderByDescending(move => move.Quality)
             .ThenByDescending(move => move.CentipawnLoss ?? 0)
             .First();
 
-        var first = mistake.Moves[0];
-        var last = mistake.Moves[mistake.Moves.Count - 1];
-        string firstMove = $"{first.Replay.MoveNumber}{(first.Replay.Side == PlayerSide.White ? "." : "...")} {first.Replay.San}";
-        string lastMove = $"{last.Replay.MoveNumber}{(last.Replay.Side == PlayerSide.White ? "." : "...")} {last.Replay.San}";
-        string moveRange = mistake.Moves.Count == 1 ? firstMove : $"{firstMove} -> {lastMove}";
+        string moveRange = "n/a";
+        if (mistake.Moves != null && mistake.Moves.Count > 0)
+        {
+            var first = mistake.Moves[0];
+            var last = mistake.Moves[mistake.Moves.Count - 1];
+            string firstMove = $"{first.Replay.MoveNumber}{(first.Replay.Side == PlayerSide.White ? "." : "...")} {first.Replay.San}";
+            string lastMove = $"{last.Replay.MoveNumber}{(last.Replay.Side == PlayerSide.White ? "." : "...")} {last.Replay.San}";
+            moveRange = mistake.Moves.Count == 1 ? firstMove : $"{firstMove} -> {lastMove}";
+        }
+
         string label = mistake.Tag?.Label ?? "unclassified";
         string cpl = LeadMove.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a";
         DisplayText = $"{moveRange} | {mistake.Quality} | {label} | CPL {cpl}";

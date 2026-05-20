@@ -64,7 +64,7 @@ public sealed class LlamaCppServerManager : IDisposable
             DisposeProcess();
 
             int port = config.Port > 0 ? config.Port : FindFreePort();
-            if (port <= 0)
+            if (port <= 0 || port > 65535)
             {
                 return false;
             }
@@ -185,7 +185,7 @@ public sealed class LlamaCppServerManager : IDisposable
                     }
                 }
             }
-            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException)
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException or UriFormatException or ArgumentException)
             {
                 // Server not ready yet, keep polling.
             }

@@ -12,9 +12,10 @@ public static class LlamaCppServerResolver
             return null;
         }
 
-        int port = ParsePositiveInt(
+        int rawPort = ParsePositiveInt(
             Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_SERVER_PORT"),
             0);
+        int port = rawPort > 0 && rawPort <= 65535 ? rawPort : 0;
         int maxTokens = ParsePositiveInt(
             Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MAX_TOKENS"),
             256);
