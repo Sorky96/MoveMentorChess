@@ -57,6 +57,11 @@ jobs:
             $label = "sha-$($env:GITHUB_SHA.Substring(0,7))"
           }
           echo "label=$label" >> $env:GITHUB_OUTPUT
+          if ($rawTag -ne "") {
+            echo "has_manual_tag=true" >> $env:GITHUB_OUTPUT
+          } else {
+            echo "has_manual_tag=false" >> $env:GITHUB_OUTPUT
+          }
 
       # ── resolve publish mode ───────────────────────────────────────────────
       - name: Resolve publish mode
@@ -146,9 +151,9 @@ jobs:
           path: ${{ env.ZIP_NAME }}
           retention-days: 30
 
-      # ── create GitHub Release (tag-triggered runs only) ───────────────────
+      # ── create GitHub Release ─────────────────────────────────────────────
       - name: Create GitHub Release
-        if: github.ref_type == 'tag'
+        if: github.ref_type == 'tag' || steps.version.outputs.has_manual_tag == 'true'
         uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # pin v2.2.2
         with:
           tag_name: ${{ steps.version.outputs.label }}
