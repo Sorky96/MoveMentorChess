@@ -39,11 +39,20 @@ jobs:
       - name: Resolve version label
         id: version
         shell: pwsh
+        env:
+          INPUT_VERSION_TAG: ${{ inputs.version_tag }}
         run: |
+          $rawTag = ($env:INPUT_VERSION_TAG).Trim()
+          if ($rawTag -ne "") {
+            if ($rawTag -notmatch '^[a-zA-Z0-9.\-_]+$') {
+              Write-Error "Invalid characters in version_tag input: $rawTag"
+              exit 1
+            }
+          }
           if ($env:GITHUB_REF_TYPE -eq "tag") {
             $label = $env:GITHUB_REF_NAME
-          } elseif ("${{ inputs.version_tag }}" -ne "") {
-            $label = "${{ inputs.version_tag }}"
+          } elseif ($rawTag -ne "") {
+            $label = $rawTag
           } else {
             $label = "sha-$($env:GITHUB_SHA.Substring(0,7))"
           }
@@ -53,12 +62,17 @@ jobs:
       - name: Resolve publish mode
         id: mode
         shell: pwsh
+        env:
+          INPUT_PUBLISH_MODE: ${{ inputs.publish_mode }}
         run: |
-          # For tag pushes always default to self-contained for best portability.
+          $rawMode = ($env:INPUT_PUBLISH_MODE).Trim()
+          if ($rawMode -ne "self-contained" -and $rawMode -ne "framework-dependent") {
+            $rawMode = "self-contained"
+          }
           if ($env:GITHUB_REF_TYPE -eq "tag") {
             $mode = "self-contained"
           } else {
-            $mode = "${{ inputs.publish_mode }}"
+            $mode = $rawMode
           }
           if ($mode -eq "self-contained") {
             echo "self_contained=true" >> $env:GITHUB_OUTPUT
@@ -70,10 +84,10 @@ jobs:
 
       # ── checkout & SDK ─────────────────────────────────────────────────────
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # pin v4.2.2
 
       - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # pin v4.3.1
         with:
           dotnet-version: "8.0.x"
 
@@ -83,8 +97,13 @@ jobs:
 
       - name: Publish application
         shell: pwsh
+        env:
+          SELF_CONTAINED: ${{ steps.mode.outputs.self_contained }}
         run: |
-          $selfContained = "${{ steps.mode.outputs.self_contained }}"
+          $selfContained = $env:SELF_CONTAINED
+          if ($selfContained -ne "true" -and $selfContained -ne "false") {
+            $selfContained = "true"
+          }
           dotnet publish ${{ env.APP_PROJECT }} `
             --configuration Release `
             --runtime ${{ env.RID }} `
@@ -99,16 +118,27 @@ jobs:
       # ── zip ───────────────────────────────────────────────────────────────
       - name: Create ZIP archive
         shell: pwsh
+        env:
+          VERSION_LABEL: ${{ steps.version.outputs.label }}
+          PUBLISH_SUFFIX: ${{ steps.mode.outputs.suffix }}
         run: |
-          $label   = "${{ steps.version.outputs.label }}"
-          $suffix  = "${{ steps.mode.outputs.suffix }}"
+          $label = $env:VERSION_LABEL
+          $suffix = $env:PUBLISH_SUFFIX
+          if ($label -notmatch '^[a-zA-Z0-9.\-_]+$') {
+            Write-Error "Invalid version label: $label"
+            exit 1
+          }
+          if ($suffix -ne "self-contained" -and $suffix -ne "framework-dependent") {
+            Write-Error "Invalid suffix: $suffix"
+            exit 1
+          }
           $zipName = "MoveMentorChess-$label-win-x64-$suffix.zip"
           Compress-Archive -Path publish/app/* -DestinationPath $zipName
           echo "ZIP_NAME=$zipName" >> $env:GITHUB_ENV
 
       # ── upload artifact (always available in Actions UI) ──────────────────
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pin v4.6.2
         with:
           name: ${{ env.ZIP_NAME }}
           path: ${{ env.ZIP_NAME }}
@@ -117,7 +147,7 @@ jobs:
       # ── create GitHub Release (tag-triggered runs only) ───────────────────
       - name: Create GitHub Release
         if: github.ref_type == 'tag'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # pin v2.2.2
         with:
           tag_name: ${{ steps.version.outputs.label }}
           name: "MoveMentorChess ${{ steps.version.outputs.label }}"
