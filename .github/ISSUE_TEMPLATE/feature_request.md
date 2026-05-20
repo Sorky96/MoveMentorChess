@@ -1,77 +1,77 @@
 ---
 name: ✨ Feature Request
-about: Zaproponuj nową funkcjonalność
+about: Propose a new feature or improvement
 labels: enhancement
 assignees: ''
 ---
 
-## 🎯 Cel użytkownika
+## 🎯 User Goal
 
-> Opisz potrzebę biznesową lub użytkownika, którą spełnia ta funkcja.
+> Describe the business or user need this feature addresses.
 
-_Jako [rola], chcę [działanie], żeby [wartość / efekt]._
+_As a [role], I want to [action] so that [value / outcome]._
 
 ---
 
-## 💡 Proponowane rozwiązanie
+## 💡 Proposed Solution
 
-> Jak wyobrażasz sobie tę funkcjonalność? Opisz zachowanie z perspektywy użytkownika.
+> How do you envision this feature? Describe the behaviour from the user's perspective.
 
 ---
 
 ## ✅ Acceptance Criteria
 
-> Zadanie jest skończone, gdy:
+> This task is done when:
 
 - [ ] ...
 - [ ] ...
-- [ ] Funkcjonalność jest objęta testami automatycznymi
-- [ ] Dokumentacja (XML doc / README) jest zaktualizowana
+- [ ] The feature is covered by automated tests
+- [ ] Documentation (XML doc / README) is updated
 
 ---
 
 ## 🚫 Non-goals
 
-> Czego **nie** robimy w ramach tego zadania.
+> What we are **not** doing in scope of this task.
 
-- Nie zmieniamy istniejącego przepływu X
-- Nie dotykamy modułu Y
-- Nie dostarczamy UI — tylko logika
-
----
-
-## 🏗️ Sugestie techniczne (opcjonalne)
-
-> Jeśli masz pomysł na implementację, opisz go tutaj. Architect może to zignorować i zaproponować lepsze rozwiązanie.
-
-- Warstwa: `...` (np. Services / Presentation / ViewModel)
-- Powiązane klasy: `...`
-- Wzorzec: `...`
+- Not changing the existing flow X
+- Not touching module Y
+- No UI — logic only
 
 ---
 
-## ⚠️ Ryzyka
+## 🏗️ Technical Suggestions (optional)
 
-> Potencjalne ryzyka związane z implementacją.
+> If you have an implementation idea, describe it here. The Architect may discard it and propose a better solution.
 
-- [ ] Zmiana publicznego API / kontraktu: ...
-- [ ] Wpływ na wydajność: ...
-- [ ] Zależności zewnętrzne: ...
-- [ ] Ryzyko regresji w: ...
-
----
-
-## 🧪 Sugerowane testy
-
-> Scenariusze testowe, które Developer / Reviewer powinni pokryć.
-
-- Jednostkowy: scenariusz happy path — ...
-- Jednostkowy: scenariusz edge case — ...
-- Integracyjny: ...
-- Ręczny: ...
+- Layer: `...` (e.g. Services / Presentation / ViewModel)
+- Related classes: `...`
+- Pattern: `...`
 
 ---
 
-## 📎 Dodatkowy kontekst
+## ⚠️ Risks
 
-> Makiety, schematy, linki do podobnych rozwiązań, powiązane issues.
+> Potential risks associated with the implementation.
+
+- [ ] Public API / contract change: ...
+- [ ] Performance impact: ...
+- [ ] External dependencies: ...
+- [ ] Regression risk in: ...
+
+---
+
+## 🧪 Suggested Tests
+
+> Test scenarios that the Developer / Reviewer should cover.
+
+- Unit: happy path — ...
+- Unit: edge case — ...
+- Integration: ...
+- Manual: ...
+
+---
+
+## 📎 Additional Context
+
+> Mockups, diagrams, links to similar solutions, related issues.

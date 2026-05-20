@@ -1,86 +1,86 @@
 ---
 name: 🐛 Bug Report
-about: Zgłoś błąd, który wymaga naprawy
+about: Report a bug that needs to be fixed
 labels: bug
 assignees: ''
 ---
 
-## 🎯 Cel użytkownika
+## 🎯 User Goal
 
-> Opisz, co użytkownik chciał osiągnąć gdy napotkał błąd.
+> Describe what the user was trying to achieve when they encountered the bug.
 
-_Jako [rola], chciałem [działanie], żeby [efekt]._
-
----
-
-## 🐛 Opis błędu
-
-> Zwięzły i jasny opis tego, co się dzieje nieprawidłowo.
+_As a [role], I wanted to [action] so that [outcome]._
 
 ---
 
-## 📋 Kroki do reprodukcji
+## 🐛 Bug Description
 
-1. Przejdź do '...'
-2. Kliknij '...'
-3. Przewiń do '...'
-4. Zaobserwuj błąd
+> A clear and concise description of what is going wrong.
 
-**Oczekiwane zachowanie:**
-> Co powinno się stać?
+---
 
-**Rzeczywiste zachowanie:**
-> Co faktycznie się dzieje?
+## 📋 Steps to Reproduce
+
+1. Go to '...'
+2. Click '...'
+3. Scroll to '...'
+4. Observe the error
+
+**Expected behaviour:**
+> What should happen?
+
+**Actual behaviour:**
+> What actually happens?
 
 ---
 
 ## ✅ Acceptance Criteria
 
-> Zadanie jest skończone, gdy:
+> This task is done when:
 
 - [ ] ...
 - [ ] ...
-- [ ] Regresja jest pokryta testem automatycznym
+- [ ] The regression is covered by an automated test
 
 ---
 
 ## 🚫 Non-goals
 
-> Czego **nie** naprawiamy w ramach tego zgłoszenia.
+> What we are **not** fixing in scope of this report.
 
-- Nie refaktorujemy całego modułu X
-- Nie zmieniamy publicznego API Y
-
----
-
-## ⚠️ Ryzyka
-
-> Potencjalne skutki uboczne naprawy.
-
-- [ ] Ryzyko regresji w module: ...
-- [ ] Ryzyko wpływu na wydajność: ...
+- Not refactoring the entire module X
+- Not changing the public API of Y
 
 ---
 
-## 🧪 Sugerowane testy
+## ⚠️ Risks
 
-> Testy, które powinny zostać dodane lub zmodyfikowane.
+> Potential side effects of the fix.
 
-- Jednostkowy: `...Tests` — scenariusz: ...
-- Integracyjny: ...
-- Ręczny: ...
+- [ ] Regression risk in module: ...
+- [ ] Performance impact risk: ...
 
 ---
 
-## 📎 Dodatkowy kontekst
+## 🧪 Suggested Tests
 
-> Logi, zrzuty ekranu, linki do kodu, numery wersji.
+> Tests that should be added or modified.
+
+- Unit: `...Tests` — scenario: ...
+- Integration: ...
+- Manual: ...
+
+---
+
+## 📎 Additional Context
+
+> Logs, screenshots, links to code, version numbers.
 
 ```
-[wklej log lub stack trace tutaj]
+[paste log or stack trace here]
 ```
 
-**Środowisko:**
+**Environment:**
 - OS:
-- Wersja aplikacji / branch:
+- App version / branch:
 - .NET SDK:

@@ -1,23 +1,23 @@
 ---
 name: 🔧 Refactor Task
-about: Zaplanuj refaktoryzację bez zmiany zachowania
+about: Plan a refactoring without changing observable behaviour
 labels: refactor, technical-debt
 assignees: ''
 ---
 
-## 🎯 Cel użytkownika / motywacja
+## 🎯 User Goal / Motivation
 
-> Dlaczego ta refaktoryzacja jest potrzebna? Jaki problem rozwiązuje lub jaką wartość niesie?
+> Why is this refactoring needed? What problem does it solve or what value does it bring?
 
-_Jako programista, chcę [zmienić X], żeby [łatwiej / bezpieczniej / szybciej] [osiągnąć Y]._
+_As a developer, I want to [change X] so that I can [more easily / safely / quickly] [achieve Y]._
 
 ---
 
-## 📍 Zakres zmian
+## 📍 Scope of Changes
 
-> Które pliki / klasy / moduły są objęte refaktoryzacją?
+> Which files / classes / modules are affected by this refactoring?
 
-| Plik / Klasa | Obecna odpowiedzialność | Docelowa odpowiedzialność |
+| File / Class | Current Responsibility | Target Responsibility |
 |---|---|---|
 | `...` | ... | ... |
 | `...` | ... | ... |
@@ -26,66 +26,66 @@ _Jako programista, chcę [zmienić X], żeby [łatwiej / bezpieczniej / szybciej
 
 ## ✅ Acceptance Criteria
 
-> Refaktoryzacja jest skończona, gdy:
+> The refactoring is done when:
 
-- [ ] Zachowanie zewnętrzne jest **identyczne** z poprzednim (testy przechodzą)
-- [ ] Build przechodzi bez warningów: `dotnet build ... --no-restore -m:1`
-- [ ] Testy przechodzą: `dotnet test ... --no-restore -m:1 --verbosity minimal`
-- [ ] Kod przeszedł review i nie ma nowych naruszeń `dotnet_diagnostic`
-- [ ] `CLEAN_CODE_AUDIT.md` jest zaktualizowany (jeśli dotyczy)
+- [ ] External behaviour is **identical** to before (all tests pass)
+- [ ] Build passes without warnings: `dotnet build ... --no-restore -m:1`
+- [ ] Tests pass: `dotnet test ... --no-restore -m:1 --verbosity minimal`
+- [ ] Code has passed review with no new `dotnet_diagnostic` violations
+- [ ] `CLEAN_CODE_AUDIT.md` is updated (if applicable)
 
 ---
 
 ## 🚫 Non-goals
 
-> Czego **nie** zmieniamy przy tej okazji.
+> What we are **not** changing in scope of this task.
 
-- Nie dodajemy nowych funkcjonalności
-- Nie zmieniamy publicznego API / kontraktu klas
-- Nie refaktorujemy X (osobny ticket)
-
----
-
-## 🏗️ Strategia refaktoryzacji
-
-> Opisz podejście krok po kroku (incremental preferred over big-bang).
-
-### Kroki
-
-1. [ ] Wyodrębnij `...` do osobnej klasy / metody
-2. [ ] Przenieś logikę `...` z `View` do `ViewModel` / `Service`
-3. [ ] Usuń martwy kod: `...`
-4. [ ] Zaktualizuj DI / `AppCompositionRoot`
-5. [ ] Uruchom build i testy po każdym kroku
-
-> 💡 **Tip:** Po każdym kroku uruchom `dotnet build` — nie czekaj do końca.
+- Not adding new features
+- Not changing the public API / class contracts
+- Not refactoring X (separate ticket)
 
 ---
 
-## ⚠️ Ryzyka
+## 🏗️ Refactoring Strategy
 
-> Co może pójść nie tak?
+> Describe the step-by-step approach (incremental preferred over big-bang).
 
-- [ ] Ryzyko zmiany zachowania w: ...
-- [ ] Ryzyko konfliktu merge z równoległymi PR: ...
-- [ ] Ryzyko naruszenia Avalonia bindings: ...
-- [ ] Inne: ...
+### Steps
 
----
+1. [ ] Extract `...` into a separate class / method
+2. [ ] Move `...` logic from `View` to `ViewModel` / `Service`
+3. [ ] Remove dead code: `...`
+4. [ ] Update DI / `AppCompositionRoot`
+5. [ ] Run build and tests after each step
 
-## 🧪 Sugerowane testy
-
-> Testy, które potwierdzą, że zachowanie się nie zmieniło.
-
-- Istniejące testy do uruchomienia: `...Tests`
-- Nowe testy regresyjne: scenariusz ...
-- Weryfikacja manualna: ...
+> 💡 **Tip:** Run `dotnet build` after each step — don't wait until the end.
 
 ---
 
-## 📎 Powiązane
+## ⚠️ Risks
 
-> Linki do `CLEAN_CODE_AUDIT.md`, powiązanych issues, PR, ADR.
+> What could go wrong?
+
+- [ ] Risk of behaviour change in: ...
+- [ ] Risk of merge conflict with parallel PRs: ...
+- [ ] Risk of breaking Avalonia bindings: ...
+- [ ] Other: ...
+
+---
+
+## 🧪 Suggested Tests
+
+> Tests that will confirm behaviour has not changed.
+
+- Existing tests to run: `...Tests`
+- New regression tests: scenario ...
+- Manual verification: ...
+
+---
+
+## 📎 Related
+
+> Links to `CLEAN_CODE_AUDIT.md`, related issues, PRs, ADRs.
 
 - Audit: ...
 - Issue: #...
