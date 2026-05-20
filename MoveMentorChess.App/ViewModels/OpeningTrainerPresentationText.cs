@@ -2,8 +2,11 @@ using System.Text.RegularExpressions;
 
 namespace MoveMentorChess.App.ViewModels;
 
-public static class OpeningTrainerPresentationText
+public static partial class OpeningTrainerPresentationText
 {
+    [GeneratedRegex(@"Tracked (?<count>\d+) opponent branch\(es\)", RegexOptions.IgnoreCase)]
+    private static partial Regex OpponentBranchRegex();
+
     public static string BuildWrongMoveFeedback(
         OpeningTrainingPosition position,
         OpeningTrainingMoveOption? preferred)
@@ -39,7 +42,7 @@ public static class OpeningTrainerPresentationText
 
     public static string FormatOpponentSummary(string summary)
     {
-        Match match = Regex.Match(summary, @"Tracked (?<count>\d+) opponent branch\(es\)", RegexOptions.IgnoreCase);
+        Match match = OpponentBranchRegex().Match(summary);
         return match.Success
             ? $"We track {match.Groups["count"].Value} common opponent replies for this opening."
             : summary;
@@ -57,7 +60,9 @@ public static class OpeningTrainerPresentationText
 
     public static string FormatMoveLabel(OpeningLineMove move)
     {
-        string tag = move.Idea?.IdeaTags.FirstOrDefault() switch
+        var tags = move.Idea?.IdeaTags;
+        OpeningMoveIdeaTag? firstTag = (tags != null && tags.Count > 0) ? tags[0] : null;
+        string tag = firstTag switch
         {
             OpeningMoveIdeaTag.ControlCenter => "center",
             OpeningMoveIdeaTag.DevelopPiece => "development",

@@ -171,7 +171,7 @@ public sealed class OpeningTrainerWorkspaceService
         }
 
         PlayerSide? studySide = ResolveStudySide(item.RepertoireSide);
-        IReadOnlyList<OpeningTrainingPosition> targetedPositions = BuildTargetedPositions(item, overview, effectiveStrictness, specialMode, target);
+        List<OpeningTrainingPosition> targetedPositions = BuildTargetedPositions(item, overview, effectiveStrictness, specialMode, target);
         foreach (OpeningTrainingPosition targetedPosition in targetedPositions)
         {
             if (positions.Count >= maxPositions)
@@ -360,7 +360,7 @@ public sealed class OpeningTrainerWorkspaceService
             return session;
         }
 
-        IReadOnlyList<OpeningTrainingPosition> continuation = BuildContinuationFromFen(
+        List<OpeningTrainingPosition> continuation = BuildContinuationFromFen(
             completedPosition,
             result.ResolvedPosition,
             remainingCount,
@@ -480,7 +480,7 @@ public sealed class OpeningTrainerWorkspaceService
         return specialModeService.BuildOptions(definition);
     }
 
-    private static IReadOnlyList<OpeningTrainingPosition> SelectSpecialWeakPositions(
+    private static List<OpeningTrainingPosition> SelectSpecialWeakPositions(
         OpeningTrainerOverview overview,
         SpecialTrainingModeDefinition? specialMode)
     {
@@ -502,7 +502,7 @@ public sealed class OpeningTrainerWorkspaceService
             : $"special-mode:{specialMode.Kind}";
     }
 
-    private IReadOnlyList<OpeningTrainingPosition> BuildTargetedPositions(
+    private List<OpeningTrainingPosition> BuildTargetedPositions(
         OpeningLineCatalogItem item,
         OpeningTrainerOverview overview,
         OpeningTrainingStrictness strictness,
@@ -534,7 +534,7 @@ public sealed class OpeningTrainerWorkspaceService
         }
 
         OpeningLineMove? move = overview.MainLine.FirstOrDefault(lineMove => lineMove.Idea is not null)
-            ?? overview.MainLine.FirstOrDefault();
+            ?? (overview.MainLine.Count > 0 ? overview.MainLine[0] : null);
         if (move is null)
         {
             return null;
@@ -605,7 +605,7 @@ public sealed class OpeningTrainerWorkspaceService
         };
     }
 
-    private IReadOnlyList<OpeningTrainingPosition> BuildContinuationFromFen(
+    private List<OpeningTrainingPosition> BuildContinuationFromFen(
         OpeningTrainingPosition template,
         OpeningPositionIdentity reachedPosition,
         int maxPositions,
@@ -728,7 +728,7 @@ public sealed class OpeningTrainerWorkspaceService
 
     private string ResolveLineStartFen(OpeningTrainerOverview overview, string fallbackFen)
     {
-        OpeningPositionKey? firstPositionKey = overview.MainLine.FirstOrDefault()?.FromPositionKey;
+        OpeningPositionKey? firstPositionKey = (overview.MainLine.Count > 0 ? overview.MainLine[0] : null)?.FromPositionKey;
         if (firstPositionKey is not null
             && openingTheory?.TryGetPositionByKey(firstPositionKey.Value.Value, out OpeningTheoryPosition? position) == true
             && position is not null)
@@ -768,7 +768,7 @@ public sealed class OpeningTrainerWorkspaceService
             ? string.Empty
             : moveText.Trim().TrimEnd('+', '#', '!', '?');
 
-    private IReadOnlyList<OpeningTrainingPosition> BuildTargetedWeakPosition(
+    private List<OpeningTrainingPosition> BuildTargetedWeakPosition(
         OpeningTrainerOverview overview,
         OpeningTrainingStrictness strictness,
         SpecialTrainingModeDefinition? specialMode,
@@ -796,7 +796,7 @@ public sealed class OpeningTrainerWorkspaceService
         return [targeted];
     }
 
-    private IReadOnlyList<OpeningTrainingPosition> BuildTargetedBranchPosition(
+    private List<OpeningTrainingPosition> BuildTargetedBranchPosition(
         OpeningLineCatalogItem item,
         OpeningTrainerOverview overview,
         OpeningTrainingStrictness strictness,
@@ -818,7 +818,7 @@ public sealed class OpeningTrainerWorkspaceService
             return [];
         }
 
-        IReadOnlyList<OpeningTrainingBranch> branches = [branch];
+        List<OpeningTrainingBranch> branches = [branch];
         IReadOnlyList<OpeningTrainingMoveOption> candidateMoves =
         [
             new OpeningTrainingMoveOption(
@@ -895,7 +895,7 @@ public sealed class OpeningTrainerWorkspaceService
         }];
     }
 
-    private static IReadOnlyList<string> BuildSessionTags(
+    private static List<string> BuildSessionTags(
         string eco,
         SpecialTrainingModeDefinition? specialMode,
         OpeningTrainingSessionTarget? target,
@@ -921,7 +921,7 @@ public sealed class OpeningTrainerWorkspaceService
         return tags.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 
-    private IReadOnlyList<OpeningTrainingPosition> BuildWeakPositionsFromHistory(
+    private List<OpeningTrainingPosition> BuildWeakPositionsFromHistory(
         string? playerKey,
         OpeningLineCatalogItem item,
         OpeningTrainerOverview overview,

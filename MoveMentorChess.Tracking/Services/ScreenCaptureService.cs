@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Globalization;
 
 namespace MoveMentorChess.Tracking;
 
@@ -36,6 +37,6 @@ public sealed class ScreenCaptureService
             }
         }
 
-        return hash.ToHashCode().ToString("X8");
+        return hash.ToHashCode().ToString("X8", CultureInfo.InvariantCulture);
     }
 }

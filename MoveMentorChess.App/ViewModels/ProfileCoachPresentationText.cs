@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace MoveMentorChess.App.ViewModels;
 
 internal static class ProfileCoachPresentationText
@@ -8,13 +10,13 @@ internal static class ProfileCoachPresentationText
         if (report.CostliestMistakeLabels.Count > 0)
         {
             ProfileCostlyLabelStat costly = report.CostliestMistakeLabels[0];
-            return $"{trend}. {summary} The most expensive pattern is {FormatMistakeLabel(costly.Label).ToLowerInvariant()}, costing {costly.TotalCentipawnLoss} total CPL.";
+            return $"{trend}. {summary} The most expensive pattern is {FormatMistakeLabel(costly.Label).ToLowerInvariant()}, costing {costly.TotalCentipawnLoss.ToString(CultureInfo.InvariantCulture)} total CPL.";
         }
 
         if (report.MistakesByPhase.Count > 0)
         {
             ProfilePhaseStat phase = report.MistakesByPhase[0];
-            return $"{trend}. {summary} The issue shows up most in the {FormatPhase(phase.Phase).ToLowerInvariant()}, with {phase.Count} highlighted mistakes.";
+            return $"{trend}. {summary} The issue shows up most in the {FormatPhase(phase.Phase).ToLowerInvariant()}, with {phase.Count.ToString(CultureInfo.InvariantCulture)} highlighted mistakes.";
         }
 
         return $"{trend}. {summary}";
@@ -61,7 +63,8 @@ internal static class ProfileCoachPresentationText
     {
         WeeklyTrainingDay? trainingDay = report.WeeklyPlan.Days.FirstOrDefault(day =>
             day.LaunchTrainingMode.HasValue && day.RelatedOpenings is { Count: > 0 });
-        string? relatedOpening = trainingDay?.RelatedOpenings?.FirstOrDefault();
+        var openings = trainingDay?.RelatedOpenings;
+        string? relatedOpening = (openings != null && openings.Count > 0) ? openings[0] : null;
         if (!string.IsNullOrWhiteSpace(relatedOpening))
         {
             return relatedOpening;
@@ -92,7 +95,7 @@ internal static class ProfileCoachPresentationText
             "endgame_technique" => "Endgame technique",
             "material_loss" => "Material losses",
             "piece_activity" => "Passive pieces",
-            _ => System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase((label ?? string.Empty).Replace('_', ' ').ToLowerInvariant())
+            _ => CultureInfo.InvariantCulture.TextInfo.ToTitleCase((label ?? string.Empty).Replace('_', ' ').ToLowerInvariant())
         };
     }
 
@@ -107,11 +110,11 @@ internal static class ProfileCoachPresentationText
         };
     }
 
-    public static string FormatTimes(int count) => count == 1 ? "1 time" : $"{count} times";
+    public static string FormatTimes(int count) => count == 1 ? "1 time" : $"{count.ToString(CultureInfo.InvariantCulture)} times";
 
     public static string FormatChartDate(DateTime? date)
     {
-        return date?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) ?? "Unknown";
+        return date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "Unknown";
     }
 
     public static string FormatOpening(string eco)
@@ -135,11 +138,11 @@ internal static class ProfileCoachPresentationText
     {
         if (total <= 0)
         {
-            return $"{count} games";
+            return $"{count.ToString(CultureInfo.InvariantCulture)} games";
         }
 
         double percentage = (double)count / total * 100.0;
-        return $"{count}/{total} games ({percentage:0.#}%)";
+        return $"{count.ToString(CultureInfo.InvariantCulture)}/{total.ToString(CultureInfo.InvariantCulture)} games ({percentage.ToString("0.#", CultureInfo.InvariantCulture)}%)";
     }
 
     public static string FormatPlyLabel(PlayerSide side, int? ply, string? san)
@@ -150,7 +153,7 @@ internal static class ProfileCoachPresentationText
         }
 
         int moveNumber = (ply.Value + 1) / 2;
-        string prefix = ply.Value % 2 == 1 ? $"{moveNumber}." : $"{moveNumber}...";
+        string prefix = ply.Value % 2 == 1 ? $"{moveNumber.ToString(CultureInfo.InvariantCulture)}." : $"{moveNumber.ToString(CultureInfo.InvariantCulture)}...";
         return string.IsNullOrWhiteSpace(san) ? prefix : $"{prefix} {san}";
     }
 
@@ -281,8 +284,8 @@ internal static class ProfileCoachPresentationText
 
     public static string BuildSnapshotSummary(PlayerProfileReport report)
     {
-        string cpl = report.AverageCentipawnLoss?.ToString() ?? "n/a";
-        return $"Across {report.GamesAnalyzed} games, the player averages CPL {cpl} with {report.HighlightedMistakes} highlighted mistakes.";
+        string cpl = report.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a";
+        return $"Across {report.GamesAnalyzed.ToString(CultureInfo.InvariantCulture)} games, the player averages CPL {cpl} with {report.HighlightedMistakes.ToString(CultureInfo.InvariantCulture)} highlighted mistakes.";
     }
 
     private static void TryAddFixFirst(List<string> items, IReadOnlyList<string> checklist, int index)

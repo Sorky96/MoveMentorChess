@@ -28,7 +28,7 @@ public static class AnalysisSnapshotPresentation
 
         if (mode == AnalysisSnapshotMode.Threat)
         {
-            EngineLine? threatLine = lead.AfterAnalysis.Lines.FirstOrDefault();
+            EngineLine? threatLine = lead.AfterAnalysis.Lines.Count > 0 ? lead.AfterAnalysis.Lines[0] : null;
             string threatMove = AnalysisDetailsTextFormatter.FormatMoveFromFen(lead.Replay.FenAfter, threatLine?.MoveUci);
             return threatLine is null
                 ? BuildThreatText(label)
@@ -66,7 +66,7 @@ public static class AnalysisSnapshotPresentation
             arrows.Add(bestArrow);
         }
 
-        EngineLine? threatLine = lead.AfterAnalysis.Lines.FirstOrDefault();
+        EngineLine? threatLine = lead.AfterAnalysis.Lines.Count > 0 ? lead.AfterAnalysis.Lines[0] : null;
         if (mode == AnalysisSnapshotMode.Threat
             && TryBuildMoveArrow(lead.Replay.FenAfter, threatLine?.MoveUci, "#D84A4A", out AnalysisSnapshotArrow threatArrow))
         {
@@ -79,7 +79,7 @@ public static class AnalysisSnapshotPresentation
     public static string BuildBestMoveIdeaText(MoveAnalysisResult lead)
     {
         string bestMove = AnalysisDetailsTextFormatter.FormatMoveFromFen(lead.Replay.FenBefore, lead.BeforeAnalysis.BestMoveUci);
-        EngineLine? bestLine = lead.BeforeAnalysis.Lines.FirstOrDefault();
+        EngineLine? bestLine = lead.BeforeAnalysis.Lines.Count > 0 ? lead.BeforeAnalysis.Lines[0] : null;
         string note = bestLine is null
             ? "keeps the cleaner position"
             : AnalysisCoachingTextFormatter.BuildCandidateCoachNote(lead, bestLine, isBest: true);

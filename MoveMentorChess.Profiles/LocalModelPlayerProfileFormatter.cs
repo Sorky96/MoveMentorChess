@@ -50,7 +50,9 @@ public sealed class LocalModelPlayerProfileFormatter : IPlayerProfileFormatter
             FallbackReason = null;
             return output;
         }
+#pragma warning disable CA1031 // Fallback should trigger for any failure in the underlying local model execution
         catch (Exception ex)
+#pragma warning restore CA1031
         {
             return FormatFallback(report, audienceLevel, trainerStyle, $"Local profile model failed: {ex.Message}");
         }

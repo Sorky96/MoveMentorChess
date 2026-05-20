@@ -6,8 +6,19 @@ public sealed class OpeningTrainingCoachingService
     {
         ArgumentNullException.ThrowIfNull(position);
 
-        OpeningTrainingMoveOption? preferred = position.CandidateMoves.FirstOrDefault(option => option.IsPreferred)
-            ?? position.CandidateMoves.FirstOrDefault();
+        OpeningTrainingMoveOption? preferred = null;
+        for (int i = 0; i < position.CandidateMoves.Count; i++)
+        {
+            if (position.CandidateMoves[i].IsPreferred)
+            {
+                preferred = position.CandidateMoves[i];
+                break;
+            }
+        }
+        if (preferred is null && position.CandidateMoves.Count > 0)
+        {
+            preferred = position.CandidateMoves[0];
+        }
         string moveText = preferred?.DisplayText
             ?? position.BetterMove
             ?? "the prepared book move";
@@ -190,9 +201,26 @@ public sealed class OpeningTrainingCoachingService
         OpeningTrainingAttemptResult result,
         TrainingMistakeCategory category)
     {
-        OpeningTrainingMoveOption? preferred = result.PreferredReferences.FirstOrDefault()
-            ?? position.CandidateMoves.FirstOrDefault(option => option.IsPreferred)
-            ?? position.CandidateMoves.FirstOrDefault();
+        OpeningTrainingMoveOption? preferred = null;
+        if (result.PreferredReferences.Count > 0)
+        {
+            preferred = result.PreferredReferences[0];
+        }
+        else
+        {
+            for (int i = 0; i < position.CandidateMoves.Count; i++)
+            {
+                if (position.CandidateMoves[i].IsPreferred)
+                {
+                    preferred = position.CandidateMoves[i];
+                    break;
+                }
+            }
+            if (preferred is null && position.CandidateMoves.Count > 0)
+            {
+                preferred = position.CandidateMoves[0];
+            }
+        }
         string categoryText = category switch
         {
             TrainingMistakeCategory.IllegalMove => "First make sure the move is legal in the current board position.",

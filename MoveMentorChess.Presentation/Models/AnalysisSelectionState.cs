@@ -84,7 +84,7 @@ public sealed class AnalysisSelectionState
             ? 0
             : AnalysisTimelinePresentation.CountReviewedHighlights(CurrentResult, reviewedPlies);
 
-    private string BuildSummaryText(IReadOnlyList<SelectedMistakeViewItem> items)
+    private string BuildSummaryText(List<SelectedMistakeViewItem> items)
     {
         if (CurrentResult is null)
         {

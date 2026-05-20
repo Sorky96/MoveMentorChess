@@ -75,7 +75,9 @@ public static class GameAnalysisCache
         {
             store.SaveResult(key, result);
         }
+#pragma warning disable CA1031
         catch (Exception ex)
+#pragma warning restore CA1031
         {
             PersistenceDiagnostics.Warning(
                 nameof(GameAnalysisCache),
@@ -134,7 +136,9 @@ public static class GameAnalysisCache
         {
             store.SaveWindowState(fingerprint, state);
         }
+#pragma warning disable CA1031
         catch (Exception ex)
+#pragma warning restore CA1031
         {
             PersistenceDiagnostics.Warning(
                 nameof(GameAnalysisCache),
@@ -178,7 +182,9 @@ public static class GameAnalysisCache
         {
             return store.TryLoadResult(key, out result);
         }
+#pragma warning disable CA1031
         catch (Exception ex)
+#pragma warning restore CA1031
         {
             PersistenceDiagnostics.Warning(
                 nameof(GameAnalysisCache),
@@ -195,7 +201,9 @@ public static class GameAnalysisCache
         {
             return store.TryLoadWindowState(fingerprint, out state);
         }
+#pragma warning disable CA1031
         catch (Exception ex)
+#pragma warning restore CA1031
         {
             PersistenceDiagnostics.Warning(
                 nameof(GameAnalysisCache),

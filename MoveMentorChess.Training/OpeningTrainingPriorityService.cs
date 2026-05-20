@@ -41,7 +41,7 @@ public sealed class OpeningTrainingPriorityService
     private static IEnumerable<TrainingPriorityItem> BuildBranchPriorities(
         OpeningTrainerOverview overview,
         HashSet<string> reviewedBranches,
-        IReadOnlyDictionary<string, int> wrongByBranch)
+        Dictionary<string, int> wrongByBranch)
     {
         foreach (OpeningTrainingBranch branch in overview.CommonBranches)
         {
@@ -93,7 +93,7 @@ public sealed class OpeningTrainingPriorityService
 
     private static IEnumerable<TrainingPriorityItem> BuildWeakPositionPriorities(
         OpeningTrainerOverview overview,
-        IReadOnlyDictionary<string, int> wrongByPosition)
+        Dictionary<string, int> wrongByPosition)
     {
         foreach (OpeningTrainingPosition position in overview.WeakPositions)
         {

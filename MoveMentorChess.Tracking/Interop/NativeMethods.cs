@@ -1,10 +1,8 @@
-using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace MoveMentorChess.Tracking;
 
-internal static class NativeMethods
+internal static partial class NativeMethods
 {
     public static WindowCaptureInfo? TryGetForegroundWindowInfo()
     {
@@ -14,21 +12,22 @@ internal static class NativeMethods
             return null;
         }
 
-        StringBuilder titleBuilder = new(512);
-        _ = GetWindowText(handle, titleBuilder, titleBuilder.Capacity);
-        string title = titleBuilder.ToString().Trim();
+        char[] titleBuffer = new char[512];
+        int titleLen = GetWindowText(handle, titleBuffer, titleBuffer.Length);
+        string title = new string(titleBuffer, 0, titleLen).Trim();
         return string.IsNullOrWhiteSpace(title) ? null : new WindowCaptureInfo(handle, title);
     }
 
     public static bool WindowExists(nint handle) => handle != 0 && IsWindow(handle);
 
-    [DllImport("user32.dll")]
-    private static extern nint GetForegroundWindow();
+    [LibraryImport("user32.dll")]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvStdcall)])]
+    private static partial nint GetForegroundWindow();
 
-    [DllImport("user32.dll", CharSet = CharSet.Auto)]
-    private static extern int GetWindowText(nint hWnd, StringBuilder text, int maxCount);
+    [LibraryImport("user32.dll", EntryPoint = "GetWindowTextW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+    private static partial int GetWindowText(nint hWnd, [Out] char[] lpString, int nMaxCount);
 
-    [DllImport("user32.dll")]
+    [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool IsWindow(nint hWnd);
+    private static partial bool IsWindow(nint hWnd);
 }

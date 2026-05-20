@@ -259,7 +259,9 @@ public sealed class OpeningCoverageLineItemViewModel
 
     private static string BuildPriorityText(OpeningTrainerOverview? overview)
     {
-        TrainingPriorityItem? priority = overview?.Priorities.FirstOrDefault();
+        TrainingPriorityItem? priority = (overview?.Priorities != null && overview.Priorities.Count > 0)
+            ? overview.Priorities[0]
+            : null;
         if (priority is null)
         {
             return "No priority signal yet.";

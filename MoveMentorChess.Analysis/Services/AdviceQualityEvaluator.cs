@@ -2,6 +2,7 @@
 // Run with: dotnet run --project MoveMentorChessServices -- --eval-advice
 // Or compile and run directly.
 
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 
@@ -98,8 +99,8 @@ public static class AdviceQualityEvaluator
 
         StringBuilder report = new();
         report.AppendLine("# Advice Quality Evaluation Report");
-        report.AppendLine($"Date: {DateTime.Now:yyyy-MM-dd HH:mm}");
-        report.AppendLine($"Model: {Path.GetFileName(config.ModelPath)}");
+        report.AppendLine(CultureInfo.InvariantCulture, $"Date: {DateTime.Now:yyyy-MM-dd HH:mm}");
+        report.AppendLine(CultureInfo.InvariantCulture, $"Model: {Path.GetFileName(config.ModelPath)}");
         report.AppendLine();
 
         int passed = 0;
@@ -122,10 +123,10 @@ public static class AdviceQualityEvaluator
 
             string? rawResponse = model.Generate(request);
 
-            report.AppendLine($"## {testCase.Name}");
-            report.AppendLine($"- Quality: {testCase.Quality}, Label: {testCase.Tag.Label}, CPL: {testCase.CentipawnLoss}");
-            report.AppendLine($"- Played: {testCase.Replay.San}, Best: {testCase.BestMoveUci}");
-            report.AppendLine($"- Level: {testCase.Level}");
+            report.AppendLine(CultureInfo.InvariantCulture, $"## {testCase.Name}");
+            report.AppendLine(CultureInfo.InvariantCulture, $"- Quality: {testCase.Quality}, Label: {testCase.Tag.Label}, CPL: {testCase.CentipawnLoss}");
+            report.AppendLine(CultureInfo.InvariantCulture, $"- Played: {testCase.Replay.San}, Best: {testCase.BestMoveUci}");
+            report.AppendLine(CultureInfo.InvariantCulture, $"- Level: {testCase.Level}");
             report.AppendLine();
 
             if (rawResponse is null)
@@ -141,7 +142,7 @@ public static class AdviceQualityEvaluator
             {
                 Console.WriteLine("FAIL (parse error)");
                 report.AppendLine("**Result: FAIL** — could not parse response");
-                report.AppendLine($"```\n{rawResponse}\n```");
+                report.AppendLine(CultureInfo.InvariantCulture, $"```\n{rawResponse}\n```");
                 report.AppendLine();
                 failed++;
                 continue;
@@ -150,18 +151,18 @@ public static class AdviceQualityEvaluator
             Console.WriteLine("OK");
             report.AppendLine("**Result: OK**");
             report.AppendLine();
-            report.AppendLine($"**short_text**: {parsed.ShortText}");
+            report.AppendLine(CultureInfo.InvariantCulture, $"**short_text**: {parsed.ShortText}");
             report.AppendLine();
-            report.AppendLine($"**detailed_text**: {parsed.DetailedText}");
+            report.AppendLine(CultureInfo.InvariantCulture, $"**detailed_text**: {parsed.DetailedText}");
             report.AppendLine();
-            report.AppendLine($"**training_hint**: {parsed.TrainingHint}");
+            report.AppendLine(CultureInfo.InvariantCulture, $"**training_hint**: {parsed.TrainingHint}");
             report.AppendLine();
             report.AppendLine("---");
             report.AppendLine();
             passed++;
         }
 
-        report.AppendLine($"## Summary: {passed} passed, {failed} failed out of {TestCases.Length}");
+        report.AppendLine(CultureInfo.InvariantCulture, $"## Summary: {passed} passed, {failed} failed out of {TestCases.Length}");
 
         string reportPath = Path.Combine(AppContext.BaseDirectory, "advice-quality-report.md");
         File.WriteAllText(reportPath, report.ToString());

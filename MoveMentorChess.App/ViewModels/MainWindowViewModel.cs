@@ -72,7 +72,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         ApplySelectedImportedMoveCommand = new RelayCommand(ApplySelectedImportedMove, () => !IsBusy && SelectedImportedMove is not null);
         AnalyzeImportedGameCommand = new RelayCommand(async () => await AnalyzeImportedGameAsync(), () => !IsBusy && importedGame is not null && engine is not null);
         StopImportCommand = new RelayCommand(StopImport, () => IsImportCancellationAvailable);
-        ShowSelectedMistakeOnBoardCommand = new RelayCommand(ShowSelectedMistakeOnBoard, () => !IsBusy && SelectedAnalysisMistake is not null);
+        ShowSelectedMistakeOnBoardCommand = new RelayCommand(ShowSelectedMistakeOnBoard, () => !IsBusy && SelectedAnalysisMistake?.LeadMove is not null);
 
         TryInitializeEngine();
         ClearPieceMoveOptions();
@@ -385,7 +385,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 ? "PGN loaded, but no SAN moves were found."
                 : $"Imported {importedReplay.Count} plies from PGN.";
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             StatusMessage = $"Could not parse PGN: {ex.Message}";
         }
@@ -533,7 +533,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 {
                     throw;
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ex is not OutOfMemoryException)
                 {
                     failed++;
                     if (failureMessages.Count < 5)
@@ -813,7 +813,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 LoadImportedGameCore(game);
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OutOfMemoryException)
             {
                 Trace.TraceWarning(
                     "MainWindowViewModel: skipped imported game '{0}' because replay loading failed ({1}: {2})",
@@ -857,7 +857,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             ApplyAnalysisFilter();
             StatusMessage = $"Analysis finished for {SelectedAnalysisSide}.";
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             cachedAnalysisResult = null;
             cachedAnalysisResultsBySide.Remove(SelectedAnalysisSide);
@@ -1002,6 +1002,12 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (SelectedAnalysisMistake is null)
         {
+            return;
+        }
+
+        if (SelectedAnalysisMistake.LeadMove is null)
+        {
+            StatusMessage = "Selected mistake has no associated moves and cannot be shown on the board.";
             return;
         }
 
@@ -1161,7 +1167,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             engine.SendCommand("setoption name MultiPV value 3");
             StatusMessage = $"MoveMentor Chess is ready. External chess engine loaded from {enginePath}.";
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             engine = null;
             StatusMessage = $"MoveMentor Chess is ready, but the analysis engine is unavailable. {ex.Message}";
@@ -1232,7 +1238,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                         : $"Evaluation: Black +{Math.Abs(pawns):0.0}";
             }
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             SuggestionText = "Engine suggestions: unavailable";
             EvaluationText = "Evaluation: unavailable";
@@ -1293,7 +1299,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         RefreshBoard();
     }
 
-    private void UpdatePieceMoveOptions(string fromSquare, string pieceName, IReadOnlyList<LegalMoveInfo> movesForPiece)
+    private void UpdatePieceMoveOptions(string fromSquare, string pieceName, List<LegalMoveInfo> movesForPiece)
     {
         PieceMoveOptions.Clear();
         PieceMoveOptionsHeader = $"Selected piece: {pieceName} from {fromSquare} | legal moves: {movesForPiece.Count}";
@@ -1318,7 +1324,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 baselineAnalysis = engine.AnalyzePosition(currentFen, new EngineAnalysisOptions(Depth: 10, MultiPv: 1, MoveTimeMs: 90));
                 bestMove = baselineAnalysis.BestMoveUci;
             }
-            catch
+            catch (Exception ex) when (ex is not OutOfMemoryException)
             {
                 baselineAnalysis = null;
                 bestMove = null;
@@ -1377,14 +1383,14 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             }
 
             EngineAnalysis moveAnalysis = engine.AnalyzePosition(appliedMove.FenAfter, new EngineAnalysisOptions(Depth: 10, MultiPv: 1, MoveTimeMs: 90));
-            EngineLine? moveLine = moveAnalysis.Lines.FirstOrDefault();
+            EngineLine? moveLine = moveAnalysis.Lines.Count > 0 ? moveAnalysis.Lines[0] : null;
             int moveCp = NormalizePerspectiveScore(moveLine?.Centipawns, perspectiveSide, perspectiveSide == "White" ? "Black" : "White");
             int? moveMate = moveLine?.MateIn is int mate ? -mate : null;
             string scoreText = FormatEvalScore(moveLine?.Centipawns is null ? null : moveCp, moveMate);
             string evalBrush = GetEvalBrush(moveLine?.Centipawns is null ? null : moveCp, moveMate);
             return new PieceMovePresentation(moveText, scoreText, evalBrush);
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             return new PieceMovePresentation(moveText, string.Empty, "#657386");
         }
@@ -1443,7 +1449,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             : fen;
     }
 
-    private async Task<string?> SelectMoveToApplyAsync(IReadOnlyList<LegalMoveInfo> matchingMoves)
+    private async Task<string?> SelectMoveToApplyAsync(List<LegalMoveInfo> matchingMoves)
     {
         if (matchingMoves.Count == 0)
         {

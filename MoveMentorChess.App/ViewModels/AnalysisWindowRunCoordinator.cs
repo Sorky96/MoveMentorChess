@@ -90,7 +90,7 @@ internal sealed class AnalysisWindowRunCoordinator(
             dataService.StoreResult(cacheKey, result);
             return AnalysisWindowRunOutcome.Completed(result, side);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             return AnalysisWindowRunOutcome.Failed(ex);
         }

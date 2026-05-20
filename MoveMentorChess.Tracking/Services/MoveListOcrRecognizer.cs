@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Text.RegularExpressions;
+using MoveMentorChess.Tracking.Interop;
 using Tesseract;
 
 namespace MoveMentorChess.Tracking;
@@ -13,11 +14,13 @@ public interface IMoveListRecognizer
     bool TryRecognize(Bitmap source, out MoveListRecognitionResult? result, out string? error);
 }
 
-public sealed class MoveListOcrRecognizer : IMoveListRecognizer
+public sealed partial class MoveListOcrRecognizer : IMoveListRecognizer
 {
-    private static readonly Regex SanRegex = new(
+    [GeneratedRegex(
         @"(?<!\S)(?:O-O-O|O-O|0-0-0|0-0|[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?[+#]?|[a-h]x[a-h][1-8](?:=[QRBN])?[+#]?|[a-h][1-8](?:=[QRBN])?[+#]?)(?=\s|$)",
-        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        RegexOptions.IgnoreCase)]
+    private static partial Regex SanRegexGenerated();
+    private static Regex SanRegex => SanRegexGenerated();
 
     private readonly string tesseractDataPath;
     private readonly IClock clock;
@@ -67,7 +70,7 @@ public sealed class MoveListOcrRecognizer : IMoveListRecognizer
                 clock.UtcNow);
             return true;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             error = ex.Message;
             return false;

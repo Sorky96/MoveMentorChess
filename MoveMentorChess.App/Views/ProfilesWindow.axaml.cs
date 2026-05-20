@@ -1,3 +1,4 @@
+using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -124,7 +125,7 @@ public partial class ProfilesWindow : Window
 
             RenderProfile(result.Report, result.OpeningReport, renderVersion);
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             ShowStatus("Could not load the selected player profile.");
         }
@@ -402,7 +403,7 @@ public partial class ProfilesWindow : Window
                 }
             });
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -433,14 +434,16 @@ public partial class ProfilesWindow : Window
         };
     }
 
-    private Control CreateCoachDecisionCard(PlayerProfileReport report)
+    private Border CreateCoachDecisionCard(PlayerProfileReport report)
     {
         string mainIssue = report.TopMistakeLabels.Count > 0
             ? FormatMistakeLabel(report.TopMistakeLabels[0].Label)
             : "No dominant issue yet";
         string trend = FormatTrendHeadline(report.ProgressSignal.Direction);
-        string firstAction = BuildFixFirstItems(report).FirstOrDefault()
-            ?? "Review two recent mistakes from your own games before the next training session.";
+        var fixFirstItems = BuildFixFirstItems(report);
+        string firstAction = fixFirstItems.Count > 0
+            ? fixFirstItems[0]
+            : "Review two recent mistakes from your own games before the next training session.";
         string whyItMatters = BuildCoachOverviewReason(report, trend);
         string? firstOpening = FindFirstTrainingOpening(report);
 
@@ -473,7 +476,7 @@ public partial class ProfilesWindow : Window
         return card;
     }
 
-    private Control CreateSectionCard(string title, IEnumerable<Control> children)
+    private Border CreateSectionCard(string title, IEnumerable<Control> children)
     {
         Border card = CreateCardBorder();
         StackPanel panel = CreateCardPanel();
@@ -496,7 +499,7 @@ public partial class ProfilesWindow : Window
         return card;
     }
 
-    private Control CreateCollapsibleSection(string title, IEnumerable<Control> children, bool isExpanded = false)
+    private Expander CreateCollapsibleSection(string title, IEnumerable<Control> children, bool isExpanded = false)
     {
         StackPanel? panel = isExpanded ? BuildRowsPanel(children) : null;
         Expander expander = CreateCollapsibleSectionShell(title, panel, isExpanded);
@@ -517,7 +520,7 @@ public partial class ProfilesWindow : Window
         return expander;
     }
 
-    private Control CreateCollapsibleSection(string title, StackPanel panel, bool isExpanded = false)
+    private Expander CreateCollapsibleSection(string title, StackPanel panel, bool isExpanded = false)
     {
         return CreateCollapsibleSectionShell(title, panel, isExpanded);
     }
@@ -692,7 +695,7 @@ public partial class ProfilesWindow : Window
         });
         panel.Children.Add(CreateBodyText(FormatExampleRank(example.Rank), "#9EB5C5"));
         panel.Children.Add(CreateBodyText($"Better move: {example.BetterMove}", "#D7E2EA"));
-        panel.Children.Add(CreateBodyText($"Label: {FormatMistakeLabel(example.Label)} | CPL: {example.CentipawnLoss?.ToString() ?? "n/a"} | Phase: {FormatPhase(example.Phase)}", "#D7E2EA"));
+        panel.Children.Add(CreateBodyText($"Label: {FormatMistakeLabel(example.Label)} | CPL: {example.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"} | Phase: {FormatPhase(example.Phase)}", "#D7E2EA"));
         panel.Children.Add(CreateBodyText($"Opening: {FormatOpening(example.Eco)}", "#D7E2EA"));
 
         Button button = new()
@@ -804,7 +807,7 @@ public partial class ProfilesWindow : Window
             $"First mistake: {FormatMistakeLabel(example.FirstMistakeType ?? "unclassified")} on {FormatPlyLabel(example.Side, example.FirstMistakePly, example.FirstMistakeSan)}",
             "#D7E2EA"));
         panel.Children.Add(CreateBodyText(
-            $"Opening: {example.OpeningDisplayName} | CPL {example.FirstMistakeCentipawnLoss?.ToString() ?? "n/a"}",
+            $"Opening: {example.OpeningDisplayName} | CPL {example.FirstMistakeCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"}",
             "#D7E2EA"));
 
         Button button = new()
@@ -889,7 +892,7 @@ public partial class ProfilesWindow : Window
         panel.Children.Add(CreateBodyText($"Your move: {recommendation.PlayedSan}", "#9EB5C5"));
         panel.Children.Add(CreateBodyText($"Suggested move: {recommendation.BetterMove}", "#D7E2EA"));
         panel.Children.Add(CreateBodyText(
-            $"Theme: {FormatMistakeLabel(recommendation.MistakeType ?? "unclassified")} | CPL {recommendation.CentipawnLoss?.ToString() ?? "n/a"}",
+            $"Theme: {FormatMistakeLabel(recommendation.MistakeType ?? "unclassified")} | CPL {recommendation.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"}",
             "#D7E2EA"));
 
         Button button = new()
@@ -1121,11 +1124,11 @@ public partial class ProfilesWindow : Window
             FormatPlyLabel(recommendation.Side, recommendation.Ply, recommendation.PlayedSan),
             $"Your move: {recommendation.PlayedSan}",
             $"Suggested move: {recommendation.BetterMove}",
-            $"Theme: {FormatMistakeLabel(recommendation.MistakeType ?? "unclassified")} | CPL {recommendation.CentipawnLoss?.ToString() ?? "n/a"}"
+            $"Theme: {FormatMistakeLabel(recommendation.MistakeType ?? "unclassified")} | CPL {recommendation.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"}"
         ];
     }
 
-    private static IReadOnlyList<BoardArrowViewModel> BuildPreviewArrows(
+    private static List<BoardArrowViewModel> BuildPreviewArrows(
         string fen,
         params (string? MoveText, Color Color)[] moveSpecs)
     {
@@ -1180,12 +1183,13 @@ public partial class ProfilesWindow : Window
             appliedMove = game.ApplySanWithResult(san);
             return true;
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             return false;
         }
     }
 
+#pragma warning disable SYSLIB1045
     private static string? TryExtractUci(string moveText)
     {
         if (System.Text.RegularExpressions.Regex.IsMatch(moveText, "^[a-h][1-8][a-h][1-8][qrbn]?$", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
@@ -1199,6 +1203,7 @@ public partial class ProfilesWindow : Window
             System.Text.RegularExpressions.RegexOptions.IgnoreCase);
         return match.Success ? match.Groups[1].Value : null;
     }
+#pragma warning restore SYSLIB1045
 
     private static string TrimMoveDisplayText(string moveText)
     {
@@ -1206,7 +1211,7 @@ public partial class ProfilesWindow : Window
         return parenIndex > 0 ? moveText[..parenIndex].Trim() : moveText;
     }
 
-    private static Control CreateInsightCard(string label, string value, string? detail = null)
+    private static Border CreateInsightCard(string label, string value, string? detail = null)
     {
         Border card = new()
         {

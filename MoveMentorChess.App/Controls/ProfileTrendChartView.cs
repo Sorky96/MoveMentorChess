@@ -1,3 +1,4 @@
+using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -53,7 +54,7 @@ public sealed class ProfileTrendChartView : Control
         Rect plot = BuildPlotRect(bounds);
         context.DrawRectangle(Brush.Parse("#10242E"), null, plot);
 
-        IReadOnlyList<ProfileTrendChartSeries> visibleSeries = Series
+        List<ProfileTrendChartSeries> visibleSeries = Series
             .Where(series => series.Points.Any(point => point.Value.HasValue))
             .ToList();
         if (visibleSeries.Count == 0)
@@ -126,7 +127,7 @@ public sealed class ProfileTrendChartView : Control
             double y = plot.Bottom - (plot.Height * i / 4.0);
             context.DrawLine(gridPen, new Point(plot.Left, y), new Point(plot.Right, y));
             double value = min + ((max - min) * i / 4.0);
-            DrawText(context, Math.Round(value).ToString(), 11, Brush.Parse("#9EB5C5"), new Point(4, y - 8));
+            DrawText(context, Math.Round(value).ToString(CultureInfo.InvariantCulture), 11, Brush.Parse("#9EB5C5"), new Point(4, y - 8));
         }
 
         context.DrawLine(axisPen, new Point(plot.Left, plot.Top), new Point(plot.Left, plot.Bottom));
@@ -316,7 +317,7 @@ public sealed class ProfileTrendChartView : Control
 
     private int? FindHoveredIndex(Point pointer)
     {
-        IReadOnlyList<ProfileTrendChartSeries> visibleSeries = Series
+        List<ProfileTrendChartSeries> visibleSeries = Series
             .Where(series => series.Points.Any(point => point.Value.HasValue))
             .ToList();
         if (visibleSeries.Count == 0)
@@ -355,7 +356,7 @@ public sealed class ProfileTrendChartView : Control
 
     private static void DrawXAxisLabels(DrawingContext context, IReadOnlyList<ProfileTrendChartPoint> points, Rect plot, bool hasBars)
     {
-        IReadOnlyList<ProfileTrendChartPoint> labeled = points
+        List<ProfileTrendChartPoint> labeled = points
             .Where(point => !string.IsNullOrWhiteSpace(point.Label))
             .ToList();
         if (labeled.Count == 0)

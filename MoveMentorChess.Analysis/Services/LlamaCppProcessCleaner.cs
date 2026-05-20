@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 
 namespace MoveMentorChess.Analysis;
@@ -25,7 +26,7 @@ public static class LlamaCppProcessCleaner
             {
                 processes = Process.GetProcessesByName(processName);
             }
-            catch
+            catch (Exception ex) when (ex is InvalidOperationException or Win32Exception)
             {
                 continue;
             }
@@ -54,7 +55,7 @@ public static class LlamaCppProcessCleaner
                     process.Kill(entireProcessTree: true);
                     process.WaitForExit(5000);
                 }
-                catch
+                catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or NotSupportedException)
                 {
                     // Best effort orphan cleanup only.
                 }
@@ -88,7 +89,7 @@ public static class LlamaCppProcessCleaner
             string normalized = NormalizeDirectorySeparator(Path.GetFullPath(path));
             roots.Add(normalized);
         }
-        catch
+        catch (Exception ex) when (ex is IOException or ArgumentException or NotSupportedException)
         {
             // Ignore invalid paths.
         }
@@ -113,7 +114,7 @@ public static class LlamaCppProcessCleaner
         {
             return process.MainModule?.FileName;
         }
-        catch
+        catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
         {
             return null;
         }

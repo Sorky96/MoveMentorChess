@@ -23,7 +23,7 @@ public sealed class DefaultStockfishPathResolver : IStockfishPathResolver
             {
                 fullPath = Path.GetFullPath(candidate);
             }
-            catch
+            catch (Exception ex) when (ex is ArgumentException or System.Security.SecurityException or NotSupportedException or PathTooLongException)
             {
                 continue;
             }

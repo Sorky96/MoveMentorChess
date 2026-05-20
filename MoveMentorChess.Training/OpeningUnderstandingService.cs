@@ -26,7 +26,7 @@ public sealed class OpeningUnderstandingService
 
     private static OpeningUnderstandingCard BuildOpeningPlanCard(OpeningTrainerOverview overview, OpeningLineCatalogItem line)
     {
-        IReadOnlyList<string> ideas = overview.WhyTheseMovesMatter
+        List<string> ideas = overview.WhyTheseMovesMatter
             .Select(idea => idea.ShortExplanation)
             .Where(text => !string.IsNullOrWhiteSpace(text))
             .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -46,7 +46,7 @@ public sealed class OpeningUnderstandingService
 
     private static OpeningUnderstandingCard BuildPieceSetupCard(OpeningTrainerOverview overview, OpeningLineCatalogItem line)
     {
-        IReadOnlyList<string> developmentMoves = overview.MainLine
+        List<string> developmentMoves = overview.MainLine
             .Where(move => LooksLikePieceDevelopment(move.San))
             .Select(move => move.San)
             .Take(4)
@@ -122,7 +122,7 @@ public sealed class OpeningUnderstandingService
 
     private static string FormatMainLine(IReadOnlyList<OpeningLineMove> mainLine, int maxMoves)
     {
-        IReadOnlyList<string> moves = mainLine
+        List<string> moves = mainLine
             .Take(maxMoves)
             .Select(move => move.San)
             .Where(move => !string.IsNullOrWhiteSpace(move))

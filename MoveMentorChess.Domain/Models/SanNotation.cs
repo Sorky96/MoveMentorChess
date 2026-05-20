@@ -5,13 +5,34 @@ using System.Text.RegularExpressions;
 
 namespace MoveMentorChess.Domain;
 
-public static class SanNotation
+public static partial class SanNotation
 {
-    private static readonly Regex SanCleanupRegex = new(@"[!?]+", RegexOptions.Compiled);
-    private static readonly Regex MoveNumberPrefixRegex = new(@"^\d+\.(\.\.)?", RegexOptions.Compiled);
-    private static readonly Regex SanTokenRegex = new(
-        @"^(?:(?:O-O-O|O-O|0-0-0|0-0)[+#]?|[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?[+#]?|[a-h]x[a-h][1-8](?:=[QRBN])?[+#]?|[a-h][1-8](?:=[QRBN])?[+#]?)$",
-        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    [GeneratedRegex(@"[!?]+")]
+    private static partial Regex SanCleanupRegex();
+
+    [GeneratedRegex(@"^\d+\.(\.\.)?")]
+    private static partial Regex MoveNumberPrefixRegex();
+
+    [GeneratedRegex(@"^(?:(?:O-O-O|O-O|0-0-0|0-0)[+#]?|[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?[+#]?|[a-h]x[a-h][1-8](?:=[QRBN])?[+#]?|[a-h][1-8](?:=[QRBN])?[+#]?)$", RegexOptions.IgnoreCase)]
+    private static partial Regex SanTokenRegex();
+
+    [GeneratedRegex(@"\[.*?\]")]
+    private static partial Regex PgnBracketRegex();
+
+    [GeneratedRegex(@"\{.*?\}")]
+    private static partial Regex PgnBraceRegex();
+
+    [GeneratedRegex(@"\(.*?\)")]
+    private static partial Regex PgnParenthesesRegex();
+
+    [GeneratedRegex(@";[^\r\n]*")]
+    private static partial Regex PgnCommentRegex();
+
+    [GeneratedRegex(@"[^\w=+#\-xO]", RegexOptions.IgnoreCase)]
+    private static partial Regex NormalizeCleanupRegex();
+
+    [GeneratedRegex(@"[+#]+$")]
+    private static partial Regex CheckSuffixRegex();
 
     public static List<string> ParsePgnMoves(string pgnText)
     {
@@ -25,10 +46,10 @@ public static class SanNotation
             return ParsePgnMovesWithLimit(pgnText, Math.Max(0, maxMoves.Value));
         }
 
-        string text = Regex.Replace(pgnText, @"\[.*?\]", " ");
-        text = Regex.Replace(text, @"\{.*?\}", " ");
-        text = Regex.Replace(text, @"\(.*?\)", " ");
-        text = Regex.Replace(text, @";[^\r\n]*", " ");
+        string text = PgnBracketRegex().Replace(pgnText, " ");
+        text = PgnBraceRegex().Replace(text, " ");
+        text = PgnParenthesesRegex().Replace(text, " ");
+        text = PgnCommentRegex().Replace(text, " ");
         text = text.Replace('\r', ' ').Replace('\n', ' ');
 
         List<string> moves = new();
@@ -56,8 +77,8 @@ public static class SanNotation
         normalized = normalized.Replace("e.p.", string.Empty, StringComparison.OrdinalIgnoreCase);
         normalized = normalized.Replace("ep", string.Empty, StringComparison.OrdinalIgnoreCase);
         normalized = normalized.Replace(" ", string.Empty);
-        normalized = Regex.Replace(normalized, @"[^\w=+#\-xO]", string.Empty, RegexOptions.IgnoreCase);
-        normalized = SanCleanupRegex.Replace(normalized, string.Empty);
+        normalized = NormalizeCleanupRegex().Replace(normalized, string.Empty);
+        normalized = SanCleanupRegex().Replace(normalized, string.Empty);
         if (normalized.Length > 0 && ShouldUppercasePiecePrefix(normalized))
         {
             normalized = char.ToUpperInvariant(normalized[0]) + normalized[1..];
@@ -69,7 +90,7 @@ public static class SanNotation
     public static string RemoveCheckSuffix(string san)
     {
         string normalized = NormalizeSan(san);
-        return Regex.Replace(normalized, @"[+#]+$", string.Empty);
+        return CheckSuffixRegex().Replace(normalized, string.Empty);
     }
 
     public static bool HasExplicitPiecePrefix(string normalizedSan)
@@ -233,7 +254,7 @@ public static class SanNotation
 
     private static bool TryReadSanToken(string rawToken, out string token)
     {
-        token = MoveNumberPrefixRegex.Replace(rawToken.Trim(), string.Empty);
+        token = MoveNumberPrefixRegex().Replace(rawToken.Trim(), string.Empty);
         if (string.IsNullOrWhiteSpace(token) || token is "$" or "1-0" or "0-1" or "1/2-1/2" or "*")
         {
             return false;
@@ -244,6 +265,6 @@ public static class SanNotation
             return false;
         }
 
-        return SanTokenRegex.IsMatch(token);
+        return SanTokenRegex().IsMatch(token);
     }
 }

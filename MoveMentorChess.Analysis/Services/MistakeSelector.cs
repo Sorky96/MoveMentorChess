@@ -26,7 +26,7 @@ public sealed class MistakeSelector
         List<RankedMistake> rankedInaccuracies = ranked
             .Where(item => item.Mistake.Quality == MoveQualityBucket.Inaccuracy)
             .OrderByDescending(item => item.Score)
-            .ThenBy(item => item.Mistake.Moves.First().Replay.Ply)
+            .ThenBy(item => item.Mistake.Moves[0].Replay.Ply)
             .ToList();
         List<SelectedMistake> topInaccuracies = SelectTopInaccuracies(rankedInaccuracies);
 
@@ -34,7 +34,7 @@ public sealed class MistakeSelector
 
         return selected
             .Distinct()
-            .OrderBy(item => item.Moves.First().Replay.Ply)
+            .OrderBy(item => item.Moves[0].Replay.Ply)
             .ToList();
     }
 
@@ -81,7 +81,7 @@ public sealed class MistakeSelector
         return new SelectedMistake(group, lead.Quality, lead.MistakeTag, explanation);
     }
 
-    private static bool CanMergeIntoCurrentGroup(IReadOnlyList<MoveAnalysisResult> currentGroup, MoveAnalysisResult candidate)
+    private static bool CanMergeIntoCurrentGroup(List<MoveAnalysisResult> currentGroup, MoveAnalysisResult candidate)
     {
         MoveAnalysisResult last = currentGroup[^1];
         int gap = candidate.Replay.Ply - last.Replay.Ply;
@@ -113,7 +113,7 @@ public sealed class MistakeSelector
         return !HasMeaningfulRecovery(last, candidate);
     }
 
-    private static List<SelectedMistake> SelectTopInaccuracies(IReadOnlyList<RankedMistake> rankedInaccuracies)
+    private static List<SelectedMistake> SelectTopInaccuracies(List<RankedMistake> rankedInaccuracies)
     {
         List<SelectedMistake> selected = new();
         HashSet<string> labels = new(StringComparer.OrdinalIgnoreCase);
@@ -375,7 +375,7 @@ public sealed class MistakeSelector
         return candidateBefore >= previousAfter + 100;
     }
 
-    private static bool HasNearbyNarrative(IReadOnlyList<SelectedMistake> selected, SelectedMistake candidate)
+    private static bool HasNearbyNarrative(List<SelectedMistake> selected, SelectedMistake candidate)
     {
         if (selected.Count == 0)
         {

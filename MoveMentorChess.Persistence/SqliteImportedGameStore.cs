@@ -214,7 +214,14 @@ internal static class SqliteImportedGameStore
             string? timeControl = statement.GetText(9);
             GameTimeControlCategory category = ParseTimeControlCategory(statement.GetNullableInt(10), timeControl);
             string? updatedUtcText = statement.GetText(11);
-            DateTime.TryParse(updatedUtcText, out DateTime updatedUtc);
+            if (!DateTime.TryParse(
+                updatedUtcText,
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal,
+                out DateTime updatedUtc))
+            {
+                updatedUtc = DateTime.MinValue;
+            }
 
             items.Add(new SavedImportedGameSummary(
                 fingerprint,

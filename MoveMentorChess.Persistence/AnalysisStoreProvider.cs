@@ -39,14 +39,16 @@ public static class AnalysisStoreProvider
         }
     }
 
-    private static IAnalysisStore? CreateDefaultStoreSafely()
+    private static SqliteAnalysisStore? CreateDefaultStoreSafely()
     {
         try
         {
             EnsureBundledOpeningSeedImported();
             return SqliteAnalysisStore.CreateDefault();
         }
+#pragma warning disable CA1031
         catch (Exception ex)
+#pragma warning restore CA1031
         {
             PersistenceDiagnostics.Warning(
                 nameof(AnalysisStoreProvider),

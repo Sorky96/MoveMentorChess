@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace MoveMentorChess.App.ViewModels;
 
 public sealed class PlayerProfileSummaryItemViewModel
@@ -7,7 +9,7 @@ public sealed class PlayerProfileSummaryItemViewModel
         Summary = summary;
         Header = summary.DisplayName;
         string topLabels = summary.TopLabels.Count == 0 ? "no tags" : string.Join(", ", summary.TopLabels);
-        Meta = $"Games {summary.GamesAnalyzed} | Highlighted mistakes {summary.HighlightedMistakes} | CPL {summary.AverageCentipawnLoss?.ToString() ?? "n/a"} | {topLabels}";
+        Meta = $"Games {summary.GamesAnalyzed.ToString(CultureInfo.InvariantCulture)} | Highlighted mistakes {summary.HighlightedMistakes.ToString(CultureInfo.InvariantCulture)} | CPL {summary.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"} | {topLabels}";
     }
 
     public PlayerProfileSummary Summary { get; }

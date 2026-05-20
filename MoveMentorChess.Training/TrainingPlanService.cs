@@ -13,7 +13,7 @@ public sealed class TrainingPlanService
         ArgumentNullException.ThrowIfNull(profileReport);
 
         OpeningTrainingOutcomeSummary trainingSummary = BuildTrainingSummary(trainingHistory);
-        IReadOnlyList<TrainingPlanTopic> topics = BuildTopics(profileReport, openingReport, trainingSummary);
+        List<TrainingPlanTopic> topics = BuildTopics(profileReport, openingReport, trainingSummary);
         IReadOnlyList<TrainingRecommendation> recommendations = topics
             .Select(topic => new TrainingRecommendation(
                 topic.Priority,
@@ -46,7 +46,7 @@ public sealed class TrainingPlanService
             dashboard);
     }
 
-    private static IReadOnlyList<TrainingPlanTopic> BuildTopics(
+    private static List<TrainingPlanTopic> BuildTopics(
         PlayerProfileReport profileReport,
         OpeningWeaknessReport? openingReport,
         OpeningTrainingOutcomeSummary trainingSummary)
@@ -99,7 +99,7 @@ public sealed class TrainingPlanService
             .FirstOrDefault(item => string.Equals(item.Label, label, StringComparison.Ordinal));
         ProfileCostlyLabelStat? costly = profileReport.CostliestMistakeLabels
             .FirstOrDefault(item => string.Equals(item.Label, label, StringComparison.Ordinal));
-        IReadOnlyList<ProfileMistakeExample> examples = profileReport.MistakeExamples
+        List<ProfileMistakeExample> examples = profileReport.MistakeExamples
             .Where(item => string.Equals(item.Label, label, StringComparison.Ordinal))
             .Take(3)
             .ToList();
@@ -113,21 +113,21 @@ public sealed class TrainingPlanService
                 .ThenBy(group => group.Key)
                 .Select(group => (PlayerSide?)group.Key)
                 .FirstOrDefault();
-        IReadOnlyList<string> relatedOpenings = BuildRelatedOpenings(label, examples, openingReport);
+        List<string> relatedOpenings = BuildRelatedOpenings(label, examples, openingReport);
         ProfileProgressDirection labelTrend = profileReport.LabelTrends
             .FirstOrDefault(item => string.Equals(item.Label, label, StringComparison.Ordinal))
             ?.Direction
             ?? ProfileProgressDirection.InsufficientData;
 
         int frequencyScore = (frequent?.Count ?? 0) * 100;
-        int costScore = costly is null
+        int costlyScore = costly is null
             ? 0
             : (costly.TotalCentipawnLoss * 2) + ((costly.AverageCentipawnLoss ?? 0) * 3);
         int trendScore = GetTrendScore(labelTrend);
         int phaseScore = GetPhaseScore(profileReport, emphasisPhase);
         int openingWeaknessScore = GetOpeningWeaknessScore(label, openingReport);
         int trainingScore = GetTrainingScore(label, relatedOpenings, trainingSummary);
-        int totalScore = frequencyScore + costScore + trendScore + phaseScore + openingWeaknessScore + trainingScore;
+        int totalScore = frequencyScore + costlyScore + trendScore + phaseScore + openingWeaknessScore + trainingScore;
         TopicTemplate template = GetTemplate(label);
         IReadOnlyList<TrainingBlock> blocks = BuildBlocks(label, template, emphasisPhase, emphasisSide, relatedOpenings);
         TrainingPlanTopicStatus status = DetermineTopicStatus(labelTrend, trainingSummary, label, relatedOpenings, openingReport);
@@ -146,7 +146,7 @@ public sealed class TrainingPlanService
             costly?.TotalCentipawnLoss ?? 0,
             costly?.AverageCentipawnLoss,
             labelTrend,
-            profileReport.MistakesByPhase.FirstOrDefault()?.Phase,
+            profileReport.MistakesByPhase.Count > 0 ? profileReport.MistakesByPhase[0]?.Phase : null,
             emphasisPhase,
             relatedOpenings,
             openingReport,
@@ -179,7 +179,7 @@ public sealed class TrainingPlanService
             examples,
             new TrainingPlanPriorityBreakdown(
                 frequencyScore,
-                costScore,
+                costlyScore,
                 trendScore,
                 phaseScore,
                 totalScore,
@@ -189,11 +189,12 @@ public sealed class TrainingPlanService
 
     private static TrainingPlanTopic CreateFallbackTopic(PlayerProfileReport profileReport)
     {
+        GamePhase? fallbackPhase = profileReport.MistakesByPhase.Count > 0 ? profileReport.MistakesByPhase[0].Phase : null;
         IReadOnlyList<TrainingBlock> blocks =
         [
-            CreateBlock(TrainingBlockPurpose.Repair, TrainingBlockKind.GameReview, "Review recent critical moments", "Replay one recent game and stop before every large evaluation swing.", 30, profileReport.MistakesByPhase.FirstOrDefault()?.Phase, null, []),
-            CreateBlock(TrainingBlockPurpose.Maintain, TrainingBlockKind.SlowPlayFocus, "Slow down before committing", "Play one calmer practice block and name the first thing that had to be checked before moving.", 20, profileReport.MistakesByPhase.FirstOrDefault()?.Phase, null, []),
-            CreateBlock(TrainingBlockPurpose.Checklist, TrainingBlockKind.SlowPlayFocus, "Default board-scan checklist", "Keep one short board-scan phrase visible and use it before every critical move.", 15, profileReport.MistakesByPhase.FirstOrDefault()?.Phase, null, [])
+            CreateBlock(TrainingBlockPurpose.Repair, TrainingBlockKind.GameReview, "Review recent critical moments", "Replay one recent game and stop before every large evaluation swing.", 30, fallbackPhase, null, []),
+            CreateBlock(TrainingBlockPurpose.Maintain, TrainingBlockKind.SlowPlayFocus, "Slow down before committing", "Play one calmer practice block and name the first thing that had to be checked before moving.", 20, fallbackPhase, null, []),
+            CreateBlock(TrainingBlockPurpose.Checklist, TrainingBlockKind.SlowPlayFocus, "Default board-scan checklist", "Keep one short board-scan phrase visible and use it before every critical move.", 15, fallbackPhase, null, [])
         ];
 
         return new TrainingPlanTopic(
@@ -206,7 +207,7 @@ public sealed class TrainingPlanService
             "There is not enough topic-specific data yet, so this stays as a general review anchor until stronger patterns emerge.",
             "Fallback topic created because the profile does not yet contain enough labeled mistakes.",
             ProfileProgressDirection.InsufficientData,
-            profileReport.MistakesByPhase.FirstOrDefault()?.Phase,
+            fallbackPhase,
             null,
             [],
             ExtractChecklist(blocks),
@@ -280,8 +281,14 @@ public sealed class TrainingPlanService
 
     private static TrainingBlock GetBlock(TrainingPlanTopic topic, TrainingBlockPurpose purpose)
     {
-        return topic.Blocks.FirstOrDefault(block => block.Purpose == purpose)
-            ?? topic.Blocks.First();
+        for (int i = 0; i < topic.Blocks.Count; i++)
+        {
+            if (topic.Blocks[i].Purpose == purpose)
+            {
+                return topic.Blocks[i];
+            }
+        }
+        return topic.Blocks[0];
     }
 
     private static string BuildChessRationale(int occurrences, int totalCentipawnLoss, int? averageCentipawnLoss, ProfileProgressDirection trendDirection, GamePhase? emphasisPhase)
@@ -320,7 +327,7 @@ public sealed class TrainingPlanService
         ProfileProgressDirection trendDirection,
         GamePhase? weakestPhase,
         GamePhase? emphasisPhase,
-        IReadOnlyList<string> relatedOpenings,
+        List<string> relatedOpenings,
         OpeningWeaknessReport? openingReport,
         string label,
         OpeningTrainingOutcomeSummary trainingSummary)
@@ -382,7 +389,7 @@ public sealed class TrainingPlanService
 
     private static OpeningTrainingOutcomeSummary BuildTrainingSummary(IReadOnlyList<OpeningTrainingSessionResult>? history)
     {
-        IReadOnlyList<OpeningTrainingSessionResult> completed = (history ?? [])
+        List<OpeningTrainingSessionResult> completed = (history ?? [])
             .Where(result => result.Outcome == OpeningTrainingSessionOutcome.Completed)
             .ToList();
         int attemptCount = completed.Sum(result => result.AttemptCount);
@@ -495,7 +502,7 @@ public sealed class TrainingPlanService
             && openingReport.WeakOpenings.Any(opening => opening.Category == OpeningWeaknessCategory.FixNow);
     }
 
-    private static IReadOnlyList<TrainingPlanDashboardItem> BuildDashboard(
+    private static List<TrainingPlanDashboardItem> BuildDashboard(
         PlayerProfileReport profileReport,
         OpeningWeaknessReport? openingReport,
         OpeningTrainingOutcomeSummary trainingSummary,
@@ -544,9 +551,9 @@ public sealed class TrainingPlanService
         return items;
     }
 
-    private static IReadOnlyList<string> BuildRelatedOpenings(
+    private static List<string> BuildRelatedOpenings(
         string label,
-        IReadOnlyList<ProfileMistakeExample> examples,
+        List<ProfileMistakeExample> examples,
         OpeningWeaknessReport? openingReport)
     {
         IEnumerable<string> values = examples
@@ -659,7 +666,7 @@ public sealed class TrainingPlanService
         };
     }
 
-    private static GamePhase? DetermineEmphasisPhase(PlayerProfileReport profileReport, IReadOnlyList<ProfileMistakeExample> examples)
+    private static GamePhase? DetermineEmphasisPhase(PlayerProfileReport profileReport, List<ProfileMistakeExample> examples)
     {
         if (examples.Count > 0)
         {
@@ -671,7 +678,7 @@ public sealed class TrainingPlanService
                 .FirstOrDefault();
         }
 
-        return profileReport.MistakesByPhase.FirstOrDefault()?.Phase;
+        return profileReport.MistakesByPhase.Count > 0 ? profileReport.MistakesByPhase[0].Phase : null;
     }
 
     private static string BuildTrendSummary(ProfileProgressDirection direction)
@@ -734,7 +741,7 @@ public sealed class TrainingPlanService
         };
     }
 
-    private static IReadOnlyList<string> ExtractChecklist(IReadOnlyList<TrainingBlock> blocks)
+    private static List<string> ExtractChecklist(IReadOnlyList<TrainingBlock> blocks)
     {
         return blocks
             .Where(block => block.Purpose == TrainingBlockPurpose.Checklist)
@@ -743,7 +750,7 @@ public sealed class TrainingPlanService
             .ToList();
     }
 
-    private static IReadOnlyList<string> ExtractSuggestedDrills(IReadOnlyList<TrainingBlock> blocks)
+    private static List<string> ExtractSuggestedDrills(IReadOnlyList<TrainingBlock> blocks)
     {
         return blocks
             .Where(block => block.Purpose != TrainingBlockPurpose.Checklist)
@@ -751,7 +758,7 @@ public sealed class TrainingPlanService
             .ToList();
     }
 
-    private static TrainingBlock CreateBlock(TrainingBlockPurpose purpose, TrainingBlockKind kind, string title, string description, int estimatedMinutes, GamePhase? emphasisPhase, PlayerSide? emphasisSide, IReadOnlyList<string> relatedOpenings)
+    private static TrainingBlock CreateBlock(TrainingBlockPurpose purpose, TrainingBlockKind kind, string title, string description, int estimatedMinutes, GamePhase? emphasisPhase, PlayerSide? emphasisSide, List<string> relatedOpenings)
     {
         return new TrainingBlock(purpose, kind, title, description, estimatedMinutes, emphasisPhase, emphasisSide, relatedOpenings);
     }
@@ -767,7 +774,7 @@ public sealed class TrainingPlanService
         };
     }
 
-    private static IReadOnlyList<TrainingBlock> BuildBlocks(string label, TopicTemplate template, GamePhase? emphasisPhase, PlayerSide? emphasisSide, IReadOnlyList<string> relatedOpenings)
+    private static IReadOnlyList<TrainingBlock> BuildBlocks(string label, TopicTemplate template, GamePhase? emphasisPhase, PlayerSide? emphasisSide, List<string> relatedOpenings)
     {
         string phaseText = emphasisPhase.HasValue
             ? FormatPhase(emphasisPhase.Value).ToLowerInvariant()
