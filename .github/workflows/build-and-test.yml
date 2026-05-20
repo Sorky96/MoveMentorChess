@@ -43,4 +43,25 @@ jobs:
         run: dotnet build MoveMentorChess.sln --configuration Release --no-restore -m:1 --verbosity minimal
 
       - name: Run tests
-        run: dotnet test MoveMentorChess.sln --configuration Release --no-build -m:1 --verbosity minimal
+        run: dotnet test MoveMentorChess.sln --configuration Release --no-build -m:1 --verbosity minimal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+
+      - name: Install ReportGenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Generate Coverage Report
+        run: reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:"TestResults/CoverageReport" -reporttypes:"MarkdownSummary;Html"
+
+      - name: Publish Coverage Summary
+        shell: pwsh
+        run: |
+          if (Test-Path "TestResults/CoverageReport/Summary.md") {
+            Get-Content "TestResults/CoverageReport/Summary.md" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          } else {
+            Write-Error "Coverage summary file not found!"
+          }
+
+      - name: Upload Coverage Artifacts
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        with:
+          name: code-coverage-report
+          path: TestResults/CoverageReport/
