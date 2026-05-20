@@ -34,3 +34,6 @@ Desktop.ini
 packages/
 *.nupkg
 /opening_tree_import_plan.md
+
+# Test results
+[Tt]est[Rr]esults/
