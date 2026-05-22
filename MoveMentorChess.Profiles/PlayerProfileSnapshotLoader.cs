@@ -26,6 +26,12 @@ internal sealed class PlayerProfileSnapshotLoader
                 .ThenByDescending(snapshot => snapshot.MultiPv)
                 .ThenByDescending(snapshot => snapshot.MoveTimeMs ?? -1)
                 .First())
+            .OrderByDescending(snapshot => snapshot.AnalysisUpdatedUtc)
+            .ThenByDescending(snapshot => snapshot.Depth)
+            .ThenByDescending(snapshot => snapshot.MultiPv)
+            .ThenByDescending(snapshot => snapshot.MoveTimeMs ?? -1)
+            .ThenBy(snapshot => snapshot.GameFingerprint, StringComparer.Ordinal)
+            .ThenBy(snapshot => snapshot.Side)
             .Take(limit)
             .ToList();
     }
