@@ -12,8 +12,9 @@ internal static class AppCompositionRoot
         IProfilesWindowFactory profilesWindowFactory = new ProfilesWindowFactory(AnalysisStoreProvider.GetStore);
         IStockfishPathResolver stockfishPathResolver = new DefaultStockfishPathResolver();
         IMainWindowAnalysisDataService mainWindowAnalysisDataService = new DefaultMainWindowAnalysisDataService(AnalysisStoreProvider.GetStore);
+        IMainWindowDialogDataService mainWindowDialogDataService = new DefaultMainWindowDialogDataService(AnalysisStoreProvider.GetStore);
 
-        return new MainWindow(analysisWindowFactory, profilesWindowFactory, AnalysisStoreProvider.GetStore)
+        return new MainWindow(analysisWindowFactory, profilesWindowFactory, mainWindowDialogDataService)
         {
             DataContext = new MainWindowViewModel(
                 stockfishPathResolver,

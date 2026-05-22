@@ -37,7 +37,7 @@ public partial class MainWindow : Window
     {
     }
 
-    private MainWindow(
+    internal MainWindow(
         IAnalysisWindowFactory analysisWindowFactory,
         IProfilesWindowFactory profilesWindowFactory,
         IMainWindowDialogDataService dialogDataService)

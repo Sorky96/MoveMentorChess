@@ -8,7 +8,7 @@ internal sealed class DefaultProfilesWindowDataService(Func<IAnalysisStore?> ana
     private PlayerProfileService? profileService;
 
     public PlayerProfileService ProfileService
-        => profileService ??= new PlayerProfileService(GetRequiredStore());
+        => profileService ??= AnalysisStoreServiceFactory.CreatePlayerProfileService(GetRequiredStore());
 
     public ProfileCoachSessionTracker CreateSessionTracker()
     {
@@ -27,7 +27,8 @@ internal sealed class DefaultProfilesWindowDataService(Func<IAnalysisStore?> ana
             return false;
         }
 
-        viewModel = new OpeningTrainerWindowViewModel(new OpeningTrainerWorkspaceService(store));
+        viewModel = new OpeningTrainerWindowViewModel(
+            AnalysisStoreServiceFactory.CreateOpeningTrainerWorkspaceService(store));
         return true;
     }
 

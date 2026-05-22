@@ -6,20 +6,20 @@ public static class OpeningTheorySourceResolver
     {
         ArgumentNullException.ThrowIfNull(analysisStore);
 
-        IOpeningTheoryStore? theoryStore = analysisStore is SqliteAnalysisStore
-            ? TryCreateBundledSeedStore()
-            : analysisStore as IOpeningTheoryStore;
-
-        return theoryStore is null
-            ? null
-            : new OpeningTheoryQueryService(theoryStore);
+        return analysisStore is IOpeningTheoryStore theoryStore
+            ? Create(theoryStore)
+            : null;
     }
 
     public static OpeningTheoryQueryService Create(IOpeningTheoryStore theoryStore)
     {
         ArgumentNullException.ThrowIfNull(theoryStore);
 
-        return new OpeningTheoryQueryService(theoryStore);
+        IOpeningTheoryStore resolvedTheoryStore = theoryStore is SqliteAnalysisStore
+            ? TryCreateBundledSeedStore() ?? theoryStore
+            : theoryStore;
+
+        return new OpeningTheoryQueryService(resolvedTheoryStore);
     }
 
     private static SqliteAnalysisStore? TryCreateBundledSeedStore()
@@ -30,6 +30,8 @@ public static class OpeningTheorySourceResolver
             return null;
         }
 
-        return new SqliteAnalysisStore(seedPath);
+        return new SqliteAnalysisStore(
+            seedPath,
+            applyDerivedAnalysisDataVersionPolicy: false);
     }
 }
