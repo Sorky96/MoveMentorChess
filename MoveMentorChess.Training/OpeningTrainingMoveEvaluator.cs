@@ -94,7 +94,7 @@ public sealed class OpeningTrainingMoveEvaluator
                 resolvedMove.FenAfter,
                 OpeningPositionKeyBuilder.NormalizeFen(resolvedMove.FenAfter),
                 position.Ply + 1,
-                position.MoveNumber,
+                position.SideToMove == PlayerSide.Black ? position.MoveNumber + 1 : position.MoveNumber,
                 Opponent(position.SideToMove),
                 status == OpeningTrainingAttemptStatus.TransposedToKnownPosition),
             whyThisMove);

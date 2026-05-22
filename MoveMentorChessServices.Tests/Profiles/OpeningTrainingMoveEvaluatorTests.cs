@@ -46,14 +46,14 @@ public sealed class OpeningTrainingMoveEvaluatorTests
         OpeningTrainingPosition position = CreatePosition(
             OpeningTrainingMode.BranchAwareness,
             [
-                new OpeningTrainingMoveOption("e5", "e7e5", OpeningTrainingMoveRole.Alternative, false),
-                new OpeningTrainingMoveOption("c5", "c7c5", OpeningTrainingMoveRole.Alternative, false)
+                new OpeningTrainingMoveOption("c5", "c7c5", OpeningTrainingMoveRole.Alternative, false),
+                new OpeningTrainingMoveOption("e5", "e7e5", OpeningTrainingMoveRole.Alternative, false)
             ],
             sideToMove: PlayerSide.Black,
             branches:
             [
-                new OpeningTrainingBranch("e5", "e7e5", 9, "Book", null, [], []),
-                new OpeningTrainingBranch("c5", "c7c5", 3, "Book", null, [], [])
+                new OpeningTrainingBranch("c5", "c7c5", 3, "Book", null, [], []),
+                new OpeningTrainingBranch("e5", "e7e5", 9, "Book", null, [], [])
             ]);
 
         OpeningTrainingAttemptResult result = Evaluator.EvaluateMove(position, "e7e5");
@@ -61,6 +61,7 @@ public sealed class OpeningTrainingMoveEvaluatorTests
         Assert.Equal(OpeningTrainingScore.Correct, result.Score);
         OpeningTrainingMoveOption preferred = Assert.Single(result.PreferredReferences);
         Assert.Equal("e7e5", preferred.Uci);
+        Assert.Equal(2, result.ResolvedPosition?.MoveNumber);
         Assert.Contains("Correct branch", result.ShortExplanation);
     }
 
