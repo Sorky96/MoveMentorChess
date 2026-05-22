@@ -41,6 +41,96 @@ internal static class PlayerProfileStatsAggregator
             .First();
     }
 
+    public static PlayerProfileAggregateStats BuildReportStats(
+        IReadOnlyList<PlayerProfileSnapshot> snapshots,
+        IReadOnlyList<HighlightedGroup> highlightedGroups,
+        IReadOnlyList<StoredMoveAnalysis> mistakeMoves)
+    {
+        IReadOnlyList<ProfileLabelStat> topLabels = highlightedGroups
+            .GroupBy(item => item.Label)
+            .Select(group => new ProfileLabelStat(
+                group.Key,
+                group.Count(),
+                group.Average(item => item.AverageConfidence)))
+            .OrderByDescending(item => item.Count)
+            .ThenByDescending(item => item.AverageConfidence)
+            .ThenBy(item => item.Label, StringComparer.Ordinal)
+            .Take(3)
+            .ToList();
+
+        IReadOnlyList<ProfileCostlyLabelStat> costliestLabels = mistakeMoves
+            .GroupBy(move => move.MistakeLabel!, StringComparer.Ordinal)
+            .Select(group => new ProfileCostlyLabelStat(
+                group.Key,
+                group.Count(),
+                group.Sum(move => Math.Max(0, move.CentipawnLoss ?? 0)),
+                TryAverage(group.Select(move => move.CentipawnLoss))))
+            .OrderByDescending(item => item.TotalCentipawnLoss)
+            .ThenByDescending(item => item.AverageCentipawnLoss ?? 0)
+            .ThenByDescending(item => item.Count)
+            .ThenBy(item => item.Label, StringComparer.Ordinal)
+            .Take(3)
+            .ToList();
+
+        IReadOnlyList<ProfilePhaseStat> mistakesByPhase = snapshots
+            .SelectMany(snapshot => snapshot.Moves)
+            .Where(move => move.Quality.IsProblem())
+            .GroupBy(move => move.Phase)
+            .Select(group => new ProfilePhaseStat(group.Key, group.Count()))
+            .OrderByDescending(item => item.Count)
+            .ThenBy(item => item.Phase)
+            .ToList();
+
+        IReadOnlyList<ProfileOpeningStat> mistakesByOpening = snapshots
+            .SelectMany(snapshot => snapshot.Moves
+                .Where(move => move.Quality.IsProblem())
+                .Select(_ => snapshot.Eco))
+            .GroupBy(eco => eco, StringComparer.OrdinalIgnoreCase)
+            .Select(group => new ProfileOpeningStat(group.First(), group.Count()))
+            .OrderByDescending(item => item.Count)
+            .ThenBy(item => item.Eco, StringComparer.OrdinalIgnoreCase)
+            .Take(5)
+            .ToList();
+
+        IReadOnlyList<ProfileSideStat> gamesBySide = snapshots
+            .GroupBy(snapshot => snapshot.Side)
+            .Select(group => new ProfileSideStat(
+                group.Key,
+                group.Count(),
+                group.Sum(snapshot => GetHighlightedGroups(snapshot).Count)))
+            .OrderBy(item => item.Side)
+            .ToList();
+
+        IReadOnlyList<ProfileMonthlyTrend> monthlyTrend = snapshots
+            .GroupBy(snapshot => snapshot.MonthKey ?? "Unknown")
+            .Select(group => new ProfileMonthlyTrend(
+                group.Key,
+                group.Count(),
+                group.Sum(snapshot => GetHighlightedGroups(snapshot).Count),
+                TryAverage(group.SelectMany(snapshot => snapshot.Moves).Select(move => move.CentipawnLoss))))
+            .OrderBy(item => item.MonthKey, StringComparer.Ordinal)
+            .ToList();
+
+        IReadOnlyList<ProfileQuarterlyTrend> quarterlyTrend = snapshots
+            .GroupBy(snapshot => snapshot.QuarterKey ?? "Unknown")
+            .Select(group => new ProfileQuarterlyTrend(
+                group.Key,
+                group.Count(),
+                group.Sum(snapshot => GetHighlightedGroups(snapshot).Count),
+                TryAverage(group.SelectMany(snapshot => snapshot.Moves).Select(move => move.CentipawnLoss))))
+            .OrderBy(item => item.QuarterKey, StringComparer.Ordinal)
+            .ToList();
+
+        return new PlayerProfileAggregateStats(
+            topLabels,
+            costliestLabels,
+            mistakesByPhase,
+            mistakesByOpening,
+            gamesBySide,
+            monthlyTrend,
+            quarterlyTrend);
+    }
+
     public static List<PriorityLabelStat> BuildPriorityLabels(
         IReadOnlyList<ProfileLabelStat> topLabels,
         IReadOnlyList<ProfileCostlyLabelStat> costliestLabels,
@@ -196,3 +286,12 @@ internal sealed record PriorityLabelStat(
     int? AverageCentipawnLoss,
     double AverageConfidence,
     int PriorityScore);
+
+internal sealed record PlayerProfileAggregateStats(
+    IReadOnlyList<ProfileLabelStat> TopLabels,
+    IReadOnlyList<ProfileCostlyLabelStat> CostliestLabels,
+    IReadOnlyList<ProfilePhaseStat> MistakesByPhase,
+    IReadOnlyList<ProfileOpeningStat> MistakesByOpening,
+    IReadOnlyList<ProfileSideStat> GamesBySide,
+    IReadOnlyList<ProfileMonthlyTrend> MonthlyTrend,
+    IReadOnlyList<ProfileQuarterlyTrend> QuarterlyTrend);
