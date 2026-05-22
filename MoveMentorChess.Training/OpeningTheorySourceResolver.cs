@@ -30,6 +30,8 @@ public static class OpeningTheorySourceResolver
             return null;
         }
 
-        return new SqliteAnalysisStore(seedPath);
+        return new SqliteAnalysisStore(
+            seedPath,
+            applyDerivedAnalysisDataVersionPolicy: false);
     }
 }
