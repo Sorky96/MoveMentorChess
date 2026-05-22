@@ -8,11 +8,11 @@ public sealed partial class PlayerProfileService
     private static readonly int[] ProgressWindowDays = [14, 30];
 
     private readonly IImportedGameStore importedGameStore;
-    private readonly ProfileAnalysisDataSource analysisDataSource;
     private readonly IPlayerStrengthEstimator strengthEstimator;
     private readonly IOpeningTheoryStore? openingTheoryStore;
     private readonly IOpeningTreeStore? openingTreeStore;
     private readonly IOpeningTrainingHistoryStore? trainingHistoryStore;
+    private readonly PlayerProfileSnapshotLoader snapshotLoader;
 
     public PlayerProfileService(IAnalysisStore analysisStore)
         : this(
@@ -62,11 +62,12 @@ public sealed partial class PlayerProfileService
         IOpeningTrainingHistoryStore? trainingHistoryStore = null)
     {
         this.importedGameStore = importedGameStore ?? throw new ArgumentNullException(nameof(importedGameStore));
-        this.analysisDataSource = analysisDataSource ?? throw new ArgumentNullException(nameof(analysisDataSource));
+        ArgumentNullException.ThrowIfNull(analysisDataSource);
         this.strengthEstimator = strengthEstimator ?? new HeuristicPlayerStrengthEstimator();
         this.openingTheoryStore = openingTheoryStore;
         this.openingTreeStore = openingTreeStore;
         this.trainingHistoryStore = trainingHistoryStore;
+        snapshotLoader = new PlayerProfileSnapshotLoader(analysisDataSource);
     }
 
     public IReadOnlyList<PlayerProfileSummary> ListProfiles(string? filterText = null, int limit = 100)
@@ -101,7 +102,7 @@ public sealed partial class PlayerProfileService
             return false;
         }
 
-        string normalized = NormalizePlayerKey(playerKeyOrName);
+        string normalized = PlayerProfileSnapshotLoader.NormalizePlayerKey(playerKeyOrName);
         List<PlayerProfileSnapshot> snapshots = LoadSnapshots(null, 2000)
             .Where(snapshot => snapshot.PlayerKey == normalized
                 || string.Equals(snapshot.DisplayName, playerKeyOrName, StringComparison.OrdinalIgnoreCase))
@@ -139,47 +140,7 @@ public sealed partial class PlayerProfileService
     }
 
     private List<PlayerProfileSnapshot> LoadSnapshots(string? filterText, int limit)
-    {
-        ProfileAnalysisDataSet dataSet = analysisDataSource.Load(filterText, limit);
-
-        List<PlayerProfileSnapshot> mergedSnapshots = BuildSnapshotsFromMoves(dataSet.StoredMoves);
-        mergedSnapshots.AddRange(BuildSnapshotsFromResults(dataSet.Results));
-
-        return mergedSnapshots
-            .GroupBy(snapshot => new SnapshotSelectionKey(snapshot.GameFingerprint, snapshot.Side))
-            .Select(group => group
-                .OrderByDescending(snapshot => snapshot.AnalysisUpdatedUtc)
-                .ThenByDescending(snapshot => snapshot.Depth)
-                .ThenByDescending(snapshot => snapshot.MultiPv)
-                .ThenByDescending(snapshot => snapshot.MoveTimeMs ?? -1)
-                .First())
-            .Take(limit)
-            .ToList();
-    }
-
-    private static List<PlayerProfileSnapshot> BuildSnapshotsFromMoves(IReadOnlyList<StoredMoveAnalysis> storedMoves)
-    {
-        return storedMoves
-            .GroupBy(move => new AnalysisVariantKey(
-                move.Game.GameFingerprint,
-                move.Analysis.AnalyzedSide,
-                move.Analysis.Depth,
-                move.Analysis.MultiPv,
-                move.Analysis.MoveTimeMs))
-            .Select(CreateSnapshotFromMoves)
-            .Where(snapshot => snapshot is not null)
-            .Select(snapshot => snapshot!)
-            .ToList();
-    }
-
-    private static List<PlayerProfileSnapshot> BuildSnapshotsFromResults(IReadOnlyList<GameAnalysisResult> results)
-    {
-        return results
-            .Select(CreateSnapshotFromResult)
-            .Where(snapshot => snapshot is not null)
-            .Select(snapshot => snapshot!)
-            .ToList();
-    }
+        => snapshotLoader.Load(filterText, limit);
 
     private static PlayerProfileSummary BuildSummary(IGrouping<string, PlayerProfileSnapshot> group)
     {
@@ -562,7 +523,7 @@ public sealed partial class PlayerProfileService
             summary);
     }
 
-    private static ProfileMoveQualityTrend BuildMoveQualityTrend(string periodKey, IReadOnlyList<PlayerProfileSnapshot> snapshots)
+    private static ProfileMoveQualityTrend BuildMoveQualityTrend(string periodKey, List<PlayerProfileSnapshot> snapshots)
     {
         int gameCount = Math.Max(1, snapshots.Count);
         IReadOnlyList<StoredMoveAnalysis> moves = snapshots.SelectMany(snapshot => snapshot.Moves).ToList();
@@ -609,7 +570,7 @@ public sealed partial class PlayerProfileService
         };
     }
 
-    private PlayerProfileReport BuildReport(IReadOnlyList<PlayerProfileSnapshot> snapshots)
+    private PlayerProfileReport BuildReport(List<PlayerProfileSnapshot> snapshots)
     {
         string playerKey = snapshots[0].PlayerKey;
         string displayName = snapshots
@@ -793,96 +754,6 @@ public sealed record ProfileDataAvailability(
 
 public sealed partial class PlayerProfileService
 {
-    private static PlayerProfileSnapshot? CreateSnapshotFromMoves(IGrouping<AnalysisVariantKey, StoredMoveAnalysis> group)
-    {
-        List<StoredMoveAnalysis> moves = group
-            .OrderBy(move => move.Move.Ply)
-            .ToList();
-
-        StoredMoveAnalysis first = moves[0];
-        StoredGameContext game = first.Game;
-        StoredAnalysisRunContext analysis = first.Analysis;
-        string? playerName = analysis.AnalyzedSide == PlayerSide.White
-            ? game.WhitePlayer
-            : game.BlackPlayer;
-
-        if (string.IsNullOrWhiteSpace(playerName))
-        {
-            return null;
-        }
-
-        return new PlayerProfileSnapshot(
-            game.GameFingerprint,
-            NormalizePlayerKey(playerName),
-            playerName.Trim(),
-            analysis.AnalyzedSide,
-            ParseGameDate(game.DateText),
-            ParseMonthKey(game.DateText),
-            ParseQuarterKey(game.DateText),
-            string.IsNullOrWhiteSpace(game.Eco) ? "Unknown" : game.Eco!,
-            analysis.Depth,
-            analysis.MultiPv,
-            analysis.MoveTimeMs,
-            analysis.AnalysisUpdatedUtc,
-            analysis.AnalyzedSide == PlayerSide.White ? game.WhiteElo : game.BlackElo,
-            analysis.AnalyzedSide == PlayerSide.White ? game.BlackElo : game.WhiteElo,
-            game.Result,
-            game.TimeControlCategory,
-            game.TimeControl,
-            game.UtcDate,
-            game.UtcTime,
-            game.EndDate,
-            game.EndTime,
-            game.Termination,
-            game.Link,
-            moves);
-    }
-
-    private static PlayerProfileSnapshot? CreateSnapshotFromResult(GameAnalysisResult result)
-    {
-        string? playerName = result.AnalyzedSide == PlayerSide.White
-            ? result.Game.WhitePlayer
-            : result.Game.BlackPlayer;
-
-        if (string.IsNullOrWhiteSpace(playerName))
-        {
-            return null;
-        }
-
-        IReadOnlyList<StoredMoveAnalysis> moves = StoredMoveAnalysisMapper
-            .FromAnalysisResult(
-                new GameAnalysisCacheKey(GameFingerprint.Compute(result.Game.PgnText), result.AnalyzedSide, 0, 0, null),
-                result,
-                DateTime.MinValue)
-            .ToList();
-
-        return new PlayerProfileSnapshot(
-            GameFingerprint.Compute(result.Game.PgnText),
-            NormalizePlayerKey(playerName),
-            playerName.Trim(),
-            result.AnalyzedSide,
-            ParseGameDate(result.Game.DateText),
-            ParseMonthKey(result.Game.DateText),
-            ParseQuarterKey(result.Game.DateText),
-            string.IsNullOrWhiteSpace(result.Game.Eco) ? "Unknown" : result.Game.Eco!,
-            0,
-            0,
-            null,
-            DateTime.MinValue,
-            result.AnalyzedSide == PlayerSide.White ? result.Game.WhiteElo : result.Game.BlackElo,
-            result.AnalyzedSide == PlayerSide.White ? result.Game.BlackElo : result.Game.WhiteElo,
-            result.Game.Result,
-            result.Game.Metadata?.TimeControlCategory ?? GameTimeControlCategory.Unknown,
-            result.Game.Metadata?.TimeControl,
-            result.Game.Metadata?.UtcDate,
-            result.Game.Metadata?.UtcTime,
-            result.Game.Metadata?.EndDate,
-            result.Game.Metadata?.EndTime,
-            result.Game.Metadata?.Termination,
-            result.Game.Metadata?.Link,
-            moves);
-    }
-
     private static int? TryAverage(IEnumerable<int?> values)
     {
         List<int> knownValues = values
@@ -895,88 +766,6 @@ public sealed partial class PlayerProfileService
             : (int)Math.Round(knownValues.Average());
     }
 
-    private static string NormalizePlayerKey(string playerName)
-    {
-        return playerName.Trim().ToLowerInvariant();
-    }
-
-    private static DateTime? ParseGameDate(string? dateText)
-    {
-        if (string.IsNullOrWhiteSpace(dateText))
-        {
-            return null;
-        }
-
-        string[] formats =
-        [
-            "yyyy.MM.dd",
-            "yyyy-MM-dd",
-            "yyyy/MM/dd",
-            "yyyy.MM",
-            "yyyy-MM",
-            "yyyy/MM"
-        ];
-
-        return DateTime.TryParseExact(dateText, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsed)
-            ? parsed
-            : null;
-    }
-
-    private static string? ParseMonthKey(string? dateText)
-    {
-        DateTime? parsed = ParseGameDate(dateText);
-        return parsed?.ToString("yyyy-MM", CultureInfo.InvariantCulture);
-    }
-
-    private static string? ParseQuarterKey(string? dateText)
-    {
-        DateTime? parsed = ParseGameDate(dateText);
-        if (parsed.HasValue)
-        {
-            int quarter = ((parsed.Value.Month - 1) / 3) + 1;
-            return $"{parsed.Value:yyyy}-Q{quarter}";
-        }
-
-        return null;
-    }
-
-    private readonly record struct AnalysisVariantKey(
-        string GameFingerprint,
-        PlayerSide Side,
-        int Depth,
-        int MultiPv,
-        int? MoveTimeMs);
-
-    private readonly record struct SnapshotSelectionKey(
-        string GameFingerprint,
-        PlayerSide Side);
-
-    private sealed record PlayerProfileSnapshot(
-        string GameFingerprint,
-        string PlayerKey,
-        string DisplayName,
-        PlayerSide Side,
-        DateTime? GameDate,
-        string? MonthKey,
-        string? QuarterKey,
-        string Eco,
-        int Depth,
-        int MultiPv,
-        int? MoveTimeMs,
-        DateTime AnalysisUpdatedUtc,
-        int? PlayerRating,
-        int? OpponentRating,
-        string? Result,
-        GameTimeControlCategory TimeControlCategory,
-        string? TimeControl,
-        string? UtcDate,
-        string? UtcTime,
-        string? EndDate,
-        string? EndTime,
-        string? Termination,
-        string? Link,
-        IReadOnlyList<StoredMoveAnalysis> Moves);
-
     private sealed record ProgressWindowSelection(
         int WindowDays,
         IReadOnlyList<PlayerProfileSnapshot> Previous,
@@ -988,24 +777,6 @@ public sealed partial class PlayerProfileService
         GamePhase? DominantPhase,
         MoveQualityBucket Quality);
 
-    private sealed record RecommendationContext(
-        GamePhase? DominantPhase,
-        PlayerSide? DominantSide,
-        IReadOnlyList<string> TopOpenings);
-
-    private sealed record RecommendationOccurrence(
-        PlayerSide Side,
-        GamePhase? Phase,
-        string Eco);
-
-    private sealed record MistakeExampleCandidate(
-        PlayerProfileSnapshot Snapshot,
-        StoredMoveAnalysis Move);
-
-    private readonly record struct ExampleClusterKey(
-        GamePhase Phase,
-        string Eco);
-
     private sealed record PriorityLabelStat(
         string Label,
         int Count,
@@ -1014,21 +785,6 @@ public sealed partial class PlayerProfileService
         double AverageConfidence,
         int PriorityScore);
 
-    private sealed class ExampleClusterKeyComparer : IEqualityComparer<ExampleClusterKey>
-    {
-        public static ExampleClusterKeyComparer Instance { get; } = new();
-
-        public bool Equals(ExampleClusterKey x, ExampleClusterKey y)
-        {
-            return x.Phase == y.Phase
-                && string.Equals(x.Eco, y.Eco, StringComparison.OrdinalIgnoreCase);
-        }
-
-        public int GetHashCode(ExampleClusterKey obj)
-        {
-            return HashCode.Combine(obj.Phase, StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Eco ?? string.Empty));
-        }
-    }
 }
 
 public sealed partial class PlayerProfileService
@@ -1454,60 +1210,6 @@ public sealed partial class PlayerProfileService
         };
     }
 
-    private static List<ProfileMistakeExample> BuildMistakeExamples(
-        IReadOnlyList<PlayerProfileSnapshot> snapshots,
-        string label,
-        RecommendationContext context,
-        int maxCount)
-    {
-        List<MistakeExampleCandidate> candidates = BuildMistakeExampleCandidates(snapshots, label);
-        if (candidates.Count == 0)
-        {
-            return [];
-        }
-
-        List<ProfileMistakeExample> selected = [];
-        HashSet<string> selectedKeys = [];
-
-        AddRankedExample(
-            selected,
-            selectedKeys,
-            SelectMostFrequentExample(candidates, selectedKeys),
-            ProfileMistakeExampleRank.MostFrequent);
-        AddRankedExample(
-            selected,
-            selectedKeys,
-            SelectMostCostlyExample(candidates, selectedKeys),
-            ProfileMistakeExampleRank.MostCostly);
-        AddRankedExample(
-            selected,
-            selectedKeys,
-            SelectMostRepresentativeExample(candidates, context, selectedKeys),
-            ProfileMistakeExampleRank.MostRepresentative);
-
-        foreach (MistakeExampleCandidate candidate in candidates
-            .OrderByDescending(item => item.Move.IsHighlighted)
-            .ThenByDescending(item => item.Move.CentipawnLoss ?? 0)
-            .ThenByDescending(item => SeverityWeight(item.Move.Quality))
-            .ThenBy(item => item.Move.Ply))
-        {
-            if (selected.Count >= maxCount)
-            {
-                break;
-            }
-
-            AddRankedExample(
-                selected,
-                selectedKeys,
-                candidate,
-                ProfileMistakeExampleRank.MostRepresentative);
-        }
-
-        return selected
-            .Take(maxCount)
-            .ToList();
-    }
-
     private static List<ProfileMistakeExample> BuildAllMistakeExamples(
         IReadOnlyList<PlayerProfileSnapshot> snapshots,
         IReadOnlyList<ProfileLabelStat> topLabels,
@@ -1523,190 +1225,11 @@ public sealed partial class PlayerProfileService
             .SelectMany(label =>
             {
                 RecommendationContext context = BuildRecommendationContext(snapshots, label.Label);
-                return BuildMistakeExamples(snapshots, label.Label, context, perLabel);
+                return ProfileMistakeExampleSelector.BuildForLabel(snapshots, label.Label, context, perLabel);
             })
             .OrderByDescending(example => example.CentipawnLoss ?? 0)
             .Take(maxTotal)
             .ToList();
-    }
-
-    private static List<MistakeExampleCandidate> BuildMistakeExampleCandidates(
-        IReadOnlyList<PlayerProfileSnapshot> snapshots,
-        string label)
-    {
-        return snapshots
-            .SelectMany(snapshot => snapshot.Moves
-                .Where(move =>
-                    !string.IsNullOrWhiteSpace(move.MistakeLabel)
-                    && string.Equals(move.MistakeLabel, label, StringComparison.Ordinal)
-                    && move.Quality is MoveQualityBucket.Mistake or MoveQualityBucket.Blunder
-                    && !string.IsNullOrWhiteSpace(move.FenBefore))
-                .Select(move => new MistakeExampleCandidate(snapshot, move)))
-            .GroupBy(candidate => BuildExampleIdentity(candidate), StringComparer.Ordinal)
-            .Select(group => group
-                .OrderByDescending(item => item.Move.IsHighlighted)
-                .ThenByDescending(item => item.Move.CentipawnLoss ?? 0)
-                .ThenByDescending(item => SeverityWeight(item.Move.Quality))
-                .ThenBy(item => item.Move.Ply)
-                .First())
-            .ToList();
-    }
-
-    private static MistakeExampleCandidate? SelectMostFrequentExample(
-        IReadOnlyList<MistakeExampleCandidate> candidates,
-        HashSet<string> excludedKeys)
-    {
-        if (candidates.Count == 0)
-        {
-            return null;
-        }
-
-        return candidates
-            .GroupBy(
-                candidate => new ExampleClusterKey(candidate.Move.Phase, candidate.Snapshot.Eco),
-                ExampleClusterKeyComparer.Instance)
-            .OrderByDescending(group => group.Count())
-            .ThenByDescending(group => group.Max(item => item.Move.CentipawnLoss ?? 0))
-            .ThenBy(group => group.Key.Phase)
-            .ThenBy(group => group.Key.Eco, StringComparer.OrdinalIgnoreCase)
-            .Select(group => group
-                .OrderByDescending(item => item.Move.IsHighlighted)
-                .ThenByDescending(item => item.Move.CentipawnLoss ?? 0)
-                .ThenBy(item => item.Move.Ply)
-                .FirstOrDefault(item => !excludedKeys.Contains(BuildExampleIdentity(item))))
-            .FirstOrDefault();
-    }
-
-    private static MistakeExampleCandidate? SelectMostCostlyExample(
-        IReadOnlyList<MistakeExampleCandidate> candidates,
-        HashSet<string> excludedKeys)
-    {
-        return candidates
-            .OrderByDescending(candidate => candidate.Move.CentipawnLoss ?? 0)
-            .ThenByDescending(candidate => candidate.Move.IsHighlighted)
-            .ThenByDescending(candidate => SeverityWeight(candidate.Move.Quality))
-            .ThenBy(candidate => candidate.Move.Ply)
-            .Where(candidate => !excludedKeys.Contains(BuildExampleIdentity(candidate)))
-            .FirstOrDefault();
-    }
-
-    private static MistakeExampleCandidate? SelectMostRepresentativeExample(
-        IReadOnlyList<MistakeExampleCandidate> candidates,
-        RecommendationContext context,
-        HashSet<string> excludedKeys)
-    {
-        if (candidates.Count == 0)
-        {
-            return null;
-        }
-
-        double averageCpl = candidates
-            .Select(candidate => Math.Max(0, candidate.Move.CentipawnLoss ?? 0))
-            .DefaultIfEmpty(0)
-            .Average();
-
-        return candidates
-            .OrderByDescending(candidate => candidate.Move.IsHighlighted)
-            .ThenBy(candidate => BuildRepresentativePenalty(candidate, context, averageCpl))
-            .ThenByDescending(candidate => candidate.Move.MistakeConfidence ?? 0.0)
-            .ThenByDescending(candidate => candidate.Move.CentipawnLoss ?? 0)
-            .ThenBy(candidate => candidate.Move.Ply)
-            .Where(candidate => !excludedKeys.Contains(BuildExampleIdentity(candidate)))
-            .FirstOrDefault();
-    }
-
-    private static int BuildRepresentativePenalty(
-        MistakeExampleCandidate candidate,
-        RecommendationContext context,
-        double averageCpl)
-    {
-        int penalty = Math.Abs((candidate.Move.CentipawnLoss ?? 0) - (int)Math.Round(averageCpl));
-
-        if (context.DominantPhase.HasValue && candidate.Move.Phase != context.DominantPhase.Value)
-        {
-            penalty += 75;
-        }
-
-        if (context.TopOpenings.Count > 0
-            && !context.TopOpenings.Any(opening => string.Equals(opening, candidate.Snapshot.Eco, StringComparison.OrdinalIgnoreCase)))
-        {
-            penalty += 60;
-        }
-
-        if (context.DominantSide.HasValue && candidate.Snapshot.Side != context.DominantSide.Value)
-        {
-            penalty += 25;
-        }
-
-        if (!candidate.Move.IsHighlighted)
-        {
-            penalty += 15;
-        }
-
-        return penalty;
-    }
-
-    private static void AddRankedExample(
-        List<ProfileMistakeExample> selected,
-        HashSet<string> selectedKeys,
-        MistakeExampleCandidate? candidate,
-        ProfileMistakeExampleRank rank)
-    {
-        if (candidate is null)
-        {
-            return;
-        }
-
-        string identity = BuildExampleIdentity(candidate);
-        if (!selectedKeys.Add(identity))
-        {
-            return;
-        }
-
-        selected.Add(ToProfileMistakeExample(candidate, rank));
-    }
-
-    private static string BuildExampleIdentity(MistakeExampleCandidate candidate)
-    {
-        return $"{candidate.Snapshot.GameFingerprint}|{candidate.Move.Ply}|{candidate.Move.FenBefore}";
-    }
-
-    private static ProfileMistakeExample ToProfileMistakeExample(
-        MistakeExampleCandidate candidate,
-        ProfileMistakeExampleRank rank)
-    {
-        return new ProfileMistakeExample(
-            candidate.Snapshot.GameFingerprint,
-            candidate.Move.Ply,
-            candidate.Move.MoveNumber,
-            candidate.Move.AnalyzedSide,
-            candidate.Move.San,
-            FormatBetterMove(candidate.Move.FenBefore, candidate.Move.BestMoveUci),
-            candidate.Move.MistakeLabel ?? "unclassified",
-            candidate.Move.CentipawnLoss,
-            candidate.Move.Quality,
-            candidate.Move.Phase,
-            candidate.Snapshot.Eco,
-            candidate.Move.FenBefore,
-            rank);
-    }
-
-    private static string FormatBetterMove(string fenBefore, string? bestMoveUci)
-    {
-        if (string.IsNullOrWhiteSpace(bestMoveUci))
-        {
-            return "Unknown";
-        }
-
-        ChessGame game = new();
-        if (!game.TryLoadFen(fenBefore, out _)
-            || !game.TryApplyUci(bestMoveUci, out AppliedMoveInfo? appliedMove, out _)
-            || appliedMove is null)
-        {
-            return bestMoveUci;
-        }
-
-        return ChessMoveDisplayHelper.FormatSanAndUci(appliedMove.San, appliedMove.Uci);
     }
 
     private static string BuildSeveritySummary(PriorityLabelStat labelStat)
