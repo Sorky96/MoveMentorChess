@@ -10,7 +10,7 @@ public sealed class OpeningTrainerWorkspaceServiceTests
     {
         DateTime nowUtc = new(2026, 5, 18, 12, 30, 0, DateTimeKind.Utc);
         CapturingHistoryStore store = new();
-        OpeningTrainerWorkspaceService workspace = new(store, new FixedClock(nowUtc));
+        OpeningTrainerWorkspaceService workspace = CreateWorkspace(store, nowUtc);
         OpeningTrainingSessionResult result = new()
         {
             SessionId = "session-1",
@@ -39,7 +39,7 @@ public sealed class OpeningTrainerWorkspaceServiceTests
     {
         DateTime nowUtc = new(2026, 5, 18, 14, 45, 0, DateTimeKind.Utc);
         CapturingHistoryStore store = new();
-        OpeningTrainerWorkspaceService workspace = new(store, new FixedClock(nowUtc));
+        OpeningTrainerWorkspaceService workspace = CreateWorkspace(store, nowUtc);
 
         workspace.TrackTelemetry(OpeningTrainingTelemetryEvents.OpeningTrainerOpened, "Player One");
 
@@ -55,7 +55,22 @@ public sealed class OpeningTrainerWorkspaceServiceTests
         public DateTime UtcNow { get; } = utcNow;
     }
 
-    private sealed class CapturingHistoryStore : IAnalysisStore, IOpeningTrainingHistoryStore, IOpeningTrainingTelemetryStore
+    private static OpeningTrainerWorkspaceService CreateWorkspace(CapturingHistoryStore store, DateTime nowUtc)
+        => new(
+            store,
+            store,
+            store,
+            openingTheoryStore: null,
+            historyStore: store,
+            telemetryStore: store,
+            clock: new FixedClock(nowUtc));
+
+    private sealed class CapturingHistoryStore :
+        IImportedGameStore,
+        IAnalysisResultStore,
+        IStoredMoveAnalysisStore,
+        IOpeningTrainingHistoryStore,
+        IOpeningTrainingTelemetryStore
     {
         public List<OpeningTrainingScheduledAction> SavedActions { get; } = [];
 
@@ -86,14 +101,6 @@ public sealed class OpeningTrainerWorkspaceServiceTests
         public void SaveResult(GameAnalysisCacheKey key, GameAnalysisResult result) => throw new NotSupportedException();
 
         public IReadOnlyList<StoredMoveAnalysis> ListMoveAnalyses(string? filterText = null, int limit = 5000) => [];
-
-        public bool TryLoadWindowState(string gameFingerprint, out AnalysisWindowState? state)
-        {
-            state = null;
-            throw new NotSupportedException();
-        }
-
-        public void SaveWindowState(string gameFingerprint, AnalysisWindowState state) => throw new NotSupportedException();
 
         public void SaveOpeningTrainingSessionResult(OpeningTrainingSessionResult result)
         {

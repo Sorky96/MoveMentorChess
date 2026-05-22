@@ -2,7 +2,6 @@ namespace MoveMentorChess.Training;
 
 public sealed class OpeningTrainerWorkspaceService
 {
-    private readonly IAnalysisStore analysisStore;
     private readonly IClock clock;
     private readonly OpeningTheoryQueryService? openingTheory;
     private readonly OpeningTrainerService trainerService;
@@ -23,14 +22,77 @@ public sealed class OpeningTrainerWorkspaceService
     }
 
     public OpeningTrainerWorkspaceService(IAnalysisStore analysisStore, IClock clock)
+        : this(
+            analysisStore,
+            analysisStore,
+            analysisStore,
+            OpeningTheorySourceResolver.Create(analysisStore),
+            analysisStore as IOpeningTrainingHistoryStore,
+            analysisStore as IOpeningTrainingTelemetryStore,
+            clock)
     {
-        this.analysisStore = analysisStore ?? throw new ArgumentNullException(nameof(analysisStore));
+    }
+
+    public OpeningTrainerWorkspaceService(
+        IImportedGameStore importedGameStore,
+        IAnalysisResultStore resultStore,
+        IStoredMoveAnalysisStore moveAnalysisStore,
+        IOpeningTheoryStore? openingTheoryStore = null,
+        IOpeningTrainingHistoryStore? historyStore = null,
+        IOpeningTrainingTelemetryStore? telemetryStore = null)
+        : this(
+            importedGameStore,
+            resultStore,
+            moveAnalysisStore,
+            openingTheoryStore,
+            historyStore,
+            telemetryStore,
+            SystemClock.Instance)
+    {
+    }
+
+    public OpeningTrainerWorkspaceService(
+        IImportedGameStore importedGameStore,
+        IAnalysisResultStore resultStore,
+        IStoredMoveAnalysisStore moveAnalysisStore,
+        IOpeningTheoryStore? openingTheoryStore,
+        IOpeningTrainingHistoryStore? historyStore,
+        IOpeningTrainingTelemetryStore? telemetryStore,
+        IClock clock)
+        : this(
+            importedGameStore,
+            resultStore,
+            moveAnalysisStore,
+            openingTheoryStore is null ? null : OpeningTheorySourceResolver.Create(openingTheoryStore),
+            historyStore,
+            telemetryStore,
+            clock)
+    {
+    }
+
+    private OpeningTrainerWorkspaceService(
+        IImportedGameStore importedGameStore,
+        IAnalysisResultStore resultStore,
+        IStoredMoveAnalysisStore moveAnalysisStore,
+        OpeningTheoryQueryService? openingTheory,
+        IOpeningTrainingHistoryStore? historyStore,
+        IOpeningTrainingTelemetryStore? telemetryStore,
+        IClock clock)
+    {
+        ArgumentNullException.ThrowIfNull(importedGameStore);
+        ArgumentNullException.ThrowIfNull(resultStore);
+        ArgumentNullException.ThrowIfNull(moveAnalysisStore);
         this.clock = clock ?? throw new ArgumentNullException(nameof(clock));
-        openingTheory = OpeningTheorySourceResolver.Create(analysisStore);
-        trainerService = new OpeningTrainerService(analysisStore, clock);
+        this.openingTheory = openingTheory;
+        trainerService = new OpeningTrainerService(
+            importedGameStore,
+            new TrainingAnalysisDataSource(moveAnalysisStore, resultStore),
+            openingTheory,
+            historyStore,
+            clock);
         recommendationService = new OpeningTrainingRecommendationService(clock);
-        historyStore = analysisStore as IOpeningTrainingHistoryStore;
-        telemetryService = new OpeningTrainingTelemetryService(analysisStore as IOpeningTrainingTelemetryStore, clock);
+        this.historyStore = historyStore;
+        telemetryService = new OpeningTrainingTelemetryService(telemetryStore, clock);
     }
 
     public DateTime UtcNow => clock.UtcNow;
