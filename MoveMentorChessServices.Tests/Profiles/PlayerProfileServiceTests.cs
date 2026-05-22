@@ -428,6 +428,29 @@ public sealed class PlayerProfileServiceTests
     }
 
     [Fact]
+    public void PlayerProfileSnapshotLoader_AppliesDeterministicOrderingBeforeLimit()
+    {
+        List<StoredMoveAnalysis> moveAnalyses =
+        [
+            StoredMoveAnalysisMapper.CreateTestFixture(
+                gameFingerprint: "oldest",
+                analysisUpdatedUtc: DateTime.Parse("2026-04-01T00:00:00Z", null, System.Globalization.DateTimeStyles.AdjustToUniversal)),
+            StoredMoveAnalysisMapper.CreateTestFixture(
+                gameFingerprint: "newest",
+                analysisUpdatedUtc: DateTime.Parse("2026-04-03T00:00:00Z", null, System.Globalization.DateTimeStyles.AdjustToUniversal)),
+            StoredMoveAnalysisMapper.CreateTestFixture(
+                gameFingerprint: "middle",
+                analysisUpdatedUtc: DateTime.Parse("2026-04-02T00:00:00Z", null, System.Globalization.DateTimeStyles.AdjustToUniversal))
+        ];
+        FakeAnalysisStore store = new([], moveAnalyses);
+        PlayerProfileSnapshotLoader loader = new(new ProfileAnalysisDataSource(store, store));
+
+        List<PlayerProfileSnapshot> snapshots = loader.Load(null, 2);
+
+        Assert.Equal(["newest", "middle"], snapshots.Select(snapshot => snapshot.GameFingerprint));
+    }
+
+    [Fact]
     public void PlayerProfileService_MergesStructuredMovesWithLegacyResults_WithoutDroppingGames()
     {
         GameAnalysisResult resultA = CreateResult(
