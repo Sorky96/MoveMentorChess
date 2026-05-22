@@ -1,0 +1,27 @@
+namespace MoveMentorChess.Profiles;
+
+internal sealed record PlayerProfileSnapshot(
+    string GameFingerprint,
+    string PlayerKey,
+    string DisplayName,
+    PlayerSide Side,
+    DateTime? GameDate,
+    string? MonthKey,
+    string? QuarterKey,
+    string Eco,
+    int Depth,
+    int MultiPv,
+    int? MoveTimeMs,
+    DateTime AnalysisUpdatedUtc,
+    int? PlayerRating,
+    int? OpponentRating,
+    string? Result,
+    GameTimeControlCategory TimeControlCategory,
+    string? TimeControl,
+    string? UtcDate,
+    string? UtcTime,
+    string? EndDate,
+    string? EndTime,
+    string? Termination,
+    string? Link,
+    IReadOnlyList<StoredMoveAnalysis> Moves);
