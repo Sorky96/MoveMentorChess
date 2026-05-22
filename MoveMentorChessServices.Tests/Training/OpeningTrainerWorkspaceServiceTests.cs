@@ -50,6 +50,22 @@ public sealed class OpeningTrainerWorkspaceServiceTests
         Assert.Equal(telemetryEvent, savedEvent);
     }
 
+    [Fact]
+    public void CompatibilityConstructor_ForwardsTrainingTelemetryToAnalysisStore()
+    {
+        DateTime nowUtc = new(2026, 5, 18, 15, 0, 0, DateTimeKind.Utc);
+        CapturingHistoryStore store = new();
+        OpeningTrainerWorkspaceService workspace = new(store, new FixedClock(nowUtc));
+
+        workspace.TrackTelemetry(OpeningTrainingTelemetryEvents.OpeningTrainerOpened, "Player One");
+
+        OpeningTrainingTelemetryEvent telemetryEvent = Assert.Single(workspace.GetTelemetrySnapshot());
+        Assert.Equal(nowUtc, telemetryEvent.CreatedUtc);
+        Assert.Equal("player one", telemetryEvent.PlayerKey);
+        OpeningTrainingTelemetryEvent savedEvent = Assert.Single(store.SavedTelemetryEvents);
+        Assert.Equal(telemetryEvent, savedEvent);
+    }
+
     private sealed class FixedClock(DateTime utcNow) : IClock
     {
         public DateTime UtcNow { get; } = utcNow;
@@ -66,6 +82,7 @@ public sealed class OpeningTrainerWorkspaceServiceTests
             clock: new FixedClock(nowUtc));
 
     private sealed class CapturingHistoryStore :
+        IAnalysisStore,
         IImportedGameStore,
         IAnalysisResultStore,
         IStoredMoveAnalysisStore,
@@ -101,6 +118,14 @@ public sealed class OpeningTrainerWorkspaceServiceTests
         public void SaveResult(GameAnalysisCacheKey key, GameAnalysisResult result) => throw new NotSupportedException();
 
         public IReadOnlyList<StoredMoveAnalysis> ListMoveAnalyses(string? filterText = null, int limit = 5000) => [];
+
+        public bool TryLoadWindowState(string gameFingerprint, out AnalysisWindowState? state)
+        {
+            state = null;
+            throw new NotSupportedException();
+        }
+
+        public void SaveWindowState(string gameFingerprint, AnalysisWindowState state) => throw new NotSupportedException();
 
         public void SaveOpeningTrainingSessionResult(OpeningTrainingSessionResult result)
         {
