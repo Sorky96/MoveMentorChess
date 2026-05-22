@@ -428,6 +428,26 @@ public sealed class PlayerProfileServiceTests
     }
 
     [Fact]
+    public void PlayerProfileService_UsesMostCommonExactDisplayNameCasing()
+    {
+        FakeAnalysisStore store = new(
+        [
+            CreateResult("ALPHA", "One", PlayerSide.White, "C20", "2026.04.01", [], [CreateMoveAnalysis(GamePhase.Opening, 80, "opening_principles")]),
+            CreateResult("Alpha", "Two", PlayerSide.White, "C20", "2026.04.02", [], [CreateMoveAnalysis(GamePhase.Opening, 90, "opening_principles")]),
+            CreateResult("Alpha", "Three", PlayerSide.White, "C20", "2026.04.03", [], [CreateMoveAnalysis(GamePhase.Opening, 100, "opening_principles")])
+        ]);
+        PlayerProfileService service = new(store);
+
+        PlayerProfileSummary summary = Assert.Single(service.ListProfiles("alpha"));
+        bool found = service.TryBuildProfile("alpha", out PlayerProfileReport? report);
+
+        Assert.Equal("Alpha", summary.DisplayName);
+        Assert.True(found);
+        Assert.NotNull(report);
+        Assert.Equal("Alpha", report!.DisplayName);
+    }
+
+    [Fact]
     public void PlayerProfileSnapshotLoader_AppliesDeterministicOrderingBeforeLimit()
     {
         List<StoredMoveAnalysis> moveAnalyses =

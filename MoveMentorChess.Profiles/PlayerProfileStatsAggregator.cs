@@ -4,12 +4,7 @@ internal static class PlayerProfileStatsAggregator
 {
     public static PlayerProfileSummary BuildSummary(IGrouping<string, PlayerProfileSnapshot> group)
     {
-        string displayName = group
-            .GroupBy(snapshot => snapshot.DisplayName, StringComparer.OrdinalIgnoreCase)
-            .OrderByDescending(item => item.Count())
-            .ThenBy(item => item.Key, StringComparer.OrdinalIgnoreCase)
-            .Select(item => item.Key)
-            .First();
+        string displayName = SelectDisplayName(group);
 
         IReadOnlyList<string> topLabels = group
             .SelectMany(GetHighlightedGroups)
@@ -29,6 +24,21 @@ internal static class PlayerProfileStatsAggregator
             group.Sum(snapshot => GetHighlightedGroups(snapshot).Count),
             averageCpl,
             topLabels);
+    }
+
+    public static string SelectDisplayName(IEnumerable<PlayerProfileSnapshot> snapshots)
+    {
+        return snapshots
+            .GroupBy(snapshot => snapshot.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(group => group.Count())
+            .ThenBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group
+                .GroupBy(snapshot => snapshot.DisplayName, StringComparer.Ordinal)
+                .OrderByDescending(exactGroup => exactGroup.Count())
+                .ThenBy(exactGroup => exactGroup.Key, StringComparer.Ordinal)
+                .Select(exactGroup => exactGroup.Key)
+                .First())
+            .First();
     }
 
     public static List<PriorityLabelStat> BuildPriorityLabels(

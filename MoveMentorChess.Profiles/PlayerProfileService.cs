@@ -498,12 +498,7 @@ public sealed partial class PlayerProfileService
     private PlayerProfileReport BuildReport(List<PlayerProfileSnapshot> snapshots)
     {
         string playerKey = snapshots[0].PlayerKey;
-        string displayName = snapshots
-            .GroupBy(snapshot => snapshot.DisplayName, StringComparer.OrdinalIgnoreCase)
-            .OrderByDescending(item => item.Count())
-            .ThenBy(item => item.Key, StringComparer.OrdinalIgnoreCase)
-            .Select(item => item.Key)
-            .First();
+        string displayName = SelectDisplayName(snapshots);
 
         List<HighlightedGroup> highlightedGroups = snapshots
             .SelectMany(GetHighlightedGroups)
