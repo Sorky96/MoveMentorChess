@@ -10,7 +10,7 @@ public sealed class OpeningTrainerWorkspaceServiceTests
     {
         DateTime nowUtc = new(2026, 5, 18, 12, 30, 0, DateTimeKind.Utc);
         CapturingHistoryStore store = new();
-        OpeningTrainerWorkspaceService workspace = new(store, new FixedClock(nowUtc));
+        OpeningTrainerWorkspaceService workspace = CreateWorkspace(store, nowUtc);
         OpeningTrainingSessionResult result = new()
         {
             SessionId = "session-1",
@@ -39,6 +39,22 @@ public sealed class OpeningTrainerWorkspaceServiceTests
     {
         DateTime nowUtc = new(2026, 5, 18, 14, 45, 0, DateTimeKind.Utc);
         CapturingHistoryStore store = new();
+        OpeningTrainerWorkspaceService workspace = CreateWorkspace(store, nowUtc);
+
+        workspace.TrackTelemetry(OpeningTrainingTelemetryEvents.OpeningTrainerOpened, "Player One");
+
+        OpeningTrainingTelemetryEvent telemetryEvent = Assert.Single(workspace.GetTelemetrySnapshot());
+        Assert.Equal(nowUtc, telemetryEvent.CreatedUtc);
+        Assert.Equal("player one", telemetryEvent.PlayerKey);
+        OpeningTrainingTelemetryEvent savedEvent = Assert.Single(store.SavedTelemetryEvents);
+        Assert.Equal(telemetryEvent, savedEvent);
+    }
+
+    [Fact]
+    public void CompatibilityConstructor_ForwardsTrainingTelemetryToAnalysisStore()
+    {
+        DateTime nowUtc = new(2026, 5, 18, 15, 0, 0, DateTimeKind.Utc);
+        CapturingHistoryStore store = new();
         OpeningTrainerWorkspaceService workspace = new(store, new FixedClock(nowUtc));
 
         workspace.TrackTelemetry(OpeningTrainingTelemetryEvents.OpeningTrainerOpened, "Player One");
@@ -55,7 +71,23 @@ public sealed class OpeningTrainerWorkspaceServiceTests
         public DateTime UtcNow { get; } = utcNow;
     }
 
-    private sealed class CapturingHistoryStore : IAnalysisStore, IOpeningTrainingHistoryStore, IOpeningTrainingTelemetryStore
+    private static OpeningTrainerWorkspaceService CreateWorkspace(CapturingHistoryStore store, DateTime nowUtc)
+        => new(
+            store,
+            store,
+            store,
+            openingTheoryStore: null,
+            historyStore: store,
+            telemetryStore: store,
+            clock: new FixedClock(nowUtc));
+
+    private sealed class CapturingHistoryStore :
+        IAnalysisStore,
+        IImportedGameStore,
+        IAnalysisResultStore,
+        IStoredMoveAnalysisStore,
+        IOpeningTrainingHistoryStore,
+        IOpeningTrainingTelemetryStore
     {
         public List<OpeningTrainingScheduledAction> SavedActions { get; } = [];
 
