@@ -29,6 +29,8 @@ public static class OpeningTheoryBranchBuilder
         }
 
         bool hasMainMove = opponentMoves.Any(move => move.IsMainMove);
+        PlayerSide firstMoveSide = GetSideToMove(rootFen);
+        PlayerSide responseSide = Opposite(firstMoveSide);
 
         return opponentMoves
             .Select((move, index) =>
@@ -54,7 +56,7 @@ public static class OpeningTheoryBranchBuilder
                     new OpeningTrainingMove(
                         0,
                         0,
-                        PlayerSide.White,
+                        firstMoveSide,
                         move.MoveSan,
                         move.MoveUci,
                         OpeningTrainingMoveRole.Continuation,
@@ -65,7 +67,7 @@ public static class OpeningTheoryBranchBuilder
                     continuation.Add(new OpeningTrainingMove(
                         0,
                         0,
-                        PlayerSide.Black,
+                        responseSide,
                         recommendedResponse.DisplayText,
                         recommendedResponse.Uci,
                         OpeningTrainingMoveRole.Expected,
@@ -88,6 +90,19 @@ public static class OpeningTheoryBranchBuilder
                     move.ToOpeningPositionKey);
             })
             .ToList();
+    }
+
+    private static PlayerSide GetSideToMove(string fen)
+    {
+        string[] fields = fen.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return fields.Length > 1 && fields[1].Equals("b", StringComparison.OrdinalIgnoreCase)
+            ? PlayerSide.Black
+            : PlayerSide.White;
+    }
+
+    private static PlayerSide Opposite(PlayerSide side)
+    {
+        return side == PlayerSide.White ? PlayerSide.Black : PlayerSide.White;
     }
 
     public static string BuildSelectionSummary(IReadOnlyList<OpeningTrainingBranch> branches)

@@ -44,6 +44,8 @@ public sealed class OpeningTheoryBranchBuilderTests
         Assert.NotNull(branch.RecommendedResponse);
         Assert.Equal("Nf3", branch.RecommendedResponse!.DisplayText);
         Assert.Equal(2, branch.Continuation.Count);
+        Assert.Equal(PlayerSide.Black, branch.Continuation[0].Side);
+        Assert.Equal(PlayerSide.White, branch.Continuation[1].Side);
     }
 
     [Fact]
