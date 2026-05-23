@@ -24,6 +24,13 @@ internal sealed class PlayerProfileReportBuilder
         OpeningWeaknessReport? openingReport,
         IReadOnlyList<OpeningTrainingSessionResult> trainingHistory)
     {
+        ArgumentNullException.ThrowIfNull(snapshots);
+        ArgumentNullException.ThrowIfNull(trainingHistory);
+        if (snapshots.Count == 0)
+        {
+            throw new ArgumentException("At least one snapshot is required.", nameof(snapshots));
+        }
+
         string playerKey = snapshots[0].PlayerKey;
         string displayName = SelectDisplayName(snapshots);
 
