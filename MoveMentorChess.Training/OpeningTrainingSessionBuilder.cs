@@ -26,6 +26,7 @@ internal sealed class OpeningTrainingSessionBuilder
     private readonly OpeningTheoryQueryService? openingTheory;
     private readonly IOpeningTrainingHistoryStore? historyStore;
     private readonly IClock clock;
+    private readonly OpeningTrainingPositionSelector positionSelector = new();
 
     internal OpeningTrainingSessionBuilder(
         IImportedGameStore importedGameStore,
@@ -98,36 +99,10 @@ internal sealed class OpeningTrainingSessionBuilder
             positions.AddRange(built);
         }
 
-        if (effectiveOptions.TargetOpenings is { Count: > 0 } targetOpenings)
-        {
-            HashSet<string> targetEco = targetOpenings
-                .Select(NormalizeEco)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-            positions = positions
-                .Where(position => targetEco.Contains(NormalizeEco(position.Eco)))
-                .ToList();
-        }
-
-        positions = positions
-            .Where(position => effectiveOptions.Modes!.Contains(position.Mode))
-            .OrderByDescending(position => position.Priority)
-            .ThenBy(position => position.Ply)
-            .ThenBy(position => position.OpeningName, StringComparer.OrdinalIgnoreCase)
-            .Take(effectiveOptions.MaxPositions)
-            .ToList();
-
-        HashSet<string> usedLineIds = positions
-            .Select(position => position.LineId)
-            .Where(lineId => !string.IsNullOrWhiteSpace(lineId))
-            .Select(lineId => lineId!)
-            .ToHashSet(StringComparer.Ordinal);
-        List<OpeningTrainingLine> lines = linesById.Values
-            .Where(line => usedLineIds.Contains(line.LineId))
-            .OrderBy(line => line.SourceKind)
-            .ThenBy(line => line.OpeningName, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(line => line.AnchorPly)
-            .ToList();
-        List<OpeningTrainingSourceSummary> sourceSummaries = BuildSourceSummaries(positions, lines);
+        OpeningTrainingPositionSelection selection = positionSelector.Select(positions, linesById, effectiveOptions);
+        positions = selection.Positions.ToList();
+        IReadOnlyList<OpeningTrainingLine> lines = selection.Lines;
+        IReadOnlyList<OpeningTrainingSourceSummary> sourceSummaries = selection.SourceSummaries;
 
         DateTime createdUtc = clock.UtcNow;
         session = new OpeningTrainingSession(
