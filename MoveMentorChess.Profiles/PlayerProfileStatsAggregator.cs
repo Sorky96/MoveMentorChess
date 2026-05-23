@@ -86,7 +86,17 @@ internal static class PlayerProfileStatsAggregator
                 .Where(move => move.Quality.IsProblem())
                 .Select(_ => snapshot.Eco))
             .GroupBy(eco => eco, StringComparer.OrdinalIgnoreCase)
-            .Select(group => new ProfileOpeningStat(group.First(), group.Count()))
+            .Select(group =>
+            {
+                string representativeEco = group
+                    .GroupBy(eco => eco, StringComparer.Ordinal)
+                    .OrderByDescending(exactGroup => exactGroup.Count())
+                    .ThenBy(exactGroup => exactGroup.Key, StringComparer.Ordinal)
+                    .Select(exactGroup => exactGroup.Key)
+                    .First();
+
+                return new ProfileOpeningStat(representativeEco, group.Count());
+            })
             .OrderByDescending(item => item.Count)
             .ThenBy(item => item.Eco, StringComparer.OrdinalIgnoreCase)
             .Take(5)
