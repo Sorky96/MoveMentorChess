@@ -19,9 +19,18 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     private readonly OpeningStudyFeedbackAnimator studyFeedbackAnimator = new();
     private readonly OpeningTrainerTelemetryAdapter telemetryAdapter = new();
     private readonly HashSet<string> studyAvailableTargets = new(StringComparer.OrdinalIgnoreCase);
-    private readonly List<OpeningTrainingAttemptResult> currentSessionAttempts = [];
-    private readonly HashSet<string> completedNextActionIds = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, string> scheduledActionIdsBySource = new(StringComparer.OrdinalIgnoreCase);
+    private readonly OpeningTrainerSessionController sessionController;
+    // Compatibility shims – state still referenced by the rest of the ViewModel.
+    // These are now delegated to sessionController.
+    private IReadOnlyList<OpeningTrainingAttemptResult> currentSessionAttempts => sessionController.CurrentSessionAttempts;
+    private OpeningTrainingSession? guidedSession => sessionController.GuidedSession;
+    private int currentStepIndex => sessionController.CurrentStepIndex;
+    private int completedSteps => sessionController.CompletedSteps;
+    private int correctAnswers => sessionController.CorrectAnswers;
+    private int playableAnswers => sessionController.PlayableAnswers;
+    private int wrongAttempts => sessionController.WrongAttempts;
+    private int transposedAnswers => sessionController.TransposedAnswers;
+    private int hintUseCount => sessionController.HintUseCount;
     private OpeningLineCatalogItem? selectedOpening;
     private TrainingRecommendationCard? todayRecommendation;
     private TrainingPriorityItem? selectedPriority;
@@ -34,24 +43,9 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     private PlayerOpeningPlan? playerOpeningPlan;
     private SpecialTrainingModeDefinition? selectedSpecialMode;
     private OpeningTrainerOverview? overview;
-    private OpeningTrainingSession? guidedSession;
     private string? studySelectedSquare;
     private string? studyPreviewTargetSquare;
     private int currentPageIndex = SelectionPageIndex;
-    private int currentStepIndex;
-    private int completedSteps;
-    private int correctAnswers;
-    private int playableAnswers;
-    private int wrongAttempts;
-    private int transposedAnswers;
-    private int hintUseCount;
-    private int currentHintIndex;
-    private DateTime? studyStartedUtc;
-    private DateTime? firstMoveUtc;
-    private string? currentStartSource;
-    private string? currentRecommendationId;
-    private bool studyAbandonedTracked;
-    private bool sessionResultSaved;
     private string filterText = string.Empty;
     private string advancedPlayerKey = string.Empty;
     private OpeningTrainingProfileChoice? selectedProfileChoice;
@@ -87,6 +81,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     public OpeningTrainerWindowViewModel(OpeningTrainerWorkspaceService workspaceService)
     {
         this.workspaceService = workspaceService ?? throw new ArgumentNullException(nameof(workspaceService));
+        sessionController = new OpeningTrainerSessionController(workspaceService, new SessionCallbacks(this));
         RefreshCommand = new RelayCommand(RefreshOpenings);
         GoToOverviewCommand = new RelayCommand(OpenOverviewPage, () => SelectedOpening is not null && overview is not null);
         GoToSelectionCommand = new RelayCommand(() => SetPage(SelectionPageIndex));
@@ -680,7 +675,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     public string DontKnowButtonText => "I Don't Know";
 
-    public bool CanUseDontKnow => CurrentPosition is not null && !HasDontKnowAttemptForCurrentPosition();
+    public bool CanUseDontKnow => sessionController.CanUseDontKnow;
 
     public TrainingSessionOutcomeSummary? OutcomeSummary
     {
@@ -1309,42 +1304,39 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             return;
         }
 
-        guidedSession = workspaceService.BuildGuidedStudySession(SelectedOpening, overview, PlayerKey, SelectedStrictness, specialMode, target);
-        studyStartedUtc = workspaceService.UtcNow;
-        firstMoveUtc = null;
-        currentStartSource = startSource;
-        currentRecommendationId = startSource is "today_recommendation" or "overview_priority"
+        OpeningTrainingSession session = workspaceService.BuildGuidedStudySession(SelectedOpening, overview, PlayerKey, SelectedStrictness, specialMode, target);
+        
+        sessionController.StartSession(session, startSource, recommendationId);
+
+        string? telemetryRecommendationId = startSource is "today_recommendation" or "overview_priority"
             ? recommendationId
             : null;
-        studyAbandonedTracked = false;
-        sessionResultSaved = false;
-        currentSessionAttempts.Clear();
-        completedNextActionIds.Clear();
-        scheduledActionIdsBySource.Clear();
+
         workspaceService.TrackTelemetry(
             OpeningTrainingTelemetryEvents.OpeningTrainingStarted,
             PlayerKey,
             SelectedOpening,
-            guidedSession,
-            recommendationId: currentRecommendationId,
+            session,
+            recommendationId: telemetryRecommendationId,
             specialMode: specialMode?.Kind,
             properties: BuildBaseTelemetryProperties(new Dictionary<string, string>
             {
                 ["start_source"] = startSource,
-                ["position_count"] = guidedSession.Positions.Count.ToString(CultureInfo.InvariantCulture),
-                ["target_fallback"] = (target is not null && !guidedSession.Positions.Any(position => IsTargetedPosition(position, target))).ToString().ToLowerInvariant(),
+                ["position_count"] = session.Positions.Count.ToString(CultureInfo.InvariantCulture),
+                ["target_fallback"] = (target is not null && !session.Positions.Any(position => IsTargetedPosition(position, target))).ToString().ToLowerInvariant(),
                 ["recommendation_type"] = BuildRecommendationType(startSource, specialMode),
                 ["reason_code"] = TodayRecommendation is not null && string.Equals(recommendationId, TodayRecommendation.OpeningLine.LineKey.Value, StringComparison.Ordinal)
                     ? TodayRecommendation.ReasonCode.ToString()
                     : "unknown"
             }));
+
         if (specialMode is not null)
         {
             workspaceService.TrackTelemetry(
                 OpeningTrainingTelemetryEvents.SpecialModeStarted,
                 PlayerKey,
                 SelectedOpening,
-                guidedSession,
+                session,
                 specialMode: specialMode.Kind,
                 properties: BuildBaseTelemetryProperties(new Dictionary<string, string>
                 {
@@ -1352,12 +1344,12 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
                     ["max_positions"] = specialMode.MaxPositions.ToString(CultureInfo.InvariantCulture)
                 }));
         }
-        currentStepIndex = 0;
+
         MoveInput = string.Empty;
         ResultText = string.Empty;
         ResetResults();
         ClearStudySelection();
-        LoadCurrentStep();
+        sessionController.LoadCurrentStep();
         SetPage(StudyPageIndex);
     }
 
@@ -1406,70 +1398,60 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             return;
         }
 
-        firstMoveUtc ??= workspaceService.UtcNow;
         string submittedAnswer = position.AnswerKind == OpeningTrainingAnswerKind.Move
             ? MoveInput
             : SelectedAnswerOption?.Id ?? string.Empty;
-        OpeningTrainingAttemptResult result = workspaceService.Evaluate(position, submittedAnswer);
-        currentSessionAttempts.Add(result);
+
+        var evalResult = sessionController.EvaluateMove(submittedAnswer);
+        if (!evalResult.HasValue)
+        {
+            return;
+        }
+
         OpeningTrainingMoveOption? mainMove = position.CandidateMoves.FirstOrDefault(option => option.IsPreferred)
             ?? (position.CandidateMoves.Count > 0 ? position.CandidateMoves[0] : null);
-        ResultText = result.Score switch
+
+        ResultText = evalResult.Attempt.Score switch
         {
             OpeningTrainingScore.Correct => "Good. This keeps your repertoire plan on track.",
             OpeningTrainingScore.Wrong => BuildWrongMoveFeedback(position, mainMove),
-            _ when IsSubmittedMainRepertoireMove(result, mainMove) => "Good. This is the prepared repertoire move.",
+            _ when IsSubmittedMainRepertoireMove(evalResult.Attempt, mainMove) => "Good. This is the prepared repertoire move.",
             _ => mainMove is not null
                 ? $"Accepted, but the main repertoire move is {mainMove.DisplayText}."
                 : "Accepted. This is a useful theory alternative."
         };
-        TriggerStudyFeedback(result);
-        CurrentWhy = result.RecoverySuggestion
-            ?? result.WhyThisMove?.ShortExplanation
+
+        TriggerStudyFeedback(evalResult.Attempt);
+        
+        CurrentWhy = evalResult.Attempt.RecoverySuggestion
+            ?? evalResult.Attempt.WhyThisMove?.ShortExplanation
             ?? position.BetterMoveReason
             ?? string.Empty;
-        if (!string.IsNullOrWhiteSpace(result.RecoverySuggestion))
-        {
-            CurrentHintLevel = result.NextHintLevel.HasValue
-                ? $"Next hint: {result.NextHintLevel.Value}"
-                : "Recovery";
-            CurrentHintText = result.RecoverySuggestion;
-        }
-        AddResultLine(result);
 
-        if (result.Score == OpeningTrainingScore.Wrong)
+        if (!string.IsNullOrWhiteSpace(evalResult.Attempt.RecoverySuggestion))
         {
-            wrongAttempts++;
+            CurrentHintLevel = evalResult.Attempt.NextHintLevel.HasValue
+                ? $"Next hint: {evalResult.Attempt.NextHintLevel.Value}"
+                : "Recovery";
+            CurrentHintText = evalResult.Attempt.RecoverySuggestion;
+        }
+
+        AddResultLine(evalResult.Attempt);
+
+        if (!evalResult.Accepted)
+        {
             ClearStudySelection();
             RaiseResultsStateChanged();
             RaiseStudyNavigationStateChanged();
             return;
         }
 
-        completedSteps++;
-        if (result.Score == OpeningTrainingScore.Correct)
-        {
-            correctAnswers++;
-        }
-        else
-        {
-            playableAnswers++;
-        }
-
-        if (result.Status == OpeningTrainingAttemptStatus.TransposedToKnownPosition)
-        {
-            transposedAnswers++;
-        }
-
-        guidedSession = workspaceService.RebuildContinuationAfterAcceptedMove(
-            guidedSession!,
-            currentStepIndex,
-            position,
-            result);
         MoveInput = string.Empty;
         SelectedAnswerOption = null;
         ClearStudySelection();
-        MoveNext();
+        
+        sessionController.MoveNext();
+        
         RaiseResultsStateChanged();
     }
 
@@ -1581,22 +1563,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     private void MoveNext()
     {
-        if (guidedSession is null)
-        {
-            return;
-        }
-
-        if (currentStepIndex < guidedSession.Positions.Count - 1)
-        {
-            currentStepIndex++;
-            LoadCurrentStep();
-        }
-        else
-        {
-            CompleteStudy();
-        }
-
-        RaiseStudyNavigationStateChanged();
+        sessionController.MoveNext();
     }
 
     private void TriggerStudyFeedback(OpeningTrainingAttemptResult result)
@@ -1614,137 +1581,11 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     private void MovePrevious()
     {
-        if (guidedSession is null)
-        {
-            return;
-        }
-
-        if (currentStepIndex > 0)
-        {
-            currentStepIndex--;
-            LoadCurrentStep();
-        }
-
-        RaiseStudyNavigationStateChanged();
-    }
-
-    private void LoadCurrentStep()
-    {
-        OpeningTrainingPosition? position = CurrentPosition;
-        if (position is null)
-        {
-            CurrentPrompt = "Practice is idle.";
-            CurrentWhy = string.Empty;
-            PreviewArrows = [];
-            ReplaceItems(AnswerOptionItems, []);
-            SelectedAnswerOption = null;
-            ResetCurrentHint();
-            ResetStudyReference();
-            ClearStudySelection();
-            OnPropertyChanged(nameof(PreviewArrows));
-            OnPropertyChanged(nameof(HasAnswerOptions));
-            RaiseStudyNavigationStateChanged();
-            return;
-        }
-
-        PreviewFen = position.Fen;
-        CurrentPrompt = $"Step {currentStepIndex + 1}/{guidedSession!.Positions.Count}: {position.Prompt}";
-        CurrentWhy = position.BetterMoveReason ?? position.CandidateMoves.FirstOrDefault(option => option.IsPreferred)?.Idea?.ShortExplanation ?? string.Empty;
-        PreviewArrows = [];
-        ReplaceItems(AnswerOptionItems, position.AnswerOptions ?? []);
-        SelectedAnswerOption = AnswerOptionItems.FirstOrDefault();
-        ResetCurrentHint();
-        ResetStudyReference();
-        ClearStudySelection();
-        OnPropertyChanged(nameof(PreviewArrows));
-        OnPropertyChanged(nameof(HasAnswerOptions));
-        RaiseStudyNavigationStateChanged();
-    }
-
-    private void CompleteStudy()
-    {
-        int positionCount = guidedSession?.Positions.Count ?? 0;
-        OutcomeSummary = BuildOutcomeSummary(positionCount);
-        OpeningTrainingSessionResult? savedSessionResult = null;
-        if (guidedSession is not null && !sessionResultSaved)
-        {
-            sessionResultSaved = true;
-            savedSessionResult = workspaceService.SaveSessionResult(
-                guidedSession,
-                currentSessionAttempts,
-                OpeningTrainingSessionOutcome.Completed,
-                currentStartSource,
-                currentRecommendationId,
-                hintUseCount,
-                GetTimeToFirstMoveSeconds(),
-                null,
-                completedNextActionIds.ToList());
-            RefreshTodayRecommendation();
-            LoadOverview();
-        }
-
-        ResultHeadline = OpeningTrainerResultPresentation.BuildCompletionHeadline(
-            guidedSession?.Positions.Count,
-            SelectedOpeningName);
-        ResultRecommendation = OpeningTrainerResultPresentation.BuildCompletionRecommendation(
-            wrongAttempts,
-            playableAnswers,
-            transposedAnswers);
-        ReplaceItems(NextActionItems, workspaceService.BuildNextActions(OutcomeSummary));
-        RebuildNextActionCards();
-        LearningPlan = workspaceService.BuildLearningPlan(OutcomeSummary, currentSessionAttempts, NextActionItems.ToList());
-        ReplaceItems(LearningPlanReviewItems, LearningPlan.ReviewItems);
-        scheduledActionIdsBySource.Clear();
-        if (savedSessionResult is not null)
-        {
-            IReadOnlyList<OpeningTrainingScheduledAction> scheduledActions = workspaceService.SaveScheduledActions(savedSessionResult, NextActionItems.ToList());
-            foreach (OpeningTrainingScheduledAction action in scheduledActions)
-            {
-                if (!string.IsNullOrWhiteSpace(action.SourceActionId))
-                {
-                    scheduledActionIdsBySource[action.SourceActionId] = action.Id;
-                }
-            }
-        }
-
-        SelectedNextAction = NextActionItems.FirstOrDefault();
-        RaiseLearningPlanStateChanged();
-        RaiseNextActionStateChanged();
-        Dictionary<string, string> completionProperties = BuildBaseTelemetryProperties(new Dictionary<string, string>
-        {
-            ["start_source"] = currentStartSource ?? "unknown",
-            ["completed_steps"] = completedSteps.ToString(CultureInfo.InvariantCulture),
-            ["wrong_attempts"] = wrongAttempts.ToString(CultureInfo.InvariantCulture),
-            ["hint_count"] = hintUseCount.ToString(CultureInfo.InvariantCulture),
-            ["not_known_count"] = CountDontKnowAttempts().ToString(CultureInfo.InvariantCulture),
-            ["time_to_first_move_seconds"] = GetTimeToFirstMoveSeconds().ToString(CultureInfo.InvariantCulture)
-        });
-        workspaceService.TrackTelemetry(
-            OpeningTrainingTelemetryEvents.GuidedSessionCompleted,
-            PlayerKey,
-            SelectedOpening,
-            guidedSession,
-            recommendationId: currentRecommendationId,
-            properties: completionProperties);
-        workspaceService.TrackTelemetry(
-            OpeningTrainingTelemetryEvents.OpeningLearningPlanShown,
-            PlayerKey,
-            SelectedOpening,
-            guidedSession,
-            recommendationId: currentRecommendationId,
-            properties: completionProperties);
-        SetPage(ResultsPageIndex);
+        sessionController.MovePrevious();
     }
 
     private void ResetResults()
     {
-        completedSteps = 0;
-        correctAnswers = 0;
-        playableAnswers = 0;
-        wrongAttempts = 0;
-        transposedAnswers = 0;
-        hintUseCount = 0;
-        currentHintIndex = 0;
         ResultHeadline = "Practice in progress.";
         ResultRecommendation = "Finish the run to get your next review step.";
         LearningPlan = null;
@@ -1860,33 +1701,6 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(OutcomeSummary));
     }
 
-    private TrainingSessionOutcomeSummary BuildOutcomeSummary(int positionCount)
-    {
-        double completion = positionCount == 0
-            ? 0
-            : Math.Round((double)completedSteps / positionCount * 100d, 1);
-        int accepted = correctAnswers + playableAnswers;
-        double accuracy = completedSteps == 0
-            ? 0
-            : Math.Round((double)accepted / completedSteps * 100d, 1);
-
-        string headline = wrongAttempts > 0
-            ? "Needs reinforcement"
-            : playableAnswers > 0 || hintUseCount > 0
-                ? "Almost stable"
-                : "Stable line";
-
-        return new TrainingSessionOutcomeSummary(
-            headline,
-            positionCount,
-            completedSteps,
-            correctAnswers,
-            playableAnswers,
-            wrongAttempts,
-            hintUseCount,
-            completion,
-            accuracy);
-    }
 
     private void ExecutePrimaryNextAction()
     {
@@ -1930,19 +1744,18 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     private void ExecuteNextAction(TrainingNextAction action)
     {
-        completedNextActionIds.Add(action.Id);
-        if (scheduledActionIdsBySource.TryGetValue(action.Id, out string? scheduledActionId)
-            && action.Kind == TrainingNextActionKind.RepeatNow)
-        {
-            workspaceService.MarkScheduledActionCompleted(PlayerKey, scheduledActionId);
-        }
+        string? scheduledActionId;
+        sessionController.CompleteNextAction(
+            action.Id,
+            sessionController.TryGetScheduledActionId(action.Id, out scheduledActionId) ? scheduledActionId : null,
+            action.Kind);
 
         workspaceService.TrackTelemetry(
             OpeningTrainingTelemetryEvents.ResultsNextActionClicked,
             PlayerKey,
             SelectedOpening,
             guidedSession,
-            recommendationId: currentRecommendationId,
+            recommendationId: sessionController.CurrentRecommendationId,
             properties: BuildBaseTelemetryProperties(new Dictionary<string, string>
             {
                 ["next_action_id"] = action.Id,
@@ -1981,13 +1794,6 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
                 SetPage(SelectionPageIndex);
                 break;
         }
-    }
-
-    private int GetTimeToFirstMoveSeconds()
-    {
-        return studyStartedUtc.HasValue && firstMoveUtc.HasValue
-            ? Math.Max(0, (int)Math.Round((firstMoveUtc.Value - studyStartedUtc.Value).TotalSeconds))
-            : 0;
     }
 
     private void StartAnotherRecommendedOpening()
@@ -2036,45 +1842,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     private void TrackAbandonmentIfLeavingStudy(int nextPageIndex)
     {
-        if (studyAbandonedTracked
-            || currentPageIndex != StudyPageIndex
-            || nextPageIndex == StudyPageIndex
-            || nextPageIndex == ResultsPageIndex
-            || guidedSession is null
-            || sessionResultSaved
-            || completedSteps >= guidedSession.Positions.Count)
-        {
-            return;
-        }
-
-        studyAbandonedTracked = true;
-        sessionResultSaved = true;
-        DateTime abandonedUtc = workspaceService.UtcNow;
-        workspaceService.SaveSessionResult(
-            guidedSession,
-            currentSessionAttempts,
-            OpeningTrainingSessionOutcome.Abandoned,
-            currentStartSource,
-            currentRecommendationId,
-            hintUseCount,
-            GetTimeToFirstMoveSeconds(),
-            abandonedUtc,
-            completedNextActionIds.ToList());
-        RefreshTodayRecommendation();
-        LoadOverview();
-        workspaceService.TrackTelemetry(
-            OpeningTrainingTelemetryEvents.GuidedSessionAbandoned,
-            PlayerKey,
-            SelectedOpening,
-            guidedSession,
-            recommendationId: currentRecommendationId,
-            properties: BuildBaseTelemetryProperties(new Dictionary<string, string>
-            {
-                ["start_source"] = currentStartSource ?? "unknown",
-                ["completed_steps"] = completedSteps.ToString(CultureInfo.InvariantCulture),
-                ["position_count"] = guidedSession.Positions.Count.ToString(CultureInfo.InvariantCulture),
-                ["time_to_first_move_seconds"] = GetTimeToFirstMoveSeconds().ToString(CultureInfo.InvariantCulture)
-            }));
+        sessionController.TrackAbandonmentIfLeavingStudy(currentPageIndex, nextPageIndex, StudyPageIndex, ResultsPageIndex);
     }
 
     private void RaiseNextActionStateChanged()
@@ -2121,19 +1889,47 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     private void UseDontKnow()
     {
-        OpeningTrainingPosition? position = CurrentPosition;
-        if (position is null || HasDontKnowAttemptForCurrentPosition())
+        var dontKnowResult = sessionController.UseDontKnow();
+        if (!dontKnowResult.HasValue)
         {
             return;
         }
 
-        firstMoveUtc ??= workspaceService.UtcNow;
-        OpeningTrainingAttemptResult result = BuildDontKnowAttempt(position);
-        currentSessionAttempts.Add(result);
-        wrongAttempts++;
         ResultText = "Marked to revisit: use the hint, then play the prepared move on the board.";
-        AddResultLine(result);
-        ShowNextHint(trackAsDontKnow: true);
+        AddResultLine(dontKnowResult.Attempt);
+
+        if (dontKnowResult.Hint.HasValue)
+        {
+            if (dontKnowResult.Hint.Hint is not null)
+            {
+                CurrentHintLevel = $"{dontKnowResult.Hint.Hint.Level}: {dontKnowResult.Hint.Hint.Title}";
+                CurrentHintText = dontKnowResult.Hint.Hint.Text;
+                if (dontKnowResult.Hint.Hint.Level >= TrainingCoachHintLevel.Structure)
+                {
+                    PreviewArrows = BuildArrows(CurrentPosition!);
+                    OnPropertyChanged(nameof(PreviewArrows));
+                }
+
+                workspaceService.TrackTelemetry(
+                    OpeningTrainingTelemetryEvents.GuidedHintUsed,
+                    PlayerKey,
+                    SelectedOpening,
+                    guidedSession,
+                    properties: BuildBaseTelemetryProperties(new Dictionary<string, string>
+                    {
+                        ["hint_level"] = dontKnowResult.Hint.Hint.Level.ToString(),
+                        ["position_id"] = dontKnowResult.PositionId,
+                        ["source"] = "dont_know",
+                        ["hint_count"] = dontKnowResult.HintUseCount.ToString(CultureInfo.InvariantCulture)
+                    }));
+            }
+            else
+            {
+                CurrentHintLevel = "No hint available";
+                CurrentHintText = "This position does not have a coaching hint yet.";
+            }
+        }
+
         UnlockStudyReference();
         ClearStudySelection();
         RaiseResultsStateChanged();
@@ -2144,47 +1940,14 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             PlayerKey,
             SelectedOpening,
             guidedSession,
-            recommendationId: currentRecommendationId,
+            recommendationId: sessionController.CurrentRecommendationId,
             properties: BuildBaseTelemetryProperties(new Dictionary<string, string>
             {
-                ["position_id"] = position.PositionId,
-                ["step_index"] = currentStepIndex.ToString(CultureInfo.InvariantCulture),
-                ["hint_count"] = hintUseCount.ToString(CultureInfo.InvariantCulture),
-                ["not_known_count"] = CountDontKnowAttempts().ToString(CultureInfo.InvariantCulture)
+                ["position_id"] = dontKnowResult.PositionId,
+                ["step_index"] = dontKnowResult.StepIndex.ToString(CultureInfo.InvariantCulture),
+                ["hint_count"] = dontKnowResult.HintUseCount.ToString(CultureInfo.InvariantCulture),
+                ["not_known_count"] = dontKnowResult.DontKnowCount.ToString(CultureInfo.InvariantCulture)
             }));
-    }
-
-    private static OpeningTrainingAttemptResult BuildDontKnowAttempt(OpeningTrainingPosition position)
-    {
-        List<OpeningTrainingMoveOption> preferredReferences = position.CandidateMoves
-            .Where(option => option.IsPreferred)
-            .ToList();
-
-        if (preferredReferences.Count == 0)
-        {
-            preferredReferences = position.CandidateMoves.Take(1).ToList();
-        }
-
-        return new OpeningTrainingAttemptResult(
-            position.PositionId,
-            position.Mode,
-            position.SourceKind,
-            OpeningTrainingAttemptStatus.Normal,
-            "I do not know",
-            null,
-            null,
-            position.CandidateMoves,
-            OpeningTrainingScore.Wrong,
-            "Marked for review because you chose to see help before answering.",
-            [],
-            preferredReferences,
-            position.CandidateMoves.Where(option => !preferredReferences.Contains(option)).ToList(),
-            null,
-            preferredReferences.FirstOrDefault()?.Idea,
-            "Use the first hint, then make the prepared move yourself.",
-            TrainingCoachHintLevel.Plan,
-            TrainingMistakeCategory.Unknown,
-            true);
     }
 
     private void RevealStudyReference()
@@ -2195,19 +1958,21 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         }
 
         IsStudyReferenceVisible = true;
+        sessionController.MarkReferenceRevealed();
+
         workspaceService.TrackTelemetry(
             OpeningTrainingTelemetryEvents.GuidedReferenceRevealed,
             PlayerKey,
             SelectedOpening,
             guidedSession,
-            recommendationId: currentRecommendationId,
+            recommendationId: sessionController.CurrentRecommendationId,
             properties: BuildBaseTelemetryProperties(new Dictionary<string, string>
             {
                 ["position_id"] = CurrentPosition?.PositionId ?? string.Empty,
                 ["step_index"] = currentStepIndex.ToString(CultureInfo.InvariantCulture),
                 ["reference_revealed_before_attempt"] = currentSessionAttempts.All(attempt => attempt.PositionId != CurrentPosition?.PositionId).ToString().ToLowerInvariant(),
                 ["hint_count"] = hintUseCount.ToString(CultureInfo.InvariantCulture),
-                ["not_known_count"] = CountDontKnowAttempts().ToString(CultureInfo.InvariantCulture)
+                ["not_known_count"] = sessionController.CountDontKnowAttempts().ToString(CultureInfo.InvariantCulture)
             }));
         RaiseStudyNavigationStateChanged();
     }
@@ -2228,14 +1993,13 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     private void ShowNextHint(bool trackAsDontKnow)
     {
-        OpeningTrainingPosition? position = CurrentPosition;
-        if (position is null)
+        var hintResult = sessionController.ShowNextHint(trackAsDontKnow);
+        if (!hintResult.HasValue)
         {
             return;
         }
 
-        IReadOnlyList<TrainingCoachHint> hints = workspaceService.BuildCoachHints(position);
-        if (hints.Count == 0)
+        if (hintResult.Hint is null)
         {
             CurrentHintLevel = "No hint available";
             CurrentHintText = "This position does not have a coaching hint yet.";
@@ -2243,21 +2007,14 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             return;
         }
 
-        TrainingCoachHint hint = hints[Math.Min(currentHintIndex, hints.Count - 1)];
-        CurrentHintLevel = $"{hint.Level}: {hint.Title}";
-        CurrentHintText = hint.Text;
-        if (hint.Level >= TrainingCoachHintLevel.Structure)
+        CurrentHintLevel = $"{hintResult.Hint.Level}: {hintResult.Hint.Title}";
+        CurrentHintText = hintResult.Hint.Text;
+        if (hintResult.Hint.Level >= TrainingCoachHintLevel.Structure)
         {
-            PreviewArrows = BuildArrows(position);
+            PreviewArrows = BuildArrows(CurrentPosition!);
             OnPropertyChanged(nameof(PreviewArrows));
         }
 
-        if (currentHintIndex < hints.Count - 1)
-        {
-            currentHintIndex++;
-        }
-
-        hintUseCount++;
         workspaceService.TrackTelemetry(
             OpeningTrainingTelemetryEvents.GuidedHintUsed,
             PlayerKey,
@@ -2265,27 +2022,14 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             guidedSession,
             properties: BuildBaseTelemetryProperties(new Dictionary<string, string>
             {
-                ["hint_level"] = hint.Level.ToString(),
-                ["position_id"] = position.PositionId,
+                ["hint_level"] = hintResult.Hint.Level.ToString(),
+                ["position_id"] = hintResult.PositionId ?? string.Empty,
                 ["source"] = trackAsDontKnow ? "dont_know" : "hint_button",
-                ["hint_count"] = hintUseCount.ToString(CultureInfo.InvariantCulture)
+                ["hint_count"] = hintResult.HintUseCount.ToString(CultureInfo.InvariantCulture)
             }));
         RaiseResultsStateChanged();
         RaiseStudyNavigationStateChanged();
     }
-
-    private bool HasDontKnowAttemptForCurrentPosition()
-    {
-        string? positionId = CurrentPosition?.PositionId;
-        return !string.IsNullOrWhiteSpace(positionId)
-            && currentSessionAttempts.Any(attempt =>
-                string.Equals(attempt.PositionId, positionId, StringComparison.Ordinal)
-                && string.Equals(attempt.SubmittedMoveText, "I do not know", StringComparison.OrdinalIgnoreCase));
-    }
-
-    private int CountDontKnowAttempts()
-        => currentSessionAttempts.Count(attempt =>
-            string.Equals(attempt.SubmittedMoveText, "I do not know", StringComparison.OrdinalIgnoreCase));
 
     private Dictionary<string, string> BuildRecommendationTelemetryProperties(TrainingRecommendationCard recommendation)
         => telemetryAdapter.BuildRecommendationProperties(
@@ -2321,7 +2065,6 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     private void ResetCurrentHint()
     {
-        currentHintIndex = 0;
         CurrentHintLevel = "No hint used";
         CurrentHintText = "Hints will appear here when you ask for one.";
     }
@@ -2580,6 +2323,156 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
         square = (file - 'a', 8 - (rank - '0'));
         return true;
+    }
+
+    /// <summary>
+    /// Forwarding adapter from <see cref="OpeningTrainerSessionController.ISessionFlowCallbacks"/> back to the
+    /// ViewModel.  Currently a no-op stub – future passes will migrate callback implementations here and
+    /// remove the corresponding duplicated ViewModel methods.
+    /// </summary>
+    private sealed class SessionCallbacks : OpeningTrainerSessionController.ISessionFlowCallbacks
+    {
+        private readonly OpeningTrainerWindowViewModel vm;
+
+        internal SessionCallbacks(OpeningTrainerWindowViewModel vm) => this.vm = vm;
+
+        public string PlayerKey => vm.PlayerKey;
+
+        public void OnStepLoaded(
+            OpeningTrainingPosition? position,
+            int stepIndex,
+            OpeningTrainingSession? session)
+        {
+            if (position is null || session is null)
+            {
+                vm.PreviewFen = string.Empty;
+                vm.CurrentPrompt = "Practice is idle.";
+                vm.CurrentWhy = string.Empty;
+                vm.PreviewArrows = [];
+                ReplaceItems(vm.AnswerOptionItems, []);
+                vm.SelectedAnswerOption = null;
+                vm.ResetCurrentHint();
+                vm.ResetStudyReference();
+                vm.ClearStudySelection();
+                vm.OnPropertyChanged(nameof(vm.PreviewArrows));
+                vm.OnPropertyChanged(nameof(vm.HasAnswerOptions));
+                vm.RaiseStudyNavigationStateChanged();
+                return;
+            }
+
+            vm.PreviewFen = position.Fen;
+            vm.CurrentPrompt = $"Step {stepIndex + 1}/{session.Positions.Count}: {position.Prompt}";
+            vm.CurrentWhy = position.BetterMoveReason ?? position.CandidateMoves.FirstOrDefault(option => option.IsPreferred)?.Idea?.ShortExplanation ?? string.Empty;
+            vm.PreviewArrows = [];
+            ReplaceItems(vm.AnswerOptionItems, position.AnswerOptions ?? []);
+            vm.SelectedAnswerOption = vm.AnswerOptionItems.FirstOrDefault();
+            vm.ResetCurrentHint();
+            vm.ResetStudyReference();
+            vm.ClearStudySelection();
+            vm.OnPropertyChanged(nameof(vm.PreviewArrows));
+            vm.OnPropertyChanged(nameof(vm.HasAnswerOptions));
+            vm.RaiseStudyNavigationStateChanged();
+        }
+
+        public void OnStudyNavigationStateChanged()
+        {
+            vm.RaiseStudyNavigationStateChanged();
+        }
+
+        public void OnSessionCompleted(
+            TrainingSessionOutcomeSummary summary,
+            OpeningTrainingSession? session,
+            OpeningTrainingSessionResult? savedResult,
+            string? recommendationId,
+            string? startSource,
+            int completedSteps,
+            int wrongAttempts,
+            int hintUseCount,
+            int dontKnowCount,
+            int timeToFirstMoveSeconds,
+            IReadOnlyList<OpeningTrainingAttemptResult> attempts)
+        {
+            vm.OutcomeSummary = summary;
+            vm.RefreshTodayRecommendation();
+            vm.LoadOverview();
+
+            vm.ResultHeadline = OpeningTrainerResultPresentation.BuildCompletionHeadline(
+                session?.Positions.Count,
+                vm.SelectedOpeningName);
+            vm.ResultRecommendation = OpeningTrainerResultPresentation.BuildCompletionRecommendation(
+                wrongAttempts,
+                vm.playableAnswers,
+                vm.transposedAnswers);
+            ReplaceItems(vm.NextActionItems, vm.workspaceService.BuildNextActions(summary));
+            vm.RebuildNextActionCards();
+            vm.LearningPlan = vm.workspaceService.BuildLearningPlan(summary, attempts, vm.NextActionItems.ToList());
+            ReplaceItems(vm.LearningPlanReviewItems, vm.LearningPlan.ReviewItems);
+
+            if (savedResult is not null)
+            {
+                IReadOnlyList<OpeningTrainingScheduledAction> scheduledActions = vm.workspaceService.SaveScheduledActions(savedResult, vm.NextActionItems.ToList());
+                foreach ((string sourceActionId, string actionId) in scheduledActions
+                    .Where(action => !string.IsNullOrWhiteSpace(action.SourceActionId))
+                    .Select(action => (action.SourceActionId!, action.Id)))
+                {
+                    vm.sessionController.RecordScheduledAction(sourceActionId, actionId);
+                }
+            }
+
+            vm.SelectedNextAction = vm.NextActionItems.FirstOrDefault();
+            vm.RaiseLearningPlanStateChanged();
+            vm.RaiseNextActionStateChanged();
+
+            Dictionary<string, string> completionProperties = vm.BuildBaseTelemetryProperties(new Dictionary<string, string>
+            {
+                ["start_source"] = startSource ?? "unknown",
+                ["completed_steps"] = completedSteps.ToString(CultureInfo.InvariantCulture),
+                ["wrong_attempts"] = wrongAttempts.ToString(CultureInfo.InvariantCulture),
+                ["hint_count"] = hintUseCount.ToString(CultureInfo.InvariantCulture),
+                ["not_known_count"] = dontKnowCount.ToString(CultureInfo.InvariantCulture),
+                ["time_to_first_move_seconds"] = timeToFirstMoveSeconds.ToString(CultureInfo.InvariantCulture)
+            });
+            vm.workspaceService.TrackTelemetry(
+                OpeningTrainingTelemetryEvents.GuidedSessionCompleted,
+                vm.PlayerKey,
+                vm.SelectedOpening,
+                session,
+                recommendationId: recommendationId,
+                properties: completionProperties);
+            vm.workspaceService.TrackTelemetry(
+                OpeningTrainingTelemetryEvents.OpeningLearningPlanShown,
+                vm.PlayerKey,
+                vm.SelectedOpening,
+                session,
+                recommendationId: recommendationId,
+                properties: completionProperties);
+
+            vm.SetPage(ResultsPageIndex);
+        }
+
+        public void OnSessionAbandoned(
+            OpeningTrainingSession session,
+            string? recommendationId,
+            string? startSource,
+            int completedSteps,
+            int timeToFirstMoveSeconds)
+        {
+            vm.RefreshTodayRecommendation();
+            vm.LoadOverview();
+            vm.workspaceService.TrackTelemetry(
+                OpeningTrainingTelemetryEvents.GuidedSessionAbandoned,
+                vm.PlayerKey,
+                vm.SelectedOpening,
+                session,
+                recommendationId: recommendationId,
+                properties: vm.BuildBaseTelemetryProperties(new Dictionary<string, string>
+                {
+                    ["start_source"] = startSource ?? "unknown",
+                    ["completed_steps"] = completedSteps.ToString(CultureInfo.InvariantCulture),
+                    ["position_count"] = session.Positions.Count.ToString(CultureInfo.InvariantCulture),
+                    ["time_to_first_move_seconds"] = timeToFirstMoveSeconds.ToString(CultureInfo.InvariantCulture)
+                }));
+        }
     }
 }
 
