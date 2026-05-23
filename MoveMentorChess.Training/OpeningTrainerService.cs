@@ -21,6 +21,7 @@ public sealed class OpeningTrainerService
     private readonly IOpeningTrainingHistoryStore? historyStore;
     private readonly IClock clock;
     private readonly OpeningTrainingMoveEvaluator moveEvaluator = new();
+    private readonly OpeningTrainingPositionSelector positionSelector = new();
 
     public OpeningTrainerService(IAnalysisStore analysisStore)
         : this(analysisStore, SystemClock.Instance)
@@ -180,36 +181,10 @@ public sealed class OpeningTrainerService
             positions.AddRange(built);
         }
 
-        if (effectiveOptions.TargetOpenings is { Count: > 0 } targetOpenings)
-        {
-            HashSet<string> targetEco = targetOpenings
-                .Select(NormalizeEco)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-            positions = positions
-                .Where(position => targetEco.Contains(NormalizeEco(position.Eco)))
-                .ToList();
-        }
-
-        positions = positions
-            .Where(position => effectiveOptions.Modes!.Contains(position.Mode))
-            .OrderByDescending(position => position.Priority)
-            .ThenBy(position => position.Ply)
-            .ThenBy(position => position.OpeningName, StringComparer.OrdinalIgnoreCase)
-            .Take(effectiveOptions.MaxPositions)
-            .ToList();
-
-        HashSet<string> usedLineIds = positions
-            .Select(position => position.LineId)
-            .Where(lineId => !string.IsNullOrWhiteSpace(lineId))
-            .Select(lineId => lineId!)
-            .ToHashSet(StringComparer.Ordinal);
-        List<OpeningTrainingLine> lines = linesById.Values
-            .Where(line => usedLineIds.Contains(line.LineId))
-            .OrderBy(line => line.SourceKind)
-            .ThenBy(line => line.OpeningName, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(line => line.AnchorPly)
-            .ToList();
-        List<OpeningTrainingSourceSummary> sourceSummaries = BuildSourceSummaries(positions, lines);
+        OpeningTrainingPositionSelection selection = positionSelector.Select(positions, linesById, effectiveOptions);
+        positions = selection.Positions.ToList();
+        IReadOnlyList<OpeningTrainingLine> lines = selection.Lines;
+        IReadOnlyList<OpeningTrainingSourceSummary> sourceSummaries = selection.SourceSummaries;
 
         DateTime createdUtc = clock.UtcNow;
         session = new OpeningTrainingSession(
@@ -1537,28 +1512,6 @@ public sealed class OpeningTrainerService
             .FirstOrDefault();
 
         return first is null ? null : new OpeningIssue(snapshot, first);
-    }
-
-    private static List<OpeningTrainingSourceSummary> BuildSourceSummaries(
-        List<OpeningTrainingPosition> positions,
-        List<OpeningTrainingLine> lines)
-    {
-        Dictionary<OpeningTrainingSourceKind, int> lineCounts = lines
-            .GroupBy(line => line.SourceKind)
-            .ToDictionary(group => group.Key, group => group.Count());
-
-        return positions
-            .GroupBy(position => position.SourceKind)
-            .Select(group => new OpeningTrainingSourceSummary(
-                group.Key,
-                group.Count(),
-                lineCounts.TryGetValue(group.Key, out int count) ? count : 0,
-                group.Select(position => position.Eco)
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
-                    .ToList()))
-            .OrderBy(summary => summary.SourceKind)
-            .ToList();
     }
 
     private static bool IsOpeningIssue(StoredMoveAnalysis move)
