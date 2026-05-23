@@ -84,20 +84,15 @@ internal sealed class OpeningTrainingSessionBuilder
         Dictionary<SnapshotKey, OpeningTrainerSnapshot> snapshotIndex = snapshots
             .ToDictionary(snapshot => new SnapshotKey(snapshot.GameFingerprint, snapshot.Side));
         Dictionary<string, OpeningTrainingLine> linesById = new(StringComparer.Ordinal);
-        List<OpeningTrainingPosition> positions = [];
-
-        foreach (OpeningTrainingSourceKind source in effectiveOptions.Sources!)
-        {
-            List<OpeningTrainingPosition> built = source switch
+        List<OpeningTrainingPosition> positions = effectiveOptions.Sources!
+            .SelectMany(source => source switch
             {
                 OpeningTrainingSourceKind.ExampleGame => BuildExampleGamePositions(weaknessReport, snapshotIndex, linesById, effectiveOptions, openingTheory),
                 OpeningTrainingSourceKind.OpeningWeakness => BuildOpeningWeaknessPositions(weaknessReport, snapshotIndex, savedReplays, linesById, effectiveOptions, openingTheory),
                 OpeningTrainingSourceKind.FirstOpeningMistake => BuildFirstMistakePositions(snapshots, linesById, effectiveOptions, openingTheory),
                 _ => []
-            };
-
-            positions.AddRange(built);
-        }
+            })
+            .ToList();
 
         OpeningTrainingPositionSelection selection = positionSelector.Select(positions, linesById, effectiveOptions);
         positions = selection.Positions.ToList();

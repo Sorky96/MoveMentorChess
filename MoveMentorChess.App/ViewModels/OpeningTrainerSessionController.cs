@@ -151,6 +151,7 @@ internal sealed class OpeningTrainerSessionController
         if (currentStepIndex < guidedSession.Positions.Count - 1)
         {
             currentStepIndex++;
+            ResetCurrentHintProgression();
             callbacks.OnStepLoaded(CurrentPosition, currentStepIndex, guidedSession);
         }
         else
@@ -171,6 +172,7 @@ internal sealed class OpeningTrainerSessionController
         if (currentStepIndex > 0)
         {
             currentStepIndex--;
+            ResetCurrentHintProgression();
             callbacks.OnStepLoaded(CurrentPosition, currentStepIndex, guidedSession);
         }
 
@@ -179,6 +181,7 @@ internal sealed class OpeningTrainerSessionController
 
     internal void LoadCurrentStep()
     {
+        ResetCurrentHintProgression();
         callbacks.OnStepLoaded(CurrentPosition, currentStepIndex, guidedSession);
         callbacks.OnStudyNavigationStateChanged();
     }
@@ -374,6 +377,11 @@ internal sealed class OpeningTrainerSessionController
         hintUseCount = 0;
         currentHintIndex = 0;
         OutcomeSummary = null;
+    }
+
+    private void ResetCurrentHintProgression()
+    {
+        currentHintIndex = 0;
     }
 
     private bool HasDontKnowAttemptForCurrentPosition()

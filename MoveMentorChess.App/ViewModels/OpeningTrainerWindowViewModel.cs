@@ -1909,25 +1909,25 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
                     PreviewArrows = BuildArrows(CurrentPosition!);
                     OnPropertyChanged(nameof(PreviewArrows));
                 }
+
+                workspaceService.TrackTelemetry(
+                    OpeningTrainingTelemetryEvents.GuidedHintUsed,
+                    PlayerKey,
+                    SelectedOpening,
+                    guidedSession,
+                    properties: BuildBaseTelemetryProperties(new Dictionary<string, string>
+                    {
+                        ["hint_level"] = dontKnowResult.Hint.Hint.Level.ToString(),
+                        ["position_id"] = dontKnowResult.PositionId,
+                        ["source"] = "dont_know",
+                        ["hint_count"] = dontKnowResult.HintUseCount.ToString(CultureInfo.InvariantCulture)
+                    }));
             }
             else
             {
                 CurrentHintLevel = "No hint available";
                 CurrentHintText = "This position does not have a coaching hint yet.";
             }
-
-            workspaceService.TrackTelemetry(
-                OpeningTrainingTelemetryEvents.GuidedHintUsed,
-                PlayerKey,
-                SelectedOpening,
-                guidedSession,
-                properties: BuildBaseTelemetryProperties(new Dictionary<string, string>
-                {
-                    ["hint_level"] = dontKnowResult.Hint.Hint?.Level.ToString() ?? "None",
-                    ["position_id"] = dontKnowResult.PositionId,
-                    ["source"] = "dont_know",
-                    ["hint_count"] = dontKnowResult.HintUseCount.ToString(CultureInfo.InvariantCulture)
-                }));
         }
 
         UnlockStudyReference();
@@ -2411,12 +2411,11 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             if (savedResult is not null)
             {
                 IReadOnlyList<OpeningTrainingScheduledAction> scheduledActions = vm.workspaceService.SaveScheduledActions(savedResult, vm.NextActionItems.ToList());
-                foreach (OpeningTrainingScheduledAction action in scheduledActions)
+                foreach ((string sourceActionId, string actionId) in scheduledActions
+                    .Where(action => !string.IsNullOrWhiteSpace(action.SourceActionId))
+                    .Select(action => (action.SourceActionId!, action.Id)))
                 {
-                    if (!string.IsNullOrWhiteSpace(action.SourceActionId))
-                    {
-                        vm.sessionController.RecordScheduledAction(action.SourceActionId, action.Id);
-                    }
+                    vm.sessionController.RecordScheduledAction(sourceActionId, actionId);
                 }
             }
 
