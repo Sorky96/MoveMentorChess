@@ -81,6 +81,29 @@ public sealed class OpeningTrainingPositionSelectorTests
         Assert.Equal(["line-later", "line-earlier"], result.Lines.Select(line => line.LineId).ToList());
     }
 
+    [Fact]
+    public void Select_NormalizesRelatedOpeningsInSourceSummaries()
+    {
+        OpeningTrainingPosition lowerCaseEco = CreatePosition("lower", "line-lower", OpeningTrainingMode.LineRecall, OpeningTrainingSourceKind.ExampleGame, " b01 ", "Scandinavian Defense", 100);
+        OpeningTrainingPosition upperCaseEco = CreatePosition("upper", "line-upper", OpeningTrainingMode.LineRecall, OpeningTrainingSourceKind.ExampleGame, "B01", "Scandinavian Defense", 90);
+        OpeningTrainingPosition blankEco = CreatePosition("blank", "line-blank", OpeningTrainingMode.LineRecall, OpeningTrainingSourceKind.ExampleGame, "   ", "Unknown", 80);
+        Dictionary<string, OpeningTrainingLine> lines = new(StringComparer.Ordinal)
+        {
+            ["line-lower"] = CreateLine("line-lower", lowerCaseEco),
+            ["line-upper"] = CreateLine("line-upper", upperCaseEco),
+            ["line-blank"] = CreateLine("line-blank", blankEco)
+        };
+        OpeningTrainingSessionOptions options = new(
+            Modes: [OpeningTrainingMode.LineRecall],
+            MaxPositions: 3);
+
+        OpeningTrainingPositionSelection result = new OpeningTrainingPositionSelector()
+            .Select([lowerCaseEco, upperCaseEco, blankEco], lines, options);
+
+        OpeningTrainingSourceSummary summary = Assert.Single(result.SourceSummaries);
+        Assert.Equal(["B01"], summary.RelatedOpenings);
+    }
+
     private static OpeningTrainingPosition CreatePosition(
         string positionId,
         string lineId,

@@ -63,7 +63,9 @@ public sealed class OpeningTrainingPositionSelector
                 group.Key,
                 group.Count(),
                 lineCounts.TryGetValue(group.Key, out int count) ? count : 0,
-                group.Select(position => position.Eco)
+                group.Select(position => position.Eco?.Trim().ToUpperInvariant())
+                    .Where(eco => !string.IsNullOrWhiteSpace(eco))
+                    .Select(eco => eco!)
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .OrderBy(value => value, StringComparer.OrdinalIgnoreCase)
                     .ToList()))
