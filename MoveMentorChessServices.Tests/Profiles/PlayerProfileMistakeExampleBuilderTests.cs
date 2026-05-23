@@ -100,6 +100,60 @@ public sealed class PlayerProfileMistakeExampleBuilderTests
         Assert.All(examples, example => Assert.False(string.IsNullOrWhiteSpace(example.BetterMove)));
     }
 
+    [Fact]
+    public void Build_ReturnsEmptyWhenMaxTotalIsNotPositive()
+    {
+        IReadOnlyList<PlayerProfileSnapshot> snapshots =
+        [
+            CreateSnapshot(
+                "game-1",
+                PlayerSide.White,
+                "C20",
+                [CreateMove("hanging_piece", GamePhase.Opening, MoveQualityBucket.Mistake, 120, 1, isHighlighted: true)])
+        ];
+
+        List<ProfileMistakeExample> examples = PlayerProfileMistakeExampleBuilder.Build(
+            snapshots,
+            [new ProfileLabelStat("hanging_piece", 1, 0.8)],
+            maxTotal: 0);
+
+        Assert.Empty(examples);
+    }
+
+    [Fact]
+    public void Build_UsesCeilingPerLabelAllocationBeforeApplyingTotalLimit()
+    {
+        IReadOnlyList<PlayerProfileSnapshot> snapshots =
+        [
+            CreateSnapshot(
+                "game-1",
+                PlayerSide.White,
+                "C20",
+                [
+                    CreateMove("hanging_piece", GamePhase.Opening, MoveQualityBucket.Mistake, 120, 1, isHighlighted: true),
+                    CreateMove("missed_tactic", GamePhase.Middlegame, MoveQualityBucket.Blunder, 260, 5, isHighlighted: true)
+                ]),
+            CreateSnapshot(
+                "game-2",
+                PlayerSide.White,
+                "C20",
+                [
+                    CreateMove("hanging_piece", GamePhase.Opening, MoveQualityBucket.Blunder, 240, 7, isHighlighted: true),
+                    CreateMove("missed_tactic", GamePhase.Middlegame, MoveQualityBucket.Mistake, 170, 9, isHighlighted: false)
+                ])
+        ];
+        IReadOnlyList<ProfileLabelStat> topLabels =
+        [
+            new("hanging_piece", 2, 0.8),
+            new("missed_tactic", 2, 0.8)
+        ];
+
+        List<ProfileMistakeExample> examples = PlayerProfileMistakeExampleBuilder.Build(snapshots, topLabels, maxTotal: 3);
+
+        Assert.Equal(3, examples.Count);
+        Assert.Equal([260, 240, 170], examples.Select(example => example.CentipawnLoss).ToArray());
+    }
+
     private static PlayerProfileSnapshot CreateSnapshot(
         string gameFingerprint,
         PlayerSide side,

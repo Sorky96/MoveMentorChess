@@ -9,12 +9,12 @@ internal static class PlayerProfileMistakeExampleBuilder
         IReadOnlyList<ProfileLabelStat> topLabels,
         int maxTotal)
     {
-        if (topLabels.Count == 0)
+        if (maxTotal <= 0 || topLabels.Count == 0)
         {
             return [];
         }
 
-        int perLabel = Math.Max(1, maxTotal / topLabels.Count);
+        int perLabel = (maxTotal + topLabels.Count - 1) / topLabels.Count;
         return topLabels
             .SelectMany(label =>
             {
