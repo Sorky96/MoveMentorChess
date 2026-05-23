@@ -428,6 +428,69 @@ public sealed class PlayerProfileServiceTests
     }
 
     [Fact]
+    public void PlayerProfileService_UsesMostCommonExactDisplayNameCasing()
+    {
+        FakeAnalysisStore store = new(
+        [
+            CreateResult("ALPHA", "One", PlayerSide.White, "C20", "2026.04.01", [], [CreateMoveAnalysis(GamePhase.Opening, 80, "opening_principles")]),
+            CreateResult("Alpha", "Two", PlayerSide.White, "C20", "2026.04.02", [], [CreateMoveAnalysis(GamePhase.Opening, 90, "opening_principles")]),
+            CreateResult("Alpha", "Three", PlayerSide.White, "C20", "2026.04.03", [], [CreateMoveAnalysis(GamePhase.Opening, 100, "opening_principles")])
+        ]);
+        PlayerProfileService service = new(store);
+
+        PlayerProfileSummary summary = Assert.Single(service.ListProfiles("alpha"));
+        bool found = service.TryBuildProfile("alpha", out PlayerProfileReport? report);
+
+        Assert.Equal("Alpha", summary.DisplayName);
+        Assert.True(found);
+        Assert.NotNull(report);
+        Assert.Equal("Alpha", report!.DisplayName);
+    }
+
+    [Fact]
+    public void PlayerProfileService_UsesMostCommonExactOpeningCasing()
+    {
+        FakeAnalysisStore store = new(
+        [
+            CreateResult("Alpha", "One", PlayerSide.White, "c20", "2026.04.01", [], [CreateMoveAnalysis(GamePhase.Opening, 80, "opening_principles")]),
+            CreateResult("Alpha", "Two", PlayerSide.White, "C20", "2026.04.02", [], [CreateMoveAnalysis(GamePhase.Opening, 90, "opening_principles")]),
+            CreateResult("Alpha", "Three", PlayerSide.White, "C20", "2026.04.03", [], [CreateMoveAnalysis(GamePhase.Opening, 100, "opening_principles")])
+        ]);
+        PlayerProfileService service = new(store);
+
+        bool found = service.TryBuildProfile("alpha", out PlayerProfileReport? report);
+
+        Assert.True(found);
+        Assert.NotNull(report);
+        ProfileOpeningStat opening = Assert.Single(report!.MistakesByOpening);
+        Assert.Equal("C20", opening.Eco);
+        Assert.Equal(3, opening.Count);
+    }
+
+    [Fact]
+    public void PlayerProfileSnapshotLoader_AppliesDeterministicOrderingBeforeLimit()
+    {
+        List<StoredMoveAnalysis> moveAnalyses =
+        [
+            StoredMoveAnalysisMapper.CreateTestFixture(
+                gameFingerprint: "oldest",
+                analysisUpdatedUtc: DateTime.Parse("2026-04-01T00:00:00Z", null, System.Globalization.DateTimeStyles.AdjustToUniversal)),
+            StoredMoveAnalysisMapper.CreateTestFixture(
+                gameFingerprint: "newest",
+                analysisUpdatedUtc: DateTime.Parse("2026-04-03T00:00:00Z", null, System.Globalization.DateTimeStyles.AdjustToUniversal)),
+            StoredMoveAnalysisMapper.CreateTestFixture(
+                gameFingerprint: "middle",
+                analysisUpdatedUtc: DateTime.Parse("2026-04-02T00:00:00Z", null, System.Globalization.DateTimeStyles.AdjustToUniversal))
+        ];
+        FakeAnalysisStore store = new([], moveAnalyses);
+        PlayerProfileSnapshotLoader loader = new(new ProfileAnalysisDataSource(store, store));
+
+        List<PlayerProfileSnapshot> snapshots = loader.Load(null, 2);
+
+        Assert.Equal(["newest", "middle"], snapshots.Select(snapshot => snapshot.GameFingerprint));
+    }
+
+    [Fact]
     public void PlayerProfileService_MergesStructuredMovesWithLegacyResults_WithoutDroppingGames()
     {
         GameAnalysisResult resultA = CreateResult(
