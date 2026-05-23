@@ -389,6 +389,72 @@ public sealed class PlayerProfileServiceTests
     }
 
     [Fact]
+    public void PlayerProfileService_ReportsInsufficientProgressWhenComparedWindowsHaveNoCpl()
+    {
+        FakeAnalysisStore store = new(
+        [
+            CreateResult("Void", "One", PlayerSide.White, "C20", "2026.03.16", [], []),
+            CreateResult("Void", "Two", PlayerSide.White, "C20", "2026.03.17", [], []),
+            CreateResult("Void", "Three", PlayerSide.White, "C20", "2026.04.10", [], []),
+            CreateResult("Void", "Four", PlayerSide.White, "C20", "2026.04.11", [], [])
+        ]);
+
+        PlayerProfileService service = new(store);
+
+        bool found = service.TryBuildProfile("Void", out PlayerProfileReport? report);
+
+        Assert.True(found);
+        Assert.NotNull(report);
+        Assert.Equal(ProfileProgressDirection.InsufficientData, report!.ProgressSignal.Direction);
+        Assert.NotNull(report.ProgressSignal.Recent);
+        Assert.NotNull(report.ProgressSignal.Previous);
+    }
+
+    [Fact]
+    public void PlayerProfileService_UsesComparedWindowsForLabelTrends()
+    {
+        FakeAnalysisStore store = new(
+        [
+            CreateResult("Windowed", "Old", PlayerSide.White, "C20", "2026.01.05", [], [CreateMoveAnalysis(GamePhase.Opening, 150, "stale_label")]),
+            CreateResult("Windowed", "One", PlayerSide.White, "C20", "2026.03.16", [], [CreateMoveAnalysis(GamePhase.Opening, 100, "missed_tactic")]),
+            CreateResult("Windowed", "Two", PlayerSide.White, "C20", "2026.03.17", [], [CreateMoveAnalysis(GamePhase.Opening, 100, "missed_tactic")]),
+            CreateResult("Windowed", "Three", PlayerSide.White, "C20", "2026.04.10", [], [CreateMoveAnalysis(GamePhase.Opening, 60, "missed_tactic")]),
+            CreateResult("Windowed", "Four", PlayerSide.White, "C20", "2026.04.11", [], [CreateMoveAnalysis(GamePhase.Opening, 60, "missed_tactic")])
+        ]);
+
+        PlayerProfileService service = new(store);
+
+        bool found = service.TryBuildProfile("Windowed", out PlayerProfileReport? report);
+
+        Assert.True(found);
+        Assert.NotNull(report);
+        Assert.DoesNotContain(report!.LabelTrends, item => item.Label == "stale_label");
+        Assert.Contains(report.LabelTrends, item => item.Label == "missed_tactic");
+    }
+
+    [Fact]
+    public void PlayerProfileService_UsesCplOnlyProgressSummaryWhenHighlightRateDoesNotImprove()
+    {
+        FakeAnalysisStore store = new(
+        [
+            CreateResult("Cleaner", "One", PlayerSide.White, "C20", "2026.03.16", [], [CreateMoveAnalysis(GamePhase.Opening, 100, "missed_tactic")]),
+            CreateResult("Cleaner", "Two", PlayerSide.White, "C20", "2026.03.17", [], [CreateMoveAnalysis(GamePhase.Opening, 100, "missed_tactic")]),
+            CreateResult("Cleaner", "Three", PlayerSide.White, "C20", "2026.04.10", [], [CreateMoveAnalysis(GamePhase.Opening, 60, "missed_tactic")]),
+            CreateResult("Cleaner", "Four", PlayerSide.White, "C20", "2026.04.11", [], [CreateMoveAnalysis(GamePhase.Opening, 60, "missed_tactic")])
+        ]);
+
+        PlayerProfileService service = new(store);
+
+        bool found = service.TryBuildProfile("Cleaner", out PlayerProfileReport? report);
+
+        Assert.True(found);
+        Assert.NotNull(report);
+        Assert.Equal(ProfileProgressDirection.Improving, report!.ProgressSignal.Direction);
+        Assert.Contains("average CPL improved by 40", report.ProgressSignal.Summary, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("highlighted mistakes", report.ProgressSignal.Summary, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void PlayerProfileService_DoesNotTreatSameDayGamesAsProgressTrend()
     {
         FakeAnalysisStore store = new(

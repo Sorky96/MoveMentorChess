@@ -19,11 +19,7 @@ internal static class PlayerProfileProgressAnalyzer
         ProfileProgressPeriod previousPeriod = BuildProgressPeriod(selection.Previous, $"Previous {selection.WindowDays} days");
         ProfileProgressPeriod recentPeriod = BuildProgressPeriod(selection.Recent, $"Last {selection.WindowDays} days");
 
-        int cplDelta = (recentPeriod.AverageCentipawnLoss ?? 0) - (previousPeriod.AverageCentipawnLoss ?? 0);
-        double highlightDelta = recentPeriod.HighlightedMistakesPerGame - previousPeriod.HighlightedMistakesPerGame;
-
-        if ((previousPeriod.AverageCentipawnLoss is null || recentPeriod.AverageCentipawnLoss is null)
-            && selection.Previous.Count < MinimumGamesPerProgressWindow)
+        if (previousPeriod.AverageCentipawnLoss is null || recentPeriod.AverageCentipawnLoss is null)
         {
             return new ProfileProgressSignal(
                 ProfileProgressDirection.InsufficientData,
@@ -32,17 +28,24 @@ internal static class PlayerProfileProgressAnalyzer
                 previousPeriod);
         }
 
+        int cplDelta = recentPeriod.AverageCentipawnLoss.Value - previousPeriod.AverageCentipawnLoss.Value;
+        double highlightDelta = recentPeriod.HighlightedMistakesPerGame - previousPeriod.HighlightedMistakesPerGame;
+
         ProfileProgressDirection direction;
         string summary;
         if (cplDelta <= -35 || (cplDelta <= -25 && highlightDelta <= -0.15))
         {
             direction = ProfileProgressDirection.Improving;
-            summary = $"Recent games are cleaner: average CPL improved by {Math.Abs(cplDelta)} and highlighted mistakes per game also dropped.";
+            summary = cplDelta <= -35
+                ? $"Recent games are cleaner: average CPL improved by {Math.Abs(cplDelta)}."
+                : $"Recent games are cleaner: average CPL improved by {Math.Abs(cplDelta)} and highlighted mistakes per game also dropped.";
         }
         else if (cplDelta >= 35 || (cplDelta >= 25 && highlightDelta >= 0.15))
         {
             direction = ProfileProgressDirection.Regressing;
-            summary = $"Recent games are rougher: average CPL rose by {cplDelta} and the number of highlighted mistakes per game increased.";
+            summary = cplDelta >= 35
+                ? $"Recent games are rougher: average CPL rose by {cplDelta}."
+                : $"Recent games are rougher: average CPL rose by {cplDelta} and the number of highlighted mistakes per game increased.";
         }
         else
         {
@@ -60,7 +63,8 @@ internal static class PlayerProfileProgressAnalyzer
             return [];
         }
 
-        return snapshots
+        return selection.Previous
+            .Concat(selection.Recent)
             .SelectMany(snapshot => snapshot.Moves)
             .Where(move => move.Move.Quality.IsProblem() && !string.IsNullOrWhiteSpace(move.Advice.MistakeLabel))
             .Select(move => move.Advice.MistakeLabel!)
