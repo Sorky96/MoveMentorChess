@@ -8,11 +8,12 @@ internal static class AppCompositionRoot
 {
     public static MainWindow CreateMainWindow()
     {
-        IAnalysisWindowFactory analysisWindowFactory = new AnalysisWindowFactory(AnalysisStoreProvider.GetStore);
-        IProfilesWindowFactory profilesWindowFactory = new ProfilesWindowFactory(AnalysisStoreProvider.GetStore);
+        AppDataServiceFactory dataServiceFactory = new(AnalysisStoreProvider.GetStore);
+        IAnalysisWindowFactory analysisWindowFactory = dataServiceFactory.CreateAnalysisWindowFactory();
+        IProfilesWindowFactory profilesWindowFactory = dataServiceFactory.CreateProfilesWindowFactory();
         IStockfishPathResolver stockfishPathResolver = new DefaultStockfishPathResolver();
-        IMainWindowAnalysisDataService mainWindowAnalysisDataService = new DefaultMainWindowAnalysisDataService(AnalysisStoreProvider.GetStore);
-        IMainWindowDialogDataService mainWindowDialogDataService = new DefaultMainWindowDialogDataService(AnalysisStoreProvider.GetStore);
+        IMainWindowAnalysisDataService mainWindowAnalysisDataService = dataServiceFactory.CreateMainWindowAnalysisDataService();
+        IMainWindowDialogDataService mainWindowDialogDataService = dataServiceFactory.CreateMainWindowDialogDataService();
 
         return new MainWindow(analysisWindowFactory, profilesWindowFactory, mainWindowDialogDataService)
         {
