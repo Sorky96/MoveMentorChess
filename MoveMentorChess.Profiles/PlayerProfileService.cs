@@ -1,4 +1,3 @@
-using static MoveMentorChess.Profiles.PlayerProfileProgressAnalyzer;
 using static MoveMentorChess.Profiles.PlayerProfileStatsAggregator;
 
 namespace MoveMentorChess.Profiles;
@@ -11,7 +10,7 @@ public sealed partial class PlayerProfileService
     private readonly IOpeningTreeStore? openingTreeStore;
     private readonly IOpeningTrainingHistoryStore? trainingHistoryStore;
     private readonly PlayerProfileSnapshotLoader snapshotLoader;
-    private readonly PlayerRatingTrendAnalyzer ratingTrendAnalyzer;
+    private readonly PlayerProfileReportBuilder reportBuilder;
 
     public PlayerProfileService(IAnalysisStore analysisStore)
         : this(
@@ -67,7 +66,7 @@ public sealed partial class PlayerProfileService
         this.openingTreeStore = openingTreeStore;
         this.trainingHistoryStore = trainingHistoryStore;
         snapshotLoader = new PlayerProfileSnapshotLoader(analysisDataSource);
-        ratingTrendAnalyzer = new PlayerRatingTrendAnalyzer(this.strengthEstimator);
+        reportBuilder = new PlayerProfileReportBuilder(new PlayerRatingTrendAnalyzer(this.strengthEstimator));
     }
 
     public IReadOnlyList<PlayerProfileSummary> ListProfiles(string? filterText = null, int limit = 100)
@@ -157,64 +156,6 @@ public sealed partial class PlayerProfileService
     private PlayerProfileReport BuildReport(List<PlayerProfileSnapshot> snapshots)
     {
         string playerKey = snapshots[0].PlayerKey;
-        string displayName = SelectDisplayName(snapshots);
-
-        List<HighlightedGroup> highlightedGroups = snapshots
-            .SelectMany(GetHighlightedGroups)
-            .ToList();
-        IReadOnlyList<StoredMoveAnalysis> mistakeMoves = snapshots
-            .SelectMany(snapshot => snapshot.Moves)
-            .Where(move => move.Quality.IsProblem() && !string.IsNullOrWhiteSpace(move.MistakeLabel))
-            .ToList();
-        PlayerProfileAggregateStats aggregateStats = BuildReportStats(snapshots, highlightedGroups, mistakeMoves);
-
-        ProfileProgressSignal progressSignal = BuildProgressSignal(snapshots);
-        IReadOnlyList<ProfileLabelTrend> labelTrends = BuildLabelTrends(snapshots);
-        PlayerRatingTrendReport overallRatingTrend = ratingTrendAnalyzer.Build(snapshots, null);
-        IReadOnlyList<PlayerRatingTrendReport> ratingTrendsByTimeControl = ratingTrendAnalyzer.BuildByTimeControl(snapshots);
-
-        IReadOnlyList<ProfileMistakeExample> allExamples = BuildAllMistakeExamples(snapshots, aggregateStats.TopLabels, 9);
-
-        WeeklyTrainingPlan emptyWeeklyPlan = new(
-            $"{displayName} Weekly Training Plan",
-            "Training plan is being prepared from the current profile.",
-            new WeeklyTrainingBudget(
-                0,
-                0,
-                0,
-                0,
-                0,
-                "Budget will be calculated after training priorities are ranked."),
-            []);
-        PlayerProfileReport draftReport = new(
-            playerKey,
-            displayName,
-            snapshots.Count,
-            snapshots.Sum(snapshot => snapshot.Moves.Count),
-            highlightedGroups.Count,
-            TryAverage(snapshots.SelectMany(snapshot => snapshot.Moves).Select(move => move.CentipawnLoss)),
-            aggregateStats.TopLabels,
-            aggregateStats.CostliestLabels,
-            aggregateStats.MistakesByPhase,
-            aggregateStats.MistakesByOpening,
-            aggregateStats.GamesBySide,
-            aggregateStats.MonthlyTrend,
-            aggregateStats.QuarterlyTrend,
-            overallRatingTrend,
-            ratingTrendsByTimeControl,
-            progressSignal,
-            labelTrends,
-            [],
-            emptyWeeklyPlan,
-            allExamples,
-            new TrainingPlanReport(
-                playerKey,
-                displayName,
-                progressSignal.Direction,
-                "Training plan is being prepared from the current profile.",
-                [],
-                [],
-                emptyWeeklyPlan));
         OpeningWeaknessReport? openingReport = new OpeningWeaknessService(
             RequireResultStore(importedGameStore),
             RequireMoveAnalysisStore(importedGameStore),
@@ -225,30 +166,7 @@ public sealed partial class PlayerProfileService
         IReadOnlyList<OpeningTrainingSessionResult> trainingHistory = trainingHistoryStore is not null
             ? trainingHistoryStore.ListOpeningTrainingSessionResults(playerKey)
             : [];
-        TrainingPlanReport trainingPlan = new TrainingPlanService().Build(draftReport, openingReport, trainingHistory);
-
-        return new PlayerProfileReport(
-            playerKey,
-            displayName,
-            snapshots.Count,
-            snapshots.Sum(snapshot => snapshot.Moves.Count),
-            highlightedGroups.Count,
-            TryAverage(snapshots.SelectMany(snapshot => snapshot.Moves).Select(move => move.CentipawnLoss)),
-            aggregateStats.TopLabels,
-            aggregateStats.CostliestLabels,
-            aggregateStats.MistakesByPhase,
-            aggregateStats.MistakesByOpening,
-            aggregateStats.GamesBySide,
-            aggregateStats.MonthlyTrend,
-            aggregateStats.QuarterlyTrend,
-            overallRatingTrend,
-            ratingTrendsByTimeControl,
-            progressSignal,
-            labelTrends,
-            trainingPlan.Recommendations,
-            trainingPlan.WeeklyPlan,
-            allExamples,
-            trainingPlan);
+        return reportBuilder.Build(snapshots, openingReport, trainingHistory);
     }
 }
 
@@ -256,87 +174,3 @@ public sealed record ProfileDataAvailability(
     int ImportedGames,
     int AnalyzedProfiles,
     int OpeningTreePositions);
-
-public sealed partial class PlayerProfileService
-{
-    private static List<RecommendationOccurrence> BuildRecommendationOccurrences(PlayerProfileSnapshot snapshot, string label)
-    {
-        List<RecommendationOccurrence> highlightedOccurrences = GetHighlightedGroups(snapshot)
-            .Where(group => string.Equals(group.Label, label, StringComparison.Ordinal))
-            .Select(group => new RecommendationOccurrence(snapshot.Side, group.DominantPhase, snapshot.Eco))
-            .ToList();
-
-        if (highlightedOccurrences.Any(item => item.Phase.HasValue))
-        {
-            return highlightedOccurrences;
-        }
-
-        List<RecommendationOccurrence> moveOccurrences = snapshot.Moves
-            .Where(move => string.Equals(move.MistakeLabel ?? "unclassified", label, StringComparison.Ordinal))
-            .Select(move => new RecommendationOccurrence(snapshot.Side, move.Phase, snapshot.Eco))
-            .ToList();
-
-        return moveOccurrences.Count > 0
-            ? moveOccurrences
-            : highlightedOccurrences;
-    }
-
-    private static List<ProfileMistakeExample> BuildAllMistakeExamples(
-        IReadOnlyList<PlayerProfileSnapshot> snapshots,
-        IReadOnlyList<ProfileLabelStat> topLabels,
-        int maxTotal)
-    {
-        if (topLabels.Count == 0)
-        {
-            return [];
-        }
-
-        int perLabel = Math.Max(1, maxTotal / topLabels.Count);
-        return topLabels
-            .SelectMany(label =>
-            {
-                RecommendationContext context = BuildRecommendationContext(snapshots, label.Label);
-                return ProfileMistakeExampleSelector.BuildForLabel(snapshots, label.Label, context, perLabel);
-            })
-            .OrderByDescending(example => example.CentipawnLoss ?? 0)
-            .Take(maxTotal)
-            .ToList();
-    }
-
-    private static RecommendationContext BuildRecommendationContext(IReadOnlyList<PlayerProfileSnapshot> snapshots, string label)
-    {
-        List<RecommendationOccurrence> occurrences = snapshots
-            .SelectMany(snapshot => BuildRecommendationOccurrences(snapshot, label))
-            .ToList();
-
-        if (occurrences.Count == 0)
-        {
-            return new RecommendationContext(null, null, []);
-        }
-
-        GamePhase? dominantPhase = occurrences
-            .Where(item => item.Phase.HasValue)
-            .GroupBy(item => item.Phase!.Value)
-            .OrderByDescending(group => group.Count())
-            .ThenBy(group => group.Key)
-            .Select(group => (GamePhase?)group.Key)
-            .FirstOrDefault();
-
-        PlayerSide? dominantSide = occurrences
-            .GroupBy(item => item.Side)
-            .OrderByDescending(group => group.Count())
-            .ThenBy(group => group.Key)
-            .Select(group => (PlayerSide?)group.Key)
-            .FirstOrDefault();
-
-        IReadOnlyList<string> topOpenings = occurrences
-            .GroupBy(item => item.Eco, StringComparer.OrdinalIgnoreCase)
-            .OrderByDescending(group => group.Count())
-            .ThenBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
-            .Take(2)
-            .Select(group => group.Key)
-            .ToList();
-
-        return new RecommendationContext(dominantPhase, dominantSide, topOpenings);
-    }
-}
