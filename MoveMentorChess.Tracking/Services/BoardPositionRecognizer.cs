@@ -692,10 +692,10 @@ public sealed class BoardPositionRecognizer
 
     private static Bitmap ExtractSquare(Bitmap boardImage, int screenX, int screenY)
     {
-        int left = (int)Math.Round(screenX * boardImage.Width / 8.0);
-        int top = (int)Math.Round(screenY * boardImage.Height / 8.0);
-        int right = (int)Math.Round((screenX + 1) * boardImage.Width / 8.0);
-        int bottom = (int)Math.Round((screenY + 1) * boardImage.Height / 8.0);
+        int left = (int)Math.Round(screenX * (double)boardImage.Width / 8.0);
+        int top = (int)Math.Round(screenY * (double)boardImage.Height / 8.0);
+        int right = (int)Math.Round((screenX + 1) * (double)boardImage.Width / 8.0);
+        int bottom = (int)Math.Round((screenY + 1) * (double)boardImage.Height / 8.0);
         int insetX = Math.Max(1, (int)Math.Round((right - left) * 0.12));
         int insetY = Math.Max(1, (int)Math.Round((bottom - top) * 0.12));
         Rectangle source = Rectangle.FromLTRB(
@@ -886,7 +886,7 @@ public sealed class BoardPositionRecognizer
         int dr = left.R - right.R;
         int dg = left.G - right.G;
         int db = left.B - right.B;
-        return Math.Sqrt(dr * dr + dg * dg + db * db);
+        return Math.Sqrt((double)dr * dr + (double)dg * dg + (double)db * db);
     }
 
     private static double GetLuminance(Color color)
