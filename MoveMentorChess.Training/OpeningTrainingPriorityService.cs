@@ -51,8 +51,8 @@ public sealed class OpeningTrainingPriorityService
             int mistakeCount = opponentFrequency?.MistakeCount ?? 0;
             double score = branch.Frequency * 4.0
                 + (isReviewed ? 0 : 30)
-                + wrongCount * 24
-                + mistakeCount * 18;
+                + wrongCount * 24.0
+                + mistakeCount * 18.0;
 
             TrainingPriorityAction action = mistakeCount > 0
                 ? TrainingPriorityAction.ReviewOpponentReply
@@ -98,7 +98,7 @@ public sealed class OpeningTrainingPriorityService
         foreach (OpeningTrainingPosition position in overview.WeakPositions)
         {
             int wrongCount = wrongByPosition.TryGetValue(position.OpeningPositionKey.Value, out int value) ? value : 0;
-            double score = 55 + position.Priority * 8.0 + wrongCount * 24;
+            double score = 55.0 + position.Priority * 8.0 + wrongCount * 24.0;
             string moveText = string.IsNullOrWhiteSpace(position.BetterMove)
                 ? "Find the book repair move."
                 : $"Repair move: {position.BetterMove}.";

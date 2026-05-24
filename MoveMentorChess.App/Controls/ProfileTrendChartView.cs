@@ -301,7 +301,7 @@ public sealed class ProfileTrendChartView : Control
         }
 
         double width = Math.Max(160, lines.Max(line => line.Length) * 7.2 + 18);
-        double height = lines.Count * 18 + 14;
+        double height = lines.Count * 18.0 + 14.0;
         double x = Math.Clamp(pointer.X + 14, plot.Left, plot.Right - width);
         double y = Math.Clamp(pointer.Y - height - 10, plot.Top, plot.Bottom - height);
         Rect tooltip = new(x, y, width, height);
