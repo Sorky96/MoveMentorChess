@@ -24,6 +24,7 @@ public sealed partial class MoveListOcrRecognizer : IMoveListRecognizer
 
     private readonly string tesseractDataPath;
     private readonly IClock clock;
+    private readonly ITesseractDataPathResolver tesseractDataPathResolver;
 
     public MoveListOcrRecognizer(string tesseractDataPath)
         : this(tesseractDataPath, SystemClock.Instance)
@@ -31,9 +32,18 @@ public sealed partial class MoveListOcrRecognizer : IMoveListRecognizer
     }
 
     public MoveListOcrRecognizer(string tesseractDataPath, IClock clock)
+        : this(tesseractDataPath, clock, new DefaultTesseractDataPathResolver())
+    {
+    }
+
+    public MoveListOcrRecognizer(
+        string tesseractDataPath,
+        IClock clock,
+        ITesseractDataPathResolver tesseractDataPathResolver)
     {
         this.tesseractDataPath = tesseractDataPath;
         this.clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        this.tesseractDataPathResolver = tesseractDataPathResolver ?? throw new ArgumentNullException(nameof(tesseractDataPathResolver));
     }
 
     public bool TryRecognize(Bitmap source, out MoveListRecognitionResult? result, out string? error)
@@ -41,7 +51,7 @@ public sealed partial class MoveListOcrRecognizer : IMoveListRecognizer
         result = null;
         error = null;
 
-        if (!TesseractDataResolver.TryGetReadyDataPath(out string resolvedDataPath, out error))
+        if (!tesseractDataPathResolver.TryGetReadyDataPath(tesseractDataPath, out string resolvedDataPath, out error))
         {
             return false;
         }
