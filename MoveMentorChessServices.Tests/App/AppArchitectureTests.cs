@@ -108,6 +108,28 @@ public sealed partial class AppArchitectureTests
     }
 
     [Fact]
+    public void LlamaRuntimeResolversUseSharedPathCandidates()
+    {
+        string analysisRoot = Path.Join(FindRepositoryRoot(), "MoveMentorChess.Analysis");
+        string[] resolverFiles =
+        [
+            "LlamaCppAdviceRuntimeResolver.cs",
+            "LlamaCppServerResolver.cs"
+        ];
+
+        string[] directRuntimeDirectoryReads = resolverFiles
+            .Where(fileName =>
+            {
+                string resolver = File.ReadAllText(Path.Join(analysisRoot, "Services", fileName));
+                return resolver.Contains("AppContext.BaseDirectory", StringComparison.Ordinal)
+                    || resolver.Contains("Directory.GetCurrentDirectory", StringComparison.Ordinal);
+            })
+            .ToArray();
+
+        Assert.Empty(directRuntimeDirectoryReads);
+    }
+
+    [Fact]
     public void SqliteAnalysisStoreFacadeDoesNotOwnSqlStatements()
     {
         string facadePath = Path.Join(FindRepositoryRoot(), "MoveMentorChess.Persistence", "SqliteAnalysisStore.cs");
