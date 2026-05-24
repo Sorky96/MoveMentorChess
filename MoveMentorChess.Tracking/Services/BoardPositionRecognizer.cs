@@ -36,11 +36,18 @@ public sealed class BoardPositionRecognizer
     private readonly Dictionary<string, List<float[]>> genericShapeTemplates = new(StringComparer.Ordinal);
     private readonly Dictionary<string, List<float[]>> genericPieceTemplates = new(StringComparer.Ordinal);
     private readonly string? imagesDirectory;
+    private readonly ITrackingTemplatePathResolver templatePathResolver;
     private bool genericTemplatesInitialized;
 
     public BoardPositionRecognizer(string? imagesDirectory = null)
+        : this(imagesDirectory, new DefaultTrackingTemplatePathResolver())
+    {
+    }
+
+    public BoardPositionRecognizer(string? imagesDirectory, ITrackingTemplatePathResolver templatePathResolver)
     {
         this.imagesDirectory = imagesDirectory;
+        this.templatePathResolver = templatePathResolver ?? throw new ArgumentNullException(nameof(templatePathResolver));
     }
 
     public bool HasTemplates => templates.Count > 0;
@@ -990,7 +997,7 @@ public sealed class BoardPositionRecognizer
         return -1;
     }
 
-    private static bool TryRecognizeReferenceSnapshot(Bitmap boardImage, bool whiteAtBottom, out string placementFen, out double confidence)
+    private bool TryRecognizeReferenceSnapshot(Bitmap boardImage, bool whiteAtBottom, out string placementFen, out double confidence)
     {
         placementFen = string.Empty;
         confidence = 0;
@@ -1005,7 +1012,7 @@ public sealed class BoardPositionRecognizer
                 continue;
             }
 
-            string? referencePath = FindTrackingTemplate(snapshot.FileName);
+            string? referencePath = templatePathResolver.Resolve(snapshot.FileName);
             if (referencePath is null)
             {
                 continue;
@@ -1243,29 +1250,6 @@ public sealed class BoardPositionRecognizer
     {
         using Image pieceImage = Image.FromFile(Path.Combine(imagesDirectory!, GetPieceFileName(piece)));
         graphics.DrawImage(pieceImage, rect);
-    }
-
-    private static string? FindTrackingTemplate(string fileName)
-    {
-        DirectoryInfo? current = new(AppContext.BaseDirectory);
-        while (current is not null)
-        {
-            string directCandidate = Path.Combine(current.FullName, "TrackingTemplates", fileName);
-            if (File.Exists(directCandidate))
-            {
-                return directCandidate;
-            }
-
-            string projectCandidate = Path.Combine(current.FullName, "MoveMentorChessServices", "TrackingTemplates", fileName);
-            if (File.Exists(projectCandidate))
-            {
-                return projectCandidate;
-            }
-
-            current = current.Parent;
-        }
-
-        return null;
     }
 
     private sealed record ReferenceSnapshot(string FileName, string PlacementFen, bool WhiteAtBottom);
