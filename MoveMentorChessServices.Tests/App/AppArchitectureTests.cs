@@ -7,7 +7,7 @@ public sealed class AppArchitectureTests
     [Fact]
     public void AppViewsAndViewModelsDoNotAccessGlobalAnalysisStoreProvider()
     {
-        string appRoot = Path.Combine(FindRepositoryRoot(), "MoveMentorChess.App");
+        string appRoot = Path.Join(FindRepositoryRoot(), "MoveMentorChess.App");
         string[] forbiddenFiles = Directory
             .EnumerateFiles(appRoot, "*.cs", SearchOption.AllDirectories)
             .Where(path =>
@@ -24,7 +24,7 @@ public sealed class AppArchitectureTests
     [Fact]
     public void SqliteAnalysisStoreFacadeDoesNotOwnSqlStatements()
     {
-        string facadePath = Path.Combine(FindRepositoryRoot(), "MoveMentorChess.Persistence", "SqliteAnalysisStore.cs");
+        string facadePath = Path.Join(FindRepositoryRoot(), "MoveMentorChess.Persistence", "SqliteAnalysisStore.cs");
         string facade = File.ReadAllText(facadePath);
 
         Assert.DoesNotContain("CREATE TABLE", facade, StringComparison.OrdinalIgnoreCase);
@@ -40,7 +40,7 @@ public sealed class AppArchitectureTests
         DirectoryInfo? directory = new(AppContext.BaseDirectory);
         while (directory is not null)
         {
-            if (File.Exists(Path.Combine(directory.FullName, "MoveMentorChess.sln")))
+            if (File.Exists(Path.Join(directory.FullName, "MoveMentorChess.sln")))
             {
                 return directory.FullName;
             }
