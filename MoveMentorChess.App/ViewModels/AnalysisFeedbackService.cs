@@ -7,9 +7,7 @@ namespace MoveMentorChess.App.ViewModels;
 internal static class AnalysisFeedbackService
 {
     public static MoveAdviceFeedback CreateFeedback(
-        ImportedGame importedGame,
-        PlayerSide analyzedSide,
-        EngineAnalysisOptions analysisOptions,
+        GameAnalysisCacheKey key,
         SelectedMistakeViewItem item,
         DateTime timestampUtc,
         AdviceFeedbackKind feedbackKind,
@@ -17,14 +15,12 @@ internal static class AnalysisFeedbackService
         string? comment)
     {
         MoveAnalysisResult lead = item.LeadMove;
-        string gameFingerprint = GameFingerprint.Compute(importedGame.PgnText);
-        GameAnalysisCacheKey key = GameAnalysisCache.CreateKey(importedGame, analyzedSide, analysisOptions);
 
         return new MoveAdviceFeedback(
             Guid.NewGuid().ToString("N"),
             timestampUtc,
-            gameFingerprint,
-            analyzedSide,
+            key.GameFingerprint,
+            key.Side,
             key.Depth,
             key.MultiPv,
             key.MoveTimeMs,
@@ -70,9 +66,7 @@ internal static class AnalysisFeedbackService
 
     public static MoveAdviceFeedback? FindLatestFeedback(
         IAnalysisStore? store,
-        ImportedGame importedGame,
-        PlayerSide analyzedSide,
-        EngineAnalysisOptions analysisOptions,
+        GameAnalysisCacheKey key,
         MoveAnalysisResult lead)
     {
         if (store is null)
@@ -80,7 +74,6 @@ internal static class AnalysisFeedbackService
             return null;
         }
 
-        GameAnalysisCacheKey key = GameAnalysisCache.CreateKey(importedGame, analyzedSide, analysisOptions);
         return store.ListMoveAdviceFeedback(limit: 2000)
             .Where(feedback =>
                 feedback.GameFingerprint == key.GameFingerprint

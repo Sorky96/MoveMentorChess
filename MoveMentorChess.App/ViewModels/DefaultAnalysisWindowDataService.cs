@@ -34,6 +34,12 @@ internal sealed class DefaultAnalysisWindowDataService : IAnalysisWindowDataServ
     public bool IsAnalysisForGame(GameAnalysisResult result, ImportedGame game)
         => AnalysisResultCacheLoader.IsAnalysisForGame(result, game);
 
+    public GameAnalysisCacheKey CreateAnalysisCacheKey(
+        ImportedGame importedGame,
+        PlayerSide side,
+        EngineAnalysisOptions analysisOptions)
+        => analysisResultCache.CreateKey(importedGame, side, analysisOptions);
+
     public bool TryLoadExistingResult(
         ImportedGame importedGame,
         PlayerSide side,
@@ -69,12 +75,10 @@ internal sealed class DefaultAnalysisWindowDataService : IAnalysisWindowDataServ
         PlayerSide analyzedSide,
         EngineAnalysisOptions analysisOptions,
         MoveAnalysisResult lead)
-        => AnalysisFeedbackService.FindLatestFeedback(
-            storeProvider(),
-            importedGame,
-            analyzedSide,
-            analysisOptions,
-            lead);
+    {
+        GameAnalysisCacheKey key = analysisResultCache.CreateKey(importedGame, analyzedSide, analysisOptions);
+        return AnalysisFeedbackService.FindLatestFeedback(storeProvider(), key, lead);
+    }
 
     public OpeningTheoryQueryService? CreateOpeningTheory()
     {

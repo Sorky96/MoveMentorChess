@@ -73,13 +73,18 @@ public sealed partial class AppArchitectureTests
     }
 
     [Fact]
-    public void AppViewModelsUseCachePortForGameCacheInvalidation()
+    public void AppViewModelsUseCachePortForGameAnalysisCache()
     {
         string viewModelsRoot = Path.Join(FindRepositoryRoot(), "MoveMentorChess.App", "ViewModels");
         string[] forbiddenFiles = Directory
             .EnumerateFiles(viewModelsRoot, "*.cs", SearchOption.AllDirectories)
             .Where(path => Path.GetFileName(path) != "GameAnalysisResultCacheAdapter.cs")
-            .Where(path => File.ReadAllText(path).Contains("GameAnalysisCache.RemoveGame", StringComparison.Ordinal))
+            .Where(path =>
+            {
+                string content = File.ReadAllText(path);
+                return content.Contains("GameAnalysisCache.CreateKey", StringComparison.Ordinal)
+                    || content.Contains("GameAnalysisCache.RemoveGame", StringComparison.Ordinal);
+            })
             .Select(path => Path.GetRelativePath(viewModelsRoot, path))
             .Order()
             .ToArray();
