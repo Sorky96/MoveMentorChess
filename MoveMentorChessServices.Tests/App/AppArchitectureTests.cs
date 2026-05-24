@@ -1,8 +1,9 @@
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace MoveMentorChessServices.Tests.App;
 
-public sealed class AppArchitectureTests
+public sealed partial class AppArchitectureTests
 {
     [Fact]
     public void P1LargeClassCleanupBoundariesDoNotRegress()
@@ -10,11 +11,11 @@ public sealed class AppArchitectureTests
         string root = FindRepositoryRoot();
         (string Path, int MaxLines)[] cleanupBudgets =
         [
-            (Path.Combine(root, "MoveMentorChess.App", "ViewModels", "OpeningTrainerWindowViewModel.cs"), 2600),
-            (Path.Combine(root, "MoveMentorChess.App", "Views", "AnalysisWindow.axaml.cs"), 550),
-            (Path.Combine(root, "MoveMentorChess.App", "Views", "ProfilesWindow.axaml.cs"), 820),
-            (Path.Combine(root, "MoveMentorChess.Training", "OpeningTrainerService.cs"), 500),
-            (Path.Combine(root, "MoveMentorChess.Profiles", "PlayerProfileService.cs"), 220)
+            (Path.Join(root, "MoveMentorChess.App", "ViewModels", "OpeningTrainerWindowViewModel.cs"), 2600),
+            (Path.Join(root, "MoveMentorChess.App", "Views", "AnalysisWindow.axaml.cs"), 550),
+            (Path.Join(root, "MoveMentorChess.App", "Views", "ProfilesWindow.axaml.cs"), 820),
+            (Path.Join(root, "MoveMentorChess.Training", "OpeningTrainerService.cs"), 500),
+            (Path.Join(root, "MoveMentorChess.Profiles", "PlayerProfileService.cs"), 220)
         ];
 
         string[] oversizedFiles = cleanupBudgets
@@ -29,10 +30,11 @@ public sealed class AppArchitectureTests
     public void PlayerProfileServiceStaysConcreteFacadeWithExtractedCollaborators()
     {
         string root = FindRepositoryRoot();
-        string profilesRoot = Path.Combine(root, "MoveMentorChess.Profiles");
-        string service = File.ReadAllText(Path.Combine(profilesRoot, "PlayerProfileService.cs"));
+        string profilesRoot = Path.Join(root, "MoveMentorChess.Profiles");
+        string service = File.ReadAllText(Path.Join(profilesRoot, "PlayerProfileService.cs"));
 
-        Assert.DoesNotContain("partial class PlayerProfileService", service, StringComparison.Ordinal);
+        bool declaresPartialPlayerProfileService = PartialPlayerProfileServiceRegex().IsMatch(service);
+        Assert.False(declaresPartialPlayerProfileService, "PlayerProfileService must remain non-partial.");
         Assert.Contains("PlayerProfileSnapshotLoader", service, StringComparison.Ordinal);
         Assert.Contains("PlayerProfileReportBuilder", service, StringComparison.Ordinal);
 
@@ -47,7 +49,7 @@ public sealed class AppArchitectureTests
         ];
 
         string[] missingCollaborators = requiredCollaborators
-            .Where(fileName => !File.Exists(Path.Combine(profilesRoot, fileName)))
+            .Where(fileName => !File.Exists(Path.Join(profilesRoot, fileName)))
             .ToArray();
 
         Assert.Empty(missingCollaborators);
@@ -56,7 +58,7 @@ public sealed class AppArchitectureTests
     [Fact]
     public void AppViewsAndViewModelsDoNotAccessGlobalAnalysisStoreProvider()
     {
-        string appRoot = Path.Combine(FindRepositoryRoot(), "MoveMentorChess.App");
+        string appRoot = Path.Join(FindRepositoryRoot(), "MoveMentorChess.App");
         string[] forbiddenFiles = Directory
             .EnumerateFiles(appRoot, "*.cs", SearchOption.AllDirectories)
             .Where(path =>
@@ -73,7 +75,7 @@ public sealed class AppArchitectureTests
     [Fact]
     public void SqliteAnalysisStoreFacadeDoesNotOwnSqlStatements()
     {
-        string facadePath = Path.Combine(FindRepositoryRoot(), "MoveMentorChess.Persistence", "SqliteAnalysisStore.cs");
+        string facadePath = Path.Join(FindRepositoryRoot(), "MoveMentorChess.Persistence", "SqliteAnalysisStore.cs");
         string facade = File.ReadAllText(facadePath);
 
         Assert.DoesNotContain("CREATE TABLE", facade, StringComparison.OrdinalIgnoreCase);
@@ -89,7 +91,7 @@ public sealed class AppArchitectureTests
         DirectoryInfo? directory = new(AppContext.BaseDirectory);
         while (directory is not null)
         {
-            if (File.Exists(Path.Combine(directory.FullName, "MoveMentorChess.sln")))
+            if (File.Exists(Path.Join(directory.FullName, "MoveMentorChess.sln")))
             {
                 return directory.FullName;
             }
@@ -99,4 +101,7 @@ public sealed class AppArchitectureTests
 
         throw new InvalidOperationException("Could not find repository root.");
     }
+
+    [GeneratedRegex(@"\bpartial\s+class\s+PlayerProfileService\b", RegexOptions.CultureInvariant)]
+    private static partial Regex PartialPlayerProfileServiceRegex();
 }
