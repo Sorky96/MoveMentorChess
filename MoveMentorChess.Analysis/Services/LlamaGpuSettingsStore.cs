@@ -22,7 +22,7 @@ public static class LlamaGpuSettingsStore
 
                 string json = File.ReadAllText(path);
                 LlamaGpuSettings? settings = JsonSerializer.Deserialize<LlamaGpuSettings>(json, JsonOptions);
-                return settings ?? LlamaGpuSettings.Default;
+                return Normalize(settings);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
             {
@@ -40,9 +40,18 @@ public static class LlamaGpuSettingsStore
             string path = GetSettingsPath();
             string directory = Path.GetDirectoryName(path) ?? AppContext.BaseDirectory;
             Directory.CreateDirectory(directory);
-            string json = JsonSerializer.Serialize(settings, JsonOptions);
+            string json = JsonSerializer.Serialize(Normalize(settings), JsonOptions);
             File.WriteAllText(path, json);
         }
+    }
+
+    private static LlamaGpuSettings Normalize(LlamaGpuSettings? settings)
+    {
+        settings ??= LlamaGpuSettings.Default;
+        return settings with
+        {
+            ServerPath = string.IsNullOrWhiteSpace(settings.ServerPath) ? null : settings.ServerPath.Trim()
+        };
     }
 
     private static string GetSettingsPath()

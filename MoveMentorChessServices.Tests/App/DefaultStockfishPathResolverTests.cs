@@ -1,3 +1,4 @@
+using MoveMentorChess.Analysis;
 using MoveMentorChess.App.Composition;
 using Xunit;
 
@@ -17,6 +18,23 @@ public sealed class DefaultStockfishPathResolverTests
         string? resolved = resolver.Resolve();
 
         Assert.Equal(expected, resolved);
+    }
+
+    [Fact]
+    public void ResolvePrefersConfiguredStockfishPath()
+    {
+        string baseDirectory = TestPath("app");
+        string currentDirectory = TestPath("repo");
+        string configured = Path.GetFullPath(Path.Join(TestPath("custom"), "stockfish.exe"));
+        string nextToApp = Path.GetFullPath(Path.Join(baseDirectory, "stockfish.exe"));
+        FakeAppRuntimeEnvironment environment = new(baseDirectory, currentDirectory, [configured, nextToApp]);
+        DefaultStockfishPathResolver resolver = new(
+            environment,
+            () => StockfishSettings.Default with { ExecutablePath = configured });
+
+        string? resolved = resolver.Resolve();
+
+        Assert.Equal(configured, resolved);
     }
 
     [Fact]

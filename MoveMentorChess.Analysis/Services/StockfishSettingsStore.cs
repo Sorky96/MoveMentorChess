@@ -53,8 +53,12 @@ public static class StockfishSettingsStore
             HashMb: Math.Clamp(settings.HashMb <= 0 ? StockfishSettings.Default.HashMb : settings.HashMb, 16, 4096),
             BulkAnalysisDepth: Math.Clamp(settings.BulkAnalysisDepth <= 0 ? StockfishSettings.Default.BulkAnalysisDepth : settings.BulkAnalysisDepth, 1, 30),
             BulkAnalysisMultiPv: Math.Clamp(settings.BulkAnalysisMultiPv <= 0 ? StockfishSettings.Default.BulkAnalysisMultiPv : settings.BulkAnalysisMultiPv, 1, 5),
-            BulkAnalysisMoveTimeMs: Math.Clamp(settings.BulkAnalysisMoveTimeMs <= 0 ? StockfishSettings.Default.BulkAnalysisMoveTimeMs : settings.BulkAnalysisMoveTimeMs, 25, 5000));
+            BulkAnalysisMoveTimeMs: Math.Clamp(settings.BulkAnalysisMoveTimeMs <= 0 ? StockfishSettings.Default.BulkAnalysisMoveTimeMs : settings.BulkAnalysisMoveTimeMs, 25, 5000),
+            ExecutablePath: NormalizePath(settings.ExecutablePath));
     }
+
+    private static string? NormalizePath(string? path)
+        => string.IsNullOrWhiteSpace(path) ? null : path.Trim();
 
     private static string GetSettingsPath()
     {

@@ -1,19 +1,29 @@
 using System.IO;
+using MoveMentorChess.Analysis;
 
 namespace MoveMentorChess.App.Composition;
 
 public sealed class DefaultStockfishPathResolver : IStockfishPathResolver
 {
     private readonly IAppRuntimeEnvironment environment;
+    private readonly Func<StockfishSettings> settingsProvider;
 
     public DefaultStockfishPathResolver()
-        : this(SystemAppRuntimeEnvironment.Instance)
+        : this(SystemAppRuntimeEnvironment.Instance, StockfishSettingsStore.Load)
     {
     }
 
     internal DefaultStockfishPathResolver(IAppRuntimeEnvironment environment)
+        : this(environment, () => StockfishSettings.Default)
+    {
+    }
+
+    internal DefaultStockfishPathResolver(
+        IAppRuntimeEnvironment environment,
+        Func<StockfishSettings> settingsProvider)
     {
         this.environment = environment ?? throw new ArgumentNullException(nameof(environment));
+        this.settingsProvider = settingsProvider ?? throw new ArgumentNullException(nameof(settingsProvider));
     }
 
     public string? Resolve()
@@ -22,6 +32,7 @@ public sealed class DefaultStockfishPathResolver : IStockfishPathResolver
         string currentDirectory = environment.CurrentDirectory;
         string[] candidates =
         [
+            settingsProvider().ExecutablePath ?? string.Empty,
             Path.Combine(baseDirectory, "stockfish.exe"),
             Path.Combine(baseDirectory, "..", "..", "..", "..", "MoveMentorChessServices", "bin", "Debug", "net8.0-windows", "stockfish.exe"),
             Path.Combine(baseDirectory, "..", "..", "..", "..", "..", "MoveMentorChessServices", "bin", "Debug", "net8.0-windows", "stockfish.exe"),
