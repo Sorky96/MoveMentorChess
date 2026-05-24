@@ -35,18 +35,25 @@ public sealed class BoardPositionRecognizer
     private readonly Dictionary<string, List<float[]>> coldStartBoardTemplates = new(StringComparer.Ordinal);
     private readonly Dictionary<string, List<float[]>> genericShapeTemplates = new(StringComparer.Ordinal);
     private readonly Dictionary<string, List<float[]>> genericPieceTemplates = new(StringComparer.Ordinal);
-    private readonly string? imagesDirectory;
+    private readonly ITrackingPieceImageRepository pieceImageRepository;
     private readonly ITrackingTemplatePathResolver templatePathResolver;
     private bool genericTemplatesInitialized;
 
     public BoardPositionRecognizer(string? imagesDirectory = null)
-        : this(imagesDirectory, new DefaultTrackingTemplatePathResolver())
+        : this(new DirectoryTrackingPieceImageRepository(imagesDirectory), new DefaultTrackingTemplatePathResolver())
     {
     }
 
     public BoardPositionRecognizer(string? imagesDirectory, ITrackingTemplatePathResolver templatePathResolver)
+        : this(new DirectoryTrackingPieceImageRepository(imagesDirectory), templatePathResolver)
     {
-        this.imagesDirectory = imagesDirectory;
+    }
+
+    public BoardPositionRecognizer(
+        ITrackingPieceImageRepository pieceImageRepository,
+        ITrackingTemplatePathResolver templatePathResolver)
+    {
+        this.pieceImageRepository = pieceImageRepository ?? throw new ArgumentNullException(nameof(pieceImageRepository));
         this.templatePathResolver = templatePathResolver ?? throw new ArgumentNullException(nameof(templatePathResolver));
     }
 
@@ -563,43 +570,47 @@ public sealed class BoardPositionRecognizer
             }
         }
 
-        if (string.IsNullOrWhiteSpace(imagesDirectory) || !Directory.Exists(imagesDirectory))
+        if (!pieceImageRepository.IsAvailable)
         {
             return;
         }
 
         foreach (string pieceType in GenericPieceTypes)
         {
-            TryAddImageTemplate(pieceType, Path.Combine(imagesDirectory, $"w{pieceType}.svg"));
-            TryAddImageTemplate(pieceType, Path.Combine(imagesDirectory, $"b{pieceType}.svg"));
+            TryAddImageTemplate(pieceType, $"w{pieceType}.svg");
+            TryAddImageTemplate(pieceType, $"b{pieceType}.svg");
         }
     }
 
-    private void TryAddImageTemplate(string pieceType, string path)
+    private void TryAddImageTemplate(string pieceType, string fileName)
     {
-        if (!File.Exists(path))
-        {
-            return;
-        }
+        string? path = null;
 
         try
         {
-            using Image source = Image.FromFile(path);
-            bool isWhitePiece = Path.GetFileName(path).StartsWith("w", StringComparison.OrdinalIgnoreCase);
-
-            foreach (int inset in new[] { 3, 5, 7, 9 })
+            if (!pieceImageRepository.TryLoadPieceImage(fileName, out Image? source, out path) || source is null)
             {
-                using Bitmap transparentBitmap = RenderTransparentImageTemplate(source, inset);
-                AddGenericShapeTemplate(pieceType, ToTemplateMaskVector(transparentBitmap));
-                AddGenericPieceTemplate(isWhitePiece ? pieceType : pieceType.ToLowerInvariant(), ToTemplateGrayVector(transparentBitmap));
+                return;
+            }
 
-                foreach (bool isLightSquare in new[] { true, false })
+            using (source)
+            {
+                bool isWhitePiece = fileName.StartsWith("w", StringComparison.OrdinalIgnoreCase);
+
+                foreach (int inset in new[] { 3, 5, 7, 9 })
                 {
-                    using Bitmap boardBitmap = RenderImageTemplate(source, isLightSquare, inset);
-                    AddColdStartBoardTemplate(
-                        BuildTemplateKey(isWhitePiece ? pieceType : pieceType.ToLowerInvariant(), isLightSquare),
-                        ToBoardTemplateVector(boardBitmap));
-                    AddGenericShapeTemplate(pieceType, ToMaskVector(boardBitmap, out _, out _, out _, out _));
+                    using Bitmap transparentBitmap = RenderTransparentImageTemplate(source, inset);
+                    AddGenericShapeTemplate(pieceType, ToTemplateMaskVector(transparentBitmap));
+                    AddGenericPieceTemplate(isWhitePiece ? pieceType : pieceType.ToLowerInvariant(), ToTemplateGrayVector(transparentBitmap));
+
+                    foreach (bool isLightSquare in new[] { true, false })
+                    {
+                        using Bitmap boardBitmap = RenderImageTemplate(source, isLightSquare, inset);
+                        AddColdStartBoardTemplate(
+                            BuildTemplateKey(isWhitePiece ? pieceType : pieceType.ToLowerInvariant(), isLightSquare),
+                            ToBoardTemplateVector(boardBitmap));
+                        AddGenericShapeTemplate(pieceType, ToMaskVector(boardBitmap, out _, out _, out _, out _));
+                    }
                 }
             }
         }
@@ -608,7 +619,7 @@ public sealed class BoardPositionRecognizer
             Trace.TraceWarning(
                 "BoardPositionRecognizer: failed to load image template '{0}' from '{1}' ({2}: {3})",
                 pieceType,
-                path,
+                path ?? fileName,
                 ex.GetType().Name,
                 ex.Message);
         }
@@ -1066,7 +1077,7 @@ public sealed class BoardPositionRecognizer
         placementFen = string.Empty;
         confidence = 0;
 
-        if (string.IsNullOrWhiteSpace(imagesDirectory) || !Directory.Exists(imagesDirectory))
+        if (!pieceImageRepository.IsAvailable)
         {
             return false;
         }
@@ -1248,8 +1259,15 @@ public sealed class BoardPositionRecognizer
 
     private void DrawReferencePiece(Graphics graphics, string piece, Rectangle rect)
     {
-        using Image pieceImage = Image.FromFile(Path.Combine(imagesDirectory!, GetPieceFileName(piece)));
-        graphics.DrawImage(pieceImage, rect);
+        if (!pieceImageRepository.TryLoadPieceImage(GetPieceFileName(piece), out Image? pieceImage, out _) || pieceImage is null)
+        {
+            return;
+        }
+
+        using (pieceImage)
+        {
+            graphics.DrawImage(pieceImage, rect);
+        }
     }
 
     private sealed record ReferenceSnapshot(string FileName, string PlacementFen, bool WhiteAtBottom);
