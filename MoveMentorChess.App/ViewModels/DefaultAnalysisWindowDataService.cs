@@ -7,6 +7,7 @@ internal sealed class DefaultAnalysisWindowDataService : IAnalysisWindowDataServ
 {
     private readonly Func<IAnalysisStore?> storeProvider;
     private readonly IClock clock;
+    private readonly IAnalysisResultCache analysisResultCache;
 
     public DefaultAnalysisWindowDataService(Func<IAnalysisStore?> storeProvider)
         : this(storeProvider, SystemClock.Instance)
@@ -14,9 +15,18 @@ internal sealed class DefaultAnalysisWindowDataService : IAnalysisWindowDataServ
     }
 
     public DefaultAnalysisWindowDataService(Func<IAnalysisStore?> storeProvider, IClock clock)
+        : this(storeProvider, clock, GameAnalysisResultCacheAdapter.Instance)
+    {
+    }
+
+    internal DefaultAnalysisWindowDataService(
+        Func<IAnalysisStore?> storeProvider,
+        IClock clock,
+        IAnalysisResultCache analysisResultCache)
     {
         this.storeProvider = storeProvider ?? throw new ArgumentNullException(nameof(storeProvider));
         this.clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        this.analysisResultCache = analysisResultCache ?? throw new ArgumentNullException(nameof(analysisResultCache));
     }
 
     public DateTime UtcNow => clock.UtcNow;
@@ -33,6 +43,7 @@ internal sealed class DefaultAnalysisWindowDataService : IAnalysisWindowDataServ
         out GameAnalysisCacheKey cacheKey,
         out string statusText)
         => AnalysisResultCacheLoader.TryLoadExistingResult(
+            analysisResultCache,
             importedGame,
             side,
             analysisOptions,
@@ -42,13 +53,13 @@ internal sealed class DefaultAnalysisWindowDataService : IAnalysisWindowDataServ
             out statusText);
 
     public bool TryGetWindowState(ImportedGame importedGame, out AnalysisWindowState? state)
-        => AnalysisResultCacheLoader.TryGetWindowState(importedGame, out state);
+        => AnalysisResultCacheLoader.TryGetWindowState(analysisResultCache, importedGame, out state);
 
     public void StoreWindowState(ImportedGame importedGame, AnalysisWindowState state)
-        => AnalysisResultCacheLoader.StoreWindowState(importedGame, state);
+        => AnalysisResultCacheLoader.StoreWindowState(analysisResultCache, importedGame, state);
 
     public void StoreResult(GameAnalysisCacheKey cacheKey, GameAnalysisResult result)
-        => AnalysisResultCacheLoader.StoreResult(cacheKey, result);
+        => AnalysisResultCacheLoader.StoreResult(analysisResultCache, cacheKey, result);
 
     public void SaveMoveAdviceFeedback(MoveAdviceFeedback feedback)
         => storeProvider()?.SaveMoveAdviceFeedback(feedback);

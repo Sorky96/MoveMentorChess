@@ -7,10 +7,19 @@ namespace MoveMentorChess.App.ViewModels;
 internal sealed class DefaultMainWindowAnalysisDataService : IMainWindowAnalysisDataService
 {
     private readonly Func<IAnalysisStore?> analysisStoreProvider;
+    private readonly IAnalysisResultCache analysisResultCache;
 
     public DefaultMainWindowAnalysisDataService(Func<IAnalysisStore?> analysisStoreProvider)
+        : this(analysisStoreProvider, GameAnalysisResultCacheAdapter.Instance)
+    {
+    }
+
+    internal DefaultMainWindowAnalysisDataService(
+        Func<IAnalysisStore?> analysisStoreProvider,
+        IAnalysisResultCache analysisResultCache)
     {
         this.analysisStoreProvider = analysisStoreProvider ?? throw new ArgumentNullException(nameof(analysisStoreProvider));
+        this.analysisResultCache = analysisResultCache ?? throw new ArgumentNullException(nameof(analysisResultCache));
     }
 
     public void SaveImportedGame(ImportedGame game)
@@ -63,13 +72,13 @@ internal sealed class DefaultMainWindowAnalysisDataService : IMainWindowAnalysis
 
     public bool TryGetCachedAnalysis(ImportedGame game, PlayerSide side, EngineAnalysisOptions options, out GameAnalysisResult? result)
     {
-        GameAnalysisCacheKey cacheKey = GameAnalysisCache.CreateKey(game, side, options);
-        return GameAnalysisCache.TryGetResult(cacheKey, out result) && result is not null;
+        GameAnalysisCacheKey cacheKey = analysisResultCache.CreateKey(game, side, options);
+        return analysisResultCache.TryGetResult(cacheKey, out result) && result is not null;
     }
 
     public void StoreAnalysisResult(ImportedGame game, PlayerSide side, EngineAnalysisOptions options, GameAnalysisResult result)
     {
-        GameAnalysisCache.StoreResult(GameAnalysisCache.CreateKey(game, side, options), result);
+        analysisResultCache.StoreResult(analysisResultCache.CreateKey(game, side, options), result);
     }
 
     public OpeningTheoryQueryService? CreateOpeningTheory()

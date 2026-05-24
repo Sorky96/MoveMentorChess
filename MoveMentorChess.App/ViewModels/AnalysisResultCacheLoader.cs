@@ -5,6 +5,7 @@ namespace MoveMentorChess.App.ViewModels;
 internal static class AnalysisResultCacheLoader
 {
     public static bool TryLoadExistingResult(
+        IAnalysisResultCache cache,
         ImportedGame importedGame,
         PlayerSide side,
         EngineAnalysisOptions analysisOptions,
@@ -13,7 +14,9 @@ internal static class AnalysisResultCacheLoader
         out GameAnalysisCacheKey cacheKey,
         out string statusText)
     {
-        cacheKey = GameAnalysisCache.CreateKey(importedGame, side, analysisOptions);
+        ArgumentNullException.ThrowIfNull(cache);
+
+        cacheKey = cache.CreateKey(importedGame, side, analysisOptions);
 
         if (TryGetInitialResult(importedGame, side, initialResultsBySide, out result) && result is not null)
         {
@@ -21,7 +24,7 @@ internal static class AnalysisResultCacheLoader
             return true;
         }
 
-        if (GameAnalysisCache.TryGetResult(cacheKey, out result) && result is not null)
+        if (cache.TryGetResult(cacheKey, out result) && result is not null)
         {
             statusText = $"Loaded cached analysis for {side}.";
             return true;
@@ -31,14 +34,29 @@ internal static class AnalysisResultCacheLoader
         return false;
     }
 
-    public static bool TryGetWindowState(ImportedGame importedGame, out AnalysisWindowState? state)
-        => GameAnalysisCache.TryGetWindowState(importedGame, out state);
+    public static bool TryGetWindowState(
+        IAnalysisResultCache cache,
+        ImportedGame importedGame,
+        out AnalysisWindowState? state)
+    {
+        ArgumentNullException.ThrowIfNull(cache);
+        return cache.TryGetWindowState(importedGame, out state);
+    }
 
-    public static void StoreWindowState(ImportedGame importedGame, AnalysisWindowState state)
-        => GameAnalysisCache.StoreWindowState(importedGame, state);
+    public static void StoreWindowState(
+        IAnalysisResultCache cache,
+        ImportedGame importedGame,
+        AnalysisWindowState state)
+    {
+        ArgumentNullException.ThrowIfNull(cache);
+        cache.StoreWindowState(importedGame, state);
+    }
 
-    public static void StoreResult(GameAnalysisCacheKey cacheKey, GameAnalysisResult result)
-        => GameAnalysisCache.StoreResult(cacheKey, result);
+    public static void StoreResult(IAnalysisResultCache cache, GameAnalysisCacheKey cacheKey, GameAnalysisResult result)
+    {
+        ArgumentNullException.ThrowIfNull(cache);
+        cache.StoreResult(cacheKey, result);
+    }
 
     private static bool TryGetInitialResult(
         ImportedGame importedGame,
