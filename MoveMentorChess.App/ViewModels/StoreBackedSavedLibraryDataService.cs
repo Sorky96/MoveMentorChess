@@ -2,9 +2,21 @@ using MoveMentorChess.Persistence;
 
 namespace MoveMentorChess.App.ViewModels;
 
-internal sealed class StoreBackedSavedLibraryDataService(IAnalysisStore analysisStore) : ISavedLibraryDataService
+internal sealed class StoreBackedSavedLibraryDataService : ISavedLibraryDataService
 {
-    private readonly IAnalysisStore analysisStore = analysisStore ?? throw new ArgumentNullException(nameof(analysisStore));
+    private readonly IAnalysisStore analysisStore;
+    private readonly IAnalysisResultCache analysisResultCache;
+
+    public StoreBackedSavedLibraryDataService(IAnalysisStore analysisStore)
+        : this(analysisStore, GameAnalysisResultCacheAdapter.Instance)
+    {
+    }
+
+    internal StoreBackedSavedLibraryDataService(IAnalysisStore analysisStore, IAnalysisResultCache analysisResultCache)
+    {
+        this.analysisStore = analysisStore ?? throw new ArgumentNullException(nameof(analysisStore));
+        this.analysisResultCache = analysisResultCache ?? throw new ArgumentNullException(nameof(analysisResultCache));
+    }
 
     public bool IsAvailable => true;
 
@@ -21,7 +33,7 @@ internal sealed class StoreBackedSavedLibraryDataService(IAnalysisStore analysis
             return false;
         }
 
-        GameAnalysisCache.RemoveGame(gameFingerprint);
+        analysisResultCache.RemoveGame(gameFingerprint);
         return true;
     }
 

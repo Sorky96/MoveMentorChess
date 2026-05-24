@@ -19,6 +19,9 @@ internal sealed class GameAnalysisResultCacheAdapter : IAnalysisResultCache
     public void StoreResult(GameAnalysisCacheKey key, GameAnalysisResult result)
         => GameAnalysisCache.StoreResult(key, result);
 
+    public void RemoveGame(string gameFingerprint)
+        => GameAnalysisCache.RemoveGame(gameFingerprint);
+
     public bool TryGetWindowState(ImportedGame importedGame, out AnalysisWindowState? state)
         => GameAnalysisCache.TryGetWindowState(importedGame, out state);
 

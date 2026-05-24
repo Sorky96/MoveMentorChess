@@ -9,6 +9,11 @@ public interface IAnalysisWindowDataService
 
     bool IsAnalysisForGame(GameAnalysisResult result, ImportedGame game);
 
+    GameAnalysisCacheKey CreateAnalysisCacheKey(
+        ImportedGame importedGame,
+        PlayerSide side,
+        EngineAnalysisOptions analysisOptions);
+
     bool TryLoadExistingResult(
         ImportedGame importedGame,
         PlayerSide side,

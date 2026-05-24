@@ -16,10 +16,9 @@ internal static class AnalysisFeedbackRecorder
         string? comment)
     {
         DateTime timestampUtc = dataService.UtcNow;
+        GameAnalysisCacheKey key = dataService.CreateAnalysisCacheKey(importedGame, analyzedSide, analysisOptions);
         MoveAdviceFeedback feedback = AnalysisFeedbackService.CreateFeedback(
-            importedGame,
-            analyzedSide,
-            analysisOptions,
+            key,
             item,
             timestampUtc,
             feedbackKind,

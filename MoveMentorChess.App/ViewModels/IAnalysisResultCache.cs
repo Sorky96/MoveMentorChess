@@ -10,6 +10,8 @@ internal interface IAnalysisResultCache
 
     void StoreResult(GameAnalysisCacheKey key, GameAnalysisResult result);
 
+    void RemoveGame(string gameFingerprint);
+
     bool TryGetWindowState(ImportedGame importedGame, out AnalysisWindowState? state);
 
     void StoreWindowState(ImportedGame importedGame, AnalysisWindowState state);
