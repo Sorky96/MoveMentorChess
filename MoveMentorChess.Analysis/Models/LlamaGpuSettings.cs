@@ -3,10 +3,12 @@ namespace MoveMentorChess.Analysis;
 public sealed record LlamaGpuSettings(
     bool UseFullGpuPower,
     ExplanationLevel DefaultExplanationLevel = ExplanationLevel.Intermediate,
-    AdviceNarrationStyle NarrationStyle = AdviceNarrationStyle.RegularTrainer)
+    AdviceNarrationStyle NarrationStyle = AdviceNarrationStyle.RegularTrainer,
+    string? ServerPath = null)
 {
     public static LlamaGpuSettings Default { get; } = new(
         false,
         ExplanationLevel.Intermediate,
-        AdviceNarrationStyle.RegularTrainer);
+        AdviceNarrationStyle.RegularTrainer,
+        ServerPath: null);
 }

@@ -5,14 +5,16 @@ public sealed record StockfishSettings(
     int HashMb,
     int BulkAnalysisDepth,
     int BulkAnalysisMultiPv,
-    int BulkAnalysisMoveTimeMs)
+    int BulkAnalysisMoveTimeMs,
+    string? ExecutablePath = null)
 {
     public static StockfishSettings Default { get; } = new(
         Threads: Math.Max(1, Environment.ProcessorCount - 1),
         HashMb: 256,
         BulkAnalysisDepth: 7,
         BulkAnalysisMultiPv: 1,
-        BulkAnalysisMoveTimeMs: 250);
+        BulkAnalysisMoveTimeMs: 250,
+        ExecutablePath: null);
 
     public StockfishEngineOptions ToEngineOptions()
         => new(

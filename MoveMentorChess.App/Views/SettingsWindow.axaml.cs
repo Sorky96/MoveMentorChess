@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using MoveMentorChess.Analysis;
 
 namespace MoveMentorChess.App.Views;
@@ -30,6 +31,8 @@ public partial class SettingsWindow : Window
         };
 
         FullGpuPowerCheckBox.IsChecked = settings.UseFullGpuPower;
+        LlamaServerPathTextBox.Text = settings.ServerPath;
+        StockfishPathTextBox.Text = stockfishSettings.ExecutablePath;
         StockfishThreadsNumeric.Value = stockfishSettings.Threads;
         StockfishHashNumeric.Value = stockfishSettings.HashMb;
         BulkDepthNumeric.Value = stockfishSettings.BulkAnalysisDepth;
@@ -59,7 +62,8 @@ public partial class SettingsWindow : Window
                 : ExplanationLevel.Intermediate,
             NarrationStyleComboBox.SelectedItem is NarrationStyleOption narrationOption
                 ? narrationOption.Style
-                : AdviceNarrationStyle.RegularTrainer);
+                : AdviceNarrationStyle.RegularTrainer,
+            PathHelpers.NormalizePath(LlamaServerPathTextBox.Text));
 
     public StockfishSettings SelectedStockfishSettings =>
         new(
@@ -67,7 +71,8 @@ public partial class SettingsWindow : Window
             ReadInt(StockfishHashNumeric, StockfishSettings.Default.HashMb),
             ReadInt(BulkDepthNumeric, StockfishSettings.Default.BulkAnalysisDepth),
             ReadInt(BulkMultiPvNumeric, StockfishSettings.Default.BulkAnalysisMultiPv),
-            ReadInt(BulkMoveTimeNumeric, StockfishSettings.Default.BulkAnalysisMoveTimeMs));
+            ReadInt(BulkMoveTimeNumeric, StockfishSettings.Default.BulkAnalysisMoveTimeMs),
+            PathHelpers.NormalizePath(StockfishPathTextBox.Text));
 
     private void SaveButton_Click(object? sender, RoutedEventArgs e)
     {
@@ -80,6 +85,24 @@ public partial class SettingsWindow : Window
     private void CancelButton_Click(object? sender, RoutedEventArgs e)
     {
         Close(false);
+    }
+
+    private async void BrowseStockfishButton_Click(object? sender, RoutedEventArgs e)
+    {
+        string? path = await PickExecutablePathAsync("Select stockfish.exe");
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            StockfishPathTextBox.Text = path;
+        }
+    }
+
+    private async void BrowseLlamaServerButton_Click(object? sender, RoutedEventArgs e)
+    {
+        string? path = await PickExecutablePathAsync("Select llama-server.exe");
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            LlamaServerPathTextBox.Text = path;
+        }
     }
 
     private void RefreshModeDescription()
@@ -102,6 +125,25 @@ public partial class SettingsWindow : Window
         return numeric.Value.HasValue
             ? Convert.ToInt32(numeric.Value.Value)
             : fallback;
+    }
+
+    private async Task<string?> PickExecutablePathAsync(string title)
+    {
+        IReadOnlyList<IStorageFile> files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = title,
+            AllowMultiple = false,
+            FileTypeFilter =
+            [
+                new FilePickerFileType("Executable files")
+                {
+                    Patterns = ["*.exe"]
+                },
+                FilePickerFileTypes.All
+            ]
+        });
+
+        return files.Count == 0 ? null : files[0].Path.LocalPath;
     }
 
     private sealed record ExplanationLevelOption(ExplanationLevel Level, string Label)
