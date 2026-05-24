@@ -1,5 +1,4 @@
 using System.Drawing;
-using System.IO;
 using System.Runtime.InteropServices;
 
 namespace MoveMentorChess.Tracking;
@@ -15,12 +14,19 @@ public sealed class Tracker
     }
 
     public Tracker(string tesseractDataPath, IClock clock)
+        : this(tesseractDataPath, clock, new DefaultTrackingImageDirectoryResolver())
+    {
+    }
+
+    public Tracker(string tesseractDataPath, IClock clock, ITrackingImageDirectoryResolver imageDirectoryResolver)
     {
         ArgumentNullException.ThrowIfNull(clock);
+        ArgumentNullException.ThrowIfNull(imageDirectoryResolver);
+
         captureService = new ScreenCaptureService();
         coordinator = new TrackingCoordinator(
             new MoveListOcrRecognizer(tesseractDataPath, clock),
-            new BoardPositionRecognizer(Path.Combine(AppContext.BaseDirectory, "Images")),
+            new BoardPositionRecognizer(imageDirectoryResolver.Resolve()),
             captureService,
             clock);
     }
