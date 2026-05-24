@@ -7,9 +7,16 @@ internal sealed class DefaultMainWindowDialogDataService : IMainWindowDialogData
     private readonly Func<IAnalysisStore?> analysisStoreProvider;
 
     public DefaultMainWindowDialogDataService(Func<IAnalysisStore?> analysisStoreProvider)
+        : this(analysisStoreProvider, GameAnalysisResultCacheAdapter.Instance)
+    {
+    }
+
+    internal DefaultMainWindowDialogDataService(
+        Func<IAnalysisStore?> analysisStoreProvider,
+        IAnalysisResultCache analysisResultCache)
     {
         this.analysisStoreProvider = analysisStoreProvider ?? throw new ArgumentNullException(nameof(analysisStoreProvider));
-        SavedLibrary = new DefaultSavedLibraryDataService(analysisStoreProvider);
+        SavedLibrary = new DefaultSavedLibraryDataService(analysisStoreProvider, analysisResultCache);
     }
 
     public ISavedLibraryDataService SavedLibrary { get; }

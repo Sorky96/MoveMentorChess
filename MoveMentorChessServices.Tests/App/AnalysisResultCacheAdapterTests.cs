@@ -25,6 +25,36 @@ public sealed class AnalysisResultCacheAdapterTests
         Assert.Equal(1, cache.TryGetResultCallCount);
     }
 
+    [Fact]
+    public void DefaultSavedLibraryDataServiceRemovesCachedAnalysisThroughInjectedCache()
+    {
+        RecordingAnalysisResultCache cache = new();
+        FakeAnalysisStore store = new(deleteImportedGameResult: true);
+        DefaultSavedLibraryDataService dataService = new(() => store, cache);
+
+        bool deleted = dataService.DeleteGameAndCachedAnalysis("game-1");
+
+        Assert.True(deleted);
+        Assert.Equal("game-1", store.DeletedGameFingerprint);
+        Assert.Equal("game-1", cache.RemovedGameFingerprint);
+        Assert.Equal(1, cache.RemoveGameCallCount);
+    }
+
+    [Fact]
+    public void StoreBackedSavedLibraryDataServiceDoesNotRemoveCacheWhenDeleteMisses()
+    {
+        RecordingAnalysisResultCache cache = new();
+        FakeAnalysisStore store = new(deleteImportedGameResult: false);
+        StoreBackedSavedLibraryDataService dataService = new(store, cache);
+
+        bool deleted = dataService.DeleteGameAndCachedAnalysis("game-1");
+
+        Assert.False(deleted);
+        Assert.Equal("game-1", store.DeletedGameFingerprint);
+        Assert.Null(cache.RemovedGameFingerprint);
+        Assert.Equal(0, cache.RemoveGameCallCount);
+    }
+
     private static ImportedGame CreateGame()
     {
         return new ImportedGame(
@@ -53,6 +83,10 @@ public sealed class AnalysisResultCacheAdapterTests
 
         public int TryGetResultCallCount { get; private set; }
 
+        public int RemoveGameCallCount { get; private set; }
+
+        public string? RemovedGameFingerprint { get; private set; }
+
         public GameAnalysisCacheKey CreateKey(ImportedGame game, PlayerSide side, EngineAnalysisOptions options)
         {
             CreateKeyCallCount++;
@@ -76,6 +110,12 @@ public sealed class AnalysisResultCacheAdapterTests
             results[key] = result;
         }
 
+        public void RemoveGame(string gameFingerprint)
+        {
+            RemoveGameCallCount++;
+            RemovedGameFingerprint = gameFingerprint;
+        }
+
         public bool TryGetWindowState(ImportedGame importedGame, out AnalysisWindowState? state)
         {
             state = null;
@@ -83,6 +123,60 @@ public sealed class AnalysisResultCacheAdapterTests
         }
 
         public void StoreWindowState(ImportedGame importedGame, AnalysisWindowState state)
+        {
+        }
+    }
+
+    private sealed class FakeAnalysisStore(bool deleteImportedGameResult) : IAnalysisStore
+    {
+        public string? DeletedGameFingerprint { get; private set; }
+
+        public void SaveImportedGame(ImportedGame game)
+        {
+        }
+
+        public void SaveImportedGames(IReadOnlyList<ImportedGame> games)
+        {
+        }
+
+        public bool TryLoadImportedGame(string gameFingerprint, out ImportedGame? game)
+        {
+            game = null;
+            return false;
+        }
+
+        public bool DeleteImportedGame(string gameFingerprint)
+        {
+            DeletedGameFingerprint = gameFingerprint;
+            return deleteImportedGameResult;
+        }
+
+        public IReadOnlyList<SavedImportedGameSummary> ListImportedGames(string? filterText = null, int limit = 200)
+            => [];
+
+        public IReadOnlyList<GameAnalysisResult> ListResults(string? filterText = null, int limit = 500)
+            => [];
+
+        public bool TryLoadResult(GameAnalysisCacheKey key, out GameAnalysisResult? result)
+        {
+            result = null;
+            return false;
+        }
+
+        public void SaveResult(GameAnalysisCacheKey key, GameAnalysisResult result)
+        {
+        }
+
+        public IReadOnlyList<StoredMoveAnalysis> ListMoveAnalyses(string? filterText = null, int limit = 5000)
+            => [];
+
+        public bool TryLoadWindowState(string gameFingerprint, out AnalysisWindowState? state)
+        {
+            state = null;
+            return false;
+        }
+
+        public void SaveWindowState(string gameFingerprint, AnalysisWindowState state)
         {
         }
     }
