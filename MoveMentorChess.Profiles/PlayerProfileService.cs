@@ -2,7 +2,7 @@ using static MoveMentorChess.Profiles.PlayerProfileStatsAggregator;
 
 namespace MoveMentorChess.Profiles;
 
-public sealed partial class PlayerProfileService
+public sealed class PlayerProfileService
 {
     private readonly IImportedGameStore importedGameStore;
     private readonly IPlayerStrengthEstimator strengthEstimator;
