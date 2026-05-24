@@ -63,7 +63,7 @@ public partial class SettingsWindow : Window
             NarrationStyleComboBox.SelectedItem is NarrationStyleOption narrationOption
                 ? narrationOption.Style
                 : AdviceNarrationStyle.RegularTrainer,
-            NormalizePath(LlamaServerPathTextBox.Text));
+            PathHelpers.NormalizePath(LlamaServerPathTextBox.Text));
 
     public StockfishSettings SelectedStockfishSettings =>
         new(
@@ -72,7 +72,7 @@ public partial class SettingsWindow : Window
             ReadInt(BulkDepthNumeric, StockfishSettings.Default.BulkAnalysisDepth),
             ReadInt(BulkMultiPvNumeric, StockfishSettings.Default.BulkAnalysisMultiPv),
             ReadInt(BulkMoveTimeNumeric, StockfishSettings.Default.BulkAnalysisMoveTimeMs),
-            NormalizePath(StockfishPathTextBox.Text));
+            PathHelpers.NormalizePath(StockfishPathTextBox.Text));
 
     private void SaveButton_Click(object? sender, RoutedEventArgs e)
     {
@@ -145,9 +145,6 @@ public partial class SettingsWindow : Window
 
         return files.Count == 0 ? null : files[0].Path.LocalPath;
     }
-
-    private static string? NormalizePath(string? path)
-        => string.IsNullOrWhiteSpace(path) ? null : path.Trim();
 
     private sealed record ExplanationLevelOption(ExplanationLevel Level, string Label)
     {

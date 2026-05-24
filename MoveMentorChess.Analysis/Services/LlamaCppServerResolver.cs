@@ -35,10 +35,10 @@ public static class LlamaCppServerResolver
 
     public static string? ResolveServerPath()
     {
-        string? fromSettings = Normalize(LlamaGpuSettingsStore.Load().ServerPath);
-        if (File.Exists(fromSettings))
+        LlamaGpuSettings settings = LlamaGpuSettingsStore.Load();
+        if (File.Exists(settings.ServerPath))
         {
-            return fromSettings;
+            return settings.ServerPath;
         }
 
         string? fromEnvironment = Normalize(Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH"));

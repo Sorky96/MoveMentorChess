@@ -50,7 +50,7 @@ public static class LlamaGpuSettingsStore
         settings ??= LlamaGpuSettings.Default;
         return settings with
         {
-            ServerPath = string.IsNullOrWhiteSpace(settings.ServerPath) ? null : settings.ServerPath.Trim()
+            ServerPath = PathHelpers.NormalizePath(settings.ServerPath)
         };
     }
 

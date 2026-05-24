@@ -61,6 +61,7 @@ Current executable resolution keeps the app portable:
 - Stockfish is resolved from the app output folder first, then from development fallback locations.
 - `llama-server.exe` and `llama-cli.exe` can be placed next to the app, under `.\llama.cpp`, or under `.\tools\llama.cpp`.
 - `llama-server.exe` can also be provided with `MoveMentorChessServices_LLAMA_CPP_SERVER_PATH`.
+- `llama-cli.exe` can also be provided with `MoveMentorChessServices_LLAMA_CPP_CLI_PATH`.
 - The GGUF model path can be provided with `MoveMentorChessServices_LLAMA_CPP_MODEL_PATH`.
 
 The intended production setup is to configure these paths once in Settings: Stockfish should be provided explicitly, while `llama-server.exe` remains optional because the app can fall back to heuristic coaching text.

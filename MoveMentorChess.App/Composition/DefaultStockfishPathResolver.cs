@@ -33,11 +33,11 @@ public sealed class DefaultStockfishPathResolver : IStockfishPathResolver
         string[] candidates =
         [
             settingsProvider().ExecutablePath ?? string.Empty,
-            Path.Combine(baseDirectory, "stockfish.exe"),
-            Path.Combine(baseDirectory, "..", "..", "..", "..", "MoveMentorChessServices", "bin", "Debug", "net8.0-windows", "stockfish.exe"),
-            Path.Combine(baseDirectory, "..", "..", "..", "..", "..", "MoveMentorChessServices", "bin", "Debug", "net8.0-windows", "stockfish.exe"),
-            Path.Combine(currentDirectory, "MoveMentorChessServices", "bin", "Debug", "net8.0-windows", "stockfish.exe"),
-            Path.Combine(currentDirectory, "stockfish.exe")
+            Path.Join(baseDirectory, "stockfish.exe"),
+            Path.Join(baseDirectory, "..", "..", "..", "..", "MoveMentorChessServices", "bin", "Debug", "net8.0-windows", "stockfish.exe"),
+            Path.Join(baseDirectory, "..", "..", "..", "..", "..", "MoveMentorChessServices", "bin", "Debug", "net8.0-windows", "stockfish.exe"),
+            Path.Join(currentDirectory, "MoveMentorChessServices", "bin", "Debug", "net8.0-windows", "stockfish.exe"),
+            Path.Join(currentDirectory, "stockfish.exe")
         ];
 
         foreach (string candidate in candidates)
