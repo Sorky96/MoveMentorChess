@@ -1,9 +1,60 @@
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace MoveMentorChessServices.Tests.App;
 
-public sealed class AppArchitectureTests
+public sealed partial class AppArchitectureTests
 {
+    [Fact]
+    public void P1LargeClassCleanupBoundariesDoNotRegress()
+    {
+        string root = FindRepositoryRoot();
+        (string Path, int MaxLines)[] cleanupBudgets =
+        [
+            (Path.Join(root, "MoveMentorChess.App", "ViewModels", "OpeningTrainerWindowViewModel.cs"), 2600),
+            (Path.Join(root, "MoveMentorChess.App", "Views", "AnalysisWindow.axaml.cs"), 550),
+            (Path.Join(root, "MoveMentorChess.App", "Views", "ProfilesWindow.axaml.cs"), 820),
+            (Path.Join(root, "MoveMentorChess.Training", "OpeningTrainerService.cs"), 500),
+            (Path.Join(root, "MoveMentorChess.Profiles", "PlayerProfileService.cs"), 220)
+        ];
+
+        string[] oversizedFiles = cleanupBudgets
+            .Where(file => File.ReadLines(file.Path).Count() > file.MaxLines)
+            .Select(file => $"{Path.GetRelativePath(root, file.Path)} exceeds {file.MaxLines} lines")
+            .ToArray();
+
+        Assert.Empty(oversizedFiles);
+    }
+
+    [Fact]
+    public void PlayerProfileServiceStaysConcreteFacadeWithExtractedCollaborators()
+    {
+        string root = FindRepositoryRoot();
+        string profilesRoot = Path.Join(root, "MoveMentorChess.Profiles");
+        string service = File.ReadAllText(Path.Join(profilesRoot, "PlayerProfileService.cs"));
+
+        bool declaresPartialPlayerProfileService = PartialPlayerProfileServiceRegex().IsMatch(service);
+        Assert.False(declaresPartialPlayerProfileService, "PlayerProfileService must remain non-partial.");
+        Assert.Contains("PlayerProfileSnapshotLoader", service, StringComparison.Ordinal);
+        Assert.Contains("PlayerProfileReportBuilder", service, StringComparison.Ordinal);
+
+        string[] requiredCollaborators =
+        [
+            "PlayerProfileSnapshotLoader.cs",
+            "PlayerProfileStatsAggregator.cs",
+            "PlayerProfileProgressAnalyzer.cs",
+            "PlayerRatingTrendAnalyzer.cs",
+            "PlayerProfileMistakeExampleBuilder.cs",
+            "PlayerProfileReportBuilder.cs"
+        ];
+
+        string[] missingCollaborators = requiredCollaborators
+            .Where(fileName => !File.Exists(Path.Join(profilesRoot, fileName)))
+            .ToArray();
+
+        Assert.Empty(missingCollaborators);
+    }
+
     [Fact]
     public void AppViewsAndViewModelsDoNotAccessGlobalAnalysisStoreProvider()
     {
@@ -50,4 +101,7 @@ public sealed class AppArchitectureTests
 
         throw new InvalidOperationException("Could not find repository root.");
     }
+
+    [GeneratedRegex(@"\bpartial\s+class\s+PlayerProfileService\b", RegexOptions.CultureInvariant)]
+    private static partial Regex PartialPlayerProfileServiceRegex();
 }
