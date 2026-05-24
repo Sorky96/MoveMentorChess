@@ -59,19 +59,7 @@ public static class LlamaCppServerResolver
     }
 
     private static IEnumerable<string> GetServerCandidates()
-    {
-        string baseDirectory = AppContext.BaseDirectory;
-        string currentDirectory = Directory.GetCurrentDirectory();
-
-        return
-        [
-            Path.Combine(baseDirectory, "llama-server.exe"),
-            Path.Combine(baseDirectory, "llama.cpp", "llama-server.exe"),
-            Path.Combine(currentDirectory, "llama-server.exe"),
-            Path.Combine(currentDirectory, "llama.cpp", "llama-server.exe"),
-            Path.Combine(currentDirectory, "tools", "llama.cpp", "llama-server.exe")
-        ];
-    }
+        => LlamaRuntimePathCandidates.GetExecutableCandidates("llama-server.exe");
 
     private static string? Normalize(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

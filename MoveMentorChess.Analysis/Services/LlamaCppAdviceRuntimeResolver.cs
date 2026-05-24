@@ -93,19 +93,7 @@ public static class LlamaCppAdviceRuntimeResolver
     }
 
     private static IEnumerable<string> GetCliCandidates()
-    {
-        string baseDirectory = AppContext.BaseDirectory;
-        string currentDirectory = Directory.GetCurrentDirectory();
-
-        return
-        [
-            Path.Combine(baseDirectory, "llama-cli.exe"),
-            Path.Combine(baseDirectory, "llama.cpp", "llama-cli.exe"),
-            Path.Combine(currentDirectory, "llama-cli.exe"),
-            Path.Combine(currentDirectory, "llama.cpp", "llama-cli.exe"),
-            Path.Combine(currentDirectory, "tools", "llama.cpp", "llama-cli.exe")
-        ];
-    }
+        => LlamaRuntimePathCandidates.GetExecutableCandidates("llama-cli.exe");
 
     private static IEnumerable<string> GetModelCandidates()
     {
@@ -119,19 +107,7 @@ public static class LlamaCppAdviceRuntimeResolver
     }
 
     private static IEnumerable<string> GetModelDirectories()
-    {
-        string baseDirectory = AppContext.BaseDirectory;
-        string currentDirectory = Directory.GetCurrentDirectory();
-
-        return
-        [
-            Path.Combine(baseDirectory, "Models"),
-            Path.Combine(baseDirectory, "llama.cpp", "models"),
-            Path.Combine(currentDirectory, "Models"),
-            Path.Combine(currentDirectory, "llama.cpp", "models"),
-            Path.Combine(currentDirectory, "tools", "llama.cpp", "models")
-        ];
-    }
+        => LlamaRuntimePathCandidates.GetModelDirectories();
 
     private static string? Normalize(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
