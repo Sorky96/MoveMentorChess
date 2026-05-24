@@ -40,6 +40,8 @@ public sealed class DefaultTrackingPieceTemplateRenderer : ITrackingPieceTemplat
 
     public Bitmap RenderImageTemplate(Image image, bool isLightSquare, int inset)
     {
+        ValidateImageTemplateArguments(image, inset);
+
         Bitmap bitmap = new(64, 64);
         using Graphics graphics = Graphics.FromImage(bitmap);
         graphics.SmoothingMode = SmoothingMode.AntiAlias;
@@ -51,6 +53,8 @@ public sealed class DefaultTrackingPieceTemplateRenderer : ITrackingPieceTemplat
 
     public Bitmap RenderTransparentImageTemplate(Image image, int inset)
     {
+        ValidateImageTemplateArguments(image, inset);
+
         Bitmap bitmap = new(64, 64);
         using Graphics graphics = Graphics.FromImage(bitmap);
         graphics.SmoothingMode = SmoothingMode.AntiAlias;
@@ -58,6 +62,19 @@ public sealed class DefaultTrackingPieceTemplateRenderer : ITrackingPieceTemplat
         graphics.Clear(Color.Transparent);
         graphics.DrawImage(image, inset, inset, 64 - inset * 2, 64 - inset * 2);
         return bitmap;
+    }
+
+    private static void ValidateImageTemplateArguments(Image image, int inset)
+    {
+        ArgumentNullException.ThrowIfNull(image);
+
+        if (inset is < 0 or > 31)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(inset),
+                inset,
+                "Inset must be between 0 and 31 inclusive so the rendered template width and height stay greater than 0.");
+        }
     }
 
     private static void DrawFallbackPiece(Graphics graphics, string pieceType, bool isWhitePiece)

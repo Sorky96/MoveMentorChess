@@ -44,4 +44,52 @@ public sealed class TrackingPieceTemplateRendererTests
         Assert.Equal(new Size(64, 64), template.Size);
         Assert.NotEqual(Color.FromArgb(238, 238, 210).ToArgb(), template.GetPixel(32, 32).ToArgb());
     }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(32)]
+    public void RenderImageTemplate_RejectsInvalidInset(int inset)
+    {
+        DefaultTrackingPieceTemplateRenderer renderer = new();
+        using Bitmap source = new(16, 16);
+
+        ArgumentOutOfRangeException exception = Assert.Throws<ArgumentOutOfRangeException>(
+            () => renderer.RenderImageTemplate(source, isLightSquare: true, inset));
+
+        Assert.Equal("inset", exception.ParamName);
+        Assert.Contains("between 0 and 31", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(inset.ToString(System.Globalization.CultureInfo.InvariantCulture), exception.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(32)]
+    public void RenderTransparentImageTemplate_RejectsInvalidInset(int inset)
+    {
+        DefaultTrackingPieceTemplateRenderer renderer = new();
+        using Bitmap source = new(16, 16);
+
+        ArgumentOutOfRangeException exception = Assert.Throws<ArgumentOutOfRangeException>(
+            () => renderer.RenderTransparentImageTemplate(source, inset));
+
+        Assert.Equal("inset", exception.ParamName);
+        Assert.Contains("between 0 and 31", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(inset.ToString(System.Globalization.CultureInfo.InvariantCulture), exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void RenderImageTemplate_RejectsNullImage()
+    {
+        DefaultTrackingPieceTemplateRenderer renderer = new();
+
+        Assert.Throws<ArgumentNullException>(() => renderer.RenderImageTemplate(null!, isLightSquare: true, inset: 0));
+    }
+
+    [Fact]
+    public void RenderTransparentImageTemplate_RejectsNullImage()
+    {
+        DefaultTrackingPieceTemplateRenderer renderer = new();
+
+        Assert.Throws<ArgumentNullException>(() => renderer.RenderTransparentImageTemplate(null!, inset: 0));
+    }
 }
