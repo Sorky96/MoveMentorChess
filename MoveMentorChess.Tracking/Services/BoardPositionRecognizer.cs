@@ -36,24 +36,40 @@ public sealed class BoardPositionRecognizer
     private readonly Dictionary<string, List<float[]>> genericShapeTemplates = new(StringComparer.Ordinal);
     private readonly Dictionary<string, List<float[]>> genericPieceTemplates = new(StringComparer.Ordinal);
     private readonly ITrackingPieceImageRepository pieceImageRepository;
+    private readonly ITrackingPieceTemplateRenderer pieceTemplateRenderer;
     private readonly ITrackingTemplatePathResolver templatePathResolver;
     private bool genericTemplatesInitialized;
 
     public BoardPositionRecognizer(string? imagesDirectory = null)
-        : this(new DirectoryTrackingPieceImageRepository(imagesDirectory), new DefaultTrackingTemplatePathResolver())
+        : this(
+            new DirectoryTrackingPieceImageRepository(imagesDirectory),
+            new DefaultTrackingPieceTemplateRenderer(),
+            new DefaultTrackingTemplatePathResolver())
     {
     }
 
     public BoardPositionRecognizer(string? imagesDirectory, ITrackingTemplatePathResolver templatePathResolver)
-        : this(new DirectoryTrackingPieceImageRepository(imagesDirectory), templatePathResolver)
+        : this(
+            new DirectoryTrackingPieceImageRepository(imagesDirectory),
+            new DefaultTrackingPieceTemplateRenderer(),
+            templatePathResolver)
     {
     }
 
     public BoardPositionRecognizer(
         ITrackingPieceImageRepository pieceImageRepository,
         ITrackingTemplatePathResolver templatePathResolver)
+        : this(pieceImageRepository, new DefaultTrackingPieceTemplateRenderer(), templatePathResolver)
+    {
+    }
+
+    public BoardPositionRecognizer(
+        ITrackingPieceImageRepository pieceImageRepository,
+        ITrackingPieceTemplateRenderer pieceTemplateRenderer,
+        ITrackingTemplatePathResolver templatePathResolver)
     {
         this.pieceImageRepository = pieceImageRepository ?? throw new ArgumentNullException(nameof(pieceImageRepository));
+        this.pieceTemplateRenderer = pieceTemplateRenderer ?? throw new ArgumentNullException(nameof(pieceTemplateRenderer));
         this.templatePathResolver = templatePathResolver ?? throw new ArgumentNullException(nameof(templatePathResolver));
     }
 
@@ -547,24 +563,24 @@ public sealed class BoardPositionRecognizer
 
         foreach (string pieceType in GenericPieceTypes)
         {
-            using Bitmap whiteTransparentTemplate = RenderFallbackTransparentTemplate(pieceType, true);
+            using Bitmap whiteTransparentTemplate = pieceTemplateRenderer.RenderFallbackTransparentTemplate(pieceType, true);
             AddGenericShapeTemplate(pieceType, ToTemplateMaskVector(whiteTransparentTemplate));
             AddGenericPieceTemplate(pieceType, ToTemplateGrayVector(whiteTransparentTemplate));
 
-            using Bitmap blackTransparentTemplate = RenderFallbackTransparentTemplate(pieceType, false);
+            using Bitmap blackTransparentTemplate = pieceTemplateRenderer.RenderFallbackTransparentTemplate(pieceType, false);
             AddGenericShapeTemplate(pieceType, ToTemplateMaskVector(blackTransparentTemplate));
             AddGenericPieceTemplate(pieceType.ToLowerInvariant(), ToTemplateGrayVector(blackTransparentTemplate));
 
             foreach (bool isLightSquare in new[] { true, false })
             {
-                using Bitmap emptyBoardTemplate = RenderEmptyBoardSquare(isLightSquare);
+                using Bitmap emptyBoardTemplate = pieceTemplateRenderer.RenderEmptyBoardSquare(isLightSquare);
                 AddColdStartBoardTemplate(BuildTemplateKey(null, isLightSquare), ToBoardTemplateVector(emptyBoardTemplate));
 
-                using Bitmap whiteBoardTemplate = RenderFallbackTemplate(pieceType, true, isLightSquare);
+                using Bitmap whiteBoardTemplate = pieceTemplateRenderer.RenderFallbackTemplate(pieceType, true, isLightSquare);
                 AddColdStartBoardTemplate(BuildTemplateKey(pieceType, isLightSquare), ToBoardTemplateVector(whiteBoardTemplate));
                 AddGenericShapeTemplate(pieceType, ToMaskVector(whiteBoardTemplate, out _, out _, out _, out _));
 
-                using Bitmap blackBoardTemplate = RenderFallbackTemplate(pieceType, false, isLightSquare);
+                using Bitmap blackBoardTemplate = pieceTemplateRenderer.RenderFallbackTemplate(pieceType, false, isLightSquare);
                 AddColdStartBoardTemplate(BuildTemplateKey(pieceType.ToLowerInvariant(), isLightSquare), ToBoardTemplateVector(blackBoardTemplate));
                 AddGenericShapeTemplate(pieceType, ToMaskVector(blackBoardTemplate, out _, out _, out _, out _));
             }
@@ -599,13 +615,13 @@ public sealed class BoardPositionRecognizer
 
                 foreach (int inset in new[] { 3, 5, 7, 9 })
                 {
-                    using Bitmap transparentBitmap = RenderTransparentImageTemplate(source, inset);
+                    using Bitmap transparentBitmap = pieceTemplateRenderer.RenderTransparentImageTemplate(source, inset);
                     AddGenericShapeTemplate(pieceType, ToTemplateMaskVector(transparentBitmap));
                     AddGenericPieceTemplate(isWhitePiece ? pieceType : pieceType.ToLowerInvariant(), ToTemplateGrayVector(transparentBitmap));
 
                     foreach (bool isLightSquare in new[] { true, false })
                     {
-                        using Bitmap boardBitmap = RenderImageTemplate(source, isLightSquare, inset);
+                        using Bitmap boardBitmap = pieceTemplateRenderer.RenderImageTemplate(source, isLightSquare, inset);
                         AddColdStartBoardTemplate(
                             BuildTemplateKey(isWhitePiece ? pieceType : pieceType.ToLowerInvariant(), isLightSquare),
                             ToBoardTemplateVector(boardBitmap));
@@ -623,78 +639,6 @@ public sealed class BoardPositionRecognizer
                 ex.GetType().Name,
                 ex.Message);
         }
-    }
-
-    private static Bitmap RenderFallbackTemplate(string pieceType, bool isWhitePiece, bool isLightSquare)
-    {
-        Bitmap bitmap = new(64, 64);
-        using Graphics graphics = Graphics.FromImage(bitmap);
-        graphics.SmoothingMode = SmoothingMode.AntiAlias;
-        graphics.Clear(isLightSquare ? LightSquareColor : DarkSquareColor);
-
-        Rectangle inset = Rectangle.Inflate(new Rectangle(0, 0, 64, 64), -8, -8);
-        using Brush fillBrush = new SolidBrush(isWhitePiece ? Color.WhiteSmoke : Color.FromArgb(24, 24, 24));
-        using Brush outlineBrush = new SolidBrush(isWhitePiece ? Color.Black : Color.Gainsboro);
-        using Font font = new("Segoe UI", 24, FontStyle.Bold, GraphicsUnit.Pixel);
-        graphics.FillEllipse(fillBrush, inset);
-
-        SizeF textSize = graphics.MeasureString(pieceType, font);
-        PointF location = new(
-            (64 - textSize.Width) / 2f,
-            (64 - textSize.Height) / 2f - 1f);
-        graphics.DrawString(pieceType, font, outlineBrush, location);
-        return bitmap;
-    }
-
-    private static Bitmap RenderEmptyBoardSquare(bool isLightSquare)
-    {
-        Bitmap bitmap = new(64, 64);
-        using Graphics graphics = Graphics.FromImage(bitmap);
-        graphics.Clear(isLightSquare ? LightSquareColor : DarkSquareColor);
-        return bitmap;
-    }
-
-    private static Bitmap RenderFallbackTransparentTemplate(string pieceType, bool isWhitePiece)
-    {
-        Bitmap bitmap = new(64, 64);
-        using Graphics graphics = Graphics.FromImage(bitmap);
-        graphics.SmoothingMode = SmoothingMode.AntiAlias;
-        graphics.Clear(Color.Transparent);
-
-        Rectangle inset = Rectangle.Inflate(new Rectangle(0, 0, 64, 64), -8, -8);
-        using Brush fillBrush = new SolidBrush(isWhitePiece ? Color.WhiteSmoke : Color.FromArgb(24, 24, 24));
-        using Brush outlineBrush = new SolidBrush(isWhitePiece ? Color.Black : Color.Gainsboro);
-        using Font font = new("Segoe UI", 24, FontStyle.Bold, GraphicsUnit.Pixel);
-        graphics.FillEllipse(fillBrush, inset);
-
-        SizeF textSize = graphics.MeasureString(pieceType, font);
-        PointF location = new(
-            (64 - textSize.Width) / 2f,
-            (64 - textSize.Height) / 2f - 1f);
-        graphics.DrawString(pieceType, font, outlineBrush, location);
-        return bitmap;
-    }
-
-    private static Bitmap RenderImageTemplate(Image image, bool isLightSquare, int inset)
-    {
-        Bitmap bitmap = new(64, 64);
-        using Graphics graphics = Graphics.FromImage(bitmap);
-        graphics.SmoothingMode = SmoothingMode.AntiAlias;
-        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-        graphics.Clear(isLightSquare ? LightSquareColor : DarkSquareColor);
-        graphics.DrawImage(image, inset, inset, 64 - inset * 2, 64 - inset * 2);
-        return bitmap;
-    }
-
-    private static Bitmap RenderTransparentImageTemplate(Image image, int inset)
-    {
-        Bitmap bitmap = new(64, 64);
-        using Graphics graphics = Graphics.FromImage(bitmap);
-        graphics.SmoothingMode = SmoothingMode.AntiAlias;
-        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-        graphics.Clear(Color.Transparent);
-        graphics.DrawImage(image, inset, inset, 64 - inset * 2, 64 - inset * 2);
-        return bitmap;
     }
 
     private static double ComputeDistance(float[] left, float[] right)
