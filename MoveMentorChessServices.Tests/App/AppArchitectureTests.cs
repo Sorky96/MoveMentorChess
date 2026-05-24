@@ -93,6 +93,21 @@ public sealed partial class AppArchitectureTests
     }
 
     [Fact]
+    public void StockfishPathResolverUsesRuntimeEnvironmentPort()
+    {
+        string resolverPath = Path.Join(
+            FindRepositoryRoot(),
+            "MoveMentorChess.App",
+            "Composition",
+            "DefaultStockfishPathResolver.cs");
+        string resolver = File.ReadAllText(resolverPath);
+
+        Assert.DoesNotContain("AppContext.BaseDirectory", resolver, StringComparison.Ordinal);
+        Assert.DoesNotContain("Environment.CurrentDirectory", resolver, StringComparison.Ordinal);
+        Assert.DoesNotContain("File.Exists", resolver, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void SqliteAnalysisStoreFacadeDoesNotOwnSqlStatements()
     {
         string facadePath = Path.Join(FindRepositoryRoot(), "MoveMentorChess.Persistence", "SqliteAnalysisStore.cs");
