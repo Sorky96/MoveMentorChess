@@ -5,10 +5,6 @@ on:
     branches:
       - master
       - main
-      - "feature/**"
-      - "bugfix/**"
-      - "architecture/**"
-      - "codex/**"
   pull_request:
     branches:
       - master
