@@ -9,7 +9,7 @@ public sealed class DiagnosticsLoggerTests
     [Fact]
     public void JsonlDiagnosticsLogger_ReportsWriteFailureWithoutThrowing()
     {
-        string directoryPath = Path.Combine(Path.GetTempPath(), $"MoveMentorChessServices-{Guid.NewGuid():N}");
+        string directoryPath = Path.Join(Path.GetTempPath(), $"MoveMentorChessServices-{Guid.NewGuid():N}");
         Directory.CreateDirectory(directoryPath);
         using CapturingTraceListener listener = new();
         Trace.Listeners.Add(listener);
@@ -34,7 +34,7 @@ public sealed class DiagnosticsLoggerTests
     [Fact]
     public void JsonlDiagnosticsLogger_DoesNotThrowWhenTraceListenerFails()
     {
-        string directoryPath = Path.Combine(Path.GetTempPath(), $"MoveMentorChessServices-{Guid.NewGuid():N}");
+        string directoryPath = Path.Join(Path.GetTempPath(), $"MoveMentorChessServices-{Guid.NewGuid():N}");
         Directory.CreateDirectory(directoryPath);
         using ThrowingTraceListener listener = new();
         Trace.Listeners.Add(listener);
@@ -85,12 +85,16 @@ public sealed class DiagnosticsLoggerTests
     {
         public override void Write(string? message)
         {
-            throw new InvalidOperationException("Trace listener failed.");
+            throw new TraceListenerFailureException();
         }
 
         public override void WriteLine(string? message)
         {
-            throw new InvalidOperationException("Trace listener failed.");
+            throw new TraceListenerFailureException();
         }
+    }
+
+    private sealed class TraceListenerFailureException : Exception
+    {
     }
 }

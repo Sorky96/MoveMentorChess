@@ -15,15 +15,9 @@ internal static class DiagnosticLogWriteFailureReporter
                 exception.GetType().Name,
                 exception.Message);
         }
-        catch (InvalidOperationException)
-        {
-            // Diagnostic reporting must not make the original fallback path fail.
-        }
-        catch (IOException)
-        {
-            // Diagnostic reporting must not make the original fallback path fail.
-        }
-        catch (UnauthorizedAccessException)
+#pragma warning disable CA1031
+        catch (Exception)
+#pragma warning restore CA1031
         {
             // Diagnostic reporting must not make the original fallback path fail.
         }
