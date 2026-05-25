@@ -48,6 +48,25 @@ public sealed class LlamaRuntimePathCandidatesTests
             directories);
     }
 
+    [Fact]
+    public void GetExecutableCandidatesUsesRuntimeEnvironment()
+    {
+        string baseDirectory = TestPath("app-env");
+        string currentDirectory = TestPath("repo-env");
+        TestLlamaRuntimeEnvironment environment = new(baseDirectory, currentDirectory);
+
+        IReadOnlyList<string> candidates = LlamaRuntimePathCandidates.GetExecutableCandidates(
+            "llama-cli.exe",
+            environment);
+
+        Assert.Equal(Path.Join(baseDirectory, "llama-cli.exe"), candidates[0]);
+        Assert.Equal(Path.Join(currentDirectory, "tools", "llama.cpp", "llama-cli.exe"), candidates[^1]);
+    }
+
     private static string TestPath(string name)
         => Path.GetFullPath(Path.Join(Path.GetTempPath(), "MoveMentorChessTests", name));
+
+    private sealed record TestLlamaRuntimeEnvironment(
+        string BaseDirectory,
+        string CurrentDirectory) : ILlamaRuntimeEnvironment;
 }
