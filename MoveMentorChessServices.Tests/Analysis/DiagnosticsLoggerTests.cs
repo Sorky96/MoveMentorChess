@@ -31,6 +31,27 @@ public sealed class DiagnosticsLoggerTests
         }
     }
 
+    [Fact]
+    public void JsonlDiagnosticsLogger_DoesNotThrowWhenTraceListenerFails()
+    {
+        string directoryPath = Path.Combine(Path.GetTempPath(), $"MoveMentorChessServices-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directoryPath);
+        using ThrowingTraceListener listener = new();
+        Trace.Listeners.Add(listener);
+
+        try
+        {
+            JsonlDiagnosticsLogger<TestEntry> logger = new(directoryPath);
+
+            logger.Record(new TestEntry("sample"));
+        }
+        finally
+        {
+            Trace.Listeners.Remove(listener);
+            Directory.Delete(directoryPath);
+        }
+    }
+
     private sealed record TestEntry(string Value);
 
     private sealed class CapturingTraceListener : TraceListener
@@ -57,6 +78,19 @@ public sealed class DiagnosticsLoggerTests
             }
 
             base.Dispose(disposing);
+        }
+    }
+
+    private sealed class ThrowingTraceListener : TraceListener
+    {
+        public override void Write(string? message)
+        {
+            throw new InvalidOperationException("Trace listener failed.");
+        }
+
+        public override void WriteLine(string? message)
+        {
+            throw new InvalidOperationException("Trace listener failed.");
         }
     }
 }
