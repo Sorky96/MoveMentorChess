@@ -94,7 +94,7 @@ public sealed class DiagnosticsLoggerTests
         }
     }
 
-    private sealed class TraceListenerFailureException : Exception
+    private sealed class TraceListenerFailureException : ApplicationException
     {
     }
 }
