@@ -5,6 +5,7 @@ namespace MoveMentorChess.Analysis;
 
 public static class LlamaCppProcessCleaner
 {
+    private static readonly LlamaManagedProcessRootResolver RootResolver = new();
     private static readonly string[] ManagedExecutableNames =
     [
         "llama-server",
@@ -12,8 +13,20 @@ public static class LlamaCppProcessCleaner
     ];
 
     public static void CleanupOrphanedProcesses()
+        => CleanupOrphanedProcesses(SystemLlamaRuntimeEnvironment.Instance);
+
+    private static void CleanupOrphanedProcesses(ILlamaRuntimeEnvironment environment)
     {
-        HashSet<string> managedRoots = GetManagedRoots();
+        IReadOnlySet<string> managedRoots;
+        try
+        {
+            managedRoots = RootResolver.Resolve(environment);
+        }
+        catch (Exception ex) when (ex is IOException or ArgumentException or NotSupportedException or UnauthorizedAccessException)
+        {
+            return;
+        }
+
         if (managedRoots.Count == 0)
         {
             return;
@@ -67,35 +80,7 @@ public static class LlamaCppProcessCleaner
         }
     }
 
-    private static HashSet<string> GetManagedRoots()
-    {
-        HashSet<string> roots = new(StringComparer.OrdinalIgnoreCase);
-
-        AddRoot(roots, AppContext.BaseDirectory);
-        AddRoot(roots, Directory.GetCurrentDirectory());
-
-        return roots;
-    }
-
-    private static void AddRoot(HashSet<string> roots, string? path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
-
-        try
-        {
-            string normalized = NormalizeDirectorySeparator(Path.GetFullPath(path));
-            roots.Add(normalized);
-        }
-        catch (Exception ex) when (ex is IOException or ArgumentException or NotSupportedException)
-        {
-            // Ignore invalid paths.
-        }
-    }
-
-    private static bool IsUnderManagedRoot(string executablePath, HashSet<string> managedRoots)
+    private static bool IsUnderManagedRoot(string executablePath, IReadOnlySet<string> managedRoots)
     {
         foreach (string root in managedRoots)
         {

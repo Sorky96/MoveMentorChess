@@ -3,10 +3,26 @@ namespace MoveMentorChess.Analysis;
 public static class LlamaRuntimePathCandidates
 {
     public static IReadOnlyList<string> GetExecutableCandidates(string executableName)
-        => GetExecutableCandidates(executableName, AppContext.BaseDirectory, Directory.GetCurrentDirectory());
+        => GetExecutableCandidates(executableName, SystemLlamaRuntimeEnvironment.Instance);
 
     public static IReadOnlyList<string> GetModelDirectories()
-        => GetModelDirectories(AppContext.BaseDirectory, Directory.GetCurrentDirectory());
+        => GetModelDirectories(SystemLlamaRuntimeEnvironment.Instance);
+
+    public static IReadOnlyList<string> GetExecutableCandidates(
+        string executableName,
+        ILlamaRuntimeEnvironment environment)
+    {
+        ArgumentNullException.ThrowIfNull(environment);
+
+        return GetExecutableCandidates(executableName, environment.BaseDirectory, environment.CurrentDirectory);
+    }
+
+    public static IReadOnlyList<string> GetModelDirectories(ILlamaRuntimeEnvironment environment)
+    {
+        ArgumentNullException.ThrowIfNull(environment);
+
+        return GetModelDirectories(environment.BaseDirectory, environment.CurrentDirectory);
+    }
 
     public static IReadOnlyList<string> GetExecutableCandidates(
         string executableName,
