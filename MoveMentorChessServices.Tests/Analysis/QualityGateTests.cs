@@ -1,6 +1,7 @@
 using MoveMentorChess.Analysis;
 using MoveMentorChess.Diagnostics;
 using MoveMentorChessServices;
+using System.Text.Json;
 using Xunit;
 
 namespace MoveMentorChessServices.Tests;
@@ -42,6 +43,25 @@ public sealed class QualityGateTests
         Assert.Equal("hanging_piece", corrected.MistakeTag?.Label);
         Assert.True(corrected.MistakeTag?.Confidence <= 0.49);
         Assert.Contains("quality_gate_evidence_missing_hanging_piece", corrected.MistakeTag?.Evidence ?? []);
+    }
+
+    [Fact]
+    public void AnalysisQualityGate_UsesClockForDiagnosticsTimestamp()
+    {
+        DateTime timestamp = new(2026, 5, 25, 10, 15, 0, DateTimeKind.Utc);
+        using TempJsonl<QualityGateReport> tempLog = new();
+        AnalysisQualityGate gate = new(tempLog.Logger, new TemplateAdviceGenerator(), clock: new FixedClock(timestamp));
+        MoveAnalysisResult move = CreateMoveAnalysis(
+            MoveQualityBucket.Mistake,
+            "opening_principles",
+            ["early_queen_move"],
+            GamePhase.Middlegame,
+            180);
+
+        gate.Apply(move, "game-clock", PlayerSide.White);
+
+        QualityGateReport report = tempLog.ReadSingle();
+        Assert.Equal(timestamp, report.TimestampUtc);
     }
 
     [Fact]
@@ -175,11 +195,22 @@ training_hint: develop a piece
         public string? Generate(LocalModelAdviceRequest request) => response;
     }
 
+    private sealed class FixedClock(DateTime utcNow) : IClock
+    {
+        public DateTime UtcNow { get; } = utcNow;
+    }
+
     private sealed class TempJsonl<T> : IDisposable
     {
-        private readonly string path = Path.Combine(Path.GetTempPath(), $"MoveMentorChessServices-{Guid.NewGuid():N}.jsonl");
+        private readonly string path = Path.Join(Path.GetTempPath(), $"MoveMentorChessServices-{Guid.NewGuid():N}.jsonl");
 
         public JsonlDiagnosticsLogger<T> Logger => new(path);
+
+        public T ReadSingle()
+        {
+            string line = File.ReadAllLines(path).Single();
+            return JsonSerializer.Deserialize<T>(line)!;
+        }
 
         public void Dispose()
         {
