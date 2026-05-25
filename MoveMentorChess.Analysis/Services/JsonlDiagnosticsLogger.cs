@@ -36,8 +36,14 @@ public sealed class JsonlDiagnosticsLogger<T>
                 File.AppendAllText(filePath, line + Environment.NewLine);
             }
         }
-        catch (IOException) { }
-        catch (UnauthorizedAccessException) { }
+        catch (IOException ex)
+        {
+            DiagnosticLogWriteFailureReporter.TraceWarning(nameof(JsonlDiagnosticsLogger<T>), filePath, ex);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            DiagnosticLogWriteFailureReporter.TraceWarning(nameof(JsonlDiagnosticsLogger<T>), filePath, ex);
+        }
     }
 }
 

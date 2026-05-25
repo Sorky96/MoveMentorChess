@@ -98,8 +98,14 @@ public sealed class DiagnosticMistakeClassifier
                 File.AppendAllText(logFilePath, line + Environment.NewLine);
             }
         }
-        catch (IOException) { }
-        catch (UnauthorizedAccessException) { }
+        catch (IOException ex)
+        {
+            DiagnosticLogWriteFailureReporter.TraceWarning(nameof(DiagnosticMistakeClassifier), logFilePath, ex);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            DiagnosticLogWriteFailureReporter.TraceWarning(nameof(DiagnosticMistakeClassifier), logFilePath, ex);
+        }
     }
 
     private static string? GetDiagnosticReason(MistakeTag tag)
