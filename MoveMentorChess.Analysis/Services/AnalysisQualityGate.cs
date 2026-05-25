@@ -13,15 +13,18 @@ public sealed class AnalysisQualityGate
     private readonly JsonlDiagnosticsLogger<QualityGateReport>? logger;
     private readonly IAdviceGenerator fallbackAdviceGenerator;
     private readonly AdviceGenerationSettings settings;
+    private readonly IClock clock;
 
     public AnalysisQualityGate(
         JsonlDiagnosticsLogger<QualityGateReport>? logger = null,
         IAdviceGenerator? fallbackAdviceGenerator = null,
-        AdviceGenerationSettings? settings = null)
+        AdviceGenerationSettings? settings = null,
+        IClock? clock = null)
     {
         this.logger = logger ?? QualityGateDiagnosticsLogger.CreateDefault();
         this.settings = settings ?? AdviceGenerationSettings.Default;
         this.fallbackAdviceGenerator = fallbackAdviceGenerator ?? new LocalHeuristicAdviceGenerator(this.settings);
+        this.clock = clock ?? SystemClock.Instance;
     }
 
     public MoveAnalysisResult Apply(
@@ -122,7 +125,7 @@ public sealed class AnalysisQualityGate
 
         if (findings.Count > 0)
         {
-            logger?.Record(new QualityGateReport(DateTime.UtcNow, findings, correctedCount, fallbackCount));
+            logger?.Record(new QualityGateReport(clock.UtcNow, findings, correctedCount, fallbackCount));
         }
 
         if (!ReferenceEquals(tag, result.MistakeTag) || !ReferenceEquals(explanation, result.Explanation))
