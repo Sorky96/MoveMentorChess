@@ -73,6 +73,18 @@ public sealed class BoardPositionRecognizer
     public BoardPositionRecognizer(
         ITrackingPieceImageRepository pieceImageRepository,
         ITrackingPieceTemplateRenderer pieceTemplateRenderer,
+        ITrackingTemplatePathResolver templatePathResolver)
+        : this(
+            pieceImageRepository,
+            pieceTemplateRenderer,
+            new DefaultTrackingTemplateVectorizer(),
+            templatePathResolver)
+    {
+    }
+
+    public BoardPositionRecognizer(
+        ITrackingPieceImageRepository pieceImageRepository,
+        ITrackingPieceTemplateRenderer pieceTemplateRenderer,
         ITrackingTemplateVectorizer templateVectorizer,
         ITrackingTemplatePathResolver templatePathResolver)
     {
