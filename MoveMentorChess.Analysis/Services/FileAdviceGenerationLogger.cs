@@ -48,13 +48,15 @@ public sealed class FileAdviceGenerationLogger : IAdviceGenerationLogger
                 File.AppendAllText(filePath, line + Environment.NewLine);
             }
         }
-        catch (IOException)
+        catch (IOException ex)
         {
             // Diagnostic logging must never block local analysis.
+            DiagnosticLogWriteFailureReporter.TraceWarning(nameof(FileAdviceGenerationLogger), filePath, ex);
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException ex)
         {
             // Diagnostic logging must never block local analysis.
+            DiagnosticLogWriteFailureReporter.TraceWarning(nameof(FileAdviceGenerationLogger), filePath, ex);
         }
     }
 }
