@@ -8,10 +8,22 @@ public sealed class LlamaManagedProcessRootResolver
 
         HashSet<string> roots = new(StringComparer.OrdinalIgnoreCase);
 
-        AddRoot(roots, environment.BaseDirectory);
-        AddRoot(roots, environment.CurrentDirectory);
+        AddRootFromEnvironment(roots, () => environment.BaseDirectory);
+        AddRootFromEnvironment(roots, () => environment.CurrentDirectory);
 
         return roots;
+    }
+
+    private static void AddRootFromEnvironment(HashSet<string> roots, Func<string?> getPath)
+    {
+        try
+        {
+            AddRoot(roots, getPath());
+        }
+        catch (Exception ex) when (ex is IOException or ArgumentException or NotSupportedException or UnauthorizedAccessException)
+        {
+            // Ignore inaccessible/invalid runtime directory sources.
+        }
     }
 
     private static void AddRoot(HashSet<string> roots, string? path)
@@ -26,7 +38,7 @@ public sealed class LlamaManagedProcessRootResolver
             string normalized = NormalizeDirectorySeparator(Path.GetFullPath(path));
             roots.Add(normalized);
         }
-        catch (Exception ex) when (ex is IOException or ArgumentException or NotSupportedException)
+        catch (Exception ex) when (ex is IOException or ArgumentException or NotSupportedException or UnauthorizedAccessException)
         {
             // Ignore invalid paths.
         }

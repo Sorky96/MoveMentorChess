@@ -59,8 +59,15 @@ public sealed class LlamaRuntimePathCandidatesTests
             "llama-cli.exe",
             environment);
 
-        Assert.Equal(Path.Join(baseDirectory, "llama-cli.exe"), candidates[0]);
-        Assert.Equal(Path.Join(currentDirectory, "tools", "llama.cpp", "llama-cli.exe"), candidates[^1]);
+        Assert.Equal(
+            [
+                Path.Join(baseDirectory, "llama-cli.exe"),
+                Path.Join(baseDirectory, "llama.cpp", "llama-cli.exe"),
+                Path.Join(currentDirectory, "llama-cli.exe"),
+                Path.Join(currentDirectory, "llama.cpp", "llama-cli.exe"),
+                Path.Join(currentDirectory, "tools", "llama.cpp", "llama-cli.exe")
+            ],
+            candidates);
     }
 
     private static string TestPath(string name)

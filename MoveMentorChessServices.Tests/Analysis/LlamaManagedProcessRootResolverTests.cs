@@ -29,6 +29,16 @@ public sealed class LlamaManagedProcessRootResolverTests
         Assert.Empty(roots);
     }
 
+    [Fact]
+    public void ResolveIgnoresRuntimeEnvironmentPathReadFailures()
+    {
+        LlamaManagedProcessRootResolver resolver = new();
+
+        IReadOnlySet<string> roots = resolver.Resolve(new ThrowingLlamaRuntimeEnvironment());
+
+        Assert.Empty(roots);
+    }
+
     private static string Normalize(string path)
         => path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
             + Path.DirectorySeparatorChar;
@@ -36,4 +46,11 @@ public sealed class LlamaManagedProcessRootResolverTests
     private sealed record TestLlamaRuntimeEnvironment(
         string BaseDirectory,
         string CurrentDirectory) : ILlamaRuntimeEnvironment;
+
+    private sealed class ThrowingLlamaRuntimeEnvironment : ILlamaRuntimeEnvironment
+    {
+        public string BaseDirectory => throw new UnauthorizedAccessException();
+
+        public string CurrentDirectory => throw new NotSupportedException();
+    }
 }

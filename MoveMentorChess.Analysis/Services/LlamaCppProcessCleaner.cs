@@ -17,7 +17,16 @@ public static class LlamaCppProcessCleaner
 
     private static void CleanupOrphanedProcesses(ILlamaRuntimeEnvironment environment)
     {
-        IReadOnlySet<string> managedRoots = RootResolver.Resolve(environment);
+        IReadOnlySet<string> managedRoots;
+        try
+        {
+            managedRoots = RootResolver.Resolve(environment);
+        }
+        catch (Exception ex) when (ex is IOException or ArgumentException or NotSupportedException or UnauthorizedAccessException)
+        {
+            return;
+        }
+
         if (managedRoots.Count == 0)
         {
             return;
