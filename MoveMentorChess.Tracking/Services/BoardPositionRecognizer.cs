@@ -37,6 +37,7 @@ public sealed class BoardPositionRecognizer
     private readonly Dictionary<string, List<float[]>> genericPieceTemplates = new(StringComparer.Ordinal);
     private readonly ITrackingPieceImageRepository pieceImageRepository;
     private readonly ITrackingPieceTemplateRenderer pieceTemplateRenderer;
+    private readonly ITrackingTemplateVectorizer templateVectorizer;
     private readonly ITrackingTemplatePathResolver templatePathResolver;
     private bool genericTemplatesInitialized;
 
@@ -44,6 +45,7 @@ public sealed class BoardPositionRecognizer
         : this(
             new DirectoryTrackingPieceImageRepository(imagesDirectory),
             new DefaultTrackingPieceTemplateRenderer(),
+            new DefaultTrackingTemplateVectorizer(),
             new DefaultTrackingTemplatePathResolver())
     {
     }
@@ -52,6 +54,7 @@ public sealed class BoardPositionRecognizer
         : this(
             new DirectoryTrackingPieceImageRepository(imagesDirectory),
             new DefaultTrackingPieceTemplateRenderer(),
+            new DefaultTrackingTemplateVectorizer(),
             templatePathResolver)
     {
     }
@@ -59,7 +62,11 @@ public sealed class BoardPositionRecognizer
     public BoardPositionRecognizer(
         ITrackingPieceImageRepository pieceImageRepository,
         ITrackingTemplatePathResolver templatePathResolver)
-        : this(pieceImageRepository, new DefaultTrackingPieceTemplateRenderer(), templatePathResolver)
+        : this(
+            pieceImageRepository,
+            new DefaultTrackingPieceTemplateRenderer(),
+            new DefaultTrackingTemplateVectorizer(),
+            templatePathResolver)
     {
     }
 
@@ -67,9 +74,23 @@ public sealed class BoardPositionRecognizer
         ITrackingPieceImageRepository pieceImageRepository,
         ITrackingPieceTemplateRenderer pieceTemplateRenderer,
         ITrackingTemplatePathResolver templatePathResolver)
+        : this(
+            pieceImageRepository,
+            pieceTemplateRenderer,
+            new DefaultTrackingTemplateVectorizer(),
+            templatePathResolver)
+    {
+    }
+
+    public BoardPositionRecognizer(
+        ITrackingPieceImageRepository pieceImageRepository,
+        ITrackingPieceTemplateRenderer pieceTemplateRenderer,
+        ITrackingTemplateVectorizer templateVectorizer,
+        ITrackingTemplatePathResolver templatePathResolver)
     {
         this.pieceImageRepository = pieceImageRepository ?? throw new ArgumentNullException(nameof(pieceImageRepository));
         this.pieceTemplateRenderer = pieceTemplateRenderer ?? throw new ArgumentNullException(nameof(pieceTemplateRenderer));
+        this.templateVectorizer = templateVectorizer ?? throw new ArgumentNullException(nameof(templateVectorizer));
         this.templatePathResolver = templatePathResolver ?? throw new ArgumentNullException(nameof(templatePathResolver));
     }
 
@@ -100,7 +121,7 @@ public sealed class BoardPositionRecognizer
                 string templateKey = BuildTemplateKey(piece, IsLightSquare(boardSquare));
 
                 using Bitmap square = ExtractSquare(normalizedBoardImage, screenX, screenY);
-                AddTemplate(templateKey, ToVector(square));
+                AddTemplate(templateKey, templateVectorizer.ToVector(square));
             }
         }
     }
@@ -138,8 +159,8 @@ public sealed class BoardPositionRecognizer
                 bool isLightSquare = IsLightSquare(boardSquare);
 
                 using Bitmap square = ExtractSquare(normalizedBoardImage, screenX, screenY);
-                _ = ToMaskVector(square, out double occupancy, out double centralOccupancy, out _, out _);
-                if (!TryClassifySquare(ToVector(square), isLightSquare, out string? piece, out double squareConfidence))
+                _ = templateVectorizer.ToMaskVector(square, out double occupancy, out double centralOccupancy, out _, out _);
+                if (!TryClassifySquare(templateVectorizer.ToVector(square), isLightSquare, out string? piece, out double squareConfidence))
                 {
                     return false;
                 }
@@ -363,7 +384,7 @@ public sealed class BoardPositionRecognizer
         double boardTemplateConfidence = 0;
         _ = TryClassifyWithBoardTemplates(squareBitmap, isLightSquare, out boardTemplatePiece, out boardTemplateConfidence);
 
-        float[] maskVector = ToMaskVector(squareBitmap, out double occupancy, out _, out double pieceLuminance, out double backgroundLuminance);
+        float[] maskVector = templateVectorizer.ToMaskVector(squareBitmap, out double occupancy, out _, out double pieceLuminance, out double backgroundLuminance);
 
         if (occupancy < 0.045)
         {
@@ -380,7 +401,7 @@ public sealed class BoardPositionRecognizer
             return true;
         }
 
-        float[] pieceGrayVector = ToPieceGrayVector(squareBitmap);
+        float[] pieceGrayVector = templateVectorizer.ToPieceGrayVector(squareBitmap);
 
         string? bestPieceByGray = null;
         double bestGrayDistance = double.MaxValue;
@@ -506,7 +527,7 @@ public sealed class BoardPositionRecognizer
         piece = null;
         confidence = 0;
 
-        float[] vector = ToPieceGrayVector(squareBitmap);
+        float[] vector = templateVectorizer.ToPieceGrayVector(squareBitmap);
         string squareSuffix = isLightSquare ? "|L" : "|D";
 
         string? bestKey = null;
@@ -564,25 +585,25 @@ public sealed class BoardPositionRecognizer
         foreach (string pieceType in GenericPieceTypes)
         {
             using Bitmap whiteTransparentTemplate = pieceTemplateRenderer.RenderFallbackTransparentTemplate(pieceType, true);
-            AddGenericShapeTemplate(pieceType, ToTemplateMaskVector(whiteTransparentTemplate));
-            AddGenericPieceTemplate(pieceType, ToTemplateGrayVector(whiteTransparentTemplate));
+            AddGenericShapeTemplate(pieceType, templateVectorizer.ToTemplateMaskVector(whiteTransparentTemplate));
+            AddGenericPieceTemplate(pieceType, templateVectorizer.ToTemplateGrayVector(whiteTransparentTemplate));
 
             using Bitmap blackTransparentTemplate = pieceTemplateRenderer.RenderFallbackTransparentTemplate(pieceType, false);
-            AddGenericShapeTemplate(pieceType, ToTemplateMaskVector(blackTransparentTemplate));
-            AddGenericPieceTemplate(pieceType.ToLowerInvariant(), ToTemplateGrayVector(blackTransparentTemplate));
+            AddGenericShapeTemplate(pieceType, templateVectorizer.ToTemplateMaskVector(blackTransparentTemplate));
+            AddGenericPieceTemplate(pieceType.ToLowerInvariant(), templateVectorizer.ToTemplateGrayVector(blackTransparentTemplate));
 
             foreach (bool isLightSquare in new[] { true, false })
             {
                 using Bitmap emptyBoardTemplate = pieceTemplateRenderer.RenderEmptyBoardSquare(isLightSquare);
-                AddColdStartBoardTemplate(BuildTemplateKey(null, isLightSquare), ToBoardTemplateVector(emptyBoardTemplate));
+                AddColdStartBoardTemplate(BuildTemplateKey(null, isLightSquare), templateVectorizer.ToBoardTemplateVector(emptyBoardTemplate));
 
                 using Bitmap whiteBoardTemplate = pieceTemplateRenderer.RenderFallbackTemplate(pieceType, true, isLightSquare);
-                AddColdStartBoardTemplate(BuildTemplateKey(pieceType, isLightSquare), ToBoardTemplateVector(whiteBoardTemplate));
-                AddGenericShapeTemplate(pieceType, ToMaskVector(whiteBoardTemplate, out _, out _, out _, out _));
+                AddColdStartBoardTemplate(BuildTemplateKey(pieceType, isLightSquare), templateVectorizer.ToBoardTemplateVector(whiteBoardTemplate));
+                AddGenericShapeTemplate(pieceType, templateVectorizer.ToMaskVector(whiteBoardTemplate, out _, out _, out _, out _));
 
                 using Bitmap blackBoardTemplate = pieceTemplateRenderer.RenderFallbackTemplate(pieceType, false, isLightSquare);
-                AddColdStartBoardTemplate(BuildTemplateKey(pieceType.ToLowerInvariant(), isLightSquare), ToBoardTemplateVector(blackBoardTemplate));
-                AddGenericShapeTemplate(pieceType, ToMaskVector(blackBoardTemplate, out _, out _, out _, out _));
+                AddColdStartBoardTemplate(BuildTemplateKey(pieceType.ToLowerInvariant(), isLightSquare), templateVectorizer.ToBoardTemplateVector(blackBoardTemplate));
+                AddGenericShapeTemplate(pieceType, templateVectorizer.ToMaskVector(blackBoardTemplate, out _, out _, out _, out _));
             }
         }
 
@@ -616,16 +637,16 @@ public sealed class BoardPositionRecognizer
                 foreach (int inset in new[] { 3, 5, 7, 9 })
                 {
                     using Bitmap transparentBitmap = pieceTemplateRenderer.RenderTransparentImageTemplate(source, inset);
-                    AddGenericShapeTemplate(pieceType, ToTemplateMaskVector(transparentBitmap));
-                    AddGenericPieceTemplate(isWhitePiece ? pieceType : pieceType.ToLowerInvariant(), ToTemplateGrayVector(transparentBitmap));
+                    AddGenericShapeTemplate(pieceType, templateVectorizer.ToTemplateMaskVector(transparentBitmap));
+                    AddGenericPieceTemplate(isWhitePiece ? pieceType : pieceType.ToLowerInvariant(), templateVectorizer.ToTemplateGrayVector(transparentBitmap));
 
                     foreach (bool isLightSquare in new[] { true, false })
                     {
                         using Bitmap boardBitmap = pieceTemplateRenderer.RenderImageTemplate(source, isLightSquare, inset);
                         AddColdStartBoardTemplate(
                             BuildTemplateKey(isWhitePiece ? pieceType : pieceType.ToLowerInvariant(), isLightSquare),
-                            ToBoardTemplateVector(boardBitmap));
-                        AddGenericShapeTemplate(pieceType, ToMaskVector(boardBitmap, out _, out _, out _, out _));
+                            templateVectorizer.ToBoardTemplateVector(boardBitmap));
+                        AddGenericShapeTemplate(pieceType, templateVectorizer.ToMaskVector(boardBitmap, out _, out _, out _, out _));
                     }
                 }
             }
@@ -666,145 +687,6 @@ public sealed class BoardPositionRecognizer
             Math.Max(left + insetX + 1, right - insetX),
             Math.Max(top + insetY + 1, bottom - insetY));
         return boardImage.Clone(source, boardImage.PixelFormat);
-    }
-
-    private static float[] ToVector(Bitmap bitmap)
-    {
-        using Bitmap resized = new(bitmap, new Size(16, 16));
-        float[] vector = new float[16 * 16];
-        int index = 0;
-
-        for (int y = 0; y < resized.Height; y++)
-        {
-            for (int x = 0; x < resized.Width; x++)
-            {
-                Color pixel = resized.GetPixel(x, y);
-                vector[index++] = (pixel.R + pixel.G + pixel.B) / (255f * 3f);
-            }
-        }
-
-        return vector;
-    }
-
-    private static float[] ToBoardTemplateVector(Bitmap bitmap)
-    {
-        using Bitmap cropped = CropSquareMargins(bitmap);
-        return ToPieceGrayVector(cropped);
-    }
-
-    private static float[] ToPieceGrayVector(Bitmap bitmap)
-    {
-        using Bitmap resized = new(bitmap, new Size(16, 16));
-        Color background = EstimateBackgroundColor(resized);
-        float[] vector = new float[16 * 16];
-        int index = 0;
-
-        for (int y = 0; y < resized.Height; y++)
-        {
-            for (int x = 0; x < resized.Width; x++)
-            {
-                Color pixel = resized.GetPixel(x, y);
-                double distance = ColorDistance(pixel, background);
-                float weight = (float)Math.Clamp((distance - 12.0) / 90.0, 0.0, 1.0);
-                float gray = (pixel.R + pixel.G + pixel.B) / (255f * 3f);
-                vector[index++] = gray * weight;
-            }
-        }
-
-        return vector;
-    }
-
-    private static Bitmap CropSquareMargins(Bitmap bitmap)
-    {
-        int insetX = Math.Max(1, (int)Math.Round(bitmap.Width * 0.12));
-        int insetY = Math.Max(1, (int)Math.Round(bitmap.Height * 0.12));
-        Rectangle source = Rectangle.FromLTRB(
-            insetX,
-            insetY,
-            Math.Max(insetX + 1, bitmap.Width - insetX),
-            Math.Max(insetY + 1, bitmap.Height - insetY));
-        return bitmap.Clone(source, bitmap.PixelFormat);
-    }
-
-    private static float[] ToTemplateGrayVector(Bitmap bitmap)
-    {
-        using Bitmap resized = new(bitmap, new Size(16, 16));
-        float[] vector = new float[16 * 16];
-        int index = 0;
-
-        for (int y = 0; y < resized.Height; y++)
-        {
-            for (int x = 0; x < resized.Width; x++)
-            {
-                Color pixel = resized.GetPixel(x, y);
-                float alpha = pixel.A / 255f;
-                float gray = (pixel.R + pixel.G + pixel.B) / (255f * 3f);
-                vector[index++] = gray * alpha;
-            }
-        }
-
-        return vector;
-    }
-
-    private static float[] ToMaskVector(Bitmap bitmap, out double occupancy, out double centralOccupancy, out double pieceLuminance, out double backgroundLuminance)
-    {
-        using Bitmap resized = new(bitmap, new Size(24, 24));
-        Color background = EstimateBackgroundColor(resized);
-        backgroundLuminance = GetLuminance(background);
-
-        float[] vector = new float[24 * 24];
-        double occupancySum = 0;
-        double centralOccupancySum = 0;
-        int centralSamples = 0;
-        double weightedLuminanceSum = 0;
-        double weightSum = 0;
-        int index = 0;
-
-        for (int y = 0; y < resized.Height; y++)
-        {
-            for (int x = 0; x < resized.Width; x++)
-            {
-                Color pixel = resized.GetPixel(x, y);
-                double distance = ColorDistance(pixel, background);
-                float weight = (float)Math.Clamp((distance - 12.0) / 90.0, 0.0, 1.0);
-                vector[index++] = weight;
-                occupancySum += weight;
-                if (x >= 6 && x < 18 && y >= 6 && y < 18)
-                {
-                    centralOccupancySum += weight;
-                    centralSamples++;
-                }
-                weightedLuminanceSum += GetLuminance(pixel) * weight;
-                weightSum += weight;
-            }
-        }
-
-        occupancy = occupancySum / vector.Length;
-        centralOccupancy = centralSamples > 0 ? centralOccupancySum / centralSamples : occupancy;
-        pieceLuminance = weightSum > 0.0001
-            ? weightedLuminanceSum / weightSum
-            : backgroundLuminance;
-        return vector;
-    }
-
-    private static float[] ToTemplateMaskVector(Bitmap bitmap)
-    {
-        using Bitmap resized = new(bitmap, new Size(24, 24));
-        float[] vector = new float[24 * 24];
-        int index = 0;
-
-        for (int y = 0; y < resized.Height; y++)
-        {
-            for (int x = 0; x < resized.Width; x++)
-            {
-                Color pixel = resized.GetPixel(x, y);
-                float alpha = pixel.A / 255f;
-                float darkness = 1f - ((pixel.R + pixel.G + pixel.B) / (255f * 3f));
-                vector[index++] = Math.Clamp(Math.Max(alpha, darkness * alpha), 0f, 1f);
-            }
-        }
-
-        return vector;
     }
 
     private static Color EstimateBackgroundColor(Bitmap bitmap)
@@ -849,11 +731,6 @@ public sealed class BoardPositionRecognizer
         int dg = left.G - right.G;
         int db = left.B - right.B;
         return Math.Sqrt((double)dr * dr + (double)dg * dg + (double)db * db);
-    }
-
-    private static double GetLuminance(Color color)
-    {
-        return (color.R + color.G + color.B) / (255.0 * 3.0);
     }
 
     private static bool EstimatePieceIsWhite(double pieceLuminance, double backgroundLuminance)
@@ -989,7 +866,7 @@ public sealed class BoardPositionRecognizer
                     {
                         using Bitmap currentSquare = ExtractSquare(boardImage, screenX, screenY);
                         using Bitmap referenceSquare = ExtractSquare(referenceBoard, screenX, screenY);
-                        double distance = ComputeDistance(ToVector(currentSquare), ToVector(referenceSquare));
+                        double distance = ComputeDistance(templateVectorizer.ToVector(currentSquare), templateVectorizer.ToVector(referenceSquare));
                         confidenceSum += Math.Clamp(1.0 - distance, 0.0, 1.0);
                     }
                 }
@@ -1075,7 +952,7 @@ public sealed class BoardPositionRecognizer
             {
                 using Bitmap currentSquare = ExtractSquare(boardImage, screenX, screenY);
                 using Bitmap referenceSquare = ExtractSquare(referenceBoard, screenX, screenY);
-                double distance = ComputeDistance(ToVector(currentSquare), ToVector(referenceSquare));
+                double distance = ComputeDistance(templateVectorizer.ToVector(currentSquare), templateVectorizer.ToVector(referenceSquare));
                 confidenceSum += Math.Clamp(1.0 - distance, 0.0, 1.0);
             }
         }
