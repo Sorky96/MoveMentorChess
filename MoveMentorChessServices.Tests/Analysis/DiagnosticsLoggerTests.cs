@@ -204,6 +204,27 @@ public sealed class DiagnosticsLoggerTests
         }
     }
 
+    [Fact]
+    public void AdviceRuntimeSmokeTester_UsesInjectedClockForParseFailureLog()
+    {
+        DateTime nowUtc = new(2026, 5, 26, 19, 40, 0, DateTimeKind.Utc);
+        AdviceRuntimeInvocationLog? capturedLog = null;
+        AdviceRuntimeSmokeTestResult result = AdviceRuntimeSmokeTester.Run(
+            new AdviceRuntimeStatus(true, "ready", RuntimeName: "fake"),
+            new InvalidSmokeTestModel(),
+            new FixedClock(nowUtc),
+            log =>
+            {
+                capturedLog = log;
+                return "diagnostic.json";
+            });
+
+        Assert.False(result.Success);
+        Assert.NotNull(capturedLog);
+        Assert.Equal(nowUtc, capturedLog!.TimestampUtc);
+        Assert.Equal("diagnostic.json", result.DiagnosticPath);
+    }
+
     private sealed record TestEntry(string Value);
 
     private sealed class StaticAdviceGenerator : IAdviceGenerator
@@ -228,6 +249,18 @@ public sealed class DiagnosticsLoggerTests
         public void Record(AdviceGenerationTrace trace)
         {
             Trace = trace;
+        }
+    }
+
+    private sealed class InvalidSmokeTestModel : ILocalAdviceModel
+    {
+        public string Name => "invalid-smoke-test-model";
+
+        public bool IsAvailable => true;
+
+        public string? Generate(LocalModelAdviceRequest request)
+        {
+            return "not structured advice";
         }
     }
 
