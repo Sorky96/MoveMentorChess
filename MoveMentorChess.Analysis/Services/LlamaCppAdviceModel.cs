@@ -9,12 +9,17 @@ public sealed class LlamaCppAdviceModel : ILocalAdviceModel
 {
     private readonly LlamaCppAdviceRuntime runtime;
     private readonly IClock clock;
+    private readonly Func<AdviceRuntimeInvocationLog, string> writeDiagnosticLog;
 
-    public LlamaCppAdviceModel(LlamaCppAdviceRuntime runtime, IClock? clock = null)
+    public LlamaCppAdviceModel(
+        LlamaCppAdviceRuntime runtime,
+        IClock? clock = null,
+        Func<AdviceRuntimeInvocationLog, string>? writeDiagnosticLog = null)
     {
         ArgumentNullException.ThrowIfNull(runtime);
         this.runtime = runtime;
         this.clock = clock ?? SystemClock.Instance;
+        this.writeDiagnosticLog = writeDiagnosticLog ?? AdviceRuntimeDiagnosticsLogger.Write;
     }
 
     public string Name => "llama.cpp";
@@ -285,7 +290,7 @@ hex ::= [0-9a-fA-F]
             stdout,
             stderr,
             message);
-        string diagnosticPath = AdviceRuntimeDiagnosticsLogger.Write(log);
+        string diagnosticPath = writeDiagnosticLog(log);
         return new AdviceRuntimeInvocationException(message, log, diagnosticPath);
     }
 

@@ -163,7 +163,15 @@ public sealed class DiagnosticsLoggerTests
                 "powershell.exe"),
             ModelPath: modelPath,
             TimeoutMs: 5000);
-        LlamaCppAdviceModel model = new(runtime, new FixedClock(nowUtc));
+        AdviceRuntimeInvocationLog? capturedLog = null;
+        LlamaCppAdviceModel model = new(
+            runtime,
+            new FixedClock(nowUtc),
+            log =>
+            {
+                capturedLog = log;
+                return Path.Join(tempDirectory, "diagnostic.json");
+            });
         LocalModelAdviceRequest request = new(
             new ReplayPly(
                 1,
@@ -197,6 +205,7 @@ public sealed class DiagnosticsLoggerTests
             AdviceRuntimeInvocationException exception = Assert.Throws<AdviceRuntimeInvocationException>(() => model.Generate(request));
 
             Assert.Equal(nowUtc, exception.Log.TimestampUtc);
+            Assert.Same(capturedLog, exception.Log);
         }
         finally
         {
