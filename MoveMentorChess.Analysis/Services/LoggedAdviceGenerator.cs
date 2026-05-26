@@ -6,17 +6,20 @@ public sealed class LoggedAdviceGenerator : IAdviceGenerator
     private readonly IAdviceGenerationLogger? logger;
     private readonly AdviceGeneratorMode mode;
     private readonly string generatorName;
+    private readonly IClock clock;
 
     public LoggedAdviceGenerator(
         IAdviceGenerator inner,
         AdviceGeneratorMode mode,
         string generatorName,
-        IAdviceGenerationLogger? logger = null)
+        IAdviceGenerationLogger? logger = null,
+        IClock? clock = null)
     {
         this.inner = inner ?? throw new ArgumentNullException(nameof(inner));
         this.mode = mode;
         this.generatorName = string.IsNullOrWhiteSpace(generatorName) ? inner.GetType().Name : generatorName;
         this.logger = logger;
+        this.clock = clock ?? SystemClock.Instance;
     }
 
     public MoveExplanation Generate(
@@ -32,7 +35,7 @@ public sealed class LoggedAdviceGenerator : IAdviceGenerator
         bool usedFallback = inner is IAdviceGeneratorDiagnostics diagnostics && diagnostics.UsedFallback;
         string? fallbackReason = inner is IAdviceGeneratorDiagnostics diagnosticsWithReason ? diagnosticsWithReason.FallbackReason : null;
         logger?.Record(new AdviceGenerationTrace(
-            DateTime.UtcNow,
+            clock.UtcNow,
             generatorName,
             mode,
             UsedFallback: usedFallback,

@@ -28,8 +28,8 @@ public sealed class BoardPositionRecognizer
         new("r1bqkbnr/pppp1ppp/2n5/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R", true, KnownRenderStyle.Standard),
         new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", false, KnownRenderStyle.ChessComLikeWithCoordinates)
     };
-    private static readonly Color LightSquareColor = Color.FromArgb(238, 238, 210);
-    private static readonly Color DarkSquareColor = Color.FromArgb(118, 150, 86);
+    private static readonly Color LightSquareColor = TrackingBoardPalette.LightSquare;
+    private static readonly Color DarkSquareColor = TrackingBoardPalette.DarkSquare;
 
     private readonly Dictionary<string, List<float[]>> templates = new(StringComparer.Ordinal);
     private readonly Dictionary<string, List<float[]>> coldStartBoardTemplates = new(StringComparer.Ordinal);
@@ -39,6 +39,7 @@ public sealed class BoardPositionRecognizer
     private readonly ITrackingPieceTemplateRenderer pieceTemplateRenderer;
     private readonly ITrackingTemplateVectorizer templateVectorizer;
     private readonly ITrackingTemplatePathResolver templatePathResolver;
+    private readonly IBoardImageNormalizer boardImageNormalizer;
     private bool genericTemplatesInitialized;
 
     public BoardPositionRecognizer(string? imagesDirectory = null)
@@ -46,7 +47,8 @@ public sealed class BoardPositionRecognizer
             new DirectoryTrackingPieceImageRepository(imagesDirectory),
             new DefaultTrackingPieceTemplateRenderer(),
             new DefaultTrackingTemplateVectorizer(),
-            new DefaultTrackingTemplatePathResolver())
+            new DefaultTrackingTemplatePathResolver(),
+            new DefaultBoardImageNormalizer())
     {
     }
 
@@ -55,7 +57,8 @@ public sealed class BoardPositionRecognizer
             new DirectoryTrackingPieceImageRepository(imagesDirectory),
             new DefaultTrackingPieceTemplateRenderer(),
             new DefaultTrackingTemplateVectorizer(),
-            templatePathResolver)
+            templatePathResolver,
+            new DefaultBoardImageNormalizer())
     {
     }
 
@@ -66,7 +69,8 @@ public sealed class BoardPositionRecognizer
             pieceImageRepository,
             new DefaultTrackingPieceTemplateRenderer(),
             new DefaultTrackingTemplateVectorizer(),
-            templatePathResolver)
+            templatePathResolver,
+            new DefaultBoardImageNormalizer())
     {
     }
 
@@ -78,7 +82,8 @@ public sealed class BoardPositionRecognizer
             pieceImageRepository,
             pieceTemplateRenderer,
             new DefaultTrackingTemplateVectorizer(),
-            templatePathResolver)
+            templatePathResolver,
+            new DefaultBoardImageNormalizer())
     {
     }
 
@@ -87,19 +92,34 @@ public sealed class BoardPositionRecognizer
         ITrackingPieceTemplateRenderer pieceTemplateRenderer,
         ITrackingTemplateVectorizer templateVectorizer,
         ITrackingTemplatePathResolver templatePathResolver)
+        : this(
+            pieceImageRepository,
+            pieceTemplateRenderer,
+            templateVectorizer,
+            templatePathResolver,
+            new DefaultBoardImageNormalizer())
+    {
+    }
+
+    public BoardPositionRecognizer(
+        ITrackingPieceImageRepository pieceImageRepository,
+        ITrackingPieceTemplateRenderer pieceTemplateRenderer,
+        ITrackingTemplateVectorizer templateVectorizer,
+        ITrackingTemplatePathResolver templatePathResolver,
+        IBoardImageNormalizer boardImageNormalizer)
     {
         this.pieceImageRepository = pieceImageRepository ?? throw new ArgumentNullException(nameof(pieceImageRepository));
         this.pieceTemplateRenderer = pieceTemplateRenderer ?? throw new ArgumentNullException(nameof(pieceTemplateRenderer));
         this.templateVectorizer = templateVectorizer ?? throw new ArgumentNullException(nameof(templateVectorizer));
         this.templatePathResolver = templatePathResolver ?? throw new ArgumentNullException(nameof(templatePathResolver));
+        this.boardImageNormalizer = boardImageNormalizer ?? throw new ArgumentNullException(nameof(boardImageNormalizer));
     }
 
     public bool HasTemplates => templates.Count > 0;
 
     public Bitmap NormalizeBoardImage(Bitmap boardImage)
     {
-        Rectangle detectedBounds = DetectBoardBounds(boardImage);
-        return boardImage.Clone(detectedBounds, boardImage.PixelFormat);
+        return boardImageNormalizer.Normalize(boardImage);
     }
 
     public void LearnFromBoard(Bitmap boardImage, string placementFen, bool whiteAtBottom)
@@ -120,7 +140,7 @@ public sealed class BoardPositionRecognizer
                 string? piece = position.Board[boardSquare.X, boardSquare.Y];
                 string templateKey = BuildTemplateKey(piece, IsLightSquare(boardSquare));
 
-                using Bitmap square = ExtractSquare(normalizedBoardImage, screenX, screenY);
+                using Bitmap square = boardImageNormalizer.ExtractSquare(normalizedBoardImage, screenX, screenY);
                 AddTemplate(templateKey, templateVectorizer.ToVector(square));
             }
         }
@@ -158,7 +178,7 @@ public sealed class BoardPositionRecognizer
                 Point boardSquare = MapScreenSquareToBoard(screenX, screenY, whiteAtBottom);
                 bool isLightSquare = IsLightSquare(boardSquare);
 
-                using Bitmap square = ExtractSquare(normalizedBoardImage, screenX, screenY);
+                using Bitmap square = boardImageNormalizer.ExtractSquare(normalizedBoardImage, screenX, screenY);
                 _ = templateVectorizer.ToMaskVector(square, out double occupancy, out double centralOccupancy, out _, out _);
                 if (!TryClassifySquare(templateVectorizer.ToVector(square), isLightSquare, out string? piece, out double squareConfidence))
                 {
@@ -234,7 +254,7 @@ public sealed class BoardPositionRecognizer
                 Point boardSquare = MapScreenSquareToBoard(screenX, screenY, whiteAtBottom);
                 bool isLightSquare = IsLightSquare(boardSquare);
 
-                using Bitmap square = ExtractSquare(normalizedBoardImage, screenX, screenY);
+                using Bitmap square = boardImageNormalizer.ExtractSquare(normalizedBoardImage, screenX, screenY);
                 if (!TryClassifySquareColdStart(square, isLightSquare, out string? piece, out double squareConfidence))
                 {
                     return false;
@@ -673,22 +693,6 @@ public sealed class BoardPositionRecognizer
         return sum / left.Length;
     }
 
-    private static Bitmap ExtractSquare(Bitmap boardImage, int screenX, int screenY)
-    {
-        int left = (int)Math.Round(screenX * (double)boardImage.Width / 8.0);
-        int top = (int)Math.Round(screenY * (double)boardImage.Height / 8.0);
-        int right = (int)Math.Round((screenX + 1) * (double)boardImage.Width / 8.0);
-        int bottom = (int)Math.Round((screenY + 1) * (double)boardImage.Height / 8.0);
-        int insetX = Math.Max(1, (int)Math.Round((right - left) * 0.12));
-        int insetY = Math.Max(1, (int)Math.Round((bottom - top) * 0.12));
-        Rectangle source = Rectangle.FromLTRB(
-            left + insetX,
-            top + insetY,
-            Math.Max(left + insetX + 1, right - insetX),
-            Math.Max(top + insetY + 1, bottom - insetY));
-        return boardImage.Clone(source, boardImage.PixelFormat);
-    }
-
     private static Color EstimateBackgroundColor(Bitmap bitmap)
     {
         List<Color> samples = new();
@@ -754,81 +758,6 @@ public sealed class BoardPositionRecognizer
         return $"{symbol}|{(isLightSquare ? 'L' : 'D')}";
     }
 
-    private static Rectangle DetectBoardBounds(Bitmap boardImage)
-    {
-        int[] rowMatches = new int[boardImage.Height];
-        int[] columnMatches = new int[boardImage.Width];
-        int matchingPixels = 0;
-
-        for (int y = 0; y < boardImage.Height; y++)
-        {
-            for (int x = 0; x < boardImage.Width; x++)
-            {
-                Color pixel = boardImage.GetPixel(x, y);
-                if (ColorDistance(pixel, LightSquareColor) <= 58
-                    || ColorDistance(pixel, DarkSquareColor) <= 58)
-                {
-                    matchingPixels++;
-                    rowMatches[y]++;
-                    columnMatches[x]++;
-                }
-            }
-        }
-
-        int totalPixels = boardImage.Width * boardImage.Height;
-        if (matchingPixels < totalPixels / 12)
-        {
-            return new Rectangle(0, 0, boardImage.Width, boardImage.Height);
-        }
-
-        int rowThreshold = Math.Max(8, boardImage.Width / 5);
-        int columnThreshold = Math.Max(8, boardImage.Height / 5);
-        int minY = FindFirstIndex(rowMatches, count => count >= rowThreshold);
-        int maxY = FindLastIndex(rowMatches, count => count >= rowThreshold);
-        int minX = FindFirstIndex(columnMatches, count => count >= columnThreshold);
-        int maxX = FindLastIndex(columnMatches, count => count >= columnThreshold);
-
-        if (minX < 0 || minY < 0 || maxX <= minX || maxY <= minY)
-        {
-            return new Rectangle(0, 0, boardImage.Width, boardImage.Height);
-        }
-
-        int width = maxX - minX + 1;
-        int height = maxY - minY + 1;
-        int side = Math.Min(Math.Max(width, height), Math.Min(boardImage.Width, boardImage.Height));
-        int centerX = minX + width / 2;
-        int centerY = minY + height / 2;
-        int left = Math.Clamp(centerX - side / 2, 0, boardImage.Width - side);
-        int top = Math.Clamp(centerY - side / 2, 0, boardImage.Height - side);
-        return new Rectangle(left, top, side, side);
-    }
-
-    private static int FindFirstIndex(int[] values, Func<int, bool> predicate)
-    {
-        for (int i = 0; i < values.Length; i++)
-        {
-            if (predicate(values[i]))
-            {
-                return i;
-            }
-        }
-
-        return -1;
-    }
-
-    private static int FindLastIndex(int[] values, Func<int, bool> predicate)
-    {
-        for (int i = values.Length - 1; i >= 0; i--)
-        {
-            if (predicate(values[i]))
-            {
-                return i;
-            }
-        }
-
-        return -1;
-    }
-
     private bool TryRecognizeReferenceSnapshot(Bitmap boardImage, bool whiteAtBottom, out string placementFen, out double confidence)
     {
         placementFen = string.Empty;
@@ -864,8 +793,8 @@ public sealed class BoardPositionRecognizer
                 {
                     for (int screenX = 0; screenX < 8; screenX++)
                     {
-                        using Bitmap currentSquare = ExtractSquare(boardImage, screenX, screenY);
-                        using Bitmap referenceSquare = ExtractSquare(referenceBoard, screenX, screenY);
+                        using Bitmap currentSquare = boardImageNormalizer.ExtractSquare(boardImage, screenX, screenY);
+                        using Bitmap referenceSquare = boardImageNormalizer.ExtractSquare(referenceBoard, screenX, screenY);
                         double distance = ComputeDistance(templateVectorizer.ToVector(currentSquare), templateVectorizer.ToVector(referenceSquare));
                         confidenceSum += Math.Clamp(1.0 - distance, 0.0, 1.0);
                     }
@@ -880,6 +809,12 @@ public sealed class BoardPositionRecognizer
             }
             catch (Exception ex) when (ex is IOException or ArgumentException or OutOfMemoryException)
             {
+                Trace.TraceWarning(
+                    "BoardPositionRecognizer: failed to compare reference snapshot '{0}' from '{1}' ({2}: {3})",
+                    snapshot.FileName,
+                    referencePath,
+                    ex.GetType().Name,
+                    ex.Message);
             }
         }
 
@@ -925,6 +860,11 @@ public sealed class BoardPositionRecognizer
             }
             catch (Exception ex) when (ex is IOException or ArgumentException or OutOfMemoryException)
             {
+                Trace.TraceWarning(
+                    "BoardPositionRecognizer: failed to render known snapshot '{0}' ({1}: {2})",
+                    snapshot.PlacementFen,
+                    ex.GetType().Name,
+                    ex.Message);
             }
         }
 
@@ -950,8 +890,8 @@ public sealed class BoardPositionRecognizer
         {
             for (int screenX = 0; screenX < 8; screenX++)
             {
-                using Bitmap currentSquare = ExtractSquare(boardImage, screenX, screenY);
-                using Bitmap referenceSquare = ExtractSquare(referenceBoard, screenX, screenY);
+                using Bitmap currentSquare = boardImageNormalizer.ExtractSquare(boardImage, screenX, screenY);
+                using Bitmap referenceSquare = boardImageNormalizer.ExtractSquare(referenceBoard, screenX, screenY);
                 double distance = ComputeDistance(templateVectorizer.ToVector(currentSquare), templateVectorizer.ToVector(referenceSquare));
                 confidenceSum += Math.Clamp(1.0 - distance, 0.0, 1.0);
             }
