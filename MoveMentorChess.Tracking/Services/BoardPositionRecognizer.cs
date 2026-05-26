@@ -5,7 +5,6 @@ namespace MoveMentorChess.Tracking;
 
 public sealed class BoardPositionRecognizer
 {
-    private const string EmptyKey = ".";
     private readonly TrackingTemplateBank templates = new();
     private readonly TrackingTemplateBank coldStartBoardTemplates = new();
     private readonly TrackingTemplateBank genericShapeTemplates = new();
@@ -18,6 +17,7 @@ public sealed class BoardPositionRecognizer
     private readonly TrackingSquareClassifier squareClassifier;
     private readonly TrackingBoardSnapshotRecognizer snapshotRecognizer;
     private readonly TrackingTemplateInitializer templateInitializer;
+    private readonly TrackingLearnedTemplateTrainer learnedTemplateTrainer;
     private readonly BoardRecognitionOptions options;
 
     public BoardPositionRecognizer(string? imagesDirectory = null)
@@ -115,6 +115,11 @@ public sealed class BoardPositionRecognizer
             coldStartBoardTemplates,
             genericShapeTemplates,
             genericPieceTemplates);
+        learnedTemplateTrainer = new TrackingLearnedTemplateTrainer(
+            this.templateVectorizer,
+            this.boardImageNormalizer,
+            this.options,
+            templates);
     }
 
     public bool HasTemplates => templates.Count > 0;
@@ -126,37 +131,12 @@ public sealed class BoardPositionRecognizer
 
     public void LearnFromBoard(Bitmap boardImage, string placementFen, bool whiteAtBottom)
     {
-        if (!FenPosition.TryParse($"{placementFen} w - - 0 1", out FenPosition? position, out _)
-            || position is null)
-        {
-            return;
-        }
-
-        using Bitmap normalizedBoardImage = NormalizeBoardImage(boardImage);
-
-        for (int screenY = 0; screenY < 8; screenY++)
-        {
-            for (int screenX = 0; screenX < 8; screenX++)
-            {
-                Point boardSquare = MapScreenSquareToBoard(screenX, screenY, whiteAtBottom);
-                string? piece = position.Board[boardSquare.X, boardSquare.Y];
-                string templateKey = BuildTemplateKey(piece, IsLightSquare(boardSquare));
-
-                using Bitmap square = boardImageNormalizer.ExtractSquare(normalizedBoardImage, screenX, screenY);
-                AddTemplate(templateKey, templateVectorizer.ToVector(square));
-            }
-        }
+        learnedTemplateTrainer.LearnFromBoard(boardImage, placementFen, whiteAtBottom);
     }
 
     public void LearnFromFen(Bitmap boardImage, string fen, bool whiteAtBottom)
     {
-        if (!FenPosition.TryParse(fen, out FenPosition? position, out _)
-            || position is null)
-        {
-            return;
-        }
-
-        LearnFromBoard(boardImage, position.GetPlacementFen(), whiteAtBottom);
+        learnedTemplateTrainer.LearnFromFen(boardImage, fen, whiteAtBottom);
     }
 
     public bool TryRecognize(Bitmap boardImage, bool whiteAtBottom, out string placementFen, out double confidence)
@@ -300,14 +280,6 @@ public sealed class BoardPositionRecognizer
         return true;
     }
 
-    private void AddTemplate(string key, float[] vector)
-    {
-        int maxVariants = key.StartsWith(EmptyKey, StringComparison.Ordinal)
-            ? options.MaxEmptyTemplateVariants
-            : options.MaxLearnedPieceTemplateVariants;
-        templates.Add(key, vector, maxVariants);
-    }
-
     private static Point MapScreenSquareToBoard(int screenX, int screenY, bool whiteAtBottom)
     {
         return whiteAtBottom
@@ -316,11 +288,5 @@ public sealed class BoardPositionRecognizer
     }
 
     private static bool IsLightSquare(Point boardSquare) => (boardSquare.X + boardSquare.Y) % 2 == 0;
-
-    private static string BuildTemplateKey(string? piece, bool isLightSquare)
-    {
-        string symbol = string.IsNullOrEmpty(piece) ? EmptyKey : piece;
-        return $"{symbol}|{(isLightSquare ? 'L' : 'D')}";
-    }
 
 }
