@@ -93,6 +93,21 @@ public sealed partial class AppArchitectureTests
     }
 
     [Fact]
+    public void GameAnalysisServiceUsesPlayerMistakeProfileSourcePort()
+    {
+        string servicePath = Path.Join(
+            FindRepositoryRoot(),
+            "MoveMentorChess.Analysis",
+            "Services",
+            "GameAnalysisService.cs");
+        string service = File.ReadAllText(servicePath);
+
+        Assert.Contains("IPlayerMistakeProfileSource", service, StringComparison.Ordinal);
+        Assert.DoesNotContain("PlayerMistakeProfileProvider.TryBuild", service, StringComparison.Ordinal);
+        Assert.DoesNotContain("AnalysisStoreProvider.GetStore", service, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void StockfishPathResolverUsesRuntimeEnvironmentPort()
     {
         string resolverPath = Path.Join(
