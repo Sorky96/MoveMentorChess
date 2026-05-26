@@ -40,6 +40,7 @@ public sealed class BoardPositionRecognizer
     private readonly ITrackingTemplateVectorizer templateVectorizer;
     private readonly ITrackingTemplatePathResolver templatePathResolver;
     private readonly IBoardImageNormalizer boardImageNormalizer;
+    private readonly BoardRecognitionOptions options;
     private bool genericTemplatesInitialized;
 
     public BoardPositionRecognizer(string? imagesDirectory = null)
@@ -106,13 +107,16 @@ public sealed class BoardPositionRecognizer
         ITrackingPieceTemplateRenderer pieceTemplateRenderer,
         ITrackingTemplateVectorizer templateVectorizer,
         ITrackingTemplatePathResolver templatePathResolver,
-        IBoardImageNormalizer boardImageNormalizer)
+        IBoardImageNormalizer boardImageNormalizer,
+        BoardRecognitionOptions? options = null)
     {
         this.pieceImageRepository = pieceImageRepository ?? throw new ArgumentNullException(nameof(pieceImageRepository));
         this.pieceTemplateRenderer = pieceTemplateRenderer ?? throw new ArgumentNullException(nameof(pieceTemplateRenderer));
         this.templateVectorizer = templateVectorizer ?? throw new ArgumentNullException(nameof(templateVectorizer));
         this.templatePathResolver = templatePathResolver ?? throw new ArgumentNullException(nameof(templatePathResolver));
         this.boardImageNormalizer = boardImageNormalizer ?? throw new ArgumentNullException(nameof(boardImageNormalizer));
+        this.options = options ?? BoardRecognitionOptions.Default;
+        this.options.Validate();
     }
 
     public bool HasTemplates => templates.Count > 0;
@@ -186,13 +190,18 @@ public sealed class BoardPositionRecognizer
                 }
 
                 if ((string.Equals(piece, "P", StringComparison.Ordinal) || string.Equals(piece, "p", StringComparison.Ordinal))
-                    && centralOccupancy < 0.08
-                    && occupancy < 0.17)
+                    && centralOccupancy < options.MissingPawnCentralOccupancyMax
+                    && occupancy < options.MissingPawnOccupancyMax)
                 {
                     piece = null;
                     squareConfidence = Math.Max(
                         squareConfidence,
-                        Math.Clamp(1.0 - (occupancy * 3.5) - (centralOccupancy * 6.0), 0.0, 1.0));
+                        Math.Clamp(
+                            1.0
+                                - (occupancy * options.MissingPawnOccupancyPenaltyWeight)
+                                - (centralOccupancy * options.MissingPawnCentralOccupancyPenaltyWeight),
+                            0.0,
+                            1.0));
                 }
 
                 board[boardSquare.X, boardSquare.Y] = piece;
@@ -201,7 +210,7 @@ public sealed class BoardPositionRecognizer
         }
 
         confidence = confidenceSum / 64.0;
-        if (confidence < 0.30)
+        if (confidence < options.LearnedRecognitionMinConfidence)
         {
             return false;
         }
@@ -284,7 +293,7 @@ public sealed class BoardPositionRecognizer
         }
 
         confidence = confidenceSum / 64.0;
-        if (confidence < 0.34)
+        if (confidence < options.ColdStartRecognitionMinConfidence)
         {
             return false;
         }
@@ -302,7 +311,9 @@ public sealed class BoardPositionRecognizer
         }
 
         variants.Add(vector);
-        int maxVariants = key.StartsWith(EmptyKey, StringComparison.Ordinal) ? 40 : 16;
+        int maxVariants = key.StartsWith(EmptyKey, StringComparison.Ordinal)
+            ? options.MaxEmptyTemplateVariants
+            : options.MaxLearnedPieceTemplateVariants;
         if (variants.Count > maxVariants)
         {
             variants.RemoveAt(0);
@@ -318,7 +329,7 @@ public sealed class BoardPositionRecognizer
         }
 
         variants.Add(vector);
-        if (variants.Count > 12)
+        if (variants.Count > options.MaxGenericShapeTemplateVariants)
         {
             variants.RemoveAt(0);
         }
@@ -333,7 +344,7 @@ public sealed class BoardPositionRecognizer
         }
 
         variants.Add(vector);
-        if (variants.Count > 16)
+        if (variants.Count > options.MaxColdStartBoardTemplateVariants)
         {
             variants.RemoveAt(0);
         }
@@ -348,7 +359,7 @@ public sealed class BoardPositionRecognizer
         }
 
         variants.Add(vector);
-        if (variants.Count > 12)
+        if (variants.Count > options.MaxGenericPieceTemplateVariants)
         {
             variants.RemoveAt(0);
         }
@@ -388,7 +399,7 @@ public sealed class BoardPositionRecognizer
 
         piece = bestPiece == EmptyKey ? null : bestPiece;
         confidence = Math.Clamp(1.0 - bestDistance, 0.0, 1.0);
-        return confidence >= 0.4;
+        return confidence >= options.LearnedSquareMinConfidence;
     }
 
     private bool TryClassifySquareColdStart(Bitmap squareBitmap, bool isLightSquare, out string? piece, out double confidence)
@@ -398,7 +409,7 @@ public sealed class BoardPositionRecognizer
 
         Color estimatedBackground = EstimateBackgroundColor(squareBitmap);
         Color expectedBackground = isLightSquare ? LightSquareColor : DarkSquareColor;
-        bool backgroundLooksStandard = ColorDistance(estimatedBackground, expectedBackground) <= 55;
+        bool backgroundLooksStandard = ColorDistance(estimatedBackground, expectedBackground) <= options.StandardBackgroundColorMaxDistance;
 
         string? boardTemplatePiece = null;
         double boardTemplateConfidence = 0;
@@ -406,7 +417,7 @@ public sealed class BoardPositionRecognizer
 
         float[] maskVector = templateVectorizer.ToMaskVector(squareBitmap, out double occupancy, out _, out double pieceLuminance, out double backgroundLuminance);
 
-        if (occupancy < 0.045)
+        if (occupancy < options.EmptyOccupancyMax)
         {
             if (!backgroundLooksStandard && boardTemplatePiece is not null && boardTemplatePiece != EmptyKey)
             {
@@ -416,7 +427,7 @@ public sealed class BoardPositionRecognizer
             else
             {
                 piece = null;
-                confidence = Math.Clamp(1.0 - occupancy * 10.0, 0.0, 1.0);
+                confidence = Math.Clamp(1.0 - occupancy * options.EmptyOccupancyPenaltyWeight, 0.0, 1.0);
             }
             return true;
         }
@@ -477,43 +488,43 @@ public sealed class BoardPositionRecognizer
 
         double grayConfidence = bestPieceByGray is null
             ? 0
-            : (Math.Clamp(1.0 - bestGrayDistance, 0.0, 1.0) * 0.7)
+            : (Math.Clamp(1.0 - bestGrayDistance, 0.0, 1.0) * options.SimilarityConfidenceWeight)
                 + ((secondGrayDistance == double.MaxValue
                     ? Math.Clamp(1.0 - bestGrayDistance, 0.0, 1.0)
-                    : Math.Clamp((secondGrayDistance - bestGrayDistance) * 6.0, 0.0, 1.0)) * 0.3);
+                    : Math.Clamp((secondGrayDistance - bestGrayDistance) * options.GenericSeparationScale, 0.0, 1.0)) * options.SeparationConfidenceWeight);
 
         double shapeConfidence = bestTypeByShape is null
             ? 0
-            : (Math.Clamp(1.0 - bestShapeDistance, 0.0, 1.0) * 0.7)
+            : (Math.Clamp(1.0 - bestShapeDistance, 0.0, 1.0) * options.SimilarityConfidenceWeight)
                 + ((secondShapeDistance == double.MaxValue
                     ? Math.Clamp(1.0 - bestShapeDistance, 0.0, 1.0)
-                    : Math.Clamp((secondShapeDistance - bestShapeDistance) * 6.0, 0.0, 1.0)) * 0.3);
+                    : Math.Clamp((secondShapeDistance - bestShapeDistance) * options.GenericSeparationScale, 0.0, 1.0)) * options.SeparationConfidenceWeight);
 
         if (bestPieceByGray is not null
             && shapePiece is not null
             && string.Equals(bestPieceByGray, shapePiece, StringComparison.Ordinal))
         {
             piece = bestPieceByGray;
-            confidence = (grayConfidence * 0.55) + (shapeConfidence * 0.45);
+            confidence = (grayConfidence * options.ExactGrayConfidenceWeight) + (shapeConfidence * options.ExactShapeConfidenceWeight);
             if (backgroundLooksStandard
                 && boardTemplatePiece is not null
                 && string.Equals(boardTemplatePiece, piece, StringComparison.Ordinal))
             {
-                confidence = Math.Max(confidence, (confidence * 0.75) + (boardTemplateConfidence * 0.25));
+                confidence = ReinforceWithBoardTemplate(confidence, boardTemplateConfidence, options.ExactBoardTemplateConfidenceWeight);
             }
-            return confidence >= 0.24;
+            return confidence >= options.ShapeMinConfidence;
         }
 
         if (backgroundLooksStandard
             && boardTemplatePiece is not null
-            && boardTemplateConfidence >= Math.Max(grayConfidence, shapeConfidence) + 0.08)
+            && boardTemplateConfidence >= Math.Max(grayConfidence, shapeConfidence) + options.BoardTemplateAdvantageMargin)
         {
             piece = boardTemplatePiece;
             confidence = boardTemplateConfidence;
-            return confidence >= 0.30;
+            return confidence >= options.BoardTemplateMinConfidence;
         }
 
-        if (shapePiece is not null && shapeConfidence + 0.08 >= grayConfidence)
+        if (shapePiece is not null && shapeConfidence + options.BoardTemplateAdvantageMargin >= grayConfidence)
         {
             piece = shapePiece;
             confidence = shapeConfidence;
@@ -521,9 +532,9 @@ public sealed class BoardPositionRecognizer
                 && boardTemplatePiece is not null
                 && string.Equals(boardTemplatePiece, piece, StringComparison.Ordinal))
             {
-                confidence = Math.Max(confidence, (confidence * 0.7) + (boardTemplateConfidence * 0.3));
+                confidence = ReinforceWithBoardTemplate(confidence, boardTemplateConfidence, options.BoardTemplateReinforcementWeight);
             }
-            return confidence >= 0.24;
+            return confidence >= options.ShapeMinConfidence;
         }
 
         if (bestPieceByGray is not null)
@@ -534,9 +545,9 @@ public sealed class BoardPositionRecognizer
                 && boardTemplatePiece is not null
                 && string.Equals(boardTemplatePiece, piece, StringComparison.Ordinal))
             {
-                confidence = Math.Max(confidence, (confidence * 0.7) + (boardTemplateConfidence * 0.3));
+                confidence = ReinforceWithBoardTemplate(confidence, boardTemplateConfidence, options.BoardTemplateReinforcementWeight);
             }
-            return confidence >= 0.25;
+            return confidence >= options.GrayMinConfidence;
         }
 
         return false;
@@ -588,8 +599,8 @@ public sealed class BoardPositionRecognizer
         double likeness = Math.Clamp(1.0 - bestDistance, 0.0, 1.0);
         double separation = secondBestDistance == double.MaxValue
             ? likeness
-            : Math.Clamp((secondBestDistance - bestDistance) * 8.0, 0.0, 1.0);
-        confidence = (likeness * 0.65) + (separation * 0.35);
+            : Math.Clamp((secondBestDistance - bestDistance) * options.BoardTemplateSeparationScale, 0.0, 1.0);
+        confidence = (likeness * options.BoardTemplateSimilarityWeight) + (separation * options.BoardTemplateSeparationWeight);
         return true;
     }
 
@@ -737,10 +748,17 @@ public sealed class BoardPositionRecognizer
         return Math.Sqrt((double)dr * dr + (double)dg * dg + (double)db * db);
     }
 
-    private static bool EstimatePieceIsWhite(double pieceLuminance, double backgroundLuminance)
+    private bool EstimatePieceIsWhite(double pieceLuminance, double backgroundLuminance)
     {
-        double threshold = backgroundLuminance > 0.65 ? 0.55 : 0.48;
+        double threshold = backgroundLuminance > options.LightBackgroundLuminanceCutoff
+            ? options.LightBackgroundWhitePieceLuminanceThreshold
+            : options.DarkBackgroundWhitePieceLuminanceThreshold;
         return pieceLuminance >= threshold;
+    }
+
+    private static double ReinforceWithBoardTemplate(double confidence, double boardTemplateConfidence, double boardTemplateWeight)
+    {
+        return Math.Max(confidence, (confidence * (1.0 - boardTemplateWeight)) + (boardTemplateConfidence * boardTemplateWeight));
     }
 
     private static Point MapScreenSquareToBoard(int screenX, int screenY, bool whiteAtBottom)
@@ -818,7 +836,7 @@ public sealed class BoardPositionRecognizer
             }
         }
 
-        if (bestPlacement is null || bestConfidence < 0.96)
+        if (bestPlacement is null || bestConfidence < options.ReferenceSnapshotMinConfidence)
         {
             return false;
         }
@@ -868,7 +886,7 @@ public sealed class BoardPositionRecognizer
             }
         }
 
-        if (bestPlacement is null || bestConfidence < 0.985)
+        if (bestPlacement is null || bestConfidence < options.KnownRenderedSnapshotMinConfidence)
         {
             return false;
         }
