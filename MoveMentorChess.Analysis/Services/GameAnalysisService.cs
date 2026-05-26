@@ -13,6 +13,7 @@ public sealed class GameAnalysisService
     private readonly MistakeSelector mistakeSelector;
     private readonly AnalysisQualityGate qualityGate;
     private readonly OpeningTheoryQueryService? openingTheory;
+    private readonly IPlayerMistakeProfileSource playerMistakeProfileSource;
 
     public GameAnalysisService(
         IEngineAnalyzer engineAnalyzer,
@@ -21,7 +22,8 @@ public sealed class GameAnalysisService
         IAdviceGenerator? adviceGenerator = null,
         MistakeSelector? mistakeSelector = null,
         AnalysisQualityGate? qualityGate = null,
-        OpeningTheoryQueryService? openingTheory = null)
+        OpeningTheoryQueryService? openingTheory = null,
+        IPlayerMistakeProfileSource? playerMistakeProfileSource = null)
     {
         this.engineAnalyzer = engineAnalyzer ?? throw new ArgumentNullException(nameof(engineAnalyzer));
         this.replayService = replayService ?? new GameReplayService();
@@ -30,6 +32,7 @@ public sealed class GameAnalysisService
         this.mistakeSelector = mistakeSelector ?? new MistakeSelector();
         this.qualityGate = qualityGate ?? new AnalysisQualityGate();
         this.openingTheory = openingTheory;
+        this.playerMistakeProfileSource = playerMistakeProfileSource ?? StoreBackedPlayerMistakeProfileSource.Instance;
     }
 
     public GameAnalysisResult AnalyzeGame(
@@ -49,7 +52,7 @@ public sealed class GameAnalysisService
 
         // Load player profile once per game for prompt personalization.
         string? analyzedPlayerName = analyzedSide == PlayerSide.White ? game.WhitePlayer : game.BlackPlayer;
-        PlayerMistakeProfile? playerProfile = PlayerMistakeProfileProvider.TryBuild(analyzedPlayerName);
+        PlayerMistakeProfile? playerProfile = playerMistakeProfileSource.TryBuild(analyzedPlayerName);
 
         for (int i = 0; i < analyzedPlies.Count; i++)
         {
