@@ -16,12 +16,14 @@ public sealed class DiagnosticMistakeClassifier
 
     private readonly MistakeClassifier inner;
     private readonly string logFilePath;
+    private readonly IClock clock;
     private readonly object sync = new();
 
-    public DiagnosticMistakeClassifier(MistakeClassifier? inner = null, string? logFilePath = null)
+    public DiagnosticMistakeClassifier(MistakeClassifier? inner = null, string? logFilePath = null, IClock? clock = null)
     {
         this.inner = inner ?? new MistakeClassifier();
         this.logFilePath = logFilePath ?? DefaultLogPath();
+        this.clock = clock ?? SystemClock.Instance;
         string? dir = Path.GetDirectoryName(this.logFilePath);
         if (!string.IsNullOrWhiteSpace(dir))
         {
@@ -73,7 +75,7 @@ public sealed class DiagnosticMistakeClassifier
         }
 
         ClassifierDiagnosticEntry entry = new(
-            DateTime.UtcNow,
+            clock.UtcNow,
             gameFingerprint,
             replay.Ply,
             replay.MoveNumber,

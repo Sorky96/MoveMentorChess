@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using MoveMentorChess.Analysis;
 using Xunit;
 
@@ -92,6 +93,115 @@ public sealed class DiagnosticsLoggerTests
 
         Assert.NotNull(logger.Trace);
         Assert.Equal(nowUtc, logger.Trace!.TimestampUtc);
+    }
+
+    [Fact]
+    public void DiagnosticMistakeClassifier_UsesInjectedClockForDiagnosticEntry()
+    {
+        DateTime nowUtc = new(2026, 5, 26, 19, 10, 0, DateTimeKind.Utc);
+        string tempDirectory = Path.Join(Path.GetTempPath(), $"MoveMentorChessServices-classifier-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        string logFilePath = Path.Join(tempDirectory, "classifier.jsonl");
+
+        try
+        {
+            DiagnosticMistakeClassifier classifier = new(clock: new FixedClock(nowUtc), logFilePath: logFilePath);
+            ReplayPly replay = new(
+                1,
+                1,
+                PlayerSide.White,
+                "Qh5",
+                "Qh5",
+                "d1h5",
+                "before",
+                "after",
+                string.Empty,
+                string.Empty,
+                GamePhase.Middlegame,
+                "Q",
+                null,
+                "d1",
+                "h5",
+                false,
+                false,
+                false);
+
+            MistakeTag? tag = classifier.Classify(
+                replay,
+                "game-fingerprint",
+                PlayerSide.White,
+                MoveQualityBucket.Mistake,
+                centipawnLoss: 130,
+                materialDeltaCp: 0);
+
+            Assert.NotNull(tag);
+            string jsonLine = File.ReadAllText(logFilePath);
+            ClassifierDiagnosticEntry? entry = JsonSerializer.Deserialize<ClassifierDiagnosticEntry>(jsonLine);
+
+            Assert.NotNull(entry);
+            Assert.Equal(nowUtc, entry!.TimestampUtc);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void LlamaCppAdviceModel_UsesInjectedClockForInvocationFailureLog()
+    {
+        string tempDirectory = Path.Join(Path.GetTempPath(), $"MoveMentorChessServices-llama-clock-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        string modelPath = Path.Join(tempDirectory, "model.gguf");
+        File.WriteAllText(modelPath, "fake model");
+        DateTime nowUtc = new(2026, 5, 26, 19, 20, 0, DateTimeKind.Utc);
+        LlamaCppAdviceRuntime runtime = new(
+            CliPath: Path.Join(
+                Environment.GetFolderPath(Environment.SpecialFolder.System),
+                "WindowsPowerShell",
+                "v1.0",
+                "powershell.exe"),
+            ModelPath: modelPath,
+            TimeoutMs: 5000);
+        LlamaCppAdviceModel model = new(runtime, new FixedClock(nowUtc));
+        LocalModelAdviceRequest request = new(
+            new ReplayPly(
+                1,
+                1,
+                PlayerSide.White,
+                "e4",
+                "e4",
+                "e2e4",
+                "before",
+                "after",
+                string.Empty,
+                string.Empty,
+                GamePhase.Opening,
+                "P",
+                null,
+                "e2",
+                "e4",
+                false,
+                false,
+                false),
+            MoveQualityBucket.Inaccuracy,
+            null,
+            "e7e5",
+            25,
+            ExplanationLevel.Intermediate,
+            new AdviceGenerationContext("test", "game", PlayerSide.White),
+            "Return JSON.");
+
+        try
+        {
+            AdviceRuntimeInvocationException exception = Assert.Throws<AdviceRuntimeInvocationException>(() => model.Generate(request));
+
+            Assert.Equal(nowUtc, exception.Log.TimestampUtc);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
     }
 
     private sealed record TestEntry(string Value);
