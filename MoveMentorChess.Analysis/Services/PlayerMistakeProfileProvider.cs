@@ -1,5 +1,3 @@
-using System.IO;
-
 namespace MoveMentorChess.Analysis;
 
 /// <summary>
@@ -11,35 +9,10 @@ public static class PlayerMistakeProfileProvider
     private const int MinGamesForProfile = 2;
     private const int MaxPatterns = 3;
     private const int MaxResultsToScan = 200;
+    private static readonly StoreBackedPlayerMistakeProfileSource DefaultSource = new();
 
     public static PlayerMistakeProfile? TryBuild(string? playerName)
-    {
-        if (string.IsNullOrWhiteSpace(playerName))
-        {
-            return null;
-        }
-
-        try
-        {
-            IAnalysisResultStore? store = AnalysisStoreProvider.GetStore();
-            if (store is null)
-            {
-                return null;
-            }
-
-            return TryBuildFromStore(store, playerName.Trim());
-        }
-        catch (InvalidOperationException)
-        {
-            // Store not available (e.g., during tests or first run).
-            return null;
-        }
-        catch (IOException)
-        {
-            // Store access issue.
-            return null;
-        }
-    }
+        => DefaultSource.TryBuild(playerName);
 
     internal static PlayerMistakeProfile? TryBuildFromStore(IAnalysisResultStore store, string playerName)
     {
