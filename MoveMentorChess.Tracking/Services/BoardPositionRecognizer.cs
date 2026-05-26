@@ -31,10 +31,10 @@ public sealed class BoardPositionRecognizer
     private static readonly Color LightSquareColor = TrackingBoardPalette.LightSquare;
     private static readonly Color DarkSquareColor = TrackingBoardPalette.DarkSquare;
 
-    private readonly Dictionary<string, List<float[]>> templates = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, List<float[]>> coldStartBoardTemplates = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, List<float[]>> genericShapeTemplates = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, List<float[]>> genericPieceTemplates = new(StringComparer.Ordinal);
+    private readonly TrackingTemplateBank templates = new();
+    private readonly TrackingTemplateBank coldStartBoardTemplates = new();
+    private readonly TrackingTemplateBank genericShapeTemplates = new();
+    private readonly TrackingTemplateBank genericPieceTemplates = new();
     private readonly ITrackingPieceImageRepository pieceImageRepository;
     private readonly ITrackingPieceTemplateRenderer pieceTemplateRenderer;
     private readonly ITrackingTemplateVectorizer templateVectorizer;
@@ -304,65 +304,25 @@ public sealed class BoardPositionRecognizer
 
     private void AddTemplate(string key, float[] vector)
     {
-        if (!templates.TryGetValue(key, out List<float[]>? variants))
-        {
-            variants = new List<float[]>();
-            templates[key] = variants;
-        }
-
-        variants.Add(vector);
         int maxVariants = key.StartsWith(EmptyKey, StringComparison.Ordinal)
             ? options.MaxEmptyTemplateVariants
             : options.MaxLearnedPieceTemplateVariants;
-        if (variants.Count > maxVariants)
-        {
-            variants.RemoveAt(0);
-        }
+        templates.Add(key, vector, maxVariants);
     }
 
     private void AddGenericShapeTemplate(string key, float[] vector)
     {
-        if (!genericShapeTemplates.TryGetValue(key, out List<float[]>? variants))
-        {
-            variants = new List<float[]>();
-            genericShapeTemplates[key] = variants;
-        }
-
-        variants.Add(vector);
-        if (variants.Count > options.MaxGenericShapeTemplateVariants)
-        {
-            variants.RemoveAt(0);
-        }
+        genericShapeTemplates.Add(key, vector, options.MaxGenericShapeTemplateVariants);
     }
 
     private void AddColdStartBoardTemplate(string key, float[] vector)
     {
-        if (!coldStartBoardTemplates.TryGetValue(key, out List<float[]>? variants))
-        {
-            variants = new List<float[]>();
-            coldStartBoardTemplates[key] = variants;
-        }
-
-        variants.Add(vector);
-        if (variants.Count > options.MaxColdStartBoardTemplateVariants)
-        {
-            variants.RemoveAt(0);
-        }
+        coldStartBoardTemplates.Add(key, vector, options.MaxColdStartBoardTemplateVariants);
     }
 
     private void AddGenericPieceTemplate(string key, float[] vector)
     {
-        if (!genericPieceTemplates.TryGetValue(key, out List<float[]>? variants))
-        {
-            variants = new List<float[]>();
-            genericPieceTemplates[key] = variants;
-        }
-
-        variants.Add(vector);
-        if (variants.Count > options.MaxGenericPieceTemplateVariants)
-        {
-            variants.RemoveAt(0);
-        }
+        genericPieceTemplates.Add(key, vector, options.MaxGenericPieceTemplateVariants);
     }
 
     private bool TryClassifySquare(float[] vector, bool isLightSquare, out string? piece, out double confidence)
@@ -374,7 +334,7 @@ public sealed class BoardPositionRecognizer
         string? bestPiece = null;
         double bestDistance = double.MaxValue;
 
-        foreach ((string key, List<float[]> variants) in templates)
+        foreach ((string key, IReadOnlyList<float[]> variants) in templates.Enumerate())
         {
             if (!key.EndsWith(squareSuffix, StringComparison.Ordinal))
             {
@@ -437,7 +397,7 @@ public sealed class BoardPositionRecognizer
         string? bestPieceByGray = null;
         double bestGrayDistance = double.MaxValue;
         double secondGrayDistance = double.MaxValue;
-        foreach ((string key, List<float[]> variants) in genericPieceTemplates)
+        foreach ((string key, IReadOnlyList<float[]> variants) in genericPieceTemplates.Enumerate())
         {
             foreach (float[] variant in variants)
             {
@@ -458,7 +418,7 @@ public sealed class BoardPositionRecognizer
         string? bestTypeByShape = null;
         double bestShapeDistance = double.MaxValue;
         double secondShapeDistance = double.MaxValue;
-        foreach ((string key, List<float[]> variants) in genericShapeTemplates)
+        foreach ((string key, IReadOnlyList<float[]> variants) in genericShapeTemplates.Enumerate())
         {
             foreach (float[] variant in variants)
             {
@@ -565,7 +525,7 @@ public sealed class BoardPositionRecognizer
         double bestDistance = double.MaxValue;
         double secondBestDistance = double.MaxValue;
 
-        foreach ((string key, List<float[]> variants) in coldStartBoardTemplates)
+        foreach ((string key, IReadOnlyList<float[]> variants) in coldStartBoardTemplates.Enumerate())
         {
             if (!key.EndsWith(squareSuffix, StringComparison.Ordinal))
             {
