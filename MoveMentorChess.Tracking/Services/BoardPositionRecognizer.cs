@@ -18,6 +18,7 @@ public sealed class BoardPositionRecognizer
     private readonly TrackingBoardSnapshotRecognizer snapshotRecognizer;
     private readonly TrackingTemplateInitializer templateInitializer;
     private readonly TrackingLearnedTemplateTrainer learnedTemplateTrainer;
+    private readonly TrackingLearnedBoardRecognizer learnedBoardRecognizer;
     private readonly BoardRecognitionOptions options;
 
     public BoardPositionRecognizer(string? imagesDirectory = null)
@@ -120,6 +121,12 @@ public sealed class BoardPositionRecognizer
             this.boardImageNormalizer,
             this.options,
             templates);
+        learnedBoardRecognizer = new TrackingLearnedBoardRecognizer(
+            this.templateVectorizer,
+            this.boardImageNormalizer,
+            squareClassifier,
+            this.options,
+            templates);
     }
 
     public bool HasTemplates => templates.Count > 0;
@@ -141,71 +148,7 @@ public sealed class BoardPositionRecognizer
 
     public bool TryRecognize(Bitmap boardImage, bool whiteAtBottom, out string placementFen, out double confidence)
     {
-        placementFen = string.Empty;
-        confidence = 0;
-
-        if (!HasTemplates)
-        {
-            return false;
-        }
-
-        using Bitmap normalizedBoardImage = NormalizeBoardImage(boardImage);
-        string?[,] board = new string?[8, 8];
-        double confidenceSum = 0;
-
-        for (int screenY = 0; screenY < 8; screenY++)
-        {
-            for (int screenX = 0; screenX < 8; screenX++)
-            {
-                Point boardSquare = MapScreenSquareToBoard(screenX, screenY, whiteAtBottom);
-                bool isLightSquare = IsLightSquare(boardSquare);
-
-                using Bitmap square = boardImageNormalizer.ExtractSquare(normalizedBoardImage, screenX, screenY);
-                _ = templateVectorizer.ToMaskVector(square, out double occupancy, out double centralOccupancy, out _, out _);
-                if (!squareClassifier.TryClassifyLearnedSquare(templateVectorizer.ToVector(square), isLightSquare, out string? piece, out double squareConfidence))
-                {
-                    return false;
-                }
-
-                if ((string.Equals(piece, "P", StringComparison.Ordinal) || string.Equals(piece, "p", StringComparison.Ordinal))
-                    && centralOccupancy < options.MissingPawnCentralOccupancyMax
-                    && occupancy < options.MissingPawnOccupancyMax)
-                {
-                    piece = null;
-                    squareConfidence = Math.Max(
-                        squareConfidence,
-                        Math.Clamp(
-                            1.0
-                                - (occupancy * options.MissingPawnOccupancyPenaltyWeight)
-                                - (centralOccupancy * options.MissingPawnCentralOccupancyPenaltyWeight),
-                            0.0,
-                            1.0));
-                }
-
-                board[boardSquare.X, boardSquare.Y] = piece;
-                confidenceSum += squareConfidence;
-            }
-        }
-
-        confidence = confidenceSum / 64.0;
-        if (confidence < options.LearnedRecognitionMinConfidence)
-        {
-            return false;
-        }
-
-        placementFen = FenPosition.FromBoardState(
-            board,
-            true,
-            true,
-            true,
-            true,
-            true,
-            true,
-            true,
-            null,
-            0,
-            1).GetPlacementFen();
-        return true;
+        return learnedBoardRecognizer.TryRecognize(boardImage, whiteAtBottom, out placementFen, out confidence);
     }
 
     public bool TryRecognizeColdStart(Bitmap boardImage, bool whiteAtBottom, out string placementFen, out double confidence)
