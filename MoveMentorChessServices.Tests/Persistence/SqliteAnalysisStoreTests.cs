@@ -1276,6 +1276,66 @@ public sealed class SqliteAnalysisStoreTests
         }
     }
 
+    [Fact]
+    public void OpeningSeedBootstrapper_DefaultBundledSeedPathUsesRuntimeEnvironment()
+    {
+        FakeOpeningSeedRuntimeEnvironment environment = new(@"C:\app-root");
+
+        string seedPath = OpeningSeedBootstrapper.GetDefaultBundledSeedPath(environment);
+
+        Assert.Equal(Path.Combine(@"C:\app-root", OpeningSeedBootstrapper.BundledSeedRelativePath), seedPath);
+    }
+
+    [Fact]
+    public void OpeningSeedBootstrapper_ReturnsMissingSeedWithoutRealFileSystemAccess()
+    {
+        FakeOpeningSeedRuntimeEnvironment environment = new(@"C:\app-root");
+        OpeningSeedBootstrapper bootstrapper = new(
+            CreateTempDatabasePath(),
+            @"C:\app-root\OpeningSeed\opening-seed.db",
+            environment);
+
+        OpeningSeedBootstrapResult result = bootstrapper.EnsureSeedImported();
+
+        Assert.False(result.SeedFileFound);
+        Assert.False(result.Imported);
+        Assert.Null(result.SeedVersion);
+        Assert.Equal(0, result.Summary.NodeCount);
+    }
+
+    [Fact]
+    public void OpeningSeedBootstrapper_FallbackSeedVersionUsesRuntimeEnvironmentTimestamp()
+    {
+        string localDatabasePath = CreateTempDatabasePath();
+        string bundledSeedPath = CreateTempDatabasePath();
+        DateTime seedTimestampUtc = new(2026, 6, 1, 15, 4, 3, DateTimeKind.Utc);
+
+        try
+        {
+            SqliteAnalysisStore seedStore = new(bundledSeedPath);
+            OpeningTreeBuildResult tree = BuildOpeningTree(
+                OpeningImportGameOnePgn,
+                OpeningImportGameTwoPgn,
+                OpeningImportGameThreePgn);
+            seedStore.ReplaceOpeningTree(tree);
+            FakeOpeningSeedRuntimeEnvironment environment = new(@"C:\app-root");
+            environment.AddFile(bundledSeedPath, seedTimestampUtc);
+            OpeningSeedBootstrapper bootstrapper = new(localDatabasePath, bundledSeedPath, environment);
+
+            OpeningSeedBootstrapResult result = bootstrapper.EnsureSeedImported();
+
+            Assert.True(result.SeedFileFound);
+            Assert.True(result.Imported);
+            Assert.Equal("file-20260601150403", result.SeedVersion);
+            Assert.Equal("file-20260601150403", new SqliteAnalysisStore(localDatabasePath).GetOpeningSeedVersion());
+        }
+        finally
+        {
+            DeleteTempDatabase(localDatabasePath);
+            DeleteTempDatabase(bundledSeedPath);
+        }
+    }
+
     private static string CreateTempDatabasePath()
     {
         return Path.Combine(Path.GetTempPath(), $"MoveMentorChessServices-store-{Guid.NewGuid():N}.db");
@@ -1284,6 +1344,22 @@ public sealed class SqliteAnalysisStoreTests
     private sealed class FixedClock(DateTime utcNow) : IClock
     {
         public DateTime UtcNow { get; } = utcNow;
+    }
+
+    private sealed class FakeOpeningSeedRuntimeEnvironment(string baseDirectory) : IOpeningSeedRuntimeEnvironment
+    {
+        private readonly Dictionary<string, DateTime> files = new(StringComparer.OrdinalIgnoreCase);
+
+        public string BaseDirectory { get; } = baseDirectory;
+
+        public void AddFile(string path, DateTime lastWriteTimeUtc)
+        {
+            files[path] = lastWriteTimeUtc;
+        }
+
+        public bool FileExists(string path) => files.ContainsKey(path);
+
+        public DateTime GetLastWriteTimeUtc(string path) => files[path];
     }
 
     private static MoveAnalysisResult CreateMoveAnalysis(
