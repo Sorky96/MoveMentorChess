@@ -41,9 +41,9 @@ public sealed class TrackingLearnedTemplateTrainer
         {
             for (int screenX = 0; screenX < 8; screenX++)
             {
-                Point boardSquare = MapScreenSquareToBoard(screenX, screenY, whiteAtBottom);
+                Point boardSquare = TrackingBoardSquareMapper.MapScreenSquareToBoard(screenX, screenY, whiteAtBottom);
                 string? piece = position.Board[boardSquare.X, boardSquare.Y];
-                string templateKey = BuildTemplateKey(piece, IsLightSquare(boardSquare));
+                string templateKey = BuildTemplateKey(piece, TrackingBoardSquareMapper.IsLightSquare(boardSquare));
 
                 using Bitmap square = boardImageNormalizer.ExtractSquare(normalizedBoardImage, screenX, screenY);
                 AddTemplate(templateKey, templateVectorizer.ToVector(square));
@@ -71,15 +71,6 @@ public sealed class TrackingLearnedTemplateTrainer
             : options.MaxLearnedPieceTemplateVariants;
         templates.Add(key, vector, maxVariants);
     }
-
-    private static Point MapScreenSquareToBoard(int screenX, int screenY, bool whiteAtBottom)
-    {
-        return whiteAtBottom
-            ? new Point(screenX, screenY)
-            : new Point(7 - screenX, 7 - screenY);
-    }
-
-    private static bool IsLightSquare(Point boardSquare) => (boardSquare.X + boardSquare.Y) % 2 == 0;
 
     private static string BuildTemplateKey(string? piece, bool isLightSquare)
     {

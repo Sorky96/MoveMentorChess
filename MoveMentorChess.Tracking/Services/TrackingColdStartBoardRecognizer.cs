@@ -3,42 +3,49 @@ using System.Drawing;
 
 namespace MoveMentorChess.Tracking;
 
-public sealed class TrackingLearnedBoardRecognizer
+public sealed class TrackingColdStartBoardRecognizer
 {
-    private readonly ITrackingTemplateVectorizer templateVectorizer;
     private readonly IBoardImageNormalizer boardImageNormalizer;
     private readonly TrackingSquareClassifier squareClassifier;
     private readonly BoardRecognitionOptions options;
-    private readonly TrackingTemplateBank templates;
+    private readonly TrackingTemplateBank genericShapeTemplates;
+    private readonly TrackingTemplateBank genericPieceTemplates;
 
-    public TrackingLearnedBoardRecognizer(
-        ITrackingTemplateVectorizer templateVectorizer,
+    public TrackingColdStartBoardRecognizer(
         IBoardImageNormalizer boardImageNormalizer,
         TrackingSquareClassifier squareClassifier,
         BoardRecognitionOptions options,
-        TrackingTemplateBank templates)
+        TrackingTemplateBank genericShapeTemplates,
+        TrackingTemplateBank genericPieceTemplates)
     {
-        this.templateVectorizer = templateVectorizer ?? throw new ArgumentNullException(nameof(templateVectorizer));
         this.boardImageNormalizer = boardImageNormalizer ?? throw new ArgumentNullException(nameof(boardImageNormalizer));
         this.squareClassifier = squareClassifier ?? throw new ArgumentNullException(nameof(squareClassifier));
         this.options = options ?? throw new ArgumentNullException(nameof(options));
         this.options.Validate();
-        this.templates = templates ?? throw new ArgumentNullException(nameof(templates));
+        this.genericShapeTemplates = genericShapeTemplates ?? throw new ArgumentNullException(nameof(genericShapeTemplates));
+        this.genericPieceTemplates = genericPieceTemplates ?? throw new ArgumentNullException(nameof(genericPieceTemplates));
     }
 
     public bool TryRecognize(Bitmap boardImage, bool whiteAtBottom, out string placementFen, out double confidence)
     {
         ArgumentNullException.ThrowIfNull(boardImage);
 
+        using Bitmap normalizedBoardImage = boardImageNormalizer.Normalize(boardImage);
+        return TryRecognizeNormalized(normalizedBoardImage, whiteAtBottom, out placementFen, out confidence);
+    }
+
+    public bool TryRecognizeNormalized(Bitmap normalizedBoardImage, bool whiteAtBottom, out string placementFen, out double confidence)
+    {
+        ArgumentNullException.ThrowIfNull(normalizedBoardImage);
+
         placementFen = string.Empty;
         confidence = 0;
 
-        if (templates.Count == 0)
+        if (genericShapeTemplates.Count == 0 || genericPieceTemplates.Count == 0)
         {
             return false;
         }
 
-        using Bitmap normalizedBoardImage = boardImageNormalizer.Normalize(boardImage);
         string?[,] board = new string?[8, 8];
         double confidenceSum = 0;
 
@@ -50,25 +57,9 @@ public sealed class TrackingLearnedBoardRecognizer
                 bool isLightSquare = TrackingBoardSquareMapper.IsLightSquare(boardSquare);
 
                 using Bitmap square = boardImageNormalizer.ExtractSquare(normalizedBoardImage, screenX, screenY);
-                _ = templateVectorizer.ToMaskVector(square, out double occupancy, out double centralOccupancy, out _, out _);
-                if (!squareClassifier.TryClassifyLearnedSquare(templateVectorizer.ToVector(square), isLightSquare, out string? piece, out double squareConfidence))
+                if (!squareClassifier.TryClassifyColdStartSquare(square, isLightSquare, out string? piece, out double squareConfidence))
                 {
                     return false;
-                }
-
-                if ((string.Equals(piece, "P", StringComparison.Ordinal) || string.Equals(piece, "p", StringComparison.Ordinal))
-                    && centralOccupancy < options.MissingPawnCentralOccupancyMax
-                    && occupancy < options.MissingPawnOccupancyMax)
-                {
-                    piece = null;
-                    squareConfidence = Math.Max(
-                        squareConfidence,
-                        Math.Clamp(
-                            1.0
-                                - (occupancy * options.MissingPawnOccupancyPenaltyWeight)
-                                - (centralOccupancy * options.MissingPawnCentralOccupancyPenaltyWeight),
-                            0.0,
-                            1.0));
                 }
 
                 board[boardSquare.X, boardSquare.Y] = piece;
@@ -76,13 +67,7 @@ public sealed class TrackingLearnedBoardRecognizer
             }
         }
 
-        confidence = confidenceSum / 64.0;
-        if (confidence < options.LearnedRecognitionMinConfidence)
-        {
-            return false;
-        }
-
-        placementFen = FenPosition.FromBoardState(
+        string candidatePlacement = FenPosition.FromBoardState(
             board,
             true,
             true,
@@ -94,7 +79,19 @@ public sealed class TrackingLearnedBoardRecognizer
             null,
             0,
             1).GetPlacementFen();
+
+        if (!FenPosition.TryParse($"{candidatePlacement} w - - 0 1", out _, out _))
+        {
+            return false;
+        }
+
+        confidence = confidenceSum / 64.0;
+        if (confidence < options.ColdStartRecognitionMinConfidence)
+        {
+            return false;
+        }
+
+        placementFen = candidatePlacement;
         return true;
     }
-
 }

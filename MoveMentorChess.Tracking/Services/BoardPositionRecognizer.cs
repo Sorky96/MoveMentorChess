@@ -19,6 +19,7 @@ public sealed class BoardPositionRecognizer
     private readonly TrackingTemplateInitializer templateInitializer;
     private readonly TrackingLearnedTemplateTrainer learnedTemplateTrainer;
     private readonly TrackingLearnedBoardRecognizer learnedBoardRecognizer;
+    private readonly TrackingColdStartBoardRecognizer coldStartBoardRecognizer;
     private readonly BoardRecognitionOptions options;
 
     public BoardPositionRecognizer(string? imagesDirectory = null)
@@ -127,6 +128,12 @@ public sealed class BoardPositionRecognizer
             squareClassifier,
             this.options,
             templates);
+        coldStartBoardRecognizer = new TrackingColdStartBoardRecognizer(
+            this.boardImageNormalizer,
+            squareClassifier,
+            this.options,
+            genericShapeTemplates,
+            genericPieceTemplates);
     }
 
     public bool HasTemplates => templates.Count > 0;
@@ -169,67 +176,6 @@ public sealed class BoardPositionRecognizer
             return true;
         }
 
-        if (genericShapeTemplates.Count == 0 || genericPieceTemplates.Count == 0)
-        {
-            return false;
-        }
-
-        string?[,] board = new string?[8, 8];
-        double confidenceSum = 0;
-
-        for (int screenY = 0; screenY < 8; screenY++)
-        {
-            for (int screenX = 0; screenX < 8; screenX++)
-            {
-                Point boardSquare = MapScreenSquareToBoard(screenX, screenY, whiteAtBottom);
-                bool isLightSquare = IsLightSquare(boardSquare);
-
-                using Bitmap square = boardImageNormalizer.ExtractSquare(normalizedBoardImage, screenX, screenY);
-                if (!squareClassifier.TryClassifyColdStartSquare(square, isLightSquare, out string? piece, out double squareConfidence))
-                {
-                    return false;
-                }
-
-                board[boardSquare.X, boardSquare.Y] = piece;
-                confidenceSum += squareConfidence;
-            }
-        }
-
-        string candidatePlacement = FenPosition.FromBoardState(
-            board,
-            true,
-            true,
-            true,
-            true,
-            true,
-            true,
-            true,
-            null,
-            0,
-            1).GetPlacementFen();
-
-        if (!FenPosition.TryParse($"{candidatePlacement} w - - 0 1", out _, out _))
-        {
-            return false;
-        }
-
-        confidence = confidenceSum / 64.0;
-        if (confidence < options.ColdStartRecognitionMinConfidence)
-        {
-            return false;
-        }
-
-        placementFen = candidatePlacement;
-        return true;
+        return coldStartBoardRecognizer.TryRecognizeNormalized(normalizedBoardImage, whiteAtBottom, out placementFen, out confidence);
     }
-
-    private static Point MapScreenSquareToBoard(int screenX, int screenY, bool whiteAtBottom)
-    {
-        return whiteAtBottom
-            ? new Point(screenX, screenY)
-            : new Point(7 - screenX, 7 - screenY);
-    }
-
-    private static bool IsLightSquare(Point boardSquare) => (boardSquare.X + boardSquare.Y) % 2 == 0;
-
 }
