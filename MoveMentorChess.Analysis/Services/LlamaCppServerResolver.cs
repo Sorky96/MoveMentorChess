@@ -4,8 +4,15 @@ public static class LlamaCppServerResolver
 {
     public static LlamaCppServerConfig? Resolve()
     {
-        string? serverPath = ResolveServerPath();
-        string? modelPath = LlamaCppAdviceRuntimeResolver.ResolveModelPath();
+        return Resolve(SystemLlamaRuntimeEnvironment.Instance);
+    }
+
+    public static LlamaCppServerConfig? Resolve(ILlamaRuntimeEnvironment environment)
+    {
+        ArgumentNullException.ThrowIfNull(environment);
+
+        string? serverPath = ResolveServerPath(environment);
+        string? modelPath = LlamaCppAdviceRuntimeResolver.ResolveModelPath(environment);
 
         if (string.IsNullOrWhiteSpace(serverPath) || string.IsNullOrWhiteSpace(modelPath))
         {
@@ -35,21 +42,28 @@ public static class LlamaCppServerResolver
 
     public static string? ResolveServerPath()
     {
+        return ResolveServerPath(SystemLlamaRuntimeEnvironment.Instance);
+    }
+
+    public static string? ResolveServerPath(ILlamaRuntimeEnvironment environment)
+    {
+        ArgumentNullException.ThrowIfNull(environment);
+
         LlamaGpuSettings settings = LlamaGpuSettingsStore.Load();
-        if (File.Exists(settings.ServerPath))
+        if (environment.FileExists(settings.ServerPath ?? string.Empty))
         {
             return settings.ServerPath;
         }
 
         string? fromEnvironment = Normalize(Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH"));
-        if (File.Exists(fromEnvironment))
+        if (environment.FileExists(fromEnvironment ?? string.Empty))
         {
             return fromEnvironment;
         }
 
-        foreach (string candidate in GetServerCandidates())
+        foreach (string candidate in GetServerCandidates(environment))
         {
-            if (File.Exists(candidate))
+            if (environment.FileExists(candidate))
             {
                 return candidate;
             }
@@ -59,7 +73,10 @@ public static class LlamaCppServerResolver
     }
 
     private static IEnumerable<string> GetServerCandidates()
-        => LlamaRuntimePathCandidates.GetExecutableCandidates("llama-server.exe");
+        => GetServerCandidates(SystemLlamaRuntimeEnvironment.Instance);
+
+    private static IEnumerable<string> GetServerCandidates(ILlamaRuntimeEnvironment environment)
+        => LlamaRuntimePathCandidates.GetExecutableCandidates("llama-server.exe", environment);
 
     private static string? Normalize(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

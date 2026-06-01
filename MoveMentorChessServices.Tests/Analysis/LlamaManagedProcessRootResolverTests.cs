@@ -45,12 +45,17 @@ public sealed class LlamaManagedProcessRootResolverTests
 
     private sealed record TestLlamaRuntimeEnvironment(
         string BaseDirectory,
-        string CurrentDirectory) : ILlamaRuntimeEnvironment;
+        string CurrentDirectory) : ILlamaRuntimeEnvironment
+    {
+        public bool FileExists(string path) => false;
+    }
 
     private sealed class ThrowingLlamaRuntimeEnvironment : ILlamaRuntimeEnvironment
     {
         public string BaseDirectory => throw new UnauthorizedAccessException();
 
         public string CurrentDirectory => throw new NotSupportedException();
+
+        public bool FileExists(string path) => throw new NotSupportedException();
     }
 }

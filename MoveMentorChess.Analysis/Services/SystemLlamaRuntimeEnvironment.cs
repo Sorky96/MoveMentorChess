@@ -11,4 +11,6 @@ public sealed class SystemLlamaRuntimeEnvironment : ILlamaRuntimeEnvironment
     public string BaseDirectory => AppContext.BaseDirectory;
 
     public string CurrentDirectory => Directory.GetCurrentDirectory();
+
+    public bool FileExists(string path) => File.Exists(path);
 }

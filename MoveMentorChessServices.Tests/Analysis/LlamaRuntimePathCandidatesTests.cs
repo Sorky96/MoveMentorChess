@@ -75,5 +75,8 @@ public sealed class LlamaRuntimePathCandidatesTests
 
     private sealed record TestLlamaRuntimeEnvironment(
         string BaseDirectory,
-        string CurrentDirectory) : ILlamaRuntimeEnvironment;
+        string CurrentDirectory) : ILlamaRuntimeEnvironment
+    {
+        public bool FileExists(string path) => false;
+    }
 }

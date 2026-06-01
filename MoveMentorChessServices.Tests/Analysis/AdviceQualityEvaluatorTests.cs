@@ -82,5 +82,7 @@ public sealed class AdviceQualityEvaluatorTests
         public string BaseDirectory { get; } = baseDirectory;
 
         public string CurrentDirectory => BaseDirectory;
+
+        public bool FileExists(string path) => false;
     }
 }
