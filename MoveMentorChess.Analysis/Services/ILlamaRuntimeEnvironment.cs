@@ -6,6 +6,10 @@ public interface ILlamaRuntimeEnvironment
 
     string CurrentDirectory { get; }
 
+    string? GetEnvironmentVariable(string variable);
+
+    LlamaGpuSettings LoadLlamaGpuSettings();
+
     bool FileExists(string path);
 
     bool DirectoryExists(string path);

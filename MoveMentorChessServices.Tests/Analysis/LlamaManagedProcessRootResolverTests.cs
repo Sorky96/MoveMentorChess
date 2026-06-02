@@ -47,6 +47,10 @@ public sealed class LlamaManagedProcessRootResolverTests
         string BaseDirectory,
         string CurrentDirectory) : ILlamaRuntimeEnvironment
     {
+        public string? GetEnvironmentVariable(string variable) => null;
+
+        public LlamaGpuSettings LoadLlamaGpuSettings() => LlamaGpuSettings.Default;
+
         public bool FileExists(string path) => false;
 
         public bool DirectoryExists(string path) => false;
@@ -60,6 +64,10 @@ public sealed class LlamaManagedProcessRootResolverTests
         public string BaseDirectory => throw new UnauthorizedAccessException();
 
         public string CurrentDirectory => throw new NotSupportedException();
+
+        public string? GetEnvironmentVariable(string variable) => throw new NotSupportedException();
+
+        public LlamaGpuSettings LoadLlamaGpuSettings() => throw new NotSupportedException();
 
         public bool FileExists(string path) => throw new NotSupportedException();
 

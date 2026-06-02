@@ -1,15 +1,47 @@
+using System.IO;
+
 namespace MoveMentorChess.Analysis;
 
 public sealed class StoreBackedPlayerMistakeProfileSource : IPlayerMistakeProfileSource
 {
-    public static StoreBackedPlayerMistakeProfileSource Instance { get; } = new();
+    private readonly Func<IAnalysisResultStore?> storeProvider;
 
-    private StoreBackedPlayerMistakeProfileSource()
+    public StoreBackedPlayerMistakeProfileSource()
+        : this(AnalysisStoreProvider.GetStore)
     {
+    }
+
+    public StoreBackedPlayerMistakeProfileSource(Func<IAnalysisResultStore?> storeProvider)
+    {
+        this.storeProvider = storeProvider ?? throw new ArgumentNullException(nameof(storeProvider));
     }
 
     public PlayerMistakeProfile? TryBuild(string? playerName)
     {
-        return PlayerMistakeProfileProvider.TryBuild(playerName);
+        if (string.IsNullOrWhiteSpace(playerName))
+        {
+            return null;
+        }
+
+        try
+        {
+            IAnalysisResultStore? store = storeProvider();
+            if (store is null)
+            {
+                return null;
+            }
+
+            return PlayerMistakeProfileProvider.TryBuildFromStore(store, playerName.Trim());
+        }
+        catch (InvalidOperationException)
+        {
+            // Store not available (e.g., during tests or first run).
+            return null;
+        }
+        catch (IOException)
+        {
+            // Store access issue.
+            return null;
+        }
     }
 }

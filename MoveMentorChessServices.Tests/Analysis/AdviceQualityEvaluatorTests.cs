@@ -83,6 +83,10 @@ public sealed class AdviceQualityEvaluatorTests
 
         public string CurrentDirectory => BaseDirectory;
 
+        public string? GetEnvironmentVariable(string variable) => null;
+
+        public LlamaGpuSettings LoadLlamaGpuSettings() => LlamaGpuSettings.Default;
+
         public bool FileExists(string path) => false;
 
         public bool DirectoryExists(string path) => false;

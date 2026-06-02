@@ -19,7 +19,7 @@ public sealed class TrackingTemplateInitializer
     private readonly TrackingTemplateBank genericPieceTemplates;
 
     private readonly object initializationGate = new();
-    private bool initialized;
+    private volatile bool initialized;
 
     public TrackingTemplateInitializer(
         ITrackingPieceImageRepository pieceImageRepository,

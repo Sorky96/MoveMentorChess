@@ -32,7 +32,7 @@ public sealed class GameAnalysisService
         this.mistakeSelector = mistakeSelector ?? new MistakeSelector();
         this.qualityGate = qualityGate ?? new AnalysisQualityGate();
         this.openingTheory = openingTheory;
-        this.playerMistakeProfileSource = playerMistakeProfileSource ?? StoreBackedPlayerMistakeProfileSource.Instance;
+        this.playerMistakeProfileSource = playerMistakeProfileSource ?? new StoreBackedPlayerMistakeProfileSource();
     }
 
     public GameAnalysisResult AnalyzeGame(

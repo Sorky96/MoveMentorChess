@@ -39,6 +39,66 @@ public sealed class LlamaRuntimeResolverEnvironmentTests
     }
 
     [Fact]
+    public void AdviceRuntimeResolver_UsesRuntimeEnvironmentForEnvironmentOverrides()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "MoveMentorChessServices-llama-override-env");
+        string cliPath = Path.Join(root, "custom-cli.exe");
+        string modelPath = Path.Join(root, "custom-model.gguf");
+        FakeLlamaRuntimeEnvironment environment = new(root, root);
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH", cliPath);
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH", modelPath);
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_FULL_GPU", "true");
+        environment.AddFile(cliPath);
+        environment.AddFile(modelPath);
+
+        LlamaCppAdviceRuntime? runtime = LlamaCppAdviceRuntimeResolver.Resolve(environment);
+
+        Assert.NotNull(runtime);
+        Assert.Equal(cliPath, runtime!.CliPath);
+        Assert.Equal(modelPath, runtime.ModelPath);
+        Assert.Equal(LlamaGpuSettingsResolver.FullGpuLayersArgument, runtime.GpuLayersArgument);
+        Assert.Contains("MoveMentorChessServices_LLAMA_CPP_CLI_PATH", environment.EnvironmentVariableChecks);
+        Assert.Contains("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH", environment.EnvironmentVariableChecks);
+    }
+
+    [Fact]
+    public void ServerResolver_UsesRuntimeEnvironmentForSettingsAndEnvironmentOverrides()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "MoveMentorChessServices-server-settings-env");
+        string settingsServerPath = Path.Join(root, "settings-server.exe");
+        string environmentServerPath = Path.Join(root, "environment-server.exe");
+        FakeLlamaRuntimeEnvironment environment = new(root, root)
+        {
+            LlamaGpuSettings = new LlamaGpuSettings(false, ServerPath: settingsServerPath)
+        };
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH", environmentServerPath);
+        environment.AddFile(settingsServerPath);
+        environment.AddFile(environmentServerPath);
+
+        string? resolved = LlamaCppServerResolver.ResolveServerPath(environment);
+
+        Assert.Equal(settingsServerPath, resolved);
+        Assert.Equal(1, environment.LlamaGpuSettingsLoadCount);
+        Assert.DoesNotContain(environmentServerPath, environment.FileExistenceChecks);
+    }
+
+    [Fact]
+    public void ServerResolver_UsesRuntimeEnvironmentForServerEnvironmentOverride()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "MoveMentorChessServices-server-override-env");
+        string serverPath = Path.Join(root, "environment-server.exe");
+        FakeLlamaRuntimeEnvironment environment = new(root, root);
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH", serverPath);
+        environment.AddFile(serverPath);
+
+        string? resolved = LlamaCppServerResolver.ResolveServerPath(environment);
+
+        Assert.Equal(serverPath, resolved);
+        Assert.Contains("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH", environment.EnvironmentVariableChecks);
+        Assert.Contains(serverPath, environment.FileExistenceChecks);
+    }
+
+    [Fact]
     public void AdviceRuntimeResolver_UsesRuntimeEnvironmentForWildcardModelDiscovery()
     {
         string root = Path.Combine(Path.GetTempPath(), "MoveMentorChessServices-llama-wildcard-env");
@@ -64,10 +124,17 @@ public sealed class LlamaRuntimeResolverEnvironmentTests
     {
         private readonly HashSet<string> files = new(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> directories = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string?> environmentVariables = new(StringComparer.OrdinalIgnoreCase);
 
         public string BaseDirectory { get; } = baseDirectory;
 
         public string CurrentDirectory { get; } = currentDirectory;
+
+        public LlamaGpuSettings LlamaGpuSettings { get; init; } = LlamaGpuSettings.Default;
+
+        public int LlamaGpuSettingsLoadCount { get; private set; }
+
+        public List<string> EnvironmentVariableChecks { get; } = [];
 
         public List<string> FileExistenceChecks { get; } = [];
 
@@ -83,6 +150,23 @@ public sealed class LlamaRuntimeResolverEnvironmentTests
         public void AddDirectory(string path)
         {
             directories.Add(path);
+        }
+
+        public void AddEnvironmentVariable(string variable, string? value)
+        {
+            environmentVariables[variable] = value;
+        }
+
+        public string? GetEnvironmentVariable(string variable)
+        {
+            EnvironmentVariableChecks.Add(variable);
+            return environmentVariables.GetValueOrDefault(variable);
+        }
+
+        public LlamaGpuSettings LoadLlamaGpuSettings()
+        {
+            LlamaGpuSettingsLoadCount++;
+            return LlamaGpuSettings;
         }
 
         public bool FileExists(string path)

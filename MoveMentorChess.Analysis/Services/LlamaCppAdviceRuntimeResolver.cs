@@ -30,15 +30,15 @@ public static class LlamaCppAdviceRuntimeResolver
         }
 
         int maxTokens = ParsePositiveInt(
-            Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MAX_TOKENS"),
+            environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MAX_TOKENS"),
             96);
         int contextSize = ParsePositiveInt(
-            Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CONTEXT_SIZE"),
+            environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CONTEXT_SIZE"),
             2048);
         int timeoutMs = ParsePositiveInt(
-            Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_TIMEOUT_MS"),
+            environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_TIMEOUT_MS"),
             120000);
-        string gpuLayersArgument = LlamaGpuSettingsResolver.ResolveGpuLayersArgument();
+        string gpuLayersArgument = LlamaGpuSettingsResolver.ResolveGpuLayersArgument(environment);
 
         return new LlamaCppAdviceRuntime(cliPath, modelPath, maxTokens, contextSize, timeoutMs, gpuLayersArgument);
     }
@@ -52,7 +52,7 @@ public static class LlamaCppAdviceRuntimeResolver
     {
         ArgumentNullException.ThrowIfNull(environment);
 
-        string? fromEnvironment = Normalize(Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH"));
+        string? fromEnvironment = Normalize(environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH"));
         if (environment.FileExists(fromEnvironment ?? string.Empty))
         {
             return fromEnvironment;
@@ -78,7 +78,7 @@ public static class LlamaCppAdviceRuntimeResolver
     {
         ArgumentNullException.ThrowIfNull(environment);
 
-        string? fromEnvironment = Normalize(Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH"));
+        string? fromEnvironment = Normalize(environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH"));
         if (environment.FileExists(fromEnvironment ?? string.Empty))
         {
             return fromEnvironment;

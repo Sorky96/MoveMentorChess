@@ -12,6 +12,10 @@ public sealed class SystemLlamaRuntimeEnvironment : ILlamaRuntimeEnvironment
 
     public string CurrentDirectory => Directory.GetCurrentDirectory();
 
+    public string? GetEnvironmentVariable(string variable) => Environment.GetEnvironmentVariable(variable);
+
+    public LlamaGpuSettings LoadLlamaGpuSettings() => LlamaGpuSettingsStore.Load();
+
     public bool FileExists(string path) => File.Exists(path);
 
     public bool DirectoryExists(string path) => Directory.Exists(path);
