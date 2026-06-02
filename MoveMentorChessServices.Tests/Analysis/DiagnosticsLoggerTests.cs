@@ -155,12 +155,9 @@ public sealed class DiagnosticsLoggerTests
         string modelPath = Path.Join(tempDirectory, "model.gguf");
         File.WriteAllText(modelPath, "fake model");
         DateTime nowUtc = new(2026, 5, 26, 19, 20, 0, DateTimeKind.Utc);
+        string cliPath = ResolveFailingCliPath();
         LlamaCppAdviceRuntime runtime = new(
-            CliPath: Path.Join(
-                Environment.GetFolderPath(Environment.SpecialFolder.System),
-                "WindowsPowerShell",
-                "v1.0",
-                "powershell.exe"),
+            CliPath: cliPath,
             ModelPath: modelPath,
             TimeoutMs: 5000);
         AdviceRuntimeInvocationLog? capturedLog = null;
@@ -211,6 +208,19 @@ public sealed class DiagnosticsLoggerTests
         {
             Directory.Delete(tempDirectory, recursive: true);
         }
+    }
+
+    private static string ResolveFailingCliPath()
+    {
+        string cliPath = OperatingSystem.IsWindows()
+            ? Path.Join(
+                Environment.GetFolderPath(Environment.SpecialFolder.System),
+                "WindowsPowerShell",
+                "v1.0",
+                "powershell.exe")
+            : "/bin/false";
+        Assert.True(File.Exists(cliPath), $"Expected test CLI path to exist: {cliPath}");
+        return cliPath;
     }
 
     [Fact]

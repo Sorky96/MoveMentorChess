@@ -19,6 +19,15 @@ public sealed class DefaultBoardImageNormalizer : IBoardImageNormalizer
     public Bitmap ExtractSquare(Bitmap boardImage, int screenX, int screenY)
     {
         ArgumentNullException.ThrowIfNull(boardImage);
+        if (screenX is < 0 or > 7)
+        {
+            throw new ArgumentOutOfRangeException(nameof(screenX), screenX, "screenX must be between 0 and 7.");
+        }
+
+        if (screenY is < 0 or > 7)
+        {
+            throw new ArgumentOutOfRangeException(nameof(screenY), screenY, "screenY must be between 0 and 7.");
+        }
 
         int left = (int)Math.Round(screenX * (double)boardImage.Width / 8.0);
         int top = (int)Math.Round(screenY * (double)boardImage.Height / 8.0);

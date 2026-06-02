@@ -163,7 +163,6 @@ public sealed class BoardPositionRecognizer
         placementFen = string.Empty;
         confidence = 0;
 
-        templateInitializer.EnsureInitialized();
         using Bitmap normalizedBoardImage = NormalizeBoardImage(boardImage);
 
         if (snapshotRecognizer.TryRecognizeKnownRenderedSnapshot(normalizedBoardImage, whiteAtBottom, out placementFen, out confidence))
@@ -176,6 +175,7 @@ public sealed class BoardPositionRecognizer
             return true;
         }
 
+        templateInitializer.EnsureInitialized();
         return coldStartBoardRecognizer.TryRecognizeNormalized(normalizedBoardImage, whiteAtBottom, out placementFen, out confidence);
     }
 }

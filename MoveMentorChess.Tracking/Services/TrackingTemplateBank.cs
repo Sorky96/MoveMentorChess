@@ -26,7 +26,7 @@ public sealed class TrackingTemplateBank
         }
 
         variants.Add(vector);
-        if (variants.Count > maxVariants)
+        while (variants.Count > maxVariants)
         {
             variants.RemoveAt(0);
         }
@@ -36,7 +36,7 @@ public sealed class TrackingTemplateBank
     {
         foreach ((string key, List<float[]> variants) in templates)
         {
-            yield return (key, variants);
+            yield return (key, variants.ToArray());
         }
     }
 }

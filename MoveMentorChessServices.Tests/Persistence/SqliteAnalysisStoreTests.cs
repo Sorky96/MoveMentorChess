@@ -1290,17 +1290,26 @@ public sealed class SqliteAnalysisStoreTests
     public void OpeningSeedBootstrapper_ReturnsMissingSeedWithoutRealFileSystemAccess()
     {
         FakeOpeningSeedRuntimeEnvironment environment = new(@"C:\app-root");
-        OpeningSeedBootstrapper bootstrapper = new(
-            CreateTempDatabasePath(),
-            @"C:\app-root\OpeningSeed\opening-seed.db",
-            environment);
+        string localDatabasePath = CreateTempDatabasePath();
 
-        OpeningSeedBootstrapResult result = bootstrapper.EnsureSeedImported();
+        try
+        {
+            OpeningSeedBootstrapper bootstrapper = new(
+                localDatabasePath,
+                @"C:\app-root\OpeningSeed\opening-seed.db",
+                environment);
 
-        Assert.False(result.SeedFileFound);
-        Assert.False(result.Imported);
-        Assert.Null(result.SeedVersion);
-        Assert.Equal(0, result.Summary.NodeCount);
+            OpeningSeedBootstrapResult result = bootstrapper.EnsureSeedImported();
+
+            Assert.False(result.SeedFileFound);
+            Assert.False(result.Imported);
+            Assert.Null(result.SeedVersion);
+            Assert.Equal(0, result.Summary.NodeCount);
+        }
+        finally
+        {
+            DeleteTempDatabase(localDatabasePath);
+        }
     }
 
     [Fact]

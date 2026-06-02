@@ -48,6 +48,22 @@ public sealed class TrackingBoardSnapshotRecognizerTests
     }
 
     [Fact]
+    public void TryRecognizeKnownRenderedSnapshot_PreservesOddBoardSizeForReferenceRender()
+    {
+        RecordingBoardImageNormalizer normalizer = new();
+        TrackingBoardSnapshotRecognizer recognizer = CreateRecognizer(
+            pieceImageRepository: new AvailablePieceImageRepository(),
+            boardImageNormalizer: normalizer);
+        using Bitmap board = new(401, 401);
+
+        bool recognized = recognizer.TryRecognizeKnownRenderedSnapshot(board, whiteAtBottom: true, out _, out double confidence);
+
+        Assert.True(recognized);
+        Assert.Equal(1.0, confidence);
+        Assert.All(normalizer.ExtractedBitmapSizes, size => Assert.Equal(board.Size, size));
+    }
+
+    [Fact]
     public void Constructor_RejectsInvalidOptions()
     {
         BoardRecognitionOptions invalidOptions = BoardRecognitionOptions.Default with
@@ -62,13 +78,14 @@ public sealed class TrackingBoardSnapshotRecognizerTests
     private static TrackingBoardSnapshotRecognizer CreateRecognizer(
         ITrackingTemplatePathResolver? templatePathResolver = null,
         ITrackingPieceImageRepository? pieceImageRepository = null,
+        IBoardImageNormalizer? boardImageNormalizer = null,
         BoardRecognitionOptions? options = null)
     {
         return new TrackingBoardSnapshotRecognizer(
             pieceImageRepository ?? new UnavailablePieceImageRepository(),
             new DefaultTrackingTemplateVectorizer(),
             templatePathResolver ?? new MissingTemplatePathResolver(),
-            new DefaultBoardImageNormalizer(),
+            boardImageNormalizer ?? new DefaultBoardImageNormalizer(),
             options ?? BoardRecognitionOptions.Default);
     }
 
@@ -100,6 +117,34 @@ public sealed class TrackingBoardSnapshotRecognizerTests
             image = null;
             path = null;
             return false;
+        }
+    }
+
+    private sealed class AvailablePieceImageRepository : ITrackingPieceImageRepository
+    {
+        public bool IsAvailable => true;
+
+        public bool TryLoadPieceImage(string fileName, out Image? image, out string? path)
+        {
+            image = new Bitmap(1, 1);
+            path = fileName;
+            return true;
+        }
+    }
+
+    private sealed class RecordingBoardImageNormalizer : IBoardImageNormalizer
+    {
+        public List<Size> ExtractedBitmapSizes { get; } = [];
+
+        public Bitmap Normalize(Bitmap boardImage)
+        {
+            return (Bitmap)boardImage.Clone();
+        }
+
+        public Bitmap ExtractSquare(Bitmap boardImage, int screenX, int screenY)
+        {
+            ExtractedBitmapSizes.Add(boardImage.Size);
+            return new Bitmap(1, 1);
         }
     }
 }

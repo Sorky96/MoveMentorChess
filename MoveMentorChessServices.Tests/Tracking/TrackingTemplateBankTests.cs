@@ -35,6 +35,36 @@ public sealed class TrackingTemplateBankTests
     }
 
     [Fact]
+    public void Add_EnforcesSmallerLimitWhenMaxVariantsShrinks()
+    {
+        TrackingTemplateBank bank = new();
+        float[] first = [0.1f];
+        float[] second = [0.2f];
+        float[] third = [0.3f];
+        float[] fourth = [0.4f];
+
+        bank.Add("N|D", first, maxVariants: 4);
+        bank.Add("N|D", second, maxVariants: 4);
+        bank.Add("N|D", third, maxVariants: 4);
+        bank.Add("N|D", fourth, maxVariants: 2);
+
+        (string _, IReadOnlyList<float[]> variants) = Assert.Single(bank.Enumerate());
+        Assert.Equal([third, fourth], variants);
+    }
+
+    [Fact]
+    public void Enumerate_DoesNotExposeMutableBackingList()
+    {
+        TrackingTemplateBank bank = new();
+        float[] vector = [0.1f];
+
+        bank.Add("P|L", vector, maxVariants: 2);
+
+        (string _, IReadOnlyList<float[]> variants) = Assert.Single(bank.Enumerate());
+        Assert.IsNotType<List<float[]>>(variants);
+    }
+
+    [Fact]
     public void Add_RejectsInvalidArguments()
     {
         TrackingTemplateBank bank = new();

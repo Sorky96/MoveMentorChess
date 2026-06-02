@@ -68,17 +68,17 @@ public sealed class TrackingColdStartBoardRecognizer
         }
 
         string candidatePlacement = FenPosition.FromBoardState(
-            board,
-            true,
-            true,
-            true,
-            true,
-            true,
-            true,
-            true,
-            null,
-            0,
-            1).GetPlacementFen();
+            board: board,
+            whiteToMove: true,
+            whiteKingMoved: true,
+            blackKingMoved: true,
+            whiteRookLeftMoved: true,
+            whiteRookRightMoved: true,
+            blackRookLeftMoved: true,
+            blackRookRightMoved: true,
+            enPassantTargetSquare: null,
+            halfmoveClock: 0,
+            fullmoveNumber: 1).GetPlacementFen();
 
         if (!FenPosition.TryParse($"{candidatePlacement} w - - 0 1", out _, out _))
         {

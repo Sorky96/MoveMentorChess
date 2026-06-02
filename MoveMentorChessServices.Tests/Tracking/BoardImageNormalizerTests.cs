@@ -36,6 +36,21 @@ public sealed class BoardImageNormalizerTests
         Assert.Equal(38, square.Height);
     }
 
+    [Theory]
+    [InlineData(-1, 0, "screenX")]
+    [InlineData(8, 0, "screenX")]
+    [InlineData(0, -1, "screenY")]
+    [InlineData(0, 8, "screenY")]
+    public void ExtractSquare_RejectsOutOfRangeCoordinates(int screenX, int screenY, string expectedParameterName)
+    {
+        DefaultBoardImageNormalizer normalizer = new();
+        using Bitmap board = new(400, 400);
+
+        ArgumentOutOfRangeException exception = Assert.Throws<ArgumentOutOfRangeException>(
+            () => normalizer.ExtractSquare(board, screenX, screenY));
+        Assert.Equal(expectedParameterName, exception.ParamName);
+    }
+
     [Fact]
     public void Normalize_RejectsNullBitmap()
     {

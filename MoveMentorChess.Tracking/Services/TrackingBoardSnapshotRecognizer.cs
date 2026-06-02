@@ -198,9 +198,7 @@ public sealed class TrackingBoardSnapshotRecognizer
 
     private Bitmap RenderStandardReferenceBoard(string placementFen, bool whiteAtBottom, Size boardSize)
     {
-        int tileWidth = Math.Max(1, boardSize.Width / 8);
-        int tileHeight = Math.Max(1, boardSize.Height / 8);
-        Bitmap bitmap = new(tileWidth * 8, tileHeight * 8);
+        Bitmap bitmap = new(boardSize.Width, boardSize.Height);
         using Graphics graphics = Graphics.FromImage(bitmap);
         graphics.Clear(Color.Black);
 
@@ -216,7 +214,7 @@ public sealed class TrackingBoardSnapshotRecognizer
             {
                 int screenX = whiteAtBottom ? boardX : 7 - boardX;
                 int screenY = whiteAtBottom ? boardY : 7 - boardY;
-                Rectangle rect = new(screenX * tileWidth, screenY * tileHeight, tileWidth, tileHeight);
+                Rectangle rect = GetSquareBounds(boardSize, screenX, screenY);
                 bool lightSquare = (boardX + boardY) % 2 == 0;
 
                 using SolidBrush squareBrush = new(lightSquare ? LightSquareColor : DarkSquareColor);
@@ -235,9 +233,7 @@ public sealed class TrackingBoardSnapshotRecognizer
 
     private Bitmap RenderChessComLikeReferenceBoard(string placementFen, bool whiteAtBottom, Size boardSize)
     {
-        int tileWidth = Math.Max(1, boardSize.Width / 8);
-        int tileHeight = Math.Max(1, boardSize.Height / 8);
-        Bitmap bitmap = new(tileWidth * 8, tileHeight * 8);
+        Bitmap bitmap = new(boardSize.Width, boardSize.Height);
         using Graphics graphics = Graphics.FromImage(bitmap);
         graphics.SmoothingMode = SmoothingMode.AntiAlias;
         graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
@@ -249,7 +245,7 @@ public sealed class TrackingBoardSnapshotRecognizer
             return bitmap;
         }
 
-        float fontSize = Math.Max(8f, tileHeight * 0.21f);
+        float fontSize = Math.Max(8f, (boardSize.Height / 8f) * 0.21f);
         using Font coordFont = new("Segoe UI", fontSize, FontStyle.Bold, GraphicsUnit.Pixel);
         using Brush lightSquareBrush = new SolidBrush(LightSquareColor);
         using Brush darkSquareBrush = new SolidBrush(DarkSquareColor);
@@ -262,7 +258,7 @@ public sealed class TrackingBoardSnapshotRecognizer
             {
                 int screenX = whiteAtBottom ? boardX : 7 - boardX;
                 int screenY = whiteAtBottom ? boardY : 7 - boardY;
-                Rectangle rect = new(screenX * tileWidth, screenY * tileHeight, tileWidth, tileHeight);
+                Rectangle rect = GetSquareBounds(boardSize, screenX, screenY);
                 bool lightSquare = (boardX + boardY) % 2 == 0;
 
                 graphics.FillRectangle(lightSquare ? lightSquareBrush : darkSquareBrush, rect);
@@ -274,8 +270,8 @@ public sealed class TrackingBoardSnapshotRecognizer
                         rank,
                         coordFont,
                         lightSquare ? darkCoordBrush : lightCoordBrush,
-                        rect.Left + Math.Max(2, tileWidth / 24f),
-                        rect.Top + Math.Max(1, tileHeight / 48f));
+                        rect.Left + Math.Max(2, rect.Width / 24f),
+                        rect.Top + Math.Max(1, rect.Height / 48f));
                 }
 
                 if (screenY == 7)
@@ -286,15 +282,15 @@ public sealed class TrackingBoardSnapshotRecognizer
                         file.ToString(),
                         coordFont,
                         lightSquare ? darkCoordBrush : lightCoordBrush,
-                        rect.Right - size.Width - Math.Max(2, tileWidth / 24f),
-                        rect.Bottom - size.Height - Math.Max(2, tileHeight / 24f));
+                        rect.Right - size.Width - Math.Max(2, rect.Width / 24f),
+                        rect.Bottom - size.Height - Math.Max(2, rect.Height / 24f));
                 }
 
                 string? piece = position.Board[boardX, boardY];
                 if (!string.IsNullOrEmpty(piece))
                 {
-                    int insetX = Math.Max(1, (int)Math.Round(tileWidth * 0.0625));
-                    int insetY = Math.Max(1, (int)Math.Round(tileHeight * 0.0625));
+                    int insetX = Math.Max(1, (int)Math.Round(rect.Width * 0.0625));
+                    int insetY = Math.Max(1, (int)Math.Round(rect.Height * 0.0625));
                     Rectangle pieceRect = Rectangle.Inflate(rect, -insetX, -insetY);
                     DrawReferencePiece(graphics, piece, pieceRect);
                 }
@@ -302,6 +298,15 @@ public sealed class TrackingBoardSnapshotRecognizer
         }
 
         return bitmap;
+    }
+
+    private static Rectangle GetSquareBounds(Size boardSize, int screenX, int screenY)
+    {
+        int left = boardSize.Width * screenX / 8;
+        int top = boardSize.Height * screenY / 8;
+        int right = boardSize.Width * (screenX + 1) / 8;
+        int bottom = boardSize.Height * (screenY + 1) / 8;
+        return Rectangle.FromLTRB(left, top, Math.Max(left + 1, right), Math.Max(top + 1, bottom));
     }
 
     private void DrawReferencePiece(Graphics graphics, string piece, Rectangle rect)

@@ -18,6 +18,7 @@ public sealed class TrackingTemplateInitializer
     private readonly TrackingTemplateBank genericShapeTemplates;
     private readonly TrackingTemplateBank genericPieceTemplates;
 
+    private readonly object initializationGate = new();
     private bool initialized;
 
     public TrackingTemplateInitializer(
@@ -46,30 +47,56 @@ public sealed class TrackingTemplateInitializer
             return;
         }
 
-        initialized = true;
+        lock (initializationGate)
+        {
+            if (initialized)
+            {
+                return;
+            }
 
+            TrackingTemplateBank coldStartBoardTemplatesToAdd = new();
+            TrackingTemplateBank genericShapeTemplatesToAdd = new();
+            TrackingTemplateBank genericPieceTemplatesToAdd = new();
+
+            PopulateTemplates(
+                coldStartBoardTemplatesToAdd,
+                genericShapeTemplatesToAdd,
+                genericPieceTemplatesToAdd);
+
+            CopyTemplates(coldStartBoardTemplatesToAdd, coldStartBoardTemplates, options.MaxColdStartBoardTemplateVariants);
+            CopyTemplates(genericShapeTemplatesToAdd, genericShapeTemplates, options.MaxGenericShapeTemplateVariants);
+            CopyTemplates(genericPieceTemplatesToAdd, genericPieceTemplates, options.MaxGenericPieceTemplateVariants);
+            initialized = true;
+        }
+    }
+
+    private void PopulateTemplates(
+        TrackingTemplateBank coldStartBoardTemplatesToAdd,
+        TrackingTemplateBank genericShapeTemplatesToAdd,
+        TrackingTemplateBank genericPieceTemplatesToAdd)
+    {
         foreach (string pieceType in GenericPieceTypes)
         {
             using Bitmap whiteTransparentTemplate = pieceTemplateRenderer.RenderFallbackTransparentTemplate(pieceType, true);
-            AddGenericShapeTemplate(pieceType, templateVectorizer.ToTemplateMaskVector(whiteTransparentTemplate));
-            AddGenericPieceTemplate(pieceType, templateVectorizer.ToTemplateGrayVector(whiteTransparentTemplate));
+            AddGenericShapeTemplate(genericShapeTemplatesToAdd, pieceType, templateVectorizer.ToTemplateMaskVector(whiteTransparentTemplate));
+            AddGenericPieceTemplate(genericPieceTemplatesToAdd, pieceType, templateVectorizer.ToTemplateGrayVector(whiteTransparentTemplate));
 
             using Bitmap blackTransparentTemplate = pieceTemplateRenderer.RenderFallbackTransparentTemplate(pieceType, false);
-            AddGenericShapeTemplate(pieceType, templateVectorizer.ToTemplateMaskVector(blackTransparentTemplate));
-            AddGenericPieceTemplate(pieceType.ToLowerInvariant(), templateVectorizer.ToTemplateGrayVector(blackTransparentTemplate));
+            AddGenericShapeTemplate(genericShapeTemplatesToAdd, pieceType, templateVectorizer.ToTemplateMaskVector(blackTransparentTemplate));
+            AddGenericPieceTemplate(genericPieceTemplatesToAdd, pieceType.ToLowerInvariant(), templateVectorizer.ToTemplateGrayVector(blackTransparentTemplate));
 
             foreach (bool isLightSquare in new[] { true, false })
             {
                 using Bitmap emptyBoardTemplate = pieceTemplateRenderer.RenderEmptyBoardSquare(isLightSquare);
-                AddColdStartBoardTemplate(BuildTemplateKey(null, isLightSquare), templateVectorizer.ToBoardTemplateVector(emptyBoardTemplate));
+                AddColdStartBoardTemplate(coldStartBoardTemplatesToAdd, BuildTemplateKey(null, isLightSquare), templateVectorizer.ToBoardTemplateVector(emptyBoardTemplate));
 
                 using Bitmap whiteBoardTemplate = pieceTemplateRenderer.RenderFallbackTemplate(pieceType, true, isLightSquare);
-                AddColdStartBoardTemplate(BuildTemplateKey(pieceType, isLightSquare), templateVectorizer.ToBoardTemplateVector(whiteBoardTemplate));
-                AddGenericShapeTemplate(pieceType, templateVectorizer.ToMaskVector(whiteBoardTemplate, out _, out _, out _, out _));
+                AddColdStartBoardTemplate(coldStartBoardTemplatesToAdd, BuildTemplateKey(pieceType, isLightSquare), templateVectorizer.ToBoardTemplateVector(whiteBoardTemplate));
+                AddGenericShapeTemplate(genericShapeTemplatesToAdd, pieceType, templateVectorizer.ToMaskVector(whiteBoardTemplate, out _, out _, out _, out _));
 
                 using Bitmap blackBoardTemplate = pieceTemplateRenderer.RenderFallbackTemplate(pieceType, false, isLightSquare);
-                AddColdStartBoardTemplate(BuildTemplateKey(pieceType.ToLowerInvariant(), isLightSquare), templateVectorizer.ToBoardTemplateVector(blackBoardTemplate));
-                AddGenericShapeTemplate(pieceType, templateVectorizer.ToMaskVector(blackBoardTemplate, out _, out _, out _, out _));
+                AddColdStartBoardTemplate(coldStartBoardTemplatesToAdd, BuildTemplateKey(pieceType.ToLowerInvariant(), isLightSquare), templateVectorizer.ToBoardTemplateVector(blackBoardTemplate));
+                AddGenericShapeTemplate(genericShapeTemplatesToAdd, pieceType, templateVectorizer.ToMaskVector(blackBoardTemplate, out _, out _, out _, out _));
             }
         }
 
@@ -80,12 +107,27 @@ public sealed class TrackingTemplateInitializer
 
         foreach (string pieceType in GenericPieceTypes)
         {
-            TryAddImageTemplate(pieceType, $"w{pieceType}.svg");
-            TryAddImageTemplate(pieceType, $"b{pieceType}.svg");
+            TryAddImageTemplate(
+                pieceType,
+                $"w{pieceType}.svg",
+                coldStartBoardTemplatesToAdd,
+                genericShapeTemplatesToAdd,
+                genericPieceTemplatesToAdd);
+            TryAddImageTemplate(
+                pieceType,
+                $"b{pieceType}.svg",
+                coldStartBoardTemplatesToAdd,
+                genericShapeTemplatesToAdd,
+                genericPieceTemplatesToAdd);
         }
     }
 
-    private void TryAddImageTemplate(string pieceType, string fileName)
+    private void TryAddImageTemplate(
+        string pieceType,
+        string fileName,
+        TrackingTemplateBank coldStartBoardTemplatesToAdd,
+        TrackingTemplateBank genericShapeTemplatesToAdd,
+        TrackingTemplateBank genericPieceTemplatesToAdd)
     {
         string? path = null;
 
@@ -103,16 +145,17 @@ public sealed class TrackingTemplateInitializer
                 foreach (int inset in new[] { 3, 5, 7, 9 })
                 {
                     using Bitmap transparentBitmap = pieceTemplateRenderer.RenderTransparentImageTemplate(source, inset);
-                    AddGenericShapeTemplate(pieceType, templateVectorizer.ToTemplateMaskVector(transparentBitmap));
-                    AddGenericPieceTemplate(isWhitePiece ? pieceType : pieceType.ToLowerInvariant(), templateVectorizer.ToTemplateGrayVector(transparentBitmap));
+                    AddGenericShapeTemplate(genericShapeTemplatesToAdd, pieceType, templateVectorizer.ToTemplateMaskVector(transparentBitmap));
+                    AddGenericPieceTemplate(genericPieceTemplatesToAdd, isWhitePiece ? pieceType : pieceType.ToLowerInvariant(), templateVectorizer.ToTemplateGrayVector(transparentBitmap));
 
                     foreach (bool isLightSquare in new[] { true, false })
                     {
                         using Bitmap boardBitmap = pieceTemplateRenderer.RenderImageTemplate(source, isLightSquare, inset);
                         AddColdStartBoardTemplate(
+                            coldStartBoardTemplatesToAdd,
                             BuildTemplateKey(isWhitePiece ? pieceType : pieceType.ToLowerInvariant(), isLightSquare),
                             templateVectorizer.ToBoardTemplateVector(boardBitmap));
-                        AddGenericShapeTemplate(pieceType, templateVectorizer.ToMaskVector(boardBitmap, out _, out _, out _, out _));
+                        AddGenericShapeTemplate(genericShapeTemplatesToAdd, pieceType, templateVectorizer.ToMaskVector(boardBitmap, out _, out _, out _, out _));
                     }
                 }
             }
@@ -128,19 +171,30 @@ public sealed class TrackingTemplateInitializer
         }
     }
 
-    private void AddGenericShapeTemplate(string key, float[] vector)
+    private static void CopyTemplates(TrackingTemplateBank source, TrackingTemplateBank destination, int maxVariants)
     {
-        genericShapeTemplates.Add(key, vector, options.MaxGenericShapeTemplateVariants);
+        foreach ((string key, IReadOnlyList<float[]> variants) in source.Enumerate())
+        {
+            foreach (float[] variant in variants)
+            {
+                destination.Add(key, variant, maxVariants);
+            }
+        }
     }
 
-    private void AddColdStartBoardTemplate(string key, float[] vector)
+    private void AddGenericShapeTemplate(TrackingTemplateBank bank, string key, float[] vector)
     {
-        coldStartBoardTemplates.Add(key, vector, options.MaxColdStartBoardTemplateVariants);
+        bank.Add(key, vector, options.MaxGenericShapeTemplateVariants);
     }
 
-    private void AddGenericPieceTemplate(string key, float[] vector)
+    private void AddColdStartBoardTemplate(TrackingTemplateBank bank, string key, float[] vector)
     {
-        genericPieceTemplates.Add(key, vector, options.MaxGenericPieceTemplateVariants);
+        bank.Add(key, vector, options.MaxColdStartBoardTemplateVariants);
+    }
+
+    private void AddGenericPieceTemplate(TrackingTemplateBank bank, string key, float[] vector)
+    {
+        bank.Add(key, vector, options.MaxGenericPieceTemplateVariants);
     }
 
     private static string BuildTemplateKey(string? piece, bool isLightSquare)

@@ -20,7 +20,7 @@ public sealed class AdviceQualityEvaluatorTests
 
         AdviceQualityEvaluationResult result = AdviceQualityEvaluator.Evaluate(
             model,
-            @"C:\models\mentor.gguf",
+            Path.Combine("models", "mentor.gguf"),
             new FixedClock(evaluatedAtUtc));
 
         Assert.Equal(5, result.Passed);
