@@ -30,18 +30,18 @@ public sealed class TrackingPieceImageRepositoryTests
             _ => false,
             _ => throw new InvalidOperationException("Loader should not run for missing files."));
 
-        bool loaded = repository.TryLoadPieceImage("wK.svg", out Image? image, out string? path);
+        bool loaded = repository.TryLoadPieceImage("wK.png", out Image? image, out string? path);
 
         Assert.False(loaded);
         Assert.Null(image);
-        Assert.EndsWith(Path.Join("Images", "wK.svg"), path);
+        Assert.EndsWith(Path.Join("Images", "wK.png"), path);
     }
 
     [Fact]
     public void TryLoadPieceImage_LoadsExpectedPiecePath()
     {
         string imagesDirectory = Path.Join(Path.GetTempPath(), Guid.NewGuid().ToString("N"), "Images");
-        string expectedPath = Path.Join(imagesDirectory, "wK.svg");
+        string expectedPath = Path.Join(imagesDirectory, "wK.png");
         string? loadedPath = null;
         DirectoryTrackingPieceImageRepository repository = new(
             imagesDirectory,
@@ -53,7 +53,7 @@ public sealed class TrackingPieceImageRepositoryTests
                 return new Bitmap(1, 1);
             });
 
-        bool loaded = repository.TryLoadPieceImage("wK.svg", out Image? image, out string? path);
+        bool loaded = repository.TryLoadPieceImage("wK.png", out Image? image, out string? path);
 
         using (image)
         {

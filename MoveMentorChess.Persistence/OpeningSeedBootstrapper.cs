@@ -6,22 +6,31 @@ public sealed class OpeningSeedBootstrapper
 
     private readonly string localDatabasePath;
     private readonly string bundledSeedPath;
+    private readonly IOpeningSeedRuntimeEnvironment runtimeEnvironment;
 
-    public OpeningSeedBootstrapper(string localDatabasePath, string bundledSeedPath)
+    public OpeningSeedBootstrapper(
+        string localDatabasePath,
+        string bundledSeedPath,
+        IOpeningSeedRuntimeEnvironment? runtimeEnvironment = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(localDatabasePath);
         ArgumentException.ThrowIfNullOrWhiteSpace(bundledSeedPath);
 
         this.localDatabasePath = localDatabasePath;
         this.bundledSeedPath = bundledSeedPath;
+        this.runtimeEnvironment = runtimeEnvironment ?? SystemOpeningSeedRuntimeEnvironment.Instance;
     }
 
-    public static string GetDefaultBundledSeedPath()
-        => Path.Combine(AppContext.BaseDirectory, BundledSeedRelativePath);
+    public static string GetDefaultBundledSeedPath(IOpeningSeedRuntimeEnvironment? runtimeEnvironment = null)
+    {
+        IOpeningSeedRuntimeEnvironment effectiveEnvironment =
+            runtimeEnvironment ?? SystemOpeningSeedRuntimeEnvironment.Instance;
+        return Path.Combine(effectiveEnvironment.BaseDirectory, BundledSeedRelativePath);
+    }
 
     public OpeningSeedBootstrapResult EnsureSeedImported()
     {
-        if (!File.Exists(bundledSeedPath))
+        if (!runtimeEnvironment.FileExists(bundledSeedPath))
         {
             return new OpeningSeedBootstrapResult(false, false, null, new OpeningTreeStoreSummary(0, 0, 0));
         }
@@ -54,9 +63,33 @@ public sealed class OpeningSeedBootstrapper
 
     private string BuildFallbackSeedVersion()
     {
-        DateTime utc = File.GetLastWriteTimeUtc(bundledSeedPath);
+        DateTime utc = runtimeEnvironment.GetLastWriteTimeUtc(bundledSeedPath);
         return $"file-{utc:yyyyMMddHHmmss}";
     }
+}
+
+public interface IOpeningSeedRuntimeEnvironment
+{
+    string BaseDirectory { get; }
+
+    bool FileExists(string path);
+
+    DateTime GetLastWriteTimeUtc(string path);
+}
+
+public sealed class SystemOpeningSeedRuntimeEnvironment : IOpeningSeedRuntimeEnvironment
+{
+    public static SystemOpeningSeedRuntimeEnvironment Instance { get; } = new();
+
+    private SystemOpeningSeedRuntimeEnvironment()
+    {
+    }
+
+    public string BaseDirectory => AppContext.BaseDirectory;
+
+    public bool FileExists(string path) => File.Exists(path);
+
+    public DateTime GetLastWriteTimeUtc(string path) => File.GetLastWriteTimeUtc(path);
 }
 
 public sealed record OpeningSeedBootstrapResult(

@@ -493,7 +493,7 @@ public sealed class TrackingTests
             }
 
             candidate = Path.Combine(current.FullName, "Images");
-            if (Directory.Exists(candidate) && File.Exists(Path.Combine(candidate, "wK.svg")))
+            if (Directory.Exists(candidate) && File.Exists(Path.Combine(candidate, "wK.png")))
             {
                 return candidate;
             }
@@ -508,18 +508,18 @@ public sealed class TrackingTests
     {
         return piece switch
         {
-            "K" => "wK.svg",
-            "Q" => "wQ.svg",
-            "R" => "wR.svg",
-            "B" => "wB.svg",
-            "N" => "wN.svg",
-            "P" => "wP.svg",
-            "k" => "bK.svg",
-            "q" => "bQ.svg",
-            "r" => "bR.svg",
-            "b" => "bB.svg",
-            "n" => "bN.svg",
-            "p" => "bP.svg",
+            "K" => "wK.png",
+            "Q" => "wQ.png",
+            "R" => "wR.png",
+            "B" => "wB.png",
+            "N" => "wN.png",
+            "P" => "wP.png",
+            "k" => "bK.png",
+            "q" => "bQ.png",
+            "r" => "bR.png",
+            "b" => "bB.png",
+            "n" => "bN.png",
+            "p" => "bP.png",
             _ => throw new InvalidOperationException($"Unsupported piece '{piece}'.")
         };
     }

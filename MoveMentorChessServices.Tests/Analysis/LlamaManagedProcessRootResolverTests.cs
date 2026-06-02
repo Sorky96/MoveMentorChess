@@ -45,12 +45,35 @@ public sealed class LlamaManagedProcessRootResolverTests
 
     private sealed record TestLlamaRuntimeEnvironment(
         string BaseDirectory,
-        string CurrentDirectory) : ILlamaRuntimeEnvironment;
+        string CurrentDirectory) : ILlamaRuntimeEnvironment
+    {
+        public string? GetEnvironmentVariable(string variable) => null;
+
+        public LlamaGpuSettings LoadLlamaGpuSettings() => LlamaGpuSettings.Default;
+
+        public bool FileExists(string path) => false;
+
+        public bool DirectoryExists(string path) => false;
+
+        public IEnumerable<string> EnumerateFiles(string path, string searchPattern)
+            => [];
+    }
 
     private sealed class ThrowingLlamaRuntimeEnvironment : ILlamaRuntimeEnvironment
     {
         public string BaseDirectory => throw new UnauthorizedAccessException();
 
         public string CurrentDirectory => throw new NotSupportedException();
+
+        public string? GetEnvironmentVariable(string variable) => throw new NotSupportedException();
+
+        public LlamaGpuSettings LoadLlamaGpuSettings() => throw new NotSupportedException();
+
+        public bool FileExists(string path) => throw new NotSupportedException();
+
+        public bool DirectoryExists(string path) => throw new NotSupportedException();
+
+        public IEnumerable<string> EnumerateFiles(string path, string searchPattern)
+            => throw new NotSupportedException();
     }
 }

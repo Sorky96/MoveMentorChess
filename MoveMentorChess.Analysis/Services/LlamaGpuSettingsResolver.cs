@@ -7,18 +7,30 @@ public static class LlamaGpuSettingsResolver
 
     public static LlamaGpuSettings Resolve()
     {
-        string? overrideValue = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_FULL_GPU");
+        return Resolve(SystemLlamaRuntimeEnvironment.Instance);
+    }
+
+    public static LlamaGpuSettings Resolve(ILlamaRuntimeEnvironment environment)
+    {
+        ArgumentNullException.ThrowIfNull(environment);
+
+        string? overrideValue = environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_FULL_GPU");
         if (TryParseBooleanOverride(overrideValue, out bool useFullGpuPower))
         {
             return new LlamaGpuSettings(useFullGpuPower);
         }
 
-        return LlamaGpuSettingsStore.Load();
+        return environment.LoadLlamaGpuSettings();
     }
 
     public static string ResolveGpuLayersArgument()
     {
-        LlamaGpuSettings settings = Resolve();
+        return ResolveGpuLayersArgument(SystemLlamaRuntimeEnvironment.Instance);
+    }
+
+    public static string ResolveGpuLayersArgument(ILlamaRuntimeEnvironment environment)
+    {
+        LlamaGpuSettings settings = Resolve(environment);
         return settings.UseFullGpuPower ? FullGpuLayersArgument : BalancedGpuLayersArgument;
     }
 

@@ -4,12 +4,13 @@
 
 using System.Globalization;
 using System.Text;
-using System.Text.Json;
 
 namespace MoveMentorChess.Analysis;
 
 public static class AdviceQualityEvaluator
 {
+    private const string DefaultReportFileName = "advice-quality-report.md";
+
     private static readonly (string Name, ReplayPly Replay, MoveQualityBucket Quality, MistakeTag Tag, string BestMoveUci, int CentipawnLoss, ExplanationLevel Level)[] TestCases =
     [
         (
@@ -74,7 +75,10 @@ public static class AdviceQualityEvaluator
         )
     ];
 
-    public static void RunEvaluation()
+    public static void RunEvaluation(
+        string? reportPath = null,
+        IClock? clock = null,
+        ILlamaRuntimeEnvironment? runtimeEnvironment = null)
     {
         Console.WriteLine("=== Advice Quality Evaluation ===");
         Console.WriteLine();
@@ -87,6 +91,7 @@ public static class AdviceQualityEvaluator
         }
 
         LlamaCppHttpAdviceModel model = new(config);
+        IClock effectiveClock = clock ?? SystemClock.Instance;
         if (!model.IsAvailable)
         {
             Console.WriteLine("ERROR: model files not found.");
@@ -97,10 +102,28 @@ public static class AdviceQualityEvaluator
         Console.WriteLine($"Model: {config.ModelPath}");
         Console.WriteLine();
 
+        AdviceQualityEvaluationResult result = Evaluate(model, config.ModelPath, effectiveClock);
+        string outputPath = reportPath ?? GetDefaultReportPath(runtimeEnvironment ?? SystemLlamaRuntimeEnvironment.Instance);
+        File.WriteAllText(outputPath, result.ReportMarkdown);
+
+        Console.WriteLine();
+        Console.WriteLine($"Results: {result.Passed}/{result.Total} passed");
+        Console.WriteLine($"Report saved to: {outputPath}");
+    }
+
+    public static AdviceQualityEvaluationResult Evaluate(
+        ILocalAdviceModel model,
+        string modelPath,
+        IClock? clock = null)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+        ArgumentException.ThrowIfNullOrWhiteSpace(modelPath);
+
+        IClock effectiveClock = clock ?? SystemClock.Instance;
         StringBuilder report = new();
         report.AppendLine("# Advice Quality Evaluation Report");
-        report.AppendLine(CultureInfo.InvariantCulture, $"Date: {DateTime.Now:yyyy-MM-dd HH:mm}");
-        report.AppendLine(CultureInfo.InvariantCulture, $"Model: {Path.GetFileName(config.ModelPath)}");
+        report.AppendLine(CultureInfo.InvariantCulture, $"Date: {effectiveClock.UtcNow:yyyy-MM-dd HH:mm}");
+        report.AppendLine(CultureInfo.InvariantCulture, $"Model: {Path.GetFileName(modelPath)}");
         report.AppendLine();
 
         int passed = 0;
@@ -164,11 +187,19 @@ public static class AdviceQualityEvaluator
 
         report.AppendLine(CultureInfo.InvariantCulture, $"## Summary: {passed} passed, {failed} failed out of {TestCases.Length}");
 
-        string reportPath = Path.Combine(AppContext.BaseDirectory, "advice-quality-report.md");
-        File.WriteAllText(reportPath, report.ToString());
+        return new AdviceQualityEvaluationResult(passed, failed, TestCases.Length, report.ToString());
+    }
 
-        Console.WriteLine();
-        Console.WriteLine($"Results: {passed}/{TestCases.Length} passed");
-        Console.WriteLine($"Report saved to: {reportPath}");
+    public static string GetDefaultReportPath(ILlamaRuntimeEnvironment runtimeEnvironment)
+    {
+        ArgumentNullException.ThrowIfNull(runtimeEnvironment);
+
+        return Path.Combine(runtimeEnvironment.BaseDirectory, DefaultReportFileName);
     }
 }
+
+public sealed record AdviceQualityEvaluationResult(
+    int Passed,
+    int Failed,
+    int Total,
+    string ReportMarkdown);

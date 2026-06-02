@@ -4,8 +4,23 @@ public static class AdviceRuntimeSmokeTester
 {
     public static AdviceRuntimeSmokeTestResult Run()
     {
-        AdviceRuntimeStatus status = AdviceRuntimeCatalog.GetStatus();
-        ILocalAdviceModel? model = CreateSmokeTestModel();
+        return Run(
+            AdviceRuntimeCatalog.GetStatus(),
+            CreateSmokeTestModel(),
+            SystemClock.Instance,
+            AdviceRuntimeDiagnosticsLogger.Write);
+    }
+
+    public static AdviceRuntimeSmokeTestResult Run(
+        AdviceRuntimeStatus status,
+        ILocalAdviceModel? model,
+        IClock? clock = null,
+        Func<AdviceRuntimeInvocationLog, string>? writeDiagnosticLog = null)
+    {
+        ArgumentNullException.ThrowIfNull(status);
+
+        IClock effectiveClock = clock ?? SystemClock.Instance;
+        Func<AdviceRuntimeInvocationLog, string> writeLog = writeDiagnosticLog ?? AdviceRuntimeDiagnosticsLogger.Write;
 
         if (!status.IsReady || model is null || !model.IsAvailable)
         {
@@ -22,8 +37,8 @@ public static class AdviceRuntimeSmokeTester
             if (!LocalModelAdviceResponseParser.TryParse(rawResponse, out LocalModelAdviceResponse? response)
                 || response is null)
             {
-                string diagnosticPath = AdviceRuntimeDiagnosticsLogger.Write(new AdviceRuntimeInvocationLog(
-                    DateTime.UtcNow,
+                string diagnosticPath = writeLog(new AdviceRuntimeInvocationLog(
+                    effectiveClock.UtcNow,
                     model.Name,
                     "smoke-test-parse",
                     string.Empty,

@@ -10,17 +10,24 @@ public static class LlamaGpuSettingsStore
 
     public static LlamaGpuSettings Load()
     {
+        return Load(SystemRuntimeSettingsEnvironment.Instance);
+    }
+
+    public static LlamaGpuSettings Load(IRuntimeSettingsEnvironment environment)
+    {
+        ArgumentNullException.ThrowIfNull(environment);
+
         lock (SyncLock)
         {
             try
             {
-                string path = GetSettingsPath();
-                if (!File.Exists(path))
+                string path = GetSettingsPath(environment);
+                if (!environment.FileExists(path))
                 {
                     return LlamaGpuSettings.Default;
                 }
 
-                string json = File.ReadAllText(path);
+                string json = environment.ReadAllText(path);
                 LlamaGpuSettings? settings = JsonSerializer.Deserialize<LlamaGpuSettings>(json, JsonOptions);
                 return Normalize(settings);
             }
@@ -33,15 +40,21 @@ public static class LlamaGpuSettingsStore
 
     public static void Save(LlamaGpuSettings settings)
     {
+        Save(settings, SystemRuntimeSettingsEnvironment.Instance);
+    }
+
+    public static void Save(LlamaGpuSettings settings, IRuntimeSettingsEnvironment environment)
+    {
         ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(environment);
 
         lock (SyncLock)
         {
-            string path = GetSettingsPath();
-            string directory = Path.GetDirectoryName(path) ?? AppContext.BaseDirectory;
-            Directory.CreateDirectory(directory);
+            string path = GetSettingsPath(environment);
+            string directory = Path.GetDirectoryName(path) ?? environment.BaseDirectory;
+            environment.CreateDirectory(directory);
             string json = JsonSerializer.Serialize(Normalize(settings), JsonOptions);
-            File.WriteAllText(path, json);
+            environment.WriteAllText(path, json);
         }
     }
 
@@ -54,12 +67,19 @@ public static class LlamaGpuSettingsStore
         };
     }
 
-    private static string GetSettingsPath()
+    public static string GetSettingsPath()
     {
-        string baseDirectory = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        return GetSettingsPath(SystemRuntimeSettingsEnvironment.Instance);
+    }
+
+    public static string GetSettingsPath(IRuntimeSettingsEnvironment environment)
+    {
+        ArgumentNullException.ThrowIfNull(environment);
+
+        string baseDirectory = environment.LocalApplicationDataDirectory;
         if (string.IsNullOrWhiteSpace(baseDirectory))
         {
-            baseDirectory = AppContext.BaseDirectory;
+            baseDirectory = environment.BaseDirectory;
         }
 
         return Path.Combine(baseDirectory, "MoveMentorChessServices", "settings", "llama-gpu-settings.json");

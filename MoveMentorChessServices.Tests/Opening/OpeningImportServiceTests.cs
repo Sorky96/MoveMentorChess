@@ -198,7 +198,8 @@ public sealed class OpeningImportServiceTests
             File.WriteAllText(Path.Combine(folder, "a.pgn"), LongGamePgn + Environment.NewLine + ShortGamePgn);
             File.WriteAllText(Path.Combine(folder, "b.pgn"), ShortGamePgn);
             FakeAnalysisStore store = new();
-            OpeningPgnImportService service = new(store);
+            DateTime importedAtUtc = new(2026, 6, 1, 12, 30, 0, DateTimeKind.Utc);
+            OpeningPgnImportService service = new(store, clock: new FixedClock(importedAtUtc));
             List<OpeningPgnImportProgress> progress = new();
 
             OpeningPgnImportResult result = service.ImportFolder(folder, progress: progress.Add);
@@ -217,6 +218,7 @@ public sealed class OpeningImportServiceTests
             Assert.Equal(34, progress[^1].TotalPliesParsed);
             Assert.Equal(result.Tree.Nodes.Count, progress[^1].NodeCount);
             Assert.Equal(result.Tree.Edges.Count, progress[^1].EdgeCount);
+            Assert.All(progress, item => Assert.Equal(importedAtUtc, item.LastUpdatedUtc));
         }
         finally
         {
@@ -555,5 +557,10 @@ public sealed class OpeningImportServiceTests
 
         public bool DeleteImportedGame(string gameFingerprint) => false;
         public IReadOnlyList<SavedImportedGameSummary> ListImportedGames(string? filterText = null, int limit = 200) => [];
+    }
+
+    private sealed class FixedClock(DateTime utcNow) : IClock
+    {
+        public DateTime UtcNow { get; } = utcNow;
     }
 }

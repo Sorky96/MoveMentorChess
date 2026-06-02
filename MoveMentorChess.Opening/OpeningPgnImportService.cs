@@ -15,6 +15,7 @@ public sealed class OpeningPgnImportService
     private readonly OpeningTreePostProcessor postProcessor;
     private readonly bool retainParsedGames;
     private readonly bool persistImportedGames;
+    private readonly IClock clock;
 
     public OpeningPgnImportService(
         IImportedGameStore store,
@@ -22,7 +23,8 @@ public sealed class OpeningPgnImportService
         IOpeningTreeStore? treeStore = null,
         OpeningTreePostProcessor? postProcessor = null,
         bool retainParsedGames = true,
-        bool persistImportedGames = true)
+        bool persistImportedGames = true,
+        IClock? clock = null)
     {
         this.store = store ?? throw new ArgumentNullException(nameof(store));
         this.treeStore = treeStore;
@@ -30,6 +32,7 @@ public sealed class OpeningPgnImportService
         this.postProcessor = postProcessor ?? new OpeningTreePostProcessor();
         this.retainParsedGames = retainParsedGames;
         this.persistImportedGames = persistImportedGames;
+        this.clock = clock ?? SystemClock.Instance;
     }
 
     public OpeningPgnImportResult ImportFile(
@@ -134,7 +137,7 @@ public sealed class OpeningPgnImportService
                 Volatile.Read(ref totalBytesRead),
                 CalculatePerMinute(totalGames, stopwatch),
                 CalculateMegabytesPerMinute(Volatile.Read(ref totalBytesRead), stopwatch),
-                DateTime.UtcNow));
+                clock.UtcNow));
         }
 
         return new OpeningPgnImportResult(files.Length, totalGames, skippedGames, totalPlies, tree, parsedGames);
@@ -202,7 +205,8 @@ public sealed class OpeningPgnImportService
                     Volatile.Read(ref totalBytesRead),
                     CalculatePerMinute(Volatile.Read(ref totalGames), stopwatch),
                     CalculateMegabytesPerMinute(Volatile.Read(ref totalBytesRead), stopwatch),
-                    treeBuilder);
+                    treeBuilder,
+                    clock.UtcNow);
             }
         }
 
@@ -220,7 +224,8 @@ public sealed class OpeningPgnImportService
                 Volatile.Read(ref totalBytesRead),
                 CalculatePerMinute(Volatile.Read(ref totalGames), stopwatch),
                 CalculateMegabytesPerMinute(Volatile.Read(ref totalBytesRead), stopwatch),
-                treeBuilder);
+                treeBuilder,
+                clock.UtcNow);
         }
 
         return new FileImportResult(indexedFile.Index, treeBuilder, parsedGames);
@@ -238,7 +243,8 @@ public sealed class OpeningPgnImportService
         long totalBytesRead,
         double gamesPerMinute,
         double megabytesPerMinute,
-        OpeningTreeBuilder treeBuilder)
+        OpeningTreeBuilder treeBuilder,
+        DateTime lastUpdatedUtc)
     {
         progress?.Invoke(new OpeningPgnImportProgress(
             file,
@@ -253,7 +259,7 @@ public sealed class OpeningPgnImportService
             totalBytesRead,
             gamesPerMinute,
             megabytesPerMinute,
-            DateTime.UtcNow));
+            lastUpdatedUtc));
     }
 
     private static double CalculatePerMinute(int count, Stopwatch stopwatch)

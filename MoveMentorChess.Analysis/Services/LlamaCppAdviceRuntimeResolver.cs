@@ -14,8 +14,15 @@ public static class LlamaCppAdviceRuntimeResolver
 
     public static LlamaCppAdviceRuntime? Resolve()
     {
-        string? cliPath = ResolveCliPath();
-        string? modelPath = ResolveModelPath();
+        return Resolve(SystemLlamaRuntimeEnvironment.Instance);
+    }
+
+    public static LlamaCppAdviceRuntime? Resolve(ILlamaRuntimeEnvironment environment)
+    {
+        ArgumentNullException.ThrowIfNull(environment);
+
+        string? cliPath = ResolveCliPath(environment);
+        string? modelPath = ResolveModelPath(environment);
 
         if (string.IsNullOrWhiteSpace(cliPath) || string.IsNullOrWhiteSpace(modelPath))
         {
@@ -23,30 +30,37 @@ public static class LlamaCppAdviceRuntimeResolver
         }
 
         int maxTokens = ParsePositiveInt(
-            Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MAX_TOKENS"),
+            environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MAX_TOKENS"),
             96);
         int contextSize = ParsePositiveInt(
-            Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CONTEXT_SIZE"),
+            environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CONTEXT_SIZE"),
             2048);
         int timeoutMs = ParsePositiveInt(
-            Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_TIMEOUT_MS"),
+            environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_TIMEOUT_MS"),
             120000);
-        string gpuLayersArgument = LlamaGpuSettingsResolver.ResolveGpuLayersArgument();
+        string gpuLayersArgument = LlamaGpuSettingsResolver.ResolveGpuLayersArgument(environment);
 
         return new LlamaCppAdviceRuntime(cliPath, modelPath, maxTokens, contextSize, timeoutMs, gpuLayersArgument);
     }
 
     public static string? ResolveCliPath()
     {
-        string? fromEnvironment = Normalize(Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH"));
-        if (File.Exists(fromEnvironment))
+        return ResolveCliPath(SystemLlamaRuntimeEnvironment.Instance);
+    }
+
+    public static string? ResolveCliPath(ILlamaRuntimeEnvironment environment)
+    {
+        ArgumentNullException.ThrowIfNull(environment);
+
+        string? fromEnvironment = Normalize(environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH"));
+        if (environment.FileExists(fromEnvironment ?? string.Empty))
         {
             return fromEnvironment;
         }
 
-        foreach (string candidate in GetCliCandidates())
+        foreach (string candidate in GetCliCandidates(environment))
         {
-            if (File.Exists(candidate))
+            if (environment.FileExists(candidate))
             {
                 return candidate;
             }
@@ -57,29 +71,36 @@ public static class LlamaCppAdviceRuntimeResolver
 
     public static string? ResolveModelPath()
     {
-        string? fromEnvironment = Normalize(Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH"));
-        if (File.Exists(fromEnvironment))
+        return ResolveModelPath(SystemLlamaRuntimeEnvironment.Instance);
+    }
+
+    public static string? ResolveModelPath(ILlamaRuntimeEnvironment environment)
+    {
+        ArgumentNullException.ThrowIfNull(environment);
+
+        string? fromEnvironment = Normalize(environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH"));
+        if (environment.FileExists(fromEnvironment ?? string.Empty))
         {
             return fromEnvironment;
         }
 
-        foreach (string candidate in GetModelCandidates())
+        foreach (string candidate in GetModelCandidates(environment))
         {
-            if (File.Exists(candidate))
+            if (environment.FileExists(candidate))
             {
                 return candidate;
             }
         }
 
-        foreach (string directory in GetModelDirectories())
+        foreach (string directory in GetModelDirectories(environment))
         {
-            if (!Directory.Exists(directory))
+            if (!environment.DirectoryExists(directory))
             {
                 continue;
             }
 
-            string? matchingModel = Directory
-                .EnumerateFiles(directory, $"{PreferredModelBaseName}*.gguf", SearchOption.TopDirectoryOnly)
+            string? matchingModel = environment
+                .EnumerateFiles(directory, $"{PreferredModelBaseName}*.gguf")
                 .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
                 .FirstOrDefault();
 
@@ -93,11 +114,17 @@ public static class LlamaCppAdviceRuntimeResolver
     }
 
     private static IEnumerable<string> GetCliCandidates()
-        => LlamaRuntimePathCandidates.GetExecutableCandidates("llama-cli.exe");
+        => GetCliCandidates(SystemLlamaRuntimeEnvironment.Instance);
+
+    private static IEnumerable<string> GetCliCandidates(ILlamaRuntimeEnvironment environment)
+        => LlamaRuntimePathCandidates.GetExecutableCandidates("llama-cli.exe", environment);
 
     private static IEnumerable<string> GetModelCandidates()
+        => GetModelCandidates(SystemLlamaRuntimeEnvironment.Instance);
+
+    private static IEnumerable<string> GetModelCandidates(ILlamaRuntimeEnvironment environment)
     {
-        foreach (string directory in GetModelDirectories())
+        foreach (string directory in GetModelDirectories(environment))
         {
             foreach (string fileName in PreferredModelFileNames)
             {
@@ -107,7 +134,10 @@ public static class LlamaCppAdviceRuntimeResolver
     }
 
     private static IEnumerable<string> GetModelDirectories()
-        => LlamaRuntimePathCandidates.GetModelDirectories();
+        => GetModelDirectories(SystemLlamaRuntimeEnvironment.Instance);
+
+    private static IEnumerable<string> GetModelDirectories(ILlamaRuntimeEnvironment environment)
+        => LlamaRuntimePathCandidates.GetModelDirectories(environment);
 
     private static string? Normalize(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

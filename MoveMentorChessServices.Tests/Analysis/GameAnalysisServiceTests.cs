@@ -804,6 +804,45 @@ Kxa2 62. Qb2# 1-0
     }
 
     [Fact]
+    public void GameAnalysisService_UsesInjectedPlayerMistakeProfileSource()
+    {
+        ImportedGame game = PgnGameParser.Parse(MiniPgn);
+        GameReplayService replayService = new();
+        IReadOnlyList<ReplayPly> replay = replayService.Replay(game);
+
+        ReplayPly whiteFirst = replay[0];
+        ReplayPly whiteSecond = replay[2];
+        FakeEngineAnalyzer fakeEngine = new(new Dictionary<string, EngineAnalysis>
+        {
+            [whiteFirst.FenBefore] = AnalysisFor(whiteFirst.FenBefore, "e2e4", 50, null, "e2e4", "e7e5"),
+            [whiteFirst.FenAfter] = AnalysisFor(whiteFirst.FenAfter, "e7e5", 120, null, "e7e5", "g1f3"),
+            [whiteSecond.FenBefore] = AnalysisFor(whiteSecond.FenBefore, "g2g3", 30, null, "g2g3", "d7d5"),
+            [whiteSecond.FenAfter] = AnalysisFor(whiteSecond.FenAfter, "d8h4", null, 1, "d8h4")
+        });
+        PlayerMistakeProfile profile = new(
+            "TesterWhite",
+            GamesAnalyzed: 4,
+            AverageCentipawnLoss: 85,
+            TopPatterns: [new PlayerMistakePatternEntry("opening_principles", 3)],
+            WeakestPhase: GamePhase.Opening);
+        FakePlayerMistakeProfileSource profileSource = new(profile);
+        CapturingAdviceGenerator adviceGenerator = new();
+
+        GameAnalysisService service = new(
+            fakeEngine,
+            replayService,
+            adviceGenerator: adviceGenerator,
+            playerMistakeProfileSource: profileSource);
+        _ = service.AnalyzeGame(game, PlayerSide.White, new EngineAnalysisOptions());
+
+        Assert.Equal("TesterWhite", profileSource.RequestedPlayerName);
+        Assert.Equal(2, adviceGenerator.Contexts.Count);
+        Assert.All(
+            adviceGenerator.Contexts,
+            context => Assert.Same(profile, context?.PromptContext?.PlayerProfile));
+    }
+
+    [Fact]
     public void GameAnalysisService_ClassifiesExactEngineMoveAsBest()
     {
         ImportedGame game = PgnGameParser.Parse("1. e4");
@@ -2658,6 +2697,35 @@ confidence: 0.82
         }
 
         public void Report(T value) => handler(value);
+    }
+
+    private sealed class FakePlayerMistakeProfileSource(PlayerMistakeProfile profile) : IPlayerMistakeProfileSource
+    {
+        public string? RequestedPlayerName { get; private set; }
+
+        public PlayerMistakeProfile? TryBuild(string? playerName)
+        {
+            RequestedPlayerName = playerName;
+            return profile;
+        }
+    }
+
+    private sealed class CapturingAdviceGenerator : IAdviceGenerator
+    {
+        public List<AdviceGenerationContext?> Contexts { get; } = new();
+
+        public MoveExplanation Generate(
+            ReplayPly replay,
+            MoveQualityBucket quality,
+            MistakeTag? tag,
+            string? bestMoveUci,
+            int? centipawnLoss,
+            ExplanationLevel level = ExplanationLevel.Intermediate,
+            AdviceGenerationContext? context = null)
+        {
+            Contexts.Add(context);
+            return new MoveExplanation("Short explanation", "Training hint", "Detailed explanation");
+        }
     }
 
     private sealed class CountingFakeEngineAnalyzer : IEngineAnalyzer

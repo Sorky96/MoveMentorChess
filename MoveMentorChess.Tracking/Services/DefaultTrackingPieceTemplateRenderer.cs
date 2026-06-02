@@ -5,8 +5,8 @@ namespace MoveMentorChess.Tracking;
 
 public sealed class DefaultTrackingPieceTemplateRenderer : ITrackingPieceTemplateRenderer
 {
-    private static readonly Color LightSquareColor = Color.FromArgb(238, 238, 210);
-    private static readonly Color DarkSquareColor = Color.FromArgb(118, 150, 86);
+    private static readonly Color LightSquareColor = TrackingBoardPalette.LightSquare;
+    private static readonly Color DarkSquareColor = TrackingBoardPalette.DarkSquare;
 
     public Bitmap RenderFallbackTemplate(string pieceType, bool isWhitePiece, bool isLightSquare)
     {

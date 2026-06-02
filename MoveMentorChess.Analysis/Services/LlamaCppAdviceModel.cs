@@ -8,11 +8,18 @@ namespace MoveMentorChess.Analysis;
 public sealed class LlamaCppAdviceModel : ILocalAdviceModel
 {
     private readonly LlamaCppAdviceRuntime runtime;
+    private readonly IClock clock;
+    private readonly Func<AdviceRuntimeInvocationLog, string> writeDiagnosticLog;
 
-    public LlamaCppAdviceModel(LlamaCppAdviceRuntime runtime)
+    public LlamaCppAdviceModel(
+        LlamaCppAdviceRuntime runtime,
+        IClock? clock = null,
+        Func<AdviceRuntimeInvocationLog, string>? writeDiagnosticLog = null)
     {
         ArgumentNullException.ThrowIfNull(runtime);
         this.runtime = runtime;
+        this.clock = clock ?? SystemClock.Instance;
+        this.writeDiagnosticLog = writeDiagnosticLog ?? AdviceRuntimeDiagnosticsLogger.Write;
     }
 
     public string Name => "llama.cpp";
@@ -33,7 +40,7 @@ public sealed class LlamaCppAdviceModel : ILocalAdviceModel
         string commandLine = BuildCommandLine(runtime.CliPath, arguments);
         string promptPreview = BuildPromptPreview(request.Prompt);
         int promptLength = request.Prompt?.Length ?? 0;
-        DateTime startedUtc = DateTime.UtcNow;
+        DateTime startedUtc = clock.UtcNow;
         Stopwatch stopwatch = Stopwatch.StartNew();
 
         using Process process = new();
@@ -283,7 +290,7 @@ hex ::= [0-9a-fA-F]
             stdout,
             stderr,
             message);
-        string diagnosticPath = AdviceRuntimeDiagnosticsLogger.Write(log);
+        string diagnosticPath = writeDiagnosticLog(log);
         return new AdviceRuntimeInvocationException(message, log, diagnosticPath);
     }
 

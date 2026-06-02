@@ -75,5 +75,17 @@ public sealed class LlamaRuntimePathCandidatesTests
 
     private sealed record TestLlamaRuntimeEnvironment(
         string BaseDirectory,
-        string CurrentDirectory) : ILlamaRuntimeEnvironment;
+        string CurrentDirectory) : ILlamaRuntimeEnvironment
+    {
+        public string? GetEnvironmentVariable(string variable) => null;
+
+        public LlamaGpuSettings LoadLlamaGpuSettings() => LlamaGpuSettings.Default;
+
+        public bool FileExists(string path) => false;
+
+        public bool DirectoryExists(string path) => false;
+
+        public IEnumerable<string> EnumerateFiles(string path, string searchPattern)
+            => [];
+    }
 }

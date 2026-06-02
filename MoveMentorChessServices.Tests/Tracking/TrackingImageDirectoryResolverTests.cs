@@ -22,13 +22,13 @@ public sealed class TrackingImageDirectoryResolverTests
             path =>
             {
                 checkedFiles.Add(path);
-                return string.Equals(path, Path.Join(expected, "wK.svg"), StringComparison.Ordinal);
+                return string.Equals(path, Path.Join(expected, "wK.png"), StringComparison.Ordinal);
             });
 
         string? resolved = resolver.Resolve();
 
         Assert.Equal(expected, resolved);
-        Assert.Contains(Path.Join(root, "src", "MoveMentorChessServices", "Images", "wK.svg"), checkedFiles);
+        Assert.Contains(Path.Join(root, "src", "MoveMentorChessServices", "Images", "wK.png"), checkedFiles);
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public sealed class TrackingImageDirectoryResolverTests
         DefaultTrackingImageDirectoryResolver resolver = new(
             () => baseDirectory,
             _ => true,
-            path => string.Equals(path, Path.Join(expected, "wK.svg"), StringComparison.Ordinal));
+            path => string.Equals(path, Path.Join(expected, "wK.png"), StringComparison.Ordinal));
 
         string? resolved = resolver.Resolve();
 
