@@ -48,6 +48,11 @@ public sealed class LlamaManagedProcessRootResolverTests
         string CurrentDirectory) : ILlamaRuntimeEnvironment
     {
         public bool FileExists(string path) => false;
+
+        public bool DirectoryExists(string path) => false;
+
+        public IEnumerable<string> EnumerateFiles(string path, string searchPattern)
+            => [];
     }
 
     private sealed class ThrowingLlamaRuntimeEnvironment : ILlamaRuntimeEnvironment
@@ -57,5 +62,10 @@ public sealed class LlamaManagedProcessRootResolverTests
         public string CurrentDirectory => throw new NotSupportedException();
 
         public bool FileExists(string path) => throw new NotSupportedException();
+
+        public bool DirectoryExists(string path) => throw new NotSupportedException();
+
+        public IEnumerable<string> EnumerateFiles(string path, string searchPattern)
+            => throw new NotSupportedException();
     }
 }

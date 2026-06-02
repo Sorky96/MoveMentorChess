@@ -94,13 +94,13 @@ public static class LlamaCppAdviceRuntimeResolver
 
         foreach (string directory in GetModelDirectories(environment))
         {
-            if (!Directory.Exists(directory))
+            if (!environment.DirectoryExists(directory))
             {
                 continue;
             }
 
-            string? matchingModel = Directory
-                .EnumerateFiles(directory, $"{PreferredModelBaseName}*.gguf", SearchOption.TopDirectoryOnly)
+            string? matchingModel = environment
+                .EnumerateFiles(directory, $"{PreferredModelBaseName}*.gguf")
                 .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
                 .FirstOrDefault();
 

@@ -78,5 +78,10 @@ public sealed class LlamaRuntimePathCandidatesTests
         string CurrentDirectory) : ILlamaRuntimeEnvironment
     {
         public bool FileExists(string path) => false;
+
+        public bool DirectoryExists(string path) => false;
+
+        public IEnumerable<string> EnumerateFiles(string path, string searchPattern)
+            => [];
     }
 }

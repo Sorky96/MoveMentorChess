@@ -13,4 +13,9 @@ public sealed class SystemLlamaRuntimeEnvironment : ILlamaRuntimeEnvironment
     public string CurrentDirectory => Directory.GetCurrentDirectory();
 
     public bool FileExists(string path) => File.Exists(path);
+
+    public bool DirectoryExists(string path) => Directory.Exists(path);
+
+    public IEnumerable<string> EnumerateFiles(string path, string searchPattern)
+        => Directory.EnumerateFiles(path, searchPattern, SearchOption.TopDirectoryOnly);
 }
