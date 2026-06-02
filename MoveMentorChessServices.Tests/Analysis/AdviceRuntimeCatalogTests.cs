@@ -3,6 +3,7 @@ using Xunit;
 
 namespace MoveMentorChessServices.Tests;
 
+[Collection("Advice runtime process state")]
 public sealed class AdviceRuntimeCatalogTests
 {
     [Fact]
@@ -47,46 +48,27 @@ public sealed class AdviceRuntimeCatalogTests
     public void LlamaCppAdviceRuntimeResolverUsesEnvironmentOverridesWhenFilesExist()
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), $"MoveMentorChessServices-llama-test-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(tempDirectory);
         string cliPath = Path.Combine(tempDirectory, "llama-cli.exe");
         string modelPath = Path.Combine(tempDirectory, "MoveMentorChessServices-advice.gguf");
-        File.WriteAllText(cliPath, "cli");
-        File.WriteAllText(modelPath, "model");
+        FakeLlamaRuntimeEnvironment environment = new(tempDirectory, tempDirectory);
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH", cliPath);
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH", modelPath);
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MAX_TOKENS", "190");
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CONTEXT_SIZE", "2048");
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_TIMEOUT_MS", "12000");
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_FULL_GPU", "false");
+        environment.AddFile(cliPath);
+        environment.AddFile(modelPath);
 
-        string? previousCli = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH");
-        string? previousModel = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH");
-        string? previousMaxTokens = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MAX_TOKENS");
-        string? previousTimeout = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_TIMEOUT_MS");
+        LlamaCppAdviceRuntime? runtime = LlamaCppAdviceRuntimeResolver.Resolve(environment);
 
-        try
-        {
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH", cliPath);
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH", modelPath);
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MAX_TOKENS", "190");
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_TIMEOUT_MS", "12000");
-
-            LlamaCppAdviceRuntime? runtime = LlamaCppAdviceRuntimeResolver.Resolve();
-
-            Assert.NotNull(runtime);
-            Assert.Equal(cliPath, runtime!.CliPath);
-            Assert.Equal(modelPath, runtime.ModelPath);
-            Assert.Equal(190, runtime.MaxTokens);
-            Assert.Equal(2048, runtime.ContextSize);
-            Assert.Equal(12000, runtime.TimeoutMs);
-            Assert.Equal(LlamaGpuSettingsResolver.BalancedGpuLayersArgument, runtime.GpuLayersArgument);
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH", previousCli);
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH", previousModel);
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MAX_TOKENS", previousMaxTokens);
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_TIMEOUT_MS", previousTimeout);
-
-            if (Directory.Exists(tempDirectory))
-            {
-                Directory.Delete(tempDirectory, recursive: true);
-            }
-        }
+        Assert.NotNull(runtime);
+        Assert.Equal(cliPath, runtime!.CliPath);
+        Assert.Equal(modelPath, runtime.ModelPath);
+        Assert.Equal(190, runtime.MaxTokens);
+        Assert.Equal(2048, runtime.ContextSize);
+        Assert.Equal(12000, runtime.TimeoutMs);
+        Assert.Equal(LlamaGpuSettingsResolver.BalancedGpuLayersArgument, runtime.GpuLayersArgument);
     }
 
     [Fact]
@@ -101,11 +83,17 @@ public sealed class AdviceRuntimeCatalogTests
 
         string? previousCli = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH");
         string? previousModel = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH");
+        string? previousServer = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH");
+        string? previousContextSize = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CONTEXT_SIZE");
+        string? previousFullGpu = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_FULL_GPU");
 
         try
         {
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH", cliPath);
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH", modelPath);
+            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH", null);
+            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CONTEXT_SIZE", "2048");
+            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_FULL_GPU", "false");
 
             AdviceRuntimeStatus status = AdviceRuntimeCatalog.GetStatus();
 
@@ -116,6 +104,9 @@ public sealed class AdviceRuntimeCatalogTests
         {
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH", previousCli);
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH", previousModel);
+            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH", previousServer);
+            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CONTEXT_SIZE", previousContextSize);
+            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_FULL_GPU", previousFullGpu);
 
             if (Directory.Exists(tempDirectory))
             {
@@ -129,6 +120,9 @@ public sealed class AdviceRuntimeCatalogTests
     {
         string? previousCli = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH");
         string? previousModel = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH");
+        string? previousServer = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH");
+        string? previousContextSize = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CONTEXT_SIZE");
+        string? previousFullGpu = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_FULL_GPU");
         string? previousCommand = Environment.GetEnvironmentVariable("MoveMentorChessServices_LOCAL_ADVICE_COMMAND");
         string? previousArgs = Environment.GetEnvironmentVariable("MoveMentorChessServices_LOCAL_ADVICE_ARGS");
         string? previousWorkdir = Environment.GetEnvironmentVariable("MoveMentorChessServices_LOCAL_ADVICE_WORKDIR");
@@ -137,6 +131,9 @@ public sealed class AdviceRuntimeCatalogTests
         {
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH", null);
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH", null);
+            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH", null);
+            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CONTEXT_SIZE", "2048");
+            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_FULL_GPU", "false");
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LOCAL_ADVICE_COMMAND", null);
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LOCAL_ADVICE_ARGS", null);
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LOCAL_ADVICE_WORKDIR", null);
@@ -151,6 +148,9 @@ public sealed class AdviceRuntimeCatalogTests
         {
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH", previousCli);
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH", previousModel);
+            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH", previousServer);
+            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CONTEXT_SIZE", previousContextSize);
+            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_FULL_GPU", previousFullGpu);
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LOCAL_ADVICE_COMMAND", previousCommand);
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LOCAL_ADVICE_ARGS", previousArgs);
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LOCAL_ADVICE_WORKDIR", previousWorkdir);
@@ -162,98 +162,55 @@ public sealed class AdviceRuntimeCatalogTests
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), $"MoveMentorChessServices-llama-qwen-{Guid.NewGuid():N}");
         string modelsDirectory = Path.Combine(tempDirectory, "Models");
-        Directory.CreateDirectory(modelsDirectory);
         string cliPath = Path.Combine(tempDirectory, "llama-cli.exe");
         string modelPath = Path.Combine(modelsDirectory, "qwen2.5-3b-instruct-q4_k_m.gguf");
-        File.WriteAllText(cliPath, "cli");
-        File.WriteAllText(modelPath, "model");
+        FakeLlamaRuntimeEnvironment environment = new(tempDirectory, tempDirectory);
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH", cliPath);
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH", null);
+        environment.AddFile(cliPath);
+        environment.AddDirectory(modelsDirectory);
+        environment.AddFile(modelPath);
 
-        string? previousCli = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH");
-        string? previousModel = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH");
-        string previousDirectory = Directory.GetCurrentDirectory();
+        LlamaCppAdviceRuntime? runtime = LlamaCppAdviceRuntimeResolver.Resolve(environment);
 
-        try
-        {
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH", cliPath);
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH", null);
-            Directory.SetCurrentDirectory(tempDirectory);
-
-            LlamaCppAdviceRuntime? runtime = LlamaCppAdviceRuntimeResolver.Resolve();
-
-            Assert.NotNull(runtime);
-            Assert.Equal(modelPath, runtime!.ModelPath);
-        }
-        finally
-        {
-            Directory.SetCurrentDirectory(previousDirectory);
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH", previousCli);
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH", previousModel);
-
-            if (Directory.Exists(tempDirectory))
-            {
-                Directory.Delete(tempDirectory, recursive: true);
-            }
-        }
+        Assert.NotNull(runtime);
+        Assert.Equal(modelPath, runtime!.ModelPath);
     }
 
     [Fact]
     public void LlamaCppServerResolverUsesEnvironmentOverrideWhenFileExists()
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), $"MoveMentorChessServices-server-resolve-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(tempDirectory);
         string serverPath = Path.Combine(tempDirectory, "llama-server.exe");
         string modelPath = Path.Combine(tempDirectory, "MoveMentorChessServices-advice.gguf");
-        File.WriteAllText(serverPath, "server");
-        File.WriteAllText(modelPath, "model");
+        FakeLlamaRuntimeEnvironment environment = new(tempDirectory, tempDirectory);
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH", serverPath);
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH", modelPath);
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH", null);
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CONTEXT_SIZE", "2048");
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_FULL_GPU", "false");
+        environment.AddFile(serverPath);
+        environment.AddFile(modelPath);
 
-        string? previousServer = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH");
-        string? previousModel = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH");
-        string? previousCli = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH");
+        LlamaCppServerConfig? config = LlamaCppServerResolver.Resolve(environment);
 
-        try
-        {
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH", serverPath);
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH", modelPath);
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH", null);
-
-            LlamaCppServerConfig? config = LlamaCppServerResolver.Resolve();
-
-            Assert.NotNull(config);
-            Assert.Equal(serverPath, config!.ServerPath);
-            Assert.Equal(modelPath, config.ModelPath);
-            Assert.Equal(LlamaGpuSettingsResolver.BalancedGpuLayersArgument, config.GpuLayersArgument);
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH", previousServer);
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH", previousModel);
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH", previousCli);
-
-            if (Directory.Exists(tempDirectory))
-            {
-                Directory.Delete(tempDirectory, recursive: true);
-            }
-        }
+        Assert.NotNull(config);
+        Assert.Equal(serverPath, config!.ServerPath);
+        Assert.Equal(modelPath, config.ModelPath);
+        Assert.Equal(LlamaGpuSettingsResolver.BalancedGpuLayersArgument, config.GpuLayersArgument);
     }
 
     [Fact]
     public void LlamaCppServerResolverReturnsNullWhenServerExeMissing()
     {
-        string? previousServer = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH");
+        string root = Path.Combine(Path.GetTempPath(), $"MoveMentorChessServices-missing-server-{Guid.NewGuid():N}");
+        string missingServerPath = Path.Combine(root, "missing-llama-server.exe");
+        FakeLlamaRuntimeEnvironment environment = new(root, root);
+        environment.AddEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH", missingServerPath);
 
-        try
-        {
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH", null);
+        string? serverPath = LlamaCppServerResolver.ResolveServerPath(environment);
 
-            string? serverPath = LlamaCppServerResolver.ResolveServerPath();
-
-            // May or may not be null depending on what's on disk, but at least it should not throw.
-            Assert.True(serverPath is null || File.Exists(serverPath));
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH", previousServer);
-        }
+        Assert.Null(serverPath);
     }
 
     [Fact]
@@ -290,12 +247,16 @@ public sealed class AdviceRuntimeCatalogTests
         string? previousServer = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH");
         string? previousCli = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH");
         string? previousModel = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH");
+        string? previousContextSize = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CONTEXT_SIZE");
+        string? previousFullGpu = Environment.GetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_FULL_GPU");
 
         try
         {
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH", serverPath);
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH", cliPath);
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH", modelPath);
+            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CONTEXT_SIZE", "2048");
+            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_FULL_GPU", "false");
 
             ILocalAdviceModel? model = AdviceRuntimeCatalog.TryCreateConfiguredModel();
 
@@ -308,6 +269,8 @@ public sealed class AdviceRuntimeCatalogTests
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_SERVER_PATH", previousServer);
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CLI_PATH", previousCli);
             Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_MODEL_PATH", previousModel);
+            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_CONTEXT_SIZE", previousContextSize);
+            Environment.SetEnvironmentVariable("MoveMentorChessServices_LLAMA_CPP_FULL_GPU", previousFullGpu);
 
             if (Directory.Exists(tempDirectory))
             {
@@ -315,4 +278,67 @@ public sealed class AdviceRuntimeCatalogTests
             }
         }
     }
+
+    private sealed class FakeLlamaRuntimeEnvironment(
+        string baseDirectory,
+        string currentDirectory) : ILlamaRuntimeEnvironment
+    {
+        private readonly HashSet<string> files = new(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> directories = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string?> environmentVariables = new(StringComparer.OrdinalIgnoreCase);
+
+        public string BaseDirectory { get; } = baseDirectory;
+
+        public string CurrentDirectory { get; } = currentDirectory;
+
+        public void AddFile(string path)
+        {
+            files.Add(path);
+        }
+
+        public void AddDirectory(string path)
+        {
+            directories.Add(path);
+        }
+
+        public void AddEnvironmentVariable(string variable, string? value)
+        {
+            environmentVariables[variable] = value;
+        }
+
+        public string? GetEnvironmentVariable(string variable)
+        {
+            return environmentVariables.GetValueOrDefault(variable);
+        }
+
+        public LlamaGpuSettings LoadLlamaGpuSettings()
+        {
+            return LlamaGpuSettings.Default;
+        }
+
+        public bool FileExists(string path)
+        {
+            return files.Contains(path);
+        }
+
+        public bool DirectoryExists(string path)
+        {
+            return directories.Contains(path);
+        }
+
+        public IEnumerable<string> EnumerateFiles(string path, string searchPattern)
+        {
+            string regexPattern = "^" + System.Text.RegularExpressions.Regex.Escape(searchPattern).Replace("\\*", ".*") + "$";
+
+            return files
+                .Where(file => directories.Contains(Path.GetDirectoryName(file) ?? string.Empty)
+                    && string.Equals(Path.GetDirectoryName(file), path, StringComparison.OrdinalIgnoreCase)
+                    && System.Text.RegularExpressions.Regex.IsMatch(Path.GetFileName(file), regexPattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                .OrderBy(file => file, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+        }
+    }
 }
+
+[CollectionDefinition("Advice runtime process state", DisableParallelization = true)]
+public sealed class AdviceRuntimeProcessStateGroup;
