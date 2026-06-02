@@ -5,10 +5,11 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
 using MoveMentorChess.Analysis;
+using MoveMentorChess.App.Renderers;
 using MoveMentorChess.App.ViewModels;
 using MoveMentorChess.Profiles;
 using static MoveMentorChess.App.ViewModels.ProfileCoachPresentationText;
-using static MoveMentorChess.App.ViewModels.ProfileCoachSectionRenderer;
+using static MoveMentorChess.App.Renderers.ProfileCoachSectionRenderer;
 
 namespace MoveMentorChess.App.Views;
 

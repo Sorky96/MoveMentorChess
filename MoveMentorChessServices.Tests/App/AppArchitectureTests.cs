@@ -108,6 +108,35 @@ public sealed partial class AppArchitectureTests
     }
 
     [Fact]
+    public void ProfileCoachRendererStaysOutsideViewModels()
+    {
+        string root = FindRepositoryRoot();
+        string rendererPath = Path.Join(root, "MoveMentorChess.App", "Renderers", "ProfileCoachSectionRenderer.cs");
+        string formerViewModelPath = Path.Join(root, "MoveMentorChess.App", "ViewModels", "ProfileCoachSectionRenderer.cs");
+
+        Assert.True(File.Exists(rendererPath), "Profile coach Avalonia rendering should live under App/Renderers.");
+        Assert.False(File.Exists(formerViewModelPath), "Profile coach Avalonia rendering should not live under ViewModels.");
+
+        string renderer = File.ReadAllText(rendererPath);
+        Assert.Contains("namespace MoveMentorChess.App.Renderers", renderer, StringComparison.Ordinal);
+        Assert.Contains("Avalonia.Controls", renderer, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ProfileTrendChartPresentationUsesColorTokensInsteadOfAvaloniaBrushes()
+    {
+        string root = FindRepositoryRoot();
+        string modelPath = Path.Join(root, "MoveMentorChess.Presentation", "Models", "ProfileTrendChartPresentation.cs");
+        string controlPath = Path.Join(root, "MoveMentorChess.App", "Controls", "ProfileTrendChartView.cs");
+        string model = File.ReadAllText(modelPath);
+        string control = File.ReadAllText(controlPath);
+
+        Assert.Contains("string StrokeHex", model, StringComparison.Ordinal);
+        Assert.DoesNotContain("Avalonia", model, StringComparison.Ordinal);
+        Assert.Contains("Brush.Parse(series.StrokeHex)", control, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void GameAnalysisServiceUsesPlayerMistakeProfileSourcePort()
     {
         string servicePath = Path.Join(

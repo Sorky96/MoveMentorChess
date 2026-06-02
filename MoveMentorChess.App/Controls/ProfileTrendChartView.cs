@@ -3,22 +3,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using MoveMentorChess.Presentation.Models;
 
 namespace MoveMentorChess.App.Controls;
-
-public enum ProfileTrendChartKind
-{
-    Line,
-    Bars
-}
-
-public sealed record ProfileTrendChartPoint(string Label, double? Value);
-
-public sealed record ProfileTrendChartSeries(
-    string Name,
-    IBrush Stroke,
-    IReadOnlyList<ProfileTrendChartPoint> Points,
-    ProfileTrendChartKind Kind = ProfileTrendChartKind.Line);
 
 public sealed class ProfileTrendChartView : Control
 {
@@ -156,7 +143,8 @@ public sealed class ProfileTrendChartView : Control
             return;
         }
 
-        Pen pen = new(series.Stroke, 2);
+        IBrush seriesBrush = CreateSeriesBrush(series);
+        Pen pen = new(seriesBrush, 2);
         for (int i = 1; i < points.Count; i++)
         {
             context.DrawLine(pen, points[i - 1], points[i]);
@@ -164,7 +152,7 @@ public sealed class ProfileTrendChartView : Control
 
         foreach (Point point in points)
         {
-            context.DrawEllipse(series.Stroke, null, point, 3.5, 3.5);
+            context.DrawEllipse(seriesBrush, null, point, 3.5, 3.5);
         }
     }
 
@@ -195,7 +183,7 @@ public sealed class ProfileTrendChartView : Control
             double x = groupStart + (width * seriesIndex);
             double y = ScaleY(plot, series.Points[i].Value!.Value, min, max);
             Rect bar = new(x, y, width, plot.Bottom - y);
-            context.DrawRectangle(series.Stroke, null, bar);
+            context.DrawRectangle(CreateSeriesBrush(series), null, bar);
         }
     }
 
@@ -227,7 +215,7 @@ public sealed class ProfileTrendChartView : Control
         double y = plot.Bottom + 30;
         foreach (ProfileTrendChartSeries item in series.Take(3))
         {
-            context.DrawRectangle(item.Stroke, null, new Rect(x, y + 3, 10, 10));
+            context.DrawRectangle(CreateSeriesBrush(item), null, new Rect(x, y + 3, 10, 10));
             DrawText(context, item.Name, 11, Brush.Parse("#D7E2EA"), new Point(x + 14, y));
             x += Math.Min(170, item.Name.Length * 7 + 34);
         }
@@ -265,7 +253,7 @@ public sealed class ProfileTrendChartView : Control
 
             double y = ScaleY(plot, item.Points[index].Value!.Value, min, max);
             context.DrawEllipse(Brushes.White, null, new Point(x, y), 5, 5);
-            context.DrawEllipse(item.Stroke, null, new Point(x, y), 3, 3);
+            context.DrawEllipse(CreateSeriesBrush(item), null, new Point(x, y), 3, 3);
         }
 
         DrawTooltip(context, series, index, plot, pointer);
@@ -404,6 +392,11 @@ public sealed class ProfileTrendChartView : Control
             PlotTop,
             Math.Max(1, bounds.Width - PlotLeft - PlotRightPadding),
             Math.Max(1, bounds.Height - PlotTop - BottomReservedForLabelsAndLegend));
+    }
+
+    private static IBrush CreateSeriesBrush(ProfileTrendChartSeries series)
+    {
+        return Brush.Parse(series.StrokeHex);
     }
 
     private static void DrawText(DrawingContext context, string text, double size, IBrush brush, Point origin)
