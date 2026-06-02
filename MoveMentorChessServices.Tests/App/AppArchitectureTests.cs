@@ -145,6 +145,33 @@ public sealed partial class AppArchitectureTests
     }
 
     [Fact]
+    public void P3ProjectReferenceBoundariesDoNotRegress()
+    {
+        string root = FindRepositoryRoot();
+        string[] presentationReferences = ReadProjectReferences(root, "MoveMentorChess.Presentation");
+        string[] trainingReferences = ReadProjectReferences(root, "MoveMentorChess.Training");
+        string[] profilesReferences = ReadProjectReferences(root, "MoveMentorChess.Profiles");
+
+        string[] forbiddenPresentationReferences =
+        [
+            "MoveMentorChess.App",
+            "MoveMentorChess.Persistence",
+            "MoveMentorChess.Training",
+            "MoveMentorChess.Tracking"
+        ];
+
+        string[] presentationBoundaryLeaks = presentationReferences
+            .Intersect(forbiddenPresentationReferences, StringComparer.Ordinal)
+            .Order()
+            .ToArray();
+
+        Assert.Empty(presentationBoundaryLeaks);
+        Assert.True(trainingReferences.Length <= 3, "Training should not grow beyond its current P3 project reference budget.");
+        Assert.True(profilesReferences.Length <= 5, "Profiles should not grow beyond its current P3 project reference budget.");
+        Assert.Contains("MoveMentorChess.Domain", presentationReferences);
+    }
+
+    [Fact]
     public void SqliteAnalysisStoreFacadeDoesNotOwnSqlStatements()
     {
         string facadePath = Path.Join(FindRepositoryRoot(), "MoveMentorChess.Persistence", "SqliteAnalysisStore.cs");
@@ -173,6 +200,21 @@ public sealed partial class AppArchitectureTests
 
         throw new InvalidOperationException("Could not find repository root.");
     }
+
+    private static string[] ReadProjectReferences(string root, string projectName)
+    {
+        string projectFile = Path.Join(root, projectName, $"{projectName}.csproj");
+        string projectText = File.ReadAllText(projectFile);
+
+        return ProjectReferenceRegex()
+            .Matches(projectText)
+            .Select(match => match.Groups["project"].Value)
+            .Order()
+            .ToArray();
+    }
+
+    [GeneratedRegex(@"<ProjectReference\s+Include=""[^""]*(?<project>MoveMentorChess(?:\.[^""\\]+)+)\.csproj""", RegexOptions.CultureInvariant)]
+    private static partial Regex ProjectReferenceRegex();
 
     [GeneratedRegex(@"\bpartial\s+class\s+PlayerProfileService\b", RegexOptions.CultureInvariant)]
     private static partial Regex PartialPlayerProfileServiceRegex();
