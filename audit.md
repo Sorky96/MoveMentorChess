@@ -1,296 +1,296 @@
 # Clean Code / Clean Architecture Audit
 
-Data audytu: 2026-06-02
-Punkt odniesienia: świeży `master`, commit `6eb556d`
-Zakres: solucja `MoveMentorChess.sln`, struktura projektów, zależności warstw, największe klasy, miejsca o wysokim sprzężeniu, testy architektoniczne i ryzyka utrzymaniowe.
+Audit date: 2026-06-02
+Baseline: fresh `master`, commit `6eb556d`
+Scope: `MoveMentorChess.sln`, project structure, layer dependencies, largest classes, high-coupling areas, architecture tests, and maintainability risks.
 
 ## 1. Business Analyst
 
-### Cel biznesowy
+### Business Goal
 
-Celem audytu jest wskazanie, czy obecna architektura pozwala bezpiecznie rozwijać aplikację MoveMentorChess bez narastania kosztu zmian w UI, analizie partii, treningu otwarć, profilach gracza i warstwie SQLite.
+The goal of this audit is to assess whether the current MoveMentorChess architecture can support further product development without increasing the cost of changes in UI workflows, game analysis, opening training, player profiles, tracking, and SQLite-backed persistence.
 
-### Kryteria akceptacji
+### Acceptance Criteria
 
-- Audyt wykonany na aktualnym `master`.
-- Wnioski zapisane w nowym pliku `audit.md`.
-- Rekomendacje są praktyczne: wskazują priorytet, ryzyko i przykładowe pliki.
-- Nie wykonano refaktoryzacji przy okazji audytu.
+- The audit is based on the current `master` branch.
+- Findings are added in a new `audit.md` file.
+- Recommendations are practical and include priority, risk, and example files.
+- No production refactoring is performed as part of the audit.
 
 ## 2. Executive Summary
 
-Ocena ogólna: **architektura jest w dobrym kierunku, ale nadal przejściowa**.
+Overall assessment: **the architecture is moving in the right direction, but it is still transitional**.
 
-Największe plusy:
+Main strengths:
 
-- Solucja jest już podzielona na sensowne obszary: `Domain`, `Analysis`, `Training`, `Profiles`, `Persistence`, `Presentation`, `Tracking`, `App`.
-- Włączone są centralne ustawienia jakości: `TreatWarningsAsErrors`, `AnalysisMode=Recommended`, nullable i implicit usings.
-- Istnieją testy architektoniczne pilnujące części granic i budżetów rozmiaru klas.
-- W ostatnich zmianach widać dobrą tendencję do wyciągania portów, np. `IPlayerMistakeProfileSource`, runtime environment resolvery i adaptery cache.
+- The solution is already split into meaningful areas: `Domain`, `Analysis`, `Training`, `Profiles`, `Persistence`, `Presentation`, `Tracking`, and `App`.
+- Central quality settings are enabled: `TreatWarningsAsErrors`, `AnalysisMode=Recommended`, nullable reference types, and implicit usings.
+- Architecture tests already guard several cleanup boundaries and project-reference budgets.
+- Recent work shows a healthy trend toward ports and adapters, for example `IPlayerMistakeProfileSource`, runtime environment resolvers, and cache adapters.
 
-Największe ryzyka:
+Main risks:
 
-- Warstwy domenowo-aplikacyjne nadal znają `Persistence`, więc kierunek zależności nie jest czysty.
-- `App` i część ViewModeli nadal agregują zbyt dużo zachowań, renderowania i nawigacji.
-- Statyczne globalne mechanizmy cache/store utrudniają testowanie, izolację i przewidywanie stanu.
-- Część modeli prezentacji i rendererów jest Avalonia-specyficzna lub leży w `ViewModels`, co zaciera granicę między prezentacją framework-neutralną a UI.
-- Testy są liczne i wartościowe, ale część z nich jest bardzo duża, co grozi wolnym, kruchym cyklem refaktoryzacji.
+- Application-level projects still know about `Persistence`, so the dependency direction is not clean yet.
+- `App` and several ViewModels still aggregate too much behavior, rendering, navigation, formatting, and workflow state.
+- Static global store/cache mechanisms make state isolation and tests harder than they need to be.
+- Some presentation models and renderers are Avalonia-specific or live under `ViewModels`, which blurs the boundary between framework-neutral presentation and UI implementation.
+- The test suite is valuable and broad, but several test files are large enough to slow down refactoring and increase fixture duplication.
 
-## 3. Stan Solucji
+## 3. Solution State
 
-### Metryki
+### Metrics
 
-- 13 projektów w `MoveMentorChess.sln`.
-- Około 486 plików C# w kodzie produkcyjnym.
-- Około 77 plików C# w testach.
-- Około 433 przypadków `Fact`/`Theory`.
+- 13 projects in `MoveMentorChess.sln`.
+- Approximately 486 production C# files.
+- Approximately 77 test C# files.
+- Local validation executed **445 tests passed, 0 failed, 0 skipped** with `dotnet test MoveMentorChess.sln --no-restore -m:1 --verbosity minimal`.
 
-Największe obszary po liczbie linii:
+Largest areas by line count:
 
-- `MoveMentorChess.App`: około 11.4k linii.
-- `MoveMentorChess.Training`: około 6.7k linii.
-- `MoveMentorChess.Analysis`: około 5.8k linii.
-- `MoveMentorChess.Domain`: około 5.0k linii.
-- `MoveMentorChessServices.Tests`: około 14.3k linii.
+- `MoveMentorChess.App`: about 11.4k lines.
+- `MoveMentorChess.Training`: about 6.7k lines.
+- `MoveMentorChess.Analysis`: about 5.8k lines.
+- `MoveMentorChess.Domain`: about 5.0k lines.
+- `MoveMentorChessServices.Tests`: about 14.3k lines.
 
-Największe pliki ryzyka:
+Largest risk files:
 
-- `MoveMentorChess.App/ViewModels/OpeningTrainerWindowViewModel.cs`: 2170 linii.
-- `MoveMentorChess.App/ViewModels/MainWindowViewModel.cs`: 1383 linie.
-- `MoveMentorChess.Training/OpeningTrainingSessionBuilder.cs`: 1168 linii.
-- `MoveMentorChess.Training/OpeningTrainerWorkspaceService.cs`: 945 linii.
-- `MoveMentorChess.Domain/Models/ChessGame.cs`: 860 linii.
-- `MoveMentorChess.App/ViewModels/ProfileCoachSectionRenderer.cs`: 802 linie.
-- `MoveMentorChess.App/Views/ProfilesWindow.axaml.cs`: 686 linii.
+- `MoveMentorChess.App/ViewModels/OpeningTrainerWindowViewModel.cs`: 2170 lines.
+- `MoveMentorChess.App/ViewModels/MainWindowViewModel.cs`: 1383 lines.
+- `MoveMentorChess.Training/OpeningTrainingSessionBuilder.cs`: 1168 lines.
+- `MoveMentorChess.Training/OpeningTrainerWorkspaceService.cs`: 945 lines.
+- `MoveMentorChess.Domain/Models/ChessGame.cs`: 860 lines.
+- `MoveMentorChess.App/ViewModels/ProfileCoachSectionRenderer.cs`: 802 lines.
+- `MoveMentorChess.App/Views/ProfilesWindow.axaml.cs`: 686 lines.
 
-## 4. Architektura Warstw
+## 4. Architecture Assessment
 
-### Co działa dobrze
+### What Works Well
 
-`Domain` jest bazową warstwą dla zasad szachowych i modeli. `Engine`, `Opening`, `Persistence`, `Tracking`, `Analysis`, `Training`, `Profiles` i `Presentation` są już oddzielone projektowo. `App` pełni rolę kompozycji i UI, co jest właściwym kierunkiem.
+`Domain` is the base layer for chess rules and core models. `Engine`, `Opening`, `Persistence`, `Tracking`, `Analysis`, `Training`, `Profiles`, and `Presentation` are already separated at project level. `App` is the UI/composition layer, which is the right overall direction.
 
-Istnieją też testy ochronne w `MoveMentorChessServices.Tests/App/AppArchitectureTests.cs`, między innymi:
+The architecture tests in `MoveMentorChessServices.Tests/App/AppArchitectureTests.cs` are especially valuable. They already guard:
 
-- blokada dostępu do `AnalysisStoreProvider.GetStore()` z Views/ViewModels,
-- pilnowanie wybranych granic referencji projektów,
-- budżety rozmiaru dla klas po wcześniejszym cleanupie,
-- ochrona fasady SQLite przed ponownym przejęciem SQL-i.
+- direct `AnalysisStoreProvider.GetStore()` usage from Views/ViewModels,
+- selected project-reference boundaries,
+- size budgets for files touched by previous cleanup work,
+- the SQLite facade boundary, so SQL does not move back into the facade.
 
-### Główna słabość
+### Primary Weakness
 
-Architektura nadal miesza **warstwy use-case/application services** z **infrastrukturą persistence**. Przykłady:
+The architecture still mixes **application/use-case services** with **persistence infrastructure**. Examples:
 
-- `MoveMentorChess.Analysis/MoveMentorChess.Analysis.csproj:10` referencjonuje `MoveMentorChess.Persistence`.
-- `MoveMentorChess.Training/MoveMentorChess.Training.csproj:12` referencjonuje `MoveMentorChess.Persistence`.
-- `MoveMentorChess.Profiles/MoveMentorChess.Profiles.csproj:13` referencjonuje `MoveMentorChess.Persistence`.
-- `MoveMentorChess.Analysis/GlobalUsings.cs:4`, `MoveMentorChess.Training/GlobalUsings.cs:4`, `MoveMentorChess.Profiles/GlobalUsings.cs:4` propagują tę zależność globalnie.
+- `MoveMentorChess.Analysis/MoveMentorChess.Analysis.csproj:10` references `MoveMentorChess.Persistence`.
+- `MoveMentorChess.Training/MoveMentorChess.Training.csproj:12` references `MoveMentorChess.Persistence`.
+- `MoveMentorChess.Profiles/MoveMentorChess.Profiles.csproj:13` references `MoveMentorChess.Persistence`.
+- `MoveMentorChess.Analysis/GlobalUsings.cs:4`, `MoveMentorChess.Training/GlobalUsings.cs:4`, and `MoveMentorChess.Profiles/GlobalUsings.cs:4` propagate that dependency globally.
 
-To nie jest awaria produkcyjna, ale jest to główna bariera przed czystą architekturą. Use-case'y nie powinny zależeć od SQLite/cache/providerów, tylko od portów zdefiniowanych bliżej domeny lub application layer.
+This is not an immediate runtime defect, but it is the main barrier to a cleaner architecture. Use-case services should depend on ports close to the application/domain boundary, while SQLite, cache providers, and global store providers should remain infrastructure details.
 
 ## 5. Findings
 
-### P1 - Odwrócić zależności od `Persistence`
+### P1 - Invert Dependencies Away From `Persistence`
 
-Ryzyko: wysokie utrzymaniowo.
+Risk: high maintainability risk.
 
-`Analysis`, `Training` i `Profiles` zależą od `Persistence`, przez co infrastruktura przecieka do logiki aplikacyjnej. Widać to także w kodzie:
+`Analysis`, `Training`, and `Profiles` depend on `Persistence`, so infrastructure details leak into application logic. Evidence:
 
-- `MoveMentorChess.Analysis/Services/GameAnalysisService.cs:35` domyślnie tworzy `StoreBackedPlayerMistakeProfileSource`.
-- `MoveMentorChess.Analysis/Services/StoreBackedPlayerMistakeProfileSource.cs:10` domyślnie używa `AnalysisStoreProvider.GetStore`.
-- `MoveMentorChess.Training/OpeningTrainingSessionBuilder.cs:245` i `MoveMentorChess.Training/OpeningWeaknessService.cs:175` używają `GameAnalysisCacheKey` z persistence.
-- `MoveMentorChess.Profiles/PlayerProfileService.cs:122` oraz `:159` tworzą `OpeningWeaknessService` bez portu/fabryki.
+- `MoveMentorChess.Analysis/Services/GameAnalysisService.cs:35` creates `StoreBackedPlayerMistakeProfileSource` by default.
+- `MoveMentorChess.Analysis/Services/StoreBackedPlayerMistakeProfileSource.cs:10` defaults to `AnalysisStoreProvider.GetStore`.
+- `MoveMentorChess.Training/OpeningTrainingSessionBuilder.cs:245` and `MoveMentorChess.Training/OpeningWeaknessService.cs:175` use `GameAnalysisCacheKey` from persistence.
+- `MoveMentorChess.Profiles/PlayerProfileService.cs:122` and `MoveMentorChess.Profiles/PlayerProfileService.cs:159` create `OpeningWeaknessService` directly.
 
-Rekomendacja:
+Recommendation:
 
-Utworzyć małą warstwę portów dla application services. Najbezpieczniej zacząć od istniejących interfejsów persistence i przenieść lub zdublować kierunkowo tylko kontrakty wymagane przez `Analysis`, `Training`, `Profiles`. Implementacje SQLite i globalne providery powinny zostać w `Persistence`, a `AppCompositionRoot` powinien podawać implementacje przez konstruktor/fabrykę.
+Create a small set of application ports for the data needed by `Analysis`, `Training`, and `Profiles`. Start incrementally by moving only the contracts those services need. Keep SQLite implementations and global providers in `Persistence`, and wire concrete implementations through `AppCompositionRoot` or small factories.
 
-Akceptacja dla pierwszego PR:
+Acceptance criteria for the first cleanup PR:
 
-- `GameAnalysisService` nie tworzy domyślnie store-backed źródła profilu.
-- `Training` nie musi referencjonować `Persistence` dla samego `GameAnalysisCacheKey`.
-- Test architektoniczny wykrywa ponowną referencję `Analysis -> Persistence` albo przynajmniej blokuje nowe bezpośrednie użycia `AnalysisStoreProvider`.
+- `GameAnalysisService` no longer creates a store-backed profile source by default.
+- `Training` does not need to reference `Persistence` only to use cache-key data.
+- An architecture test blocks new direct `AnalysisStoreProvider.GetStore` usage outside composition roots and adapters.
 
-### P1 - Rozbić orkiestrację `OpeningTrainerWindowViewModel`
+### P1 - Split `OpeningTrainerWindowViewModel`
 
-Ryzyko: wysokie dla dalszego rozwoju UI treningu.
+Risk: high risk for future UI development.
 
-`OpeningTrainerWindowViewModel.cs` ma 2170 linii i nadal odpowiada za:
+`OpeningTrainerWindowViewModel.cs` has 2170 lines and still owns:
 
-- stan kreatora i nawigację między stronami,
-- komendy,
+- wizard/page navigation state,
+- commands,
 - telemetry,
-- wybór rekomendacji,
-- sterowanie sesją,
-- feedback animowany,
-- formatowanie tekstów,
-- mapowanie ruchów na UI,
-- reakcje planszy.
+- daily recommendation selection,
+- training session orchestration,
+- animated study feedback,
+- text formatting,
+- move-to-UI mapping,
+- study board interactions.
 
-W pliku istnieje już komentarz `Compatibility shims` przy stanie delegowanym do `OpeningTrainerSessionController`, co pokazuje dobrą, ale niedokończoną migrację.
+The file already contains a `Compatibility shims` comment around state delegated to `OpeningTrainerSessionController`, which shows a good but incomplete migration.
 
-Rekomendacja:
+Recommendation:
 
-Kontynuować ekstrakcję po jednej odpowiedzialności:
+Continue extracting one responsibility at a time:
 
-1. `OpeningTrainerSelectionViewModel` - wybór profilu, filtr, rekomendacja dnia.
-2. `OpeningTrainerOverviewViewModel` - overview i priorytety.
-3. `OpeningTrainerStudyViewModel` - aktualna pozycja, wejście ruchu, hinty, plansza.
-4. `OpeningTrainerResultsViewModel` - wynik, learning plan, next actions.
+1. `OpeningTrainerSelectionViewModel` for profile selection, filtering, and today's recommendation.
+2. `OpeningTrainerOverviewViewModel` for overview and priorities.
+3. `OpeningTrainerStudyViewModel` for current position, move input, hints, and board interaction.
+4. `OpeningTrainerResultsViewModel` for outcome, learning plan, and next actions.
 
-Nie robić big-bang refaktora. Po każdym wycięciu jednej odpowiedzialności uruchomić build/testy.
+Avoid a big-bang refactor. Build and test after each meaningful slice.
 
-### P1 - Uporządkować `MainWindowViewModel`
+### P1 - Reduce `MainWindowViewModel`
 
-Ryzyko: wysokie dla stabilności importu, analizy i obsługi planszy.
+Risk: high risk for import, analysis, and board workflow stability.
 
-`MainWindowViewModel.cs` ma 1383 linie i miesza logikę planszy, import PGN, cache analizy, formatowanie oceny, bulk analysis i UI state. Dodatkowo używa `Avalonia.Media` i `MoveMentorChess.Persistence`, co czyni go mniej przenośnym i trudniejszym do testowania.
+`MainWindowViewModel.cs` has 1383 lines and mixes board state, PGN import, analysis cache access, evaluation formatting, bulk analysis, and UI state. It also uses `Avalonia.Media` and `MoveMentorChess.Persistence`, which makes it harder to test and harder to move toward a cleaner presentation boundary.
 
-Rekomendacja:
+Recommendation:
 
-Wyciągnąć:
+Extract:
 
-- `ImportedGameReplayController` albo `ReplayNavigationService`,
+- `ImportedGameReplayController` or `ReplayNavigationService`,
 - `MainBoardStatePresenter`,
 - `BulkAnalysisCoordinator`,
-- formatery oceny i statusów do `Presentation`.
+- evaluation and status formatters into `Presentation`.
 
-ViewModel powinien zostać cienką warstwą bindowalnych właściwości i komend.
+The ViewModel should become a thin holder of bindable state and commands.
 
-### P2 - Oddzielić renderery Avalonia od ViewModeli
+### P2 - Separate Avalonia Renderers From ViewModels
 
-Ryzyko: średnie, ale rosnące.
+Risk: medium, growing over time.
 
-`MoveMentorChess.App/ViewModels/ProfileCoachSectionRenderer.cs` leży w folderze `ViewModels`, ale importuje `Avalonia`, `Avalonia.Controls`, `Avalonia.Layout`, `Avalonia.Media` i buduje kontrolki bezpośrednio. Podobne sygnały występują w ViewModelach z `Avalonia.Media`.
+`MoveMentorChess.App/ViewModels/ProfileCoachSectionRenderer.cs` lives in `ViewModels`, but imports `Avalonia`, `Avalonia.Controls`, `Avalonia.Layout`, and `Avalonia.Media`, then builds controls directly. Similar Avalonia-specific signals exist in some ViewModels.
 
-Rekomendacja:
+Recommendation:
 
-- Przenieść renderery kontrolek do `MoveMentorChess.App/Views` lub `MoveMentorChess.App/Renderers`.
-- W `MoveMentorChess.Presentation` trzymać framework-neutralne modele: sekcje, wiersze, metryki, serie wykresów, kolory jako tokeny/enumy zamiast `IBrush`.
-- ViewModel powinien wystawiać modele prezentacyjne, a renderer Avalonia tłumaczyć je na kontrolki.
+- Move control renderers to `MoveMentorChess.App/Views` or `MoveMentorChess.App/Renderers`.
+- Keep framework-neutral models in `MoveMentorChess.Presentation`: sections, rows, metrics, chart series, and color tokens/enums instead of `IBrush`.
+- Let ViewModels expose presentation models while Avalonia renderers translate those models into controls.
 
-### P2 - Zmniejszyć zależność od globalnego stanu
+### P2 - Reduce Dependence on Global State
 
-Ryzyko: średnie dla testów i przewidywalności.
+Risk: medium risk for tests and predictability.
 
-Globalne mechanizmy:
+Global mechanisms include:
 
 - `MoveMentorChess.Persistence/AnalysisStoreProvider.cs`,
 - `MoveMentorChess.Persistence/GameAnalysisCache.cs`,
 - `MoveMentorChess.Persistence/PersistenceDiagnostics.cs`,
-- singletony runtime environment i `LlamaCppServerManager.Instance`.
+- runtime environment singletons and `LlamaCppServerManager.Instance`.
 
-Są częściowo opakowane adapterami, co jest dobrym kierunkiem. Nadal jednak globalny stan może wpływać na kolejność testów, izolację okien i przyszłe scenariusze wieloprofilowe.
+Some of these are already wrapped by adapters, which is a good direction. Still, global state can affect test order, window isolation, and future multi-profile scenarios.
 
-Rekomendacja:
+Recommendation:
 
-- Nie usuwać wszystkiego naraz.
-- Dla nowych funkcji wymagać portu w konstruktorze.
-- Pozostawić globalne klasy jako compatibility facade, ale nie rozwijać ich API.
-- Dodać test architektoniczny: nowe użycia `AnalysisStoreProvider.GetStore` tylko w composition/root/adapters.
+- Do not remove everything at once.
+- Require constructor-injected ports for new features.
+- Keep global classes as compatibility facades, but avoid expanding their API.
+- Add an architecture test that permits new `AnalysisStoreProvider.GetStore` usage only in composition roots or adapters.
 
-### P2 - Usługi treningowe wymagają dalszego cięcia
+### P2 - Continue Decomposing Training Services
 
-Ryzyko: średnie/wysokie.
+Risk: medium/high.
 
-`OpeningTrainingSessionBuilder.cs`, `OpeningTrainerWorkspaceService.cs`, `TrainingPlanService.cs` i `OpeningWeaknessService.cs` są nadal duże. Widać, że wyciągnięto już część odpowiedzialności, ale te klasy nadal łączą pobieranie danych, scoring, dobór pozycji, budowę tekstów, fallbacki i konstrukcję rezultatów.
+`OpeningTrainingSessionBuilder.cs`, `OpeningTrainerWorkspaceService.cs`, `TrainingPlanService.cs`, and `OpeningWeaknessService.cs` are still large. Some responsibilities have already been extracted, but these classes still combine data loading, scoring, position selection, text construction, fallback handling, and result construction.
 
-Rekomendacja:
+Recommendation:
 
-Najlepsza kolejność ekstrakcji:
+Best extraction order:
 
-1. Pure selectors/scorers bez store i bez zegara.
-2. Snapshot loaders i mappers.
-3. Formatery/reason builders do `Presentation` albo osobnego formattera.
-4. Orkiestrator zostaje jako cienki use-case.
+1. Pure selectors/scorers with no store and no clock.
+2. Snapshot loaders and mappers.
+3. Reason/text builders moved into `Presentation` or dedicated formatter services.
+4. A thin use-case orchestrator that coordinates the extracted collaborators.
 
-### P2 - Testy są mocne, ale część plików jest zbyt ciężka
+### P2 - Keep Improving Test Maintainability
 
-Ryzyko: średnie dla tempa refaktoryzacji.
+Risk: medium risk for refactoring speed.
 
-Największy test `MoveMentorChessServices.Tests/Analysis/GameAnalysisServiceTests.cs` ma 2283 linie. `SqliteAnalysisStoreTests.cs` ma 1389 linii. Przy refaktorach architektonicznych takie testy często stają się trudne do aktualizacji i zachęcają do kopiowania dużych fixture'ów.
+The test suite is broad and useful, but some files are large. `MoveMentorChessServices.Tests/Analysis/GameAnalysisServiceTests.cs` has 2283 lines, and `MoveMentorChessServices.Tests/Persistence/SqliteAnalysisStoreTests.cs` has 1389 lines. Large test files can slow down architecture changes and encourage fixture duplication.
 
-Rekomendacja:
+Recommendation:
 
-- Dodać test data builders dla partii, analiz, replay i SQLite records.
-- Podzielić testy według zachowania, np. classification, advice context, cache/persistence, progress/cancellation.
-- Zachować istniejące testy integracyjne, ale przenosić szczegółowe przypadki do mniejszych testów jednostkowych.
+- Add test data builders for games, analysis results, replay data, and SQLite records.
+- Split tests by behavior, for example classification, advice context, cache/persistence, progress, and cancellation.
+- Keep integration coverage, but move detailed edge cases into smaller unit tests where possible.
 
-### P3 - `Domain` jest wartościowy, ale `ChessGame` to przyszły kandydat do ekstrakcji
+### P3 - Treat `ChessGame` as a Future Extraction Candidate
 
-Ryzyko: niskie/średnie.
+Risk: low/medium.
 
-`ChessGame.cs` ma 860 linii i odpowiada za FEN, PGN/SAN, legal moves, wykonywanie ruchów, roszadę, en passant, promocję, ataki pól i snapshot stanu. To jest akceptowalne jako stabilny core, ale przy kolejnych zmianach w regułach lub importerze będzie coraz trudniej izolować regresje.
+`ChessGame.cs` has 860 lines and owns FEN, PGN/SAN handling, legal moves, move execution, castling, en passant, promotion, attacked squares, and state snapshots. This is acceptable as a stable core, but future notation or move-generation changes will be easier if smaller components can be tested in isolation.
 
-Rekomendacja:
+Recommendation:
 
-Nie refaktorować prewencyjnie. Gdy pojawi się zmiana w notacji lub legal move generation, wyciągnąć mały komponent:
+Do not refactor it preemptively. When a notation or legal-move change appears, extract a small component such as:
 
-- `FenParser/FenWriter`,
+- `FenParser` / `FenWriter`,
 - `SanMoveResolver`,
 - `LegalMoveGenerator`,
 - `AttackMap`.
 
-### P3 - Testy architektoniczne powinny przejść z budżetów na cele docelowe
+### P3 - Move Architecture Tests From Regression Budgets Toward Target Architecture
 
-Ryzyko: niskie, ale ważne strategicznie.
+Risk: low, but strategically important.
 
-`AppArchitectureTests` dobrze chronią przed regresją, ale obecne limity są tolerancyjne, np. `OpeningTrainerWindowViewModel.cs` do 2600 linii i `ProfilesWindow.axaml.cs` do 820 linii. To zatrzymuje pogorszenie, lecz nie wymusza dojścia do czystej struktury.
+`AppArchitectureTests` are useful regression guards, but current limits are permissive. For example, `OpeningTrainerWindowViewModel.cs` is allowed up to 2600 lines and `ProfilesWindow.axaml.cs` up to 820 lines. This prevents worsening, but it does not actively drive the code toward the desired structure.
 
-Rekomendacja:
+Recommendation:
 
-Dodać drugi poziom testów jako "target architecture":
+Add a second level of target-architecture tests:
 
-- brak nowych referencji `Analysis/Training/Profiles -> Persistence`,
-- brak `Avalonia.*` w ViewModelach poza jawnie oznaczonymi adapterami,
-- nowe renderery Avalonia tylko w `Views`, `Controls`, `Renderers`,
-- stopniowo obniżane budżety linii po każdym zakończonym slice.
+- no new `Analysis` / `Training` / `Profiles` references to `Persistence`,
+- no `Avalonia.*` in ViewModels except explicitly named adapters during transition,
+- new Avalonia renderers only under `Views`, `Controls`, or `Renderers`,
+- gradually lowered line budgets after each cleanup slice.
 
-## 6. Proponowany Roadmap
+## 6. Proposed Roadmap
 
-### Sprint 1 - Granice persistence
+### Sprint 1 - Persistence Boundaries
 
-Cel: zatrzymać dalsze przeciekanie SQLite/cache do use-case'ów.
+Goal: stop further SQLite/cache leakage into use-case services.
 
-Zakres:
+Scope:
 
-- Porty dla źródeł profilu, historii treningu, importowanych gier i wyników analizy.
-- Rejestracja implementacji w `AppCompositionRoot`/fabrykach.
-- Test architektoniczny blokujący nowe bezpośrednie użycia `AnalysisStoreProvider.GetStore`.
+- Introduce ports for player profile sources, training history, imported games, and analysis results.
+- Register concrete implementations in `AppCompositionRoot` or existing factories.
+- Add architecture tests that block new direct `AnalysisStoreProvider.GetStore` usage outside approved locations.
 
-### Sprint 2 - Opening trainer ViewModel split
+### Sprint 2 - Opening Trainer ViewModel Split
 
-Cel: zmniejszyć największy hotspot UI.
+Goal: reduce the largest UI hotspot.
 
-Zakres:
+Scope:
 
-- Wyciągnąć selection/overview/study/results w małych krokach.
-- Zachować istniejący publiczny facade dla okna.
-- Po każdym kroku build/test.
+- Extract selection, overview, study, and results state in small steps.
+- Keep the current public facade for the window during transition.
+- Build and test after every meaningful extraction.
 
-### Sprint 3 - Presentation boundary
+### Sprint 3 - Presentation Boundary
 
-Cel: wyczyścić granicę Avalonia.
+Goal: clean up the Avalonia boundary.
 
-Zakres:
+Scope:
 
-- `ProfileCoachSectionRenderer` przenieść poza `ViewModels`.
-- Kolory/brushes w ViewModelach zastąpić tokenami prezentacyjnymi.
-- `Presentation` trzyma modele, `App` renderuje.
+- Move `ProfileCoachSectionRenderer` out of `ViewModels`.
+- Replace ViewModel brushes/colors with presentation tokens where practical.
+- Keep models in `Presentation`; render them in `App`.
 
-### Sprint 4 - Training service decomposition
+### Sprint 4 - Training Service Decomposition
 
-Cel: ułatwić rozwój rekomendacji i planów treningowych.
+Goal: make recommendations and training plans easier to extend.
 
-Zakres:
+Scope:
 
-- Selectory/scorery jako pure services.
-- Oddzielne loadery snapshotów.
-- Formatery tekstów poza orkiestratorami.
+- Extract selectors/scorers as pure services.
+- Add dedicated snapshot loaders.
+- Move text formatters out of orchestration services.
 
 ## 7. Reviewer Notes
 
-Ten audyt nie zmienia kodu produkcyjnego. Ryzyko regresji runtime jest zerowe, bo dodany jest tylko dokument.
+This audit does not change production code. Runtime regression risk is negligible because the PR only adds documentation.
 
-Ryzyko merytoryczne: audyt bazuje na statycznym przeglądzie kodu i metrykach, nie na uruchomionej aplikacji UI. Wnioski są jednak poparte konkretnymi zależnościami projektów, rozmiarami plików i istniejącymi testami architektonicznymi.
+Content risk: the audit is based on static code review and metrics, not on a live UI walkthrough. The findings are still backed by concrete project references, file sizes, and existing architecture tests.
 
-Najważniejsza decyzja architektoniczna przed kolejnym refaktorem: czy porty aplikacyjne mają trafić do istniejących projektów (`Analysis`, `Training`, `Profiles`) czy do osobnego projektu typu `MoveMentorChess.Application.Abstractions`. Dla małego, inkrementalnego cleanupu rekomenduję zacząć od istniejących projektów i dopiero po drugim lub trzecim porcie zdecydować, czy osobny projekt daje realną korzyść.
+The main architecture decision before the next cleanup PR is where application ports should live. They can initially stay in the existing `Analysis`, `Training`, and `Profiles` projects. If the third or fourth port starts repeating patterns across those projects, a dedicated `MoveMentorChess.Application.Abstractions` project may become worthwhile.
