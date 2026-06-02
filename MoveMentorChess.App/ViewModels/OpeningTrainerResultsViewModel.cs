@@ -175,7 +175,7 @@ public sealed class OpeningTrainerResultsViewModel : ViewModelBase
         int playableAnswers,
         int transposedAnswers,
         IReadOnlyList<TrainingNextAction> nextActions,
-        TrainingResultLearningPlan learningPlan)
+        TrainingResultLearningPlan resultLearningPlan)
     {
         OutcomeSummary = summary;
         ResultHeadline = OpeningTrainerResultPresentation.BuildCompletionHeadline(session?.Positions.Count, openingName);
@@ -185,8 +185,8 @@ public sealed class OpeningTrainerResultsViewModel : ViewModelBase
             transposedAnswers);
         ReplaceItems(NextActionItems, nextActions);
         RebuildNextActionCards();
-        LearningPlan = learningPlan;
-        ReplaceItems(LearningPlanReviewItems, learningPlan.ReviewItems);
+        LearningPlan = resultLearningPlan;
+        ReplaceItems(LearningPlanReviewItems, resultLearningPlan.ReviewItems);
         SelectedNextAction = NextActionItems.FirstOrDefault();
         RaiseLearningPlanStateChanged();
         RaiseNextActionStateChanged();

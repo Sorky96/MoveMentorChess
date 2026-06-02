@@ -733,6 +733,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             if (!EqualityComparer<TrainingNextAction?>.Default.Equals(before, resultsViewModel.SelectedNextAction))
             {
                 ExecuteNextActionCommand.RaiseCanExecuteChanged();
+                OnPropertyChanged(nameof(SelectedNextAction));
                 OnPropertyChanged(nameof(SelectedNextActionButtonText));
                 OnPropertyChanged(nameof(ResultsNextBestActionText));
                 OnPropertyChanged(nameof(ResultsNextActionReasonText));
@@ -760,6 +761,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             resultsViewModel.SelectedSecondaryNextAction = value;
             if (!EqualityComparer<TrainingNextActionCardViewModel?>.Default.Equals(before, resultsViewModel.SelectedSecondaryNextAction))
             {
+                OnPropertyChanged(nameof(SelectedSecondaryNextAction));
                 ExecuteSecondaryNextActionCommand.RaiseCanExecuteChanged();
                 ExecuteSelectedSecondaryNextActionCommand.RaiseCanExecuteChanged();
             }
