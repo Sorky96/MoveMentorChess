@@ -156,6 +156,7 @@ public sealed partial class AppArchitectureTests
         [
             "MoveMentorChess.App",
             "MoveMentorChess.Persistence",
+            "MoveMentorChess.Profiles",
             "MoveMentorChess.Training",
             "MoveMentorChess.Tracking"
         ];

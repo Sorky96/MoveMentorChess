@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace MoveMentorChess.Profiles;
+namespace MoveMentorChess.Domain;
 
 public static class PlayerProfileTextFormatter
 {
