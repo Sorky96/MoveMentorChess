@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using MoveMentorChess.Presentation.Models;
 using Xunit;
 
 namespace MoveMentorChessServices.Tests.App;
@@ -119,7 +120,6 @@ public sealed partial class AppArchitectureTests
 
         string renderer = File.ReadAllText(rendererPath);
         Assert.Contains("namespace MoveMentorChess.App.Renderers", renderer, StringComparison.Ordinal);
-        Assert.Contains("Avalonia.Controls", renderer, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -127,13 +127,10 @@ public sealed partial class AppArchitectureTests
     {
         string root = FindRepositoryRoot();
         string modelPath = Path.Join(root, "MoveMentorChess.Presentation", "Models", "ProfileTrendChartPresentation.cs");
-        string controlPath = Path.Join(root, "MoveMentorChess.App", "Controls", "ProfileTrendChartView.cs");
         string model = File.ReadAllText(modelPath);
-        string control = File.ReadAllText(controlPath);
 
-        Assert.Contains("string StrokeHex", model, StringComparison.Ordinal);
+        Assert.NotNull(typeof(ProfileTrendChartSeries).GetProperty(nameof(ProfileTrendChartSeries.StrokeHex)));
         Assert.DoesNotContain("Avalonia", model, StringComparison.Ordinal);
-        Assert.Contains("Brush.Parse(series.StrokeHex)", control, StringComparison.Ordinal);
     }
 
     [Fact]

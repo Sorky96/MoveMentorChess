@@ -16,6 +16,7 @@ public sealed class ProfileTrendChartView : Control
 
     private int? hoveredIndex;
     private Point? pointerPosition;
+    private readonly Dictionary<string, IBrush> seriesBrushCache = new(StringComparer.OrdinalIgnoreCase);
 
     public static readonly StyledProperty<IReadOnlyList<ProfileTrendChartSeries>> SeriesProperty =
         AvaloniaProperty.Register<ProfileTrendChartView, IReadOnlyList<ProfileTrendChartSeries>>(
@@ -31,6 +32,7 @@ public sealed class ProfileTrendChartView : Control
     public override void Render(DrawingContext context)
     {
         base.Render(context);
+        seriesBrushCache.Clear();
 
         Rect bounds = Bounds;
         if (bounds.Width <= 20 || bounds.Height <= 20)
@@ -135,7 +137,7 @@ public sealed class ProfileTrendChartView : Control
         return Math.Max(step, Math.Ceiling(max / step) * step);
     }
 
-    private static void DrawLine(DrawingContext context, Rect plot, ProfileTrendChartSeries series, double min, double max)
+    private void DrawLine(DrawingContext context, Rect plot, ProfileTrendChartSeries series, double min, double max)
     {
         List<Point> points = BuildPoints(plot, series.Points, min, max);
         if (points.Count == 0)
@@ -156,7 +158,7 @@ public sealed class ProfileTrendChartView : Control
         }
     }
 
-    private static void DrawBars(
+    private void DrawBars(
         DrawingContext context,
         Rect plot,
         ProfileTrendChartSeries series,
@@ -209,7 +211,7 @@ public sealed class ProfileTrendChartView : Control
         return plot.Bottom - Math.Clamp(normalized, 0, 1) * plot.Height;
     }
 
-    private static void DrawLegend(DrawingContext context, IReadOnlyList<ProfileTrendChartSeries> series, Rect plot)
+    private void DrawLegend(DrawingContext context, IReadOnlyList<ProfileTrendChartSeries> series, Rect plot)
     {
         double x = plot.Left;
         double y = plot.Bottom + 30;
@@ -394,9 +396,15 @@ public sealed class ProfileTrendChartView : Control
             Math.Max(1, bounds.Height - PlotTop - BottomReservedForLabelsAndLegend));
     }
 
-    private static IBrush CreateSeriesBrush(ProfileTrendChartSeries series)
+    private IBrush CreateSeriesBrush(ProfileTrendChartSeries series)
     {
-        return Brush.Parse(series.StrokeHex);
+        if (!seriesBrushCache.TryGetValue(series.StrokeHex, out IBrush? brush))
+        {
+            brush = Brush.Parse(series.StrokeHex);
+            seriesBrushCache.Add(series.StrokeHex, brush);
+        }
+
+        return brush;
     }
 
     private static void DrawText(DrawingContext context, string text, double size, IBrush brush, Point origin)
