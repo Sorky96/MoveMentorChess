@@ -6,7 +6,7 @@ using Avalonia.Media;
 using MoveMentorChess.App.Controls;
 using static MoveMentorChess.App.ViewModels.ProfileCoachPresentationText;
 
-namespace MoveMentorChess.App.ViewModels;
+namespace MoveMentorChess.App.Renderers;
 
 internal static class ProfileCoachSectionRenderer
 {
@@ -174,11 +174,11 @@ internal static class ProfileCoachSectionRenderer
             [
                 new ProfileTrendChartSeries(
                     "Chess.com rating",
-                    Brush.Parse("#7DD3FC"),
+                    "#7DD3FC",
                     report.RatingTrend.RatingPoints.Select(point => new ProfileTrendChartPoint(FormatChartDate(point.GameDate), point.PlayerRating)).ToList()),
                 new ProfileTrendChartSeries(
                     "MoveMentor estimated strength",
-                    Brush.Parse("#FACC15"),
+                    "#FACC15",
                     report.RatingTrend.StrengthPoints.Select(point => new ProfileTrendChartPoint(FormatChartDate(point.GameDate), point.EstimatedStrength)).ToList())
             ]);
 
@@ -187,7 +187,7 @@ internal static class ProfileCoachSectionRenderer
             [
                 new ProfileTrendChartSeries(
                     "Average CPL",
-                    Brush.Parse("#FB7185"),
+                    "#FB7185",
                     report.RatingTrend.AverageCentipawnLossTrend.Select(point => new ProfileTrendChartPoint(point.MonthKey, point.AverageCentipawnLoss)).ToList(),
                     ProfileTrendChartKind.Bars)
             ]);
@@ -197,17 +197,17 @@ internal static class ProfileCoachSectionRenderer
             [
                 new ProfileTrendChartSeries(
                     "Blunders",
-                    Brush.Parse("#F87171"),
+                    "#F87171",
                     report.RatingTrend.MoveQualityTrend.Select(point => new ProfileTrendChartPoint(point.PeriodKey, point.BlundersPerGame)).ToList(),
                     ProfileTrendChartKind.Bars),
                 new ProfileTrendChartSeries(
                     "Mistakes",
-                    Brush.Parse("#FDBA74"),
+                    "#FDBA74",
                     report.RatingTrend.MoveQualityTrend.Select(point => new ProfileTrendChartPoint(point.PeriodKey, point.MistakesPerGame)).ToList(),
                     ProfileTrendChartKind.Bars),
                 new ProfileTrendChartSeries(
                     "Brilliant/great/best",
-                    Brush.Parse("#86EFAC"),
+                    "#86EFAC",
                     report.RatingTrend.MoveQualityTrend.Select(point => new ProfileTrendChartPoint(point.PeriodKey, point.BrilliantGreatBestPerGame)).ToList(),
                     ProfileTrendChartKind.Bars)
             ]);

@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using MoveMentorChess.Presentation.Models;
 using Xunit;
 
 namespace MoveMentorChessServices.Tests.App;
@@ -105,6 +106,31 @@ public sealed partial class AppArchitectureTests
             .ToArray();
 
         Assert.Empty(forbiddenFiles);
+    }
+
+    [Fact]
+    public void ProfileCoachRendererStaysOutsideViewModels()
+    {
+        string root = FindRepositoryRoot();
+        string rendererPath = Path.Join(root, "MoveMentorChess.App", "Renderers", "ProfileCoachSectionRenderer.cs");
+        string formerViewModelPath = Path.Join(root, "MoveMentorChess.App", "ViewModels", "ProfileCoachSectionRenderer.cs");
+
+        Assert.True(File.Exists(rendererPath), "Profile coach Avalonia rendering should live under App/Renderers.");
+        Assert.False(File.Exists(formerViewModelPath), "Profile coach Avalonia rendering should not live under ViewModels.");
+
+        string renderer = File.ReadAllText(rendererPath);
+        Assert.Contains("namespace MoveMentorChess.App.Renderers", renderer, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ProfileTrendChartPresentationUsesColorTokensInsteadOfAvaloniaBrushes()
+    {
+        string root = FindRepositoryRoot();
+        string modelPath = Path.Join(root, "MoveMentorChess.Presentation", "Models", "ProfileTrendChartPresentation.cs");
+        string model = File.ReadAllText(modelPath);
+
+        Assert.NotNull(typeof(ProfileTrendChartSeries).GetProperty(nameof(ProfileTrendChartSeries.StrokeHex)));
+        Assert.DoesNotContain("Avalonia", model, StringComparison.Ordinal);
     }
 
     [Fact]
