@@ -40,9 +40,9 @@ public sealed class PersistenceOpeningTheorySourceResolverTests
     public void Create_UsesBundledSeedStoreWhenSeedExists()
     {
         string localDatabasePath = CreateTempDatabasePath();
-        string seedRoot = Path.Combine(Path.GetTempPath(), $"MoveMentorChessServices-seed-{Guid.NewGuid():N}");
-        string seedDirectory = Path.Combine(seedRoot, "OpeningSeed");
-        string seedPath = Path.Combine(seedDirectory, "opening-seed.db");
+        string seedRoot = Path.Join(Path.GetTempPath(), $"MoveMentorChessServices-seed-{Guid.NewGuid():N}");
+        string seedDirectory = Path.Join(seedRoot, "OpeningSeed");
+        string seedPath = Path.Join(seedDirectory, "opening-seed.db");
         FakeOpeningSeedRuntimeEnvironment environment = new(seedRoot);
 
         try
@@ -75,9 +75,9 @@ public sealed class PersistenceOpeningTheorySourceResolverTests
     public void ResolveTheoryStore_ReusesBundledSeedStoreForSameSeedPath()
     {
         string localDatabasePath = CreateTempDatabasePath();
-        string seedRoot = Path.Combine(Path.GetTempPath(), $"MoveMentorChessServices-seed-{Guid.NewGuid():N}");
-        string seedDirectory = Path.Combine(seedRoot, "OpeningSeed");
-        string seedPath = Path.Combine(seedDirectory, "opening-seed.db");
+        string seedRoot = Path.Join(Path.GetTempPath(), $"MoveMentorChessServices-seed-{Guid.NewGuid():N}");
+        string seedDirectory = Path.Join(seedRoot, "OpeningSeed");
+        string seedPath = Path.Join(seedDirectory, "opening-seed.db");
         FakeOpeningSeedRuntimeEnvironment environment = new(seedRoot);
 
         try
@@ -124,7 +124,7 @@ public sealed class PersistenceOpeningTheorySourceResolverTests
 
     private static string CreateTempDatabasePath()
     {
-        return Path.Combine(Path.GetTempPath(), $"MoveMentorChessServices-theory-source-{Guid.NewGuid():N}.db");
+        return Path.Join(Path.GetTempPath(), $"MoveMentorChessServices-theory-source-{Guid.NewGuid():N}.db");
     }
 
     private static void DeleteTempDatabase(string databasePath)
