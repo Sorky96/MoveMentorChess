@@ -32,7 +32,7 @@ public sealed class GameAnalysisService
         this.mistakeSelector = mistakeSelector ?? new MistakeSelector();
         this.qualityGate = qualityGate ?? new AnalysisQualityGate();
         this.openingTheory = openingTheory;
-        this.playerMistakeProfileSource = playerMistakeProfileSource ?? new StoreBackedPlayerMistakeProfileSource();
+        this.playerMistakeProfileSource = playerMistakeProfileSource ?? NullPlayerMistakeProfileSource.Instance;
     }
 
     public GameAnalysisResult AnalyzeGame(
@@ -466,4 +466,11 @@ public sealed class GameAnalysisService
 
     private readonly record struct ScoreSnapshot(int? Centipawns, int? MateIn);
     private readonly record struct EngineCacheKey(string Fen, int Depth, int MultiPv, int? MoveTimeMs);
+
+    private sealed class NullPlayerMistakeProfileSource : IPlayerMistakeProfileSource
+    {
+        public static readonly NullPlayerMistakeProfileSource Instance = new();
+
+        public PlayerMistakeProfile? TryBuild(string? playerName) => null;
+    }
 }

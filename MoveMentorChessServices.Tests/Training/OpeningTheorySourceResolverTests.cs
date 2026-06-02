@@ -1,11 +1,11 @@
 using MoveMentorChess.Opening;
+using MoveMentorChess.App.ViewModels;
 using MoveMentorChess.Persistence;
-using MoveMentorChess.Training;
 using Xunit;
 
 namespace MoveMentorChessServices.Tests;
 
-public sealed class OpeningTheorySourceResolverTests
+public sealed class PersistenceOpeningTheorySourceResolverTests
 {
     private const string StartFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     private const string E4Fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
@@ -21,7 +21,7 @@ public sealed class OpeningTheorySourceResolverTests
             SqliteAnalysisStore localStore = new(localDatabasePath);
             localStore.ReplaceOpeningTree(CreateSingleNodeTree(StartFen));
 
-            OpeningTheoryQueryService service = OpeningTheorySourceResolver.Create((IOpeningTheoryStore)localStore, environment);
+            OpeningTheoryQueryService service = PersistenceOpeningTheorySourceResolver.Create((IOpeningTheoryStore)localStore, environment);
 
             Assert.True(service.TryGetPositionByFen(StartFen, out OpeningTheoryPosition? position));
             Assert.NotNull(position);
@@ -40,9 +40,9 @@ public sealed class OpeningTheorySourceResolverTests
     public void Create_UsesBundledSeedStoreWhenSeedExists()
     {
         string localDatabasePath = CreateTempDatabasePath();
-        string seedRoot = Path.Combine(Path.GetTempPath(), $"MoveMentorChessServices-seed-{Guid.NewGuid():N}");
-        string seedDirectory = Path.Combine(seedRoot, "OpeningSeed");
-        string seedPath = Path.Combine(seedDirectory, "opening-seed.db");
+        string seedRoot = Path.Join(Path.GetTempPath(), $"MoveMentorChessServices-seed-{Guid.NewGuid():N}");
+        string seedDirectory = Path.Join(seedRoot, "OpeningSeed");
+        string seedPath = Path.Join(seedDirectory, "opening-seed.db");
         FakeOpeningSeedRuntimeEnvironment environment = new(seedRoot);
 
         try
@@ -54,11 +54,44 @@ public sealed class OpeningTheorySourceResolverTests
             seedStore.ReplaceOpeningTree(CreateSingleNodeTree(E4Fen));
             environment.AddFile(seedPath, new DateTime(2026, 6, 1, 16, 0, 0, DateTimeKind.Utc));
 
-            OpeningTheoryQueryService service = OpeningTheorySourceResolver.Create((IOpeningTheoryStore)localStore, environment);
+            OpeningTheoryQueryService service = PersistenceOpeningTheorySourceResolver.Create((IOpeningTheoryStore)localStore, environment);
 
             Assert.False(service.TryGetPositionByFen(StartFen, out _));
             Assert.True(service.TryGetPositionByFen(E4Fen, out OpeningTheoryPosition? seedPosition));
             Assert.NotNull(seedPosition);
+        }
+        finally
+        {
+            DeleteTempDatabase(localDatabasePath);
+            DeleteTempDatabase(seedPath);
+            if (Directory.Exists(seedRoot))
+            {
+                Directory.Delete(seedRoot, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void ResolveTheoryStore_ReusesBundledSeedStoreForSameSeedPath()
+    {
+        string localDatabasePath = CreateTempDatabasePath();
+        string seedRoot = Path.Join(Path.GetTempPath(), $"MoveMentorChessServices-seed-{Guid.NewGuid():N}");
+        string seedDirectory = Path.Join(seedRoot, "OpeningSeed");
+        string seedPath = Path.Join(seedDirectory, "opening-seed.db");
+        FakeOpeningSeedRuntimeEnvironment environment = new(seedRoot);
+
+        try
+        {
+            Directory.CreateDirectory(seedDirectory);
+            SqliteAnalysisStore localStore = new(localDatabasePath);
+            SqliteAnalysisStore seedStore = new(seedPath);
+            seedStore.ReplaceOpeningTree(CreateSingleNodeTree(E4Fen));
+            environment.AddFile(seedPath, new DateTime(2026, 6, 1, 16, 0, 0, DateTimeKind.Utc));
+
+            IOpeningTheoryStore first = PersistenceOpeningTheorySourceResolver.ResolveTheoryStore(localStore, environment);
+            IOpeningTheoryStore second = PersistenceOpeningTheorySourceResolver.ResolveTheoryStore(localStore, environment);
+
+            Assert.Same(first, second);
         }
         finally
         {
@@ -91,7 +124,7 @@ public sealed class OpeningTheorySourceResolverTests
 
     private static string CreateTempDatabasePath()
     {
-        return Path.Combine(Path.GetTempPath(), $"MoveMentorChessServices-theory-source-{Guid.NewGuid():N}.db");
+        return Path.Join(Path.GetTempPath(), $"MoveMentorChessServices-theory-source-{Guid.NewGuid():N}.db");
     }
 
     private static void DeleteTempDatabase(string databasePath)

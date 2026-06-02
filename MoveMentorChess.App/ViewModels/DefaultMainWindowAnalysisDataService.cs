@@ -81,9 +81,16 @@ internal sealed class DefaultMainWindowAnalysisDataService : IMainWindowAnalysis
         analysisResultCache.StoreResult(analysisResultCache.CreateKey(game, side, options), result);
     }
 
+    public IPlayerMistakeProfileSource? CreatePlayerMistakeProfileSource()
+    {
+        return analysisStoreProvider() is null
+            ? null
+            : new StoreBackedPlayerMistakeProfileSource(() => analysisStoreProvider() as IAnalysisResultStore);
+    }
+
     public OpeningTheoryQueryService? CreateOpeningTheory()
     {
         IAnalysisStore? store = analysisStoreProvider();
-        return store is null ? null : OpeningTheorySourceResolver.Create(store);
+        return store is null ? null : PersistenceOpeningTheorySourceResolver.Create(store);
     }
 }

@@ -12,7 +12,8 @@ internal static class AnalysisRunService
         PlayerSide side,
         EngineAnalysisOptions analysisOptions,
         Action<GameAnalysisProgress>? analysisProgress,
-        OpeningTheoryQueryService? openingTheory)
+        OpeningTheoryQueryService? openingTheory,
+        IPlayerMistakeProfileSource? playerMistakeProfileSource)
     {
         ArgumentNullException.ThrowIfNull(engineAnalyzer);
         ArgumentNullException.ThrowIfNull(importedGame);
@@ -21,7 +22,8 @@ internal static class AnalysisRunService
         GameAnalysisService analysisService = new(
             engineAnalyzer,
             adviceGenerator: new SettingsBackedAdviceGenerator(AdviceGeneratorFactory.CreateBulkAnalysisGenerator()),
-            openingTheory: openingTheory);
+            openingTheory: openingTheory,
+            playerMistakeProfileSource: playerMistakeProfileSource);
         IProgress<GameAnalysisProgress>? progress = analysisProgress is null
             ? null
             : new Progress<GameAnalysisProgress>(analysisProgress);

@@ -1,3 +1,4 @@
+using MoveMentorChess.Analysis;
 using MoveMentorChess.Opening;
 using MoveMentorChess.Persistence;
 
@@ -67,6 +68,13 @@ internal sealed class DefaultAnalysisWindowDataService : IAnalysisWindowDataServ
     public void StoreResult(GameAnalysisCacheKey cacheKey, GameAnalysisResult result)
         => AnalysisResultCacheLoader.StoreResult(analysisResultCache, cacheKey, result);
 
+    public IPlayerMistakeProfileSource? CreatePlayerMistakeProfileSource()
+    {
+        return storeProvider() is null
+            ? null
+            : new StoreBackedPlayerMistakeProfileSource(() => storeProvider() as IAnalysisResultStore);
+    }
+
     public void SaveMoveAdviceFeedback(MoveAdviceFeedback feedback)
         => storeProvider()?.SaveMoveAdviceFeedback(feedback);
 
@@ -83,6 +91,6 @@ internal sealed class DefaultAnalysisWindowDataService : IAnalysisWindowDataServ
     public OpeningTheoryQueryService? CreateOpeningTheory()
     {
         IAnalysisStore? store = storeProvider();
-        return store is null ? null : OpeningTheorySourceResolver.Create(store);
+        return store is null ? null : PersistenceOpeningTheorySourceResolver.Create(store);
     }
 }

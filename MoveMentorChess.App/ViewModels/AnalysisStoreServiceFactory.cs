@@ -7,12 +7,15 @@ internal static class AnalysisStoreServiceFactory
     public static PlayerProfileService CreatePlayerProfileService(IAnalysisStore store)
     {
         ArgumentNullException.ThrowIfNull(store);
+        IOpeningTheoryStore? openingTheoryStore = store is IOpeningTheoryStore theoryStore
+            ? PersistenceOpeningTheorySourceResolver.ResolveTheoryStore(theoryStore)
+            : null;
 
         return new(
             store,
             store,
             store,
-            store as IOpeningTheoryStore,
+            openingTheoryStore,
             store as IOpeningTreeStore,
             store as IOpeningTrainingHistoryStore);
     }
@@ -20,12 +23,15 @@ internal static class AnalysisStoreServiceFactory
     public static OpeningTrainerWorkspaceService CreateOpeningTrainerWorkspaceService(IAnalysisStore store)
     {
         ArgumentNullException.ThrowIfNull(store);
+        IOpeningTheoryStore? openingTheoryStore = store is IOpeningTheoryStore theoryStore
+            ? PersistenceOpeningTheorySourceResolver.ResolveTheoryStore(theoryStore)
+            : null;
 
         return new(
             store,
             store,
             store,
-            store as IOpeningTheoryStore,
+            openingTheoryStore,
             store as IOpeningTrainingHistoryStore,
             store as IOpeningTrainingTelemetryStore);
     }

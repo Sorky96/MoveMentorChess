@@ -108,6 +108,56 @@ public sealed partial class AppArchitectureTests
     }
 
     [Fact]
+    public void UseCaseProjectsDoNotReferencePersistence()
+    {
+        string root = FindRepositoryRoot();
+        string[] useCaseProjects =
+        [
+            "MoveMentorChess.Analysis",
+            "MoveMentorChess.Training",
+            "MoveMentorChess.Profiles"
+        ];
+
+        string[] persistenceReferences = useCaseProjects
+            .SelectMany(project => ReadProjectReferences(root, project)
+                .Where(reference => string.Equals(reference, "MoveMentorChess.Persistence", StringComparison.Ordinal))
+                .Select(_ => project))
+            .Order()
+            .ToArray();
+
+        Assert.Empty(persistenceReferences);
+    }
+
+    [Fact]
+    public void GlobalAnalysisStoreProviderAccessStaysInCompositionOrPersistenceAdapters()
+    {
+        string root = FindRepositoryRoot();
+        string[] allowedFiles =
+        [
+            Path.Join("MoveMentorChess.App", "Composition", "AppCompositionRoot.cs")
+        ];
+
+        string[] sourceRoots = Directory
+            .EnumerateDirectories(root, "MoveMentorChess.*", SearchOption.TopDirectoryOnly)
+            .Where(path => !Path.GetFileName(path).Equals("MoveMentorChessServices.Tests", StringComparison.Ordinal))
+            .ToArray();
+
+        string[] forbiddenFiles = sourceRoots
+            .SelectMany(path => Directory.EnumerateFiles(path, "*.cs", SearchOption.AllDirectories))
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
+            .Where(path => File.ReadAllText(path).Contains("AnalysisStoreProvider.GetStore", StringComparison.Ordinal))
+            .Select(path => Path.GetRelativePath(root, path))
+            .Where(path => !path.StartsWith($"MoveMentorChess.Persistence{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                && !path.StartsWith($"MoveMentorChess.Diagnostics{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                && !allowedFiles.Contains(path, StringComparer.Ordinal))
+            .Order()
+            .ToArray();
+
+        Assert.Empty(forbiddenFiles);
+    }
+
+    [Fact]
     public void StockfishPathResolverUsesRuntimeEnvironmentPort()
     {
         string resolverPath = Path.Join(
