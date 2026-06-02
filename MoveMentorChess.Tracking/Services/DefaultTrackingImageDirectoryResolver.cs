@@ -5,7 +5,7 @@ namespace MoveMentorChess.Tracking;
 
 public sealed class DefaultTrackingImageDirectoryResolver : ITrackingImageDirectoryResolver
 {
-    private const string ProbePieceFileName = "wK.svg";
+    private const string ProbePieceFileName = "wK.png";
     private readonly Func<string> baseDirectoryProvider;
     private readonly Func<string, bool> directoryExists;
     private readonly Func<string, bool> fileExists;

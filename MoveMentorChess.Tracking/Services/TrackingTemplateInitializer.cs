@@ -109,13 +109,13 @@ public sealed class TrackingTemplateInitializer
         {
             TryAddImageTemplate(
                 pieceType,
-                $"w{pieceType}.svg",
+                $"w{pieceType}.png",
                 coldStartBoardTemplatesToAdd,
                 genericShapeTemplatesToAdd,
                 genericPieceTemplatesToAdd);
             TryAddImageTemplate(
                 pieceType,
-                $"b{pieceType}.svg",
+                $"b{pieceType}.png",
                 coldStartBoardTemplatesToAdd,
                 genericShapeTemplatesToAdd,
                 genericPieceTemplatesToAdd);

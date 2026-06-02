@@ -1,5 +1,7 @@
 using System;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 
 namespace MoveMentorChess.Tracking;
 
@@ -49,20 +51,7 @@ public sealed class DefaultBoardImageNormalizer : IBoardImageNormalizer
         int[] columnMatches = new int[boardImage.Width];
         int matchingPixels = 0;
 
-        for (int y = 0; y < boardImage.Height; y++)
-        {
-            for (int x = 0; x < boardImage.Width; x++)
-            {
-                Color pixel = boardImage.GetPixel(x, y);
-                if (ColorDistance(pixel, LightSquareColor) <= 58
-                    || ColorDistance(pixel, DarkSquareColor) <= 58)
-                {
-                    matchingPixels++;
-                    rowMatches[y]++;
-                    columnMatches[x]++;
-                }
-            }
-        }
+        matchingPixels = CountBoardColoredPixels(boardImage, rowMatches, columnMatches);
 
         int totalPixels = boardImage.Width * boardImage.Height;
         if (matchingPixels < totalPixels / 12)
@@ -118,11 +107,106 @@ public sealed class DefaultBoardImageNormalizer : IBoardImageNormalizer
         return -1;
     }
 
+    private static int CountBoardColoredPixels(Bitmap boardImage, int[] rowMatches, int[] columnMatches)
+    {
+        int bytesPerPixel = GetBytesPerPixel(boardImage.PixelFormat);
+        if (bytesPerPixel == 0)
+        {
+            return CountBoardColoredPixelsWithGetPixel(boardImage, rowMatches, columnMatches);
+        }
+
+        Rectangle bounds = new(0, 0, boardImage.Width, boardImage.Height);
+        BitmapData? data = null;
+
+        try
+        {
+            data = boardImage.LockBits(bounds, ImageLockMode.ReadOnly, boardImage.PixelFormat);
+            int stride = data.Stride;
+            int rowByteCount = Math.Abs(stride);
+            byte[] pixels = new byte[rowByteCount * boardImage.Height];
+            Marshal.Copy(data.Scan0, pixels, 0, pixels.Length);
+
+            int matchingPixels = 0;
+            for (int y = 0; y < boardImage.Height; y++)
+            {
+                int rowOffset = stride >= 0
+                    ? y * stride
+                    : (boardImage.Height - 1 - y) * rowByteCount;
+
+                for (int x = 0; x < boardImage.Width; x++)
+                {
+                    int pixelOffset = rowOffset + x * bytesPerPixel;
+                    int blue = pixels[pixelOffset];
+                    int green = pixels[pixelOffset + 1];
+                    int red = pixels[pixelOffset + 2];
+                    if (IsBoardColor(red, green, blue))
+                    {
+                        matchingPixels++;
+                        rowMatches[y]++;
+                        columnMatches[x]++;
+                    }
+                }
+            }
+
+            return matchingPixels;
+        }
+        finally
+        {
+            if (data is not null)
+            {
+                boardImage.UnlockBits(data);
+            }
+        }
+    }
+
+    private static int CountBoardColoredPixelsWithGetPixel(Bitmap boardImage, int[] rowMatches, int[] columnMatches)
+    {
+        int matchingPixels = 0;
+        for (int y = 0; y < boardImage.Height; y++)
+        {
+            for (int x = 0; x < boardImage.Width; x++)
+            {
+                Color pixel = boardImage.GetPixel(x, y);
+                if (IsBoardColor(pixel.R, pixel.G, pixel.B))
+                {
+                    matchingPixels++;
+                    rowMatches[y]++;
+                    columnMatches[x]++;
+                }
+            }
+        }
+
+        return matchingPixels;
+    }
+
+    private static int GetBytesPerPixel(PixelFormat pixelFormat)
+    {
+        return pixelFormat switch
+        {
+            PixelFormat.Format24bppRgb => 3,
+            PixelFormat.Format32bppArgb
+                or PixelFormat.Format32bppPArgb
+                or PixelFormat.Format32bppRgb => 4,
+            _ => 0
+        };
+    }
+
+    private static bool IsBoardColor(int red, int green, int blue)
+    {
+        return ColorDistance(red, green, blue, LightSquareColor) <= 58
+            || ColorDistance(red, green, blue, DarkSquareColor) <= 58;
+    }
+
     private static double ColorDistance(Color left, Color right)
     {
-        int dr = left.R - right.R;
-        int dg = left.G - right.G;
-        int db = left.B - right.B;
+        return ColorDistance(left.R, left.G, left.B, right);
+    }
+
+    private static double ColorDistance(int red, int green, int blue, Color right)
+    {
+        int dr = red - right.R;
+        int dg = green - right.G;
+        int db = blue - right.B;
         return Math.Sqrt((double)dr * dr + (double)dg * dg + (double)db * db);
     }
 }
