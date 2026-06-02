@@ -5,6 +5,10 @@ namespace MoveMentorChess.App.ViewModels;
 
 internal static class PersistenceOpeningTheorySourceResolver
 {
+    private static readonly object Sync = new();
+    private static string? cachedBundledSeedPath;
+    private static SqliteAnalysisStore? cachedBundledSeedStore;
+
     public static OpeningTheoryQueryService? Create(
         IAnalysisStore analysisStore,
         IOpeningSeedRuntimeEnvironment? runtimeEnvironment = null)
@@ -44,8 +48,19 @@ internal static class PersistenceOpeningTheorySourceResolver
             return null;
         }
 
-        return new SqliteAnalysisStore(
-            seedPath,
-            applyDerivedAnalysisDataVersionPolicy: false);
+        lock (Sync)
+        {
+            if (string.Equals(cachedBundledSeedPath, seedPath, StringComparison.OrdinalIgnoreCase)
+                && cachedBundledSeedStore is not null)
+            {
+                return cachedBundledSeedStore;
+            }
+
+            cachedBundledSeedPath = seedPath;
+            cachedBundledSeedStore = new SqliteAnalysisStore(
+                seedPath,
+                applyDerivedAnalysisDataVersionPolicy: false);
+            return cachedBundledSeedStore;
+        }
     }
 }

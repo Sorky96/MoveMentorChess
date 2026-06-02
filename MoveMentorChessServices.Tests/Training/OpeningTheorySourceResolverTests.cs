@@ -71,6 +71,39 @@ public sealed class PersistenceOpeningTheorySourceResolverTests
         }
     }
 
+    [Fact]
+    public void ResolveTheoryStore_ReusesBundledSeedStoreForSameSeedPath()
+    {
+        string localDatabasePath = CreateTempDatabasePath();
+        string seedRoot = Path.Combine(Path.GetTempPath(), $"MoveMentorChessServices-seed-{Guid.NewGuid():N}");
+        string seedDirectory = Path.Combine(seedRoot, "OpeningSeed");
+        string seedPath = Path.Combine(seedDirectory, "opening-seed.db");
+        FakeOpeningSeedRuntimeEnvironment environment = new(seedRoot);
+
+        try
+        {
+            Directory.CreateDirectory(seedDirectory);
+            SqliteAnalysisStore localStore = new(localDatabasePath);
+            SqliteAnalysisStore seedStore = new(seedPath);
+            seedStore.ReplaceOpeningTree(CreateSingleNodeTree(E4Fen));
+            environment.AddFile(seedPath, new DateTime(2026, 6, 1, 16, 0, 0, DateTimeKind.Utc));
+
+            IOpeningTheoryStore first = PersistenceOpeningTheorySourceResolver.ResolveTheoryStore(localStore, environment);
+            IOpeningTheoryStore second = PersistenceOpeningTheorySourceResolver.ResolveTheoryStore(localStore, environment);
+
+            Assert.Same(first, second);
+        }
+        finally
+        {
+            DeleteTempDatabase(localDatabasePath);
+            DeleteTempDatabase(seedPath);
+            if (Directory.Exists(seedRoot))
+            {
+                Directory.Delete(seedRoot, recursive: true);
+            }
+        }
+    }
+
     private static OpeningTreeBuildResult CreateSingleNodeTree(string fen)
     {
         OpeningPositionKey positionKey = OpeningPositionKeyBuilder.BuildKey(fen);

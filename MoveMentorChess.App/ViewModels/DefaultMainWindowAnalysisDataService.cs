@@ -83,8 +83,9 @@ internal sealed class DefaultMainWindowAnalysisDataService : IMainWindowAnalysis
 
     public IPlayerMistakeProfileSource? CreatePlayerMistakeProfileSource()
     {
-        IAnalysisStore? store = analysisStoreProvider();
-        return store is null ? null : new StoreBackedPlayerMistakeProfileSource(() => store);
+        return analysisStoreProvider() is null
+            ? null
+            : new StoreBackedPlayerMistakeProfileSource(() => analysisStoreProvider() as IAnalysisResultStore);
     }
 
     public OpeningTheoryQueryService? CreateOpeningTheory()

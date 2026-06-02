@@ -70,8 +70,9 @@ internal sealed class DefaultAnalysisWindowDataService : IAnalysisWindowDataServ
 
     public IPlayerMistakeProfileSource? CreatePlayerMistakeProfileSource()
     {
-        IAnalysisStore? store = storeProvider();
-        return store is null ? null : new StoreBackedPlayerMistakeProfileSource(() => store);
+        return storeProvider() is null
+            ? null
+            : new StoreBackedPlayerMistakeProfileSource(() => storeProvider() as IAnalysisResultStore);
     }
 
     public void SaveMoveAdviceFeedback(MoveAdviceFeedback feedback)
