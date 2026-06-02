@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace MoveMentorChess.Persistence;
+namespace MoveMentorChess.Domain;
 
 public static class GameFingerprint
 {

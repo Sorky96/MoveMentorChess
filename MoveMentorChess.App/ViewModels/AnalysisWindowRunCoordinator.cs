@@ -86,7 +86,8 @@ internal sealed class AnalysisWindowRunCoordinator(
                 side,
                 analysisOptions,
                 analysisProgress,
-                dataService.CreateOpeningTheory());
+                dataService.CreateOpeningTheory(),
+                dataService.CreatePlayerMistakeProfileSource());
             dataService.StoreResult(cacheKey, result);
             return AnalysisWindowRunOutcome.Completed(result, side);
         }

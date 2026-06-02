@@ -6,11 +6,6 @@ public sealed class StoreBackedPlayerMistakeProfileSource : IPlayerMistakeProfil
 {
     private readonly Func<IAnalysisResultStore?> storeProvider;
 
-    public StoreBackedPlayerMistakeProfileSource()
-        : this(AnalysisStoreProvider.GetStore)
-    {
-    }
-
     public StoreBackedPlayerMistakeProfileSource(Func<IAnalysisResultStore?> storeProvider)
     {
         this.storeProvider = storeProvider ?? throw new ArgumentNullException(nameof(storeProvider));

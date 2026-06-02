@@ -15,5 +15,7 @@ internal interface IMainWindowAnalysisDataService
 
     void StoreAnalysisResult(ImportedGame game, PlayerSide side, EngineAnalysisOptions options, GameAnalysisResult result);
 
+    IPlayerMistakeProfileSource? CreatePlayerMistakeProfileSource();
+
     OpeningTheoryQueryService? CreateOpeningTheory();
 }

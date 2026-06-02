@@ -1,5 +1,5 @@
+using MoveMentorChess.Analysis;
 using MoveMentorChess.Opening;
-using MoveMentorChess.Persistence;
 
 namespace MoveMentorChess.App.ViewModels;
 
@@ -28,6 +28,8 @@ public interface IAnalysisWindowDataService
     void StoreWindowState(ImportedGame importedGame, AnalysisWindowState state);
 
     void StoreResult(GameAnalysisCacheKey cacheKey, GameAnalysisResult result);
+
+    IPlayerMistakeProfileSource? CreatePlayerMistakeProfileSource();
 
     void SaveMoveAdviceFeedback(MoveAdviceFeedback feedback);
 

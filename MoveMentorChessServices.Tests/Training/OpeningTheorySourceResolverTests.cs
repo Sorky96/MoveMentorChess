@@ -1,11 +1,11 @@
 using MoveMentorChess.Opening;
+using MoveMentorChess.App.ViewModels;
 using MoveMentorChess.Persistence;
-using MoveMentorChess.Training;
 using Xunit;
 
 namespace MoveMentorChessServices.Tests;
 
-public sealed class OpeningTheorySourceResolverTests
+public sealed class PersistenceOpeningTheorySourceResolverTests
 {
     private const string StartFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     private const string E4Fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
@@ -21,7 +21,7 @@ public sealed class OpeningTheorySourceResolverTests
             SqliteAnalysisStore localStore = new(localDatabasePath);
             localStore.ReplaceOpeningTree(CreateSingleNodeTree(StartFen));
 
-            OpeningTheoryQueryService service = OpeningTheorySourceResolver.Create((IOpeningTheoryStore)localStore, environment);
+            OpeningTheoryQueryService service = PersistenceOpeningTheorySourceResolver.Create((IOpeningTheoryStore)localStore, environment);
 
             Assert.True(service.TryGetPositionByFen(StartFen, out OpeningTheoryPosition? position));
             Assert.NotNull(position);
@@ -54,7 +54,7 @@ public sealed class OpeningTheorySourceResolverTests
             seedStore.ReplaceOpeningTree(CreateSingleNodeTree(E4Fen));
             environment.AddFile(seedPath, new DateTime(2026, 6, 1, 16, 0, 0, DateTimeKind.Utc));
 
-            OpeningTheoryQueryService service = OpeningTheorySourceResolver.Create((IOpeningTheoryStore)localStore, environment);
+            OpeningTheoryQueryService service = PersistenceOpeningTheorySourceResolver.Create((IOpeningTheoryStore)localStore, environment);
 
             Assert.False(service.TryGetPositionByFen(StartFen, out _));
             Assert.True(service.TryGetPositionByFen(E4Fen, out OpeningTheoryPosition? seedPosition));

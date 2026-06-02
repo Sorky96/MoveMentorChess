@@ -491,7 +491,10 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 : $"The analysis engine is reviewing games for {primaryPlayer}. This may take a while.";
 
             EngineAnalysisOptions options = StockfishSettingsStore.Load().ToBulkAnalysisOptions();
-            GameAnalysisService analysisService = new(engine, openingTheory: analysisDataService.CreateOpeningTheory());
+            GameAnalysisService analysisService = new(
+                engine,
+                openingTheory: analysisDataService.CreateOpeningTheory(),
+                playerMistakeProfileSource: analysisDataService.CreatePlayerMistakeProfileSource());
             GameAnalysisResult? lastResult = null;
 
             foreach (ImportedGame game in games)
@@ -845,7 +848,10 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             ApplyAnalysisToImportedMoves();
             IProgress<GameAnalysisProgress> progress = new Progress<GameAnalysisProgress>(ShowAnalysisProgressOnBoard);
 
-            GameAnalysisService analysisService = new(engine, openingTheory: analysisDataService.CreateOpeningTheory());
+            GameAnalysisService analysisService = new(
+                engine,
+                openingTheory: analysisDataService.CreateOpeningTheory(),
+                playerMistakeProfileSource: analysisDataService.CreatePlayerMistakeProfileSource());
             cachedAnalysisResult = await Task.Run(() => analysisService.AnalyzeGame(
                 importedGame,
                 SelectedAnalysisSide,

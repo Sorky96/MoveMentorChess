@@ -9,10 +9,14 @@ public static class PlayerMistakeProfileProvider
     private const int MinGamesForProfile = 2;
     private const int MaxPatterns = 3;
     private const int MaxResultsToScan = 200;
-    private static readonly StoreBackedPlayerMistakeProfileSource DefaultSource = new();
 
-    public static PlayerMistakeProfile? TryBuild(string? playerName)
-        => DefaultSource.TryBuild(playerName);
+    public static PlayerMistakeProfile? TryBuild(IAnalysisResultStore store, string playerName)
+    {
+        ArgumentNullException.ThrowIfNull(store);
+        ArgumentException.ThrowIfNullOrWhiteSpace(playerName);
+
+        return TryBuildFromStore(store, playerName.Trim());
+    }
 
     internal static PlayerMistakeProfile? TryBuildFromStore(IAnalysisResultStore store, string playerName)
     {
