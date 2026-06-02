@@ -18,6 +18,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     private readonly OpeningTrainerWorkspaceService workspaceService;
     private readonly OpeningStudyFeedbackAnimator studyFeedbackAnimator = new();
     private readonly OpeningTrainerTelemetryAdapter telemetryAdapter = new();
+    private readonly OpeningTrainerResultsViewModel resultsViewModel = new();
     private readonly HashSet<string> studyAvailableTargets = new(StringComparer.OrdinalIgnoreCase);
     private readonly OpeningTrainerSessionController sessionController;
     // Compatibility shims – state still referenced by the rest of the ViewModel.
@@ -34,12 +35,8 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     private OpeningLineCatalogItem? selectedOpening;
     private TrainingRecommendationCard? todayRecommendation;
     private TrainingPriorityItem? selectedPriority;
-    private TrainingNextAction? selectedNextAction;
-    private TrainingNextActionCardViewModel? selectedSecondaryNextAction;
     private OpeningTrainingAnswerOption? selectedAnswerOption;
     private OpeningTrainingIntensityChoice? selectedIntensityChoice;
-    private TrainingSessionOutcomeSummary? outcomeSummary;
-    private TrainingResultLearningPlan? learningPlan;
     private PlayerOpeningPlan? playerOpeningPlan;
     private SpecialTrainingModeDefinition? selectedSpecialMode;
     private OpeningTrainerOverview? overview;
@@ -66,8 +63,6 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     private IBrush studyFeedbackBrush = Brushes.Transparent;
     private IBrush studyFeedbackBorderBrush = Brushes.Transparent;
     private double studyFeedbackOpacity;
-    private string resultHeadline = "Finish practice to see your review plan.";
-    private string resultRecommendation = "Your next review suggestion will appear here.";
     private bool isStudyReferenceVisible;
     private bool canRevealStudyReference;
     private bool isAdvancedOptionsExpanded;
@@ -128,17 +123,17 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     public ObservableCollection<string> WeakPositionItems { get; } = [];
 
-    public ObservableCollection<string> ResultItems { get; } = [];
+    public ObservableCollection<string> ResultItems => resultsViewModel.ResultItems;
 
-    public ObservableCollection<TrainingNextAction> NextActionItems { get; } = [];
+    public ObservableCollection<TrainingNextAction> NextActionItems => resultsViewModel.NextActionItems;
 
-    public ObservableCollection<TrainingNextActionCardViewModel> NextActionCards { get; } = [];
+    public ObservableCollection<TrainingNextActionCardViewModel> NextActionCards => resultsViewModel.NextActionCards;
 
-    public ObservableCollection<TrainingNextActionCardViewModel> SecondaryNextActionCards { get; } = [];
+    public ObservableCollection<TrainingNextActionCardViewModel> SecondaryNextActionCards => resultsViewModel.SecondaryNextActionCards;
 
     public ObservableCollection<OpeningTrainingAnswerOption> AnswerOptionItems { get; } = [];
 
-    public ObservableCollection<TrainingResultReviewItem> LearningPlanReviewItems { get; } = [];
+    public ObservableCollection<TrainingResultReviewItem> LearningPlanReviewItems => resultsViewModel.LearningPlanReviewItems;
 
     public ObservableCollection<OpeningUnderstandingCard> UnderstandingCards { get; } = [];
 
@@ -622,17 +617,9 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         private set => SetProperty(ref studyFeedbackOpacity, value);
     }
 
-    public string ResultHeadline
-    {
-        get => resultHeadline;
-        private set => SetProperty(ref resultHeadline, value);
-    }
+    public string ResultHeadline => resultsViewModel.ResultHeadline;
 
-    public string ResultRecommendation
-    {
-        get => resultRecommendation;
-        private set => SetProperty(ref resultRecommendation, value);
-    }
+    public string ResultRecommendation => resultsViewModel.ResultRecommendation;
 
     public bool IsStudyReferenceVisible
     {
@@ -677,81 +664,51 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     public bool CanUseDontKnow => sessionController.CanUseDontKnow;
 
-    public TrainingSessionOutcomeSummary? OutcomeSummary
-    {
-        get => outcomeSummary;
-        private set => SetProperty(ref outcomeSummary, value);
-    }
+    public TrainingSessionOutcomeSummary? OutcomeSummary => resultsViewModel.OutcomeSummary;
 
-    public TrainingResultLearningPlan? LearningPlan
-    {
-        get => learningPlan;
-        private set
-        {
-            if (SetProperty(ref learningPlan, value))
-            {
-                OnPropertyChanged(nameof(LearningPlanMasteredText));
-                OnPropertyChanged(nameof(LearningPlanRepeatText));
-                OnPropertyChanged(nameof(LearningPlanNextReviewText));
-                OnPropertyChanged(nameof(LearningPlanReasonText));
-                OnPropertyChanged(nameof(ResultsCompletedMetricText));
-                OnPropertyChanged(nameof(ResultsClearMetricText));
-                OnPropertyChanged(nameof(ResultsAlternativesMetricText));
-                OnPropertyChanged(nameof(ResultsHintsMetricText));
-                OnPropertyChanged(nameof(ResultsRevisitMetricText));
-                OnPropertyChanged(nameof(ResultsNextActionReasonText));
-                OnPropertyChanged(nameof(HasLearningPlanReviewItems));
-                OnPropertyChanged(nameof(LearningPlanReviewPlaceholder));
-                OnPropertyChanged(nameof(HasAdvancedResultDetails));
-            }
-        }
-    }
+    public TrainingResultLearningPlan? LearningPlan => resultsViewModel.LearningPlan;
 
-    public string LearningPlanMasteredText => LearningPlan?.MasteredText ?? "Mastered: finish practice to build a plan.";
+    public string LearningPlanMasteredText => resultsViewModel.LearningPlanMasteredText;
 
-    public string LearningPlanRepeatText => LearningPlan?.RepeatText ?? "To review: finish practice first.";
+    public string LearningPlanRepeatText => resultsViewModel.LearningPlanRepeatText;
 
-    public string LearningPlanNextReviewText => LearningPlan?.NextReviewText ?? "Next review: finish practice first.";
+    public string LearningPlanNextReviewText => resultsViewModel.LearningPlanNextReviewText;
 
-    public string LearningPlanReasonText => LearningPlan?.ReasonText ?? "Reason: the trainer will use your moves, hints, and misses.";
+    public string LearningPlanReasonText => resultsViewModel.LearningPlanReasonText;
 
-    public string ResultsMasteredLabel => "Completed";
+    public string ResultsMasteredLabel => resultsViewModel.ResultsMasteredLabel;
 
-    public string ResultsNeedsReviewLabel => "To Revisit";
+    public string ResultsNeedsReviewLabel => resultsViewModel.ResultsNeedsReviewLabel;
 
-    public string ResultsBiggestWeaknessText => OpeningTrainerResultPresentation.BuildBiggestWeaknessText(ResultTone, wrongAttempts);
+    public string ResultsBiggestWeaknessText => resultsViewModel.ResultsBiggestWeaknessText(wrongAttempts, ResultTone);
 
-    public string ResultsNextBestActionText => SelectedNextAction?.Title ?? "Finish practice to unlock the next best action.";
+    public string ResultsNextBestActionText => resultsViewModel.ResultsNextBestActionText;
 
-    public string ResultsNextActionReasonText => SelectedNextAction?.Description ?? LearningPlanReasonText;
+    public string ResultsNextActionReasonText => resultsViewModel.ResultsNextActionReasonText;
 
-    public bool HasAdvancedResultDetails => ResultItems.Count > 0 || LearningPlanReviewItems.Count > 0;
+    public bool HasAdvancedResultDetails => resultsViewModel.HasAdvancedResultDetails;
 
-    public string ResultCelebrationTitle => OpeningTrainerResultPresentation.BuildCelebrationTitle(ResultTone, wrongAttempts);
+    public string ResultCelebrationTitle => resultsViewModel.ResultCelebrationTitle(wrongAttempts, ResultTone);
 
-    public string ResultCelebrationText => OpeningTrainerResultPresentation.BuildCelebrationText(ResultTone, completedSteps);
+    public string ResultCelebrationText => resultsViewModel.ResultCelebrationText(completedSteps, ResultTone);
 
-    public string ResultOutcomeBadge => OpeningTrainerResultPresentation.BuildOutcomeBadge(ResultTone, wrongAttempts);
+    public string ResultOutcomeBadge => resultsViewModel.ResultOutcomeBadge(wrongAttempts, ResultTone);
 
-    public string ResultNextStepSummary => OpeningTrainerResultPresentation.BuildNextStepSummary(ResultTone, PrimaryNextAction);
+    public string ResultNextStepSummary => resultsViewModel.ResultNextStepSummary(ResultTone);
 
-    public bool HasLearningPlanReviewItems => LearningPlanReviewItems.Count > 0;
+    public bool HasLearningPlanReviewItems => resultsViewModel.HasLearningPlanReviewItems;
 
-    public string LearningPlanReviewPlaceholder => HasLearningPlanReviewItems
-        ? string.Empty
-        : "No urgent review positions from this run.";
+    public string LearningPlanReviewPlaceholder => resultsViewModel.LearningPlanReviewPlaceholder;
 
-    public string ResultsCompletedMetricText => guidedSession is null
-        ? "0/0"
-        : $"{completedSteps}/{guidedSession.Positions.Count}";
+    public string ResultsCompletedMetricText => resultsViewModel.ResultsCompletedMetricText(guidedSession, completedSteps);
 
-    public string ResultsClearMetricText => correctAnswers.ToString(CultureInfo.InvariantCulture);
+    public string ResultsClearMetricText => OpeningTrainerResultsViewModel.ResultsClearMetricText(correctAnswers);
 
-    public string ResultsAlternativesMetricText => playableAnswers.ToString(CultureInfo.InvariantCulture);
+    public string ResultsAlternativesMetricText => OpeningTrainerResultsViewModel.ResultsAlternativesMetricText(playableAnswers);
 
-    public string ResultsHintsMetricText => hintUseCount.ToString(CultureInfo.InvariantCulture);
+    public string ResultsHintsMetricText => OpeningTrainerResultsViewModel.ResultsHintsMetricText(hintUseCount);
 
-    public string ResultsRevisitMetricText => wrongAttempts.ToString(CultureInfo.InvariantCulture);
+    public string ResultsRevisitMetricText => OpeningTrainerResultsViewModel.ResultsRevisitMetricText(wrongAttempts);
 
     private TrainingResultTone ResultTone
     {
@@ -768,12 +725,15 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     public TrainingNextAction? SelectedNextAction
     {
-        get => selectedNextAction;
+        get => resultsViewModel.SelectedNextAction;
         set
         {
-            if (SetProperty(ref selectedNextAction, value))
+            TrainingNextAction? before = resultsViewModel.SelectedNextAction;
+            resultsViewModel.SelectedNextAction = value;
+            if (!EqualityComparer<TrainingNextAction?>.Default.Equals(before, resultsViewModel.SelectedNextAction))
             {
                 ExecuteNextActionCommand.RaiseCanExecuteChanged();
+                OnPropertyChanged(nameof(SelectedNextAction));
                 OnPropertyChanged(nameof(SelectedNextActionButtonText));
                 OnPropertyChanged(nameof(ResultsNextBestActionText));
                 OnPropertyChanged(nameof(ResultsNextActionReasonText));
@@ -782,32 +742,33 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         }
     }
 
-    public bool HasNextActions => NextActionItems.Count > 0;
+    public bool HasNextActions => resultsViewModel.HasNextActions;
 
-    public string NextActionsPlaceholder => HasNextActions
-        ? string.Empty
-        : "Finish a session to unlock the next action plan.";
+    public string NextActionsPlaceholder => resultsViewModel.NextActionsPlaceholder;
 
-    public string SelectedNextActionButtonText => SelectedNextAction?.CommandLabel ?? "Select next action";
+    public string SelectedNextActionButtonText => resultsViewModel.SelectedNextActionButtonText;
 
-    public TrainingNextActionCardViewModel? PrimaryNextAction => NextActionCards.FirstOrDefault();
+    public TrainingNextActionCardViewModel? PrimaryNextAction => resultsViewModel.PrimaryNextAction;
 
-    public bool HasPrimaryNextAction => PrimaryNextAction is not null;
+    public bool HasPrimaryNextAction => resultsViewModel.HasPrimaryNextAction;
 
     public TrainingNextActionCardViewModel? SelectedSecondaryNextAction
     {
-        get => selectedSecondaryNextAction;
+        get => resultsViewModel.SelectedSecondaryNextAction;
         set
         {
-            if (SetProperty(ref selectedSecondaryNextAction, value))
+            TrainingNextActionCardViewModel? before = resultsViewModel.SelectedSecondaryNextAction;
+            resultsViewModel.SelectedSecondaryNextAction = value;
+            if (!EqualityComparer<TrainingNextActionCardViewModel?>.Default.Equals(before, resultsViewModel.SelectedSecondaryNextAction))
             {
+                OnPropertyChanged(nameof(SelectedSecondaryNextAction));
                 ExecuteSecondaryNextActionCommand.RaiseCanExecuteChanged();
                 ExecuteSelectedSecondaryNextActionCommand.RaiseCanExecuteChanged();
             }
         }
     }
 
-    public bool HasSecondaryNextActions => SecondaryNextActionCards.Count > 0;
+    public bool HasSecondaryNextActions => resultsViewModel.HasSecondaryNextActions;
 
     public string? StudySelectedSquare => studySelectedSquare;
 
@@ -1586,15 +1547,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     private void ResetResults()
     {
-        ResultHeadline = "Practice in progress.";
-        ResultRecommendation = "Finish the run to get your next review step.";
-        LearningPlan = null;
-        ReplaceItems(ResultItems, []);
-        ReplaceItems(LearningPlanReviewItems, []);
-        ReplaceItems(NextActionItems, []);
-        RebuildNextActionCards();
-        SelectedNextAction = null;
-        OutcomeSummary = null;
+        resultsViewModel.Reset();
         ResetCurrentHint();
         RaiseNextActionStateChanged();
         RaiseLearningPlanStateChanged();
@@ -1603,10 +1556,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     private void AddResultLine(OpeningTrainingAttemptResult result)
     {
-        string label = result.Status == OpeningTrainingAttemptStatus.TransposedToKnownPosition
-            ? "Transposed"
-            : result.Score.ToString();
-        ResultItems.Insert(0, $"{label} | {result.SubmittedMoveText} | {result.ShortExplanation}");
+        resultsViewModel.AddResultLine(result);
         OnPropertyChanged(nameof(HasAdvancedResultDetails));
     }
 
@@ -1683,6 +1633,8 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     private void RaiseResultsStateChanged()
     {
+        OnPropertyChanged(nameof(ResultHeadline));
+        OnPropertyChanged(nameof(ResultRecommendation));
         OnPropertyChanged(nameof(ResultsSummaryText));
         OnPropertyChanged(nameof(TranspositionSummaryText));
         OnPropertyChanged(nameof(ResultsBiggestWeaknessText));
@@ -1847,6 +1799,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     private void RaiseNextActionStateChanged()
     {
+        resultsViewModel.RaiseNextActionStateChanged();
         OnPropertyChanged(nameof(HasNextActions));
         OnPropertyChanged(nameof(NextActionsPlaceholder));
         OnPropertyChanged(nameof(SelectedNextActionButtonText));
@@ -1862,20 +1815,9 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         ExecuteSelectedSecondaryNextActionCommand.RaiseCanExecuteChanged();
     }
 
-    private void RebuildNextActionCards()
-    {
-        IReadOnlyList<TrainingNextActionCardViewModel> cards = NextActionItems
-            .Select((action, index) => TrainingNextActionCardViewModel.Create(action, index == 0))
-            .ToList();
-        ReplaceItems(NextActionCards, cards);
-        ReplaceItems(SecondaryNextActionCards, cards.Skip(1).ToList());
-        SelectedNextAction = NextActionItems.FirstOrDefault();
-        SelectedSecondaryNextAction = SecondaryNextActionCards.FirstOrDefault();
-        RaiseNextActionStateChanged();
-    }
-
     private void RaiseLearningPlanStateChanged()
     {
+        resultsViewModel.RaiseLearningPlanStateChanged();
         OnPropertyChanged(nameof(LearningPlan));
         OnPropertyChanged(nameof(LearningPlanMasteredText));
         OnPropertyChanged(nameof(LearningPlanRepeatText));
@@ -2392,21 +2334,20 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             int timeToFirstMoveSeconds,
             IReadOnlyList<OpeningTrainingAttemptResult> attempts)
         {
-            vm.OutcomeSummary = summary;
             vm.RefreshTodayRecommendation();
             vm.LoadOverview();
 
-            vm.ResultHeadline = OpeningTrainerResultPresentation.BuildCompletionHeadline(
-                session?.Positions.Count,
-                vm.SelectedOpeningName);
-            vm.ResultRecommendation = OpeningTrainerResultPresentation.BuildCompletionRecommendation(
+            IReadOnlyList<TrainingNextAction> nextActions = vm.workspaceService.BuildNextActions(summary);
+            TrainingResultLearningPlan learningPlan = vm.workspaceService.BuildLearningPlan(summary, attempts, nextActions);
+            vm.resultsViewModel.CompleteSession(
+                summary,
+                session,
+                vm.SelectedOpeningName,
                 wrongAttempts,
                 vm.playableAnswers,
-                vm.transposedAnswers);
-            ReplaceItems(vm.NextActionItems, vm.workspaceService.BuildNextActions(summary));
-            vm.RebuildNextActionCards();
-            vm.LearningPlan = vm.workspaceService.BuildLearningPlan(summary, attempts, vm.NextActionItems.ToList());
-            ReplaceItems(vm.LearningPlanReviewItems, vm.LearningPlan.ReviewItems);
+                vm.transposedAnswers,
+                nextActions,
+                learningPlan);
 
             if (savedResult is not null)
             {
@@ -2419,9 +2360,9 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
                 }
             }
 
-            vm.SelectedNextAction = vm.NextActionItems.FirstOrDefault();
             vm.RaiseLearningPlanStateChanged();
             vm.RaiseNextActionStateChanged();
+            vm.RaiseResultsStateChanged();
 
             Dictionary<string, string> completionProperties = vm.BuildBaseTelemetryProperties(new Dictionary<string, string>
             {

@@ -11,7 +11,7 @@ public sealed partial class AppArchitectureTests
         string root = FindRepositoryRoot();
         (string Path, int MaxLines)[] cleanupBudgets =
         [
-            (Path.Join(root, "MoveMentorChess.App", "ViewModels", "OpeningTrainerWindowViewModel.cs"), 2600),
+            (Path.Join(root, "MoveMentorChess.App", "ViewModels", "OpeningTrainerWindowViewModel.cs"), 2500),
             (Path.Join(root, "MoveMentorChess.App", "Views", "AnalysisWindow.axaml.cs"), 550),
             (Path.Join(root, "MoveMentorChess.App", "Views", "ProfilesWindow.axaml.cs"), 820),
             (Path.Join(root, "MoveMentorChess.Training", "OpeningTrainerService.cs"), 500),
@@ -24,6 +24,21 @@ public sealed partial class AppArchitectureTests
             .ToArray();
 
         Assert.Empty(oversizedFiles);
+    }
+
+    [Fact]
+    public void OpeningTrainerResultsStateStaysExtractedFromWindowViewModel()
+    {
+        string root = FindRepositoryRoot();
+        string viewModelsRoot = Path.Join(root, "MoveMentorChess.App", "ViewModels");
+        string windowViewModel = File.ReadAllText(Path.Join(viewModelsRoot, "OpeningTrainerWindowViewModel.cs"));
+
+        Assert.True(
+            File.Exists(Path.Join(viewModelsRoot, "OpeningTrainerResultsViewModel.cs")),
+            "Opening trainer results state should stay in its extracted ViewModel.");
+        Assert.Contains("OpeningTrainerResultsViewModel", windowViewModel, StringComparison.Ordinal);
+        Assert.DoesNotContain("private TrainingResultLearningPlan? learningPlan", windowViewModel, StringComparison.Ordinal);
+        Assert.DoesNotContain("private TrainingSessionOutcomeSummary? outcomeSummary", windowViewModel, StringComparison.Ordinal);
     }
 
     [Fact]

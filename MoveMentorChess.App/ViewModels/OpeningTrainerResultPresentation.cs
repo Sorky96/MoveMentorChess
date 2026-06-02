@@ -126,7 +126,7 @@ internal static class OpeningTrainerResultPresentation
     }
 }
 
-internal enum TrainingResultTone
+public enum TrainingResultTone
 {
     NotStarted,
     Clean,
