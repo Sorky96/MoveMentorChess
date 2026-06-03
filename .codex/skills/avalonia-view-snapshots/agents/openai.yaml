@@ -1,0 +1,3 @@
+display_name: Avalonia View Snapshots
+short_description: Render MoveMentor Avalonia views headlessly for visual review.
+default_prompt: Render the Avalonia view snapshots and inspect the PNG outputs.

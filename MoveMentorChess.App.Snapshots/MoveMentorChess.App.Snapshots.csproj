@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Headless" Version="12.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MoveMentorChess.App\MoveMentorChess.App.csproj" />
+    <ProjectReference Include="..\MoveMentorChess.Persistence\MoveMentorChess.Persistence.csproj" />
+    <ProjectReference Include="..\MoveMentorChess.Profiles\MoveMentorChess.Profiles.csproj" />
+    <ProjectReference Include="..\MoveMentorChess.Training\MoveMentorChess.Training.csproj" />
+  </ItemGroup>
+
+</Project>
