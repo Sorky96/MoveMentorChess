@@ -15,6 +15,7 @@ obj/
 out/
 *.exe
 *.dll
+.dotnet-home/
 
 # Logs
 *.log
@@ -37,3 +38,4 @@ packages/
 
 # Test results
 [Tt]est[Rr]esults/
+artifacts/view-snapshots/
