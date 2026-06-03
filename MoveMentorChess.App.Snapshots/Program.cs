@@ -94,13 +94,19 @@ internal static class Program
         window.Height = size.Height;
         window.Show();
 
-        WaitForRenderWork(settleMilliseconds);
+        try
+        {
+            WaitForRenderWork(settleMilliseconds);
 
-        using WriteableBitmap frame = window.CaptureRenderedFrame()
-            ?? throw new InvalidOperationException($"Could not capture {window.GetType().Name}.");
-        frame.Save(outputPath);
-        window.Close();
-        Dispatcher.UIThread.RunJobs();
+            using WriteableBitmap frame = window.CaptureRenderedFrame()
+                ?? throw new InvalidOperationException($"Could not capture {window.GetType().Name}.");
+            frame.Save(outputPath);
+        }
+        finally
+        {
+            window.Close();
+            Dispatcher.UIThread.RunJobs();
+        }
     }
 
     private static void WaitForRenderWork(int settleMilliseconds)
@@ -173,7 +179,14 @@ internal static class Program
                 }
                 else if (arg == "--settle-ms" && i + 1 < args.Length)
                 {
-                    settleMilliseconds = Math.Max(100, int.Parse(args[++i], CultureInfo.InvariantCulture));
+                    string raw = args[++i];
+                    if (!int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed)
+                        || parsed < 0)
+                    {
+                        throw new ArgumentException("Invalid value for --settle-ms. Use a positive integer.");
+                    }
+
+                    settleMilliseconds = Math.Max(100, parsed);
                 }
             }
 
@@ -299,12 +312,23 @@ internal static class SnapshotWindowFactory
         {
             "main" => CreateMainWindow(data, store),
             "analysis" => CreateAnalysisWindow(data, store),
-            "opening-trainer" => store is null ? null : new OpeningTrainerWindow(new OpeningTrainerWindowViewModel(new OpeningTrainerWorkspaceService(store))),
+            "opening-trainer" => store is null ? null : new OpeningTrainerWindow(new OpeningTrainerWindowViewModel(CreateSnapshotWorkspace(store))),
             "profiles" => store is null ? null : CreateProfilesWindow(store),
-            "opening-coverage" => store is null ? null : new OpeningCoverageWindow(new OpeningCoverageWindowViewModel(new OpeningTrainerWorkspaceService(store))),
+            "opening-coverage" => store is null ? null : new OpeningCoverageWindow(new OpeningCoverageWindowViewModel(CreateSnapshotWorkspace(store))),
             "settings" => new SettingsWindow(),
             _ => null
         };
+    }
+
+    private static OpeningTrainerWorkspaceService CreateSnapshotWorkspace(IAnalysisStore store)
+    {
+        return new(
+            store,
+            store,
+            store,
+            store as IOpeningTheoryStore,
+            store as IOpeningTrainingHistoryStore,
+            new SnapshotTelemetryStore(store as IOpeningTrainingTelemetryStore));
     }
 
     private static MainWindow CreateMainWindow(SnapshotData data, IAnalysisStore? store)
@@ -369,5 +393,19 @@ internal static class SnapshotWindowFactory
     private sealed class NoopProfilesWindowFactory : IProfilesWindowFactory
     {
         public ProfilesWindow Create(ProfilesWindowRequest request) => new();
+    }
+
+    private sealed class SnapshotTelemetryStore(IOpeningTrainingTelemetryStore? inner) : IOpeningTrainingTelemetryStore
+    {
+        public void SaveOpeningTrainingTelemetryEvent(OpeningTrainingTelemetryEvent telemetryEvent)
+        {
+        }
+
+        public IReadOnlyList<OpeningTrainingTelemetryEvent> ListOpeningTrainingTelemetryEvents(
+            string? playerKey = null,
+            DateTime? fromUtc = null,
+            DateTime? toUtc = null,
+            int limit = 500)
+            => inner?.ListOpeningTrainingTelemetryEvents(playerKey, fromUtc, toUtc, limit) ?? [];
     }
 }

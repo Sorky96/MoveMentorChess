@@ -12,7 +12,7 @@ Use this skill when a MoveMentorChess UI change needs visual verification.
 1. Build the solution or snapshot project before rendering:
 
 ```powershell
-$env:DOTNET_CLI_HOME='C:\repo\StockfishGUI\.dotnet-home'
+$env:DOTNET_CLI_HOME="$PWD\.dotnet-home"
 $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE='1'
 dotnet build MoveMentorChess.sln --no-restore -m:1 --verbosity minimal
 ```
@@ -20,7 +20,7 @@ dotnet build MoveMentorChess.sln --no-restore -m:1 --verbosity minimal
 2. Render snapshots with the headless harness:
 
 ```powershell
-$env:DOTNET_CLI_HOME='C:\repo\StockfishGUI\.dotnet-home'
+$env:DOTNET_CLI_HOME="$PWD\.dotnet-home"
 $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE='1'
 dotnet run --project MoveMentorChess.App.Snapshots\MoveMentorChess.App.Snapshots.csproj --no-build -- --output artifacts\view-snapshots
 ```
