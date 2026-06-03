@@ -136,7 +136,7 @@ public sealed class TrainingPlanService
         IReadOnlyList<TrainingBlock> blocks = BuildBlocks(label, template, emphasisPhase, emphasisSide, relatedOpenings);
 
         string phaseSummary = emphasisPhase.HasValue
-            ? $" Most often it appears in {FormatPhase(emphasisPhase.Value).ToLowerInvariant()}."
+            ? $" Most often it appears in {TrainingTextFormatter.FormatPhase(emphasisPhase.Value).ToLowerInvariant()}."
             : string.Empty;
         string openingSummary = relatedOpenings.Count == 0
             ? string.Empty
@@ -336,14 +336,17 @@ public sealed class TrainingPlanService
         List<ProfileMistakeExample> examples,
         OpeningWeaknessReport? openingReport)
     {
-        IEnumerable<string> values = examples
+        IEnumerable<string> exampleOpenings = examples
             .Select(item => item.Eco)
             .Where(item => !string.IsNullOrWhiteSpace(item));
+        IEnumerable<string> values = exampleOpenings;
 
         if (string.Equals(label, "opening_principles", StringComparison.Ordinal)
             && TrainingPlanOpeningWeaknessSelector.HasActionableOpeningWeakness(openingReport))
         {
-            values = values.Concat(TrainingPlanOpeningWeaknessSelector.GetActionableOpenings(openingReport).Select(item => item.Eco));
+            values = TrainingPlanOpeningWeaknessSelector.GetActionableOpenings(openingReport)
+                .Select(item => item.Eco)
+                .Concat(exampleOpenings);
         }
 
         return values
@@ -464,21 +467,10 @@ public sealed class TrainingPlanService
         return new TrainingBlock(purpose, kind, title, description, estimatedMinutes, emphasisPhase, emphasisSide, relatedOpenings);
     }
 
-    private static string FormatPhase(GamePhase phase)
-    {
-        return phase switch
-        {
-            GamePhase.Opening => "Opening",
-            GamePhase.Middlegame => "Middlegame",
-            GamePhase.Endgame => "Endgame",
-            _ => phase.ToString()
-        };
-    }
-
     private static IReadOnlyList<TrainingBlock> BuildBlocks(string label, TopicTemplate template, GamePhase? emphasisPhase, PlayerSide? emphasisSide, List<string> relatedOpenings)
     {
         string phaseText = emphasisPhase.HasValue
-            ? FormatPhase(emphasisPhase.Value).ToLowerInvariant()
+            ? TrainingTextFormatter.FormatPhase(emphasisPhase.Value).ToLowerInvariant()
             : "critical positions";
         string sideText = emphasisSide.HasValue
             ? emphasisSide.Value == PlayerSide.White ? " as White" : " as Black"

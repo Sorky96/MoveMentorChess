@@ -38,6 +38,17 @@ internal static class TrainingTextFormatter
         };
     }
 
+    public static string FormatPhase(GamePhase phase)
+    {
+        return phase switch
+        {
+            GamePhase.Opening => "Opening",
+            GamePhase.Middlegame => "Middlegame",
+            GamePhase.Endgame => "Endgame",
+            _ => phase.ToString()
+        };
+    }
+
     public static string FormatTrainingBlockKind(TrainingBlockKind kind)
     {
         return kind switch

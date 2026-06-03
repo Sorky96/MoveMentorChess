@@ -60,7 +60,7 @@ public static class TrainingPlanTopicNarrativeBuilder
         };
 
         string phaseText = emphasisPhase.HasValue
-            ? $"It shows up most often in the {FormatPhase(emphasisPhase.Value).ToLowerInvariant()}, so that phase gets extra training time."
+            ? $"It shows up most often in the {TrainingTextFormatter.FormatPhase(emphasisPhase.Value).ToLowerInvariant()}, so that phase gets extra training time."
             : "It is not tied strongly to one phase yet, so the plan keeps the work general.";
 
         return $"{frequencyText} {costText} {trendText} {phaseText}";
@@ -87,7 +87,7 @@ public static class TrainingPlanTopicNarrativeBuilder
 
         if (input.EmphasisPhase.HasValue)
         {
-            string phaseText = FormatPhase(input.EmphasisPhase.Value);
+            string phaseText = TrainingTextFormatter.FormatPhase(input.EmphasisPhase.Value);
             if (input.WeakestPhase.HasValue && input.WeakestPhase.Value == input.EmphasisPhase.Value)
             {
                 parts.Add($"Weakest phase: it lines up with the current weakest phase, {phaseText}.");
@@ -135,14 +135,4 @@ public static class TrainingPlanTopicNarrativeBuilder
         };
     }
 
-    private static string FormatPhase(GamePhase phase)
-    {
-        return phase switch
-        {
-            GamePhase.Opening => "Opening",
-            GamePhase.Middlegame => "Middlegame",
-            GamePhase.Endgame => "Endgame",
-            _ => phase.ToString()
-        };
-    }
 }

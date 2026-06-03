@@ -102,6 +102,28 @@ public sealed class TrainingPlanDecompositionTests
         Assert.Contains("Recent games suggest this problem is becoming more urgent", narrative.Rationale, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void TrainingPlanService_PrioritizesActionableOpeningEcoBeforeExampleEco()
+    {
+        TrainingPlanService service = new();
+        OpeningWeaknessReport openingReport = new(
+            "alpha",
+            "Alpha",
+            5,
+            5,
+            140,
+            [
+                CreateOpeningEntry("A00", OpeningWeaknessCategory.FixNow, 180, 4),
+                CreateOpeningEntry("C20", OpeningWeaknessCategory.ReviewLater, 120, 3)
+            ],
+            []);
+
+        TrainingPlanReport report = service.Build(CreateProfileWithOpeningExamples(), openingReport);
+
+        TrainingPlanTopic topic = Assert.Single(report.Topics, item => item.Label == "opening_principles");
+        Assert.Equal(["A00", "C20", "B12"], topic.RelatedOpenings);
+    }
+
     private static OpeningTrainingSessionResult CreateResult(
         OpeningTrainingSessionOutcome outcome,
         DateTime completedUtc,
@@ -154,5 +176,87 @@ public sealed class TrainingPlanDecompositionTests
                     [])
             ],
             []);
+    }
+
+    private static OpeningWeaknessEntry CreateOpeningEntry(
+        string eco,
+        OpeningWeaknessCategory category,
+        int averageOpeningCentipawnLoss,
+        int count)
+    {
+        return new OpeningWeaknessEntry(
+            eco,
+            $"{eco} opening",
+            $"{eco} opening",
+            count,
+            averageOpeningCentipawnLoss,
+            "opening_principles",
+            count,
+            category,
+            ProfileProgressDirection.Regressing,
+            "Opening instability is costly.",
+            [],
+            [],
+            []);
+    }
+
+    private static PlayerProfileReport CreateProfileWithOpeningExamples()
+    {
+        WeeklyTrainingPlan weeklyPlan = new(
+            "Alpha Weekly Training Plan",
+            "Placeholder plan.",
+            new WeeklyTrainingBudget(0, 0, 0, 0, 0, "No time budget."),
+            []);
+        TrainingPlanReport trainingPlan = new(
+            "alpha",
+            "Alpha",
+            ProfileProgressDirection.Stable,
+            "Placeholder report.",
+            [],
+            [],
+            weeklyPlan);
+
+        return new PlayerProfileReport(
+            "alpha",
+            "Alpha",
+            5,
+            30,
+            4,
+            120,
+            [new ProfileLabelStat("opening_principles", 2, 0.9)],
+            [new ProfileCostlyLabelStat("opening_principles", 2, 240, 120)],
+            [new ProfilePhaseStat(GamePhase.Opening, 4)],
+            [],
+            [],
+            [],
+            [],
+            new ProfileProgressSignal(ProfileProgressDirection.Stable, "Stable opening trend.", null, null),
+            [],
+            [],
+            weeklyPlan,
+            [
+                CreateMistakeExample("C20", 1),
+                CreateMistakeExample("B12", 2),
+                CreateMistakeExample("D00", 3)
+            ],
+            trainingPlan);
+    }
+
+    private static ProfileMistakeExample CreateMistakeExample(string eco, int ply)
+    {
+        return new ProfileMistakeExample(
+            $"game-{eco}",
+            ply,
+            ply,
+            PlayerSide.White,
+            "h4",
+            "Nf3",
+            "opening_principles",
+            120,
+            MoveQualityBucket.Mistake,
+            GamePhase.Opening,
+            eco,
+            "fen",
+            ProfileMistakeExampleRank.MostRepresentative);
     }
 }

@@ -30,6 +30,7 @@ public sealed class TrainingPlanTopicScorer
         int phaseScore = GetPhaseScore(input.MistakesByPhase, input.EmphasisPhase);
         int openingWeaknessScore = GetOpeningWeaknessScore(input.Label, input.OpeningReport);
         int trainingScore = GetTrainingScore(input.Label, input.RelatedOpenings, input.TrainingSummary);
+        // TrainingPlanPriorityBreakdown has no opening-weakness component yet; keep this pressure visible in TotalScore.
         int totalScore = frequencyScore + costlyScore + trendScore + phaseScore + openingWeaknessScore + trainingScore;
 
         return new TrainingPlanTopicScoringResult(
