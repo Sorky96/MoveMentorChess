@@ -134,6 +134,34 @@ public sealed partial class AppArchitectureTests
     }
 
     [Fact]
+    public void TrainingPlanServiceKeepsScoringAndNarrationExtracted()
+    {
+        string root = FindRepositoryRoot();
+        string trainingRoot = Path.Join(root, "MoveMentorChess.Training");
+        string service = File.ReadAllText(Path.Join(trainingRoot, "TrainingPlanService.cs"));
+
+        string[] requiredCollaborators =
+        [
+            "OpeningTrainingOutcomeSummarizer.cs",
+            "TrainingPlanOpeningWeaknessSelector.cs",
+            "TrainingPlanTopicScorer.cs",
+            "TrainingPlanTopicNarrativeBuilder.cs"
+        ];
+
+        string[] missingCollaborators = requiredCollaborators
+            .Where(fileName => !File.Exists(Path.Join(trainingRoot, fileName)))
+            .ToArray();
+
+        Assert.Empty(missingCollaborators);
+        Assert.Contains("TrainingPlanTopicScorer", service, StringComparison.Ordinal);
+        Assert.Contains("TrainingPlanTopicNarrativeBuilder", service, StringComparison.Ordinal);
+        Assert.Contains("OpeningTrainingOutcomeSummarizer", service, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static OpeningTrainingOutcomeSummary BuildTrainingSummary", service, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static TrainingPlanTopicStatus DetermineTopicStatus", service, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static string BuildWhyThisTopicNow", service, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void GameAnalysisServiceUsesPlayerMistakeProfileSourcePort()
     {
         string servicePath = Path.Join(

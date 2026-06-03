@@ -2,6 +2,8 @@ namespace MoveMentorChess.Training;
 
 public sealed class TrainingPlanService
 {
+    private readonly TrainingPlanTopicScorer topicScorer = new();
+
     public TrainingPlanReport Build(PlayerProfileReport profileReport, OpeningWeaknessReport? openingReport = null)
         => Build(profileReport, openingReport, []);
 
@@ -12,7 +14,7 @@ public sealed class TrainingPlanService
     {
         ArgumentNullException.ThrowIfNull(profileReport);
 
-        OpeningTrainingOutcomeSummary trainingSummary = BuildTrainingSummary(trainingHistory);
+        OpeningTrainingOutcomeSummary trainingSummary = OpeningTrainingOutcomeSummarizer.Build(trainingHistory);
         List<TrainingPlanTopic> topics = BuildTopics(profileReport, openingReport, trainingSummary);
         IReadOnlyList<TrainingRecommendation> recommendations = topics
             .Select(topic => new TrainingRecommendation(
@@ -46,7 +48,7 @@ public sealed class TrainingPlanService
             dashboard);
     }
 
-    private static List<TrainingPlanTopic> BuildTopics(
+    private List<TrainingPlanTopic> BuildTopics(
         PlayerProfileReport profileReport,
         OpeningWeaknessReport? openingReport,
         OpeningTrainingOutcomeSummary trainingSummary)
@@ -58,7 +60,7 @@ public sealed class TrainingPlanService
             .Distinct(StringComparer.Ordinal)
             .ToList();
 
-        if (HasActionableOpeningWeakness(openingReport)
+        if (TrainingPlanOpeningWeaknessSelector.HasActionableOpeningWeakness(openingReport)
             && !candidateLabels.Contains("opening_principles", StringComparer.Ordinal))
         {
             candidateLabels.Add("opening_principles");
@@ -89,7 +91,7 @@ public sealed class TrainingPlanService
             .ToList();
     }
 
-    private static TrainingPlanTopic BuildTopic(
+    private TrainingPlanTopic BuildTopic(
         PlayerProfileReport profileReport,
         OpeningWeaknessReport? openingReport,
         OpeningTrainingOutcomeSummary trainingSummary,
@@ -119,18 +121,19 @@ public sealed class TrainingPlanService
             ?.Direction
             ?? ProfileProgressDirection.InsufficientData;
 
-        int frequencyScore = (frequent?.Count ?? 0) * 100;
-        int costlyScore = costly is null
-            ? 0
-            : (costly.TotalCentipawnLoss * 2) + ((costly.AverageCentipawnLoss ?? 0) * 3);
-        int trendScore = GetTrendScore(labelTrend);
-        int phaseScore = GetPhaseScore(profileReport, emphasisPhase);
-        int openingWeaknessScore = GetOpeningWeaknessScore(label, openingReport);
-        int trainingScore = GetTrainingScore(label, relatedOpenings, trainingSummary);
-        int totalScore = frequencyScore + costlyScore + trendScore + phaseScore + openingWeaknessScore + trainingScore;
+        TrainingPlanTopicScoringResult scoring = topicScorer.Score(new TrainingPlanTopicScoringInput(
+            label,
+            frequent?.Count ?? 0,
+            costly?.TotalCentipawnLoss ?? 0,
+            costly?.AverageCentipawnLoss,
+            labelTrend,
+            emphasisPhase,
+            profileReport.MistakesByPhase,
+            relatedOpenings,
+            openingReport,
+            trainingSummary));
         TopicTemplate template = GetTemplate(label);
         IReadOnlyList<TrainingBlock> blocks = BuildBlocks(label, template, emphasisPhase, emphasisSide, relatedOpenings);
-        TrainingPlanTopicStatus status = DetermineTopicStatus(labelTrend, trainingSummary, label, relatedOpenings, openingReport);
 
         string phaseSummary = emphasisPhase.HasValue
             ? $" Most often it appears in {FormatPhase(emphasisPhase.Value).ToLowerInvariant()}."
@@ -141,23 +144,17 @@ public sealed class TrainingPlanService
         string blockSummary = blocks.Count == 0
             ? string.Empty
             : $" Training blocks: {string.Join(", ", blocks.Select(block => $"{TrainingTextFormatter.FormatTrainingBlockPurpose(block.Purpose).ToLowerInvariant()} {TrainingTextFormatter.FormatTrainingBlockKind(block.Kind).ToLowerInvariant()}"))}.";
-        string whyThisTopicNow = BuildWhyThisTopicNow(
+        TrainingPlanTopicNarrative narrative = TrainingPlanTopicNarrativeBuilder.Build(new TrainingPlanTopicNarrativeInput(
+            label,
             frequent?.Count ?? 0,
             costly?.TotalCentipawnLoss ?? 0,
             costly?.AverageCentipawnLoss,
             labelTrend,
-            profileReport.MistakesByPhase.Count > 0 ? profileReport.MistakesByPhase[0]?.Phase : null,
+            profileReport.MistakesByPhase.Count > 0 ? profileReport.MistakesByPhase[0].Phase : null,
             emphasisPhase,
             relatedOpenings,
             openingReport,
-            label,
-            trainingSummary);
-        string rationale = BuildChessRationale(
-            frequent?.Count ?? 0,
-            costly?.TotalCentipawnLoss ?? 0,
-            costly?.AverageCentipawnLoss,
-            labelTrend,
-            emphasisPhase);
+            trainingSummary));
         string summary = $"{template.Description} {BuildTrendSummary(labelTrend)}{phaseSummary}{openingSummary}{blockSummary}".Trim();
 
         return new TrainingPlanTopic(
@@ -167,8 +164,8 @@ public sealed class TrainingPlanService
             template.FocusArea,
             template.Title,
             summary,
-            whyThisTopicNow,
-            rationale,
+            narrative.WhyThisTopicNow,
+            narrative.Rationale,
             labelTrend,
             emphasisPhase,
             emphasisSide,
@@ -177,14 +174,8 @@ public sealed class TrainingPlanService
             ExtractSuggestedDrills(blocks),
             blocks,
             examples,
-            new TrainingPlanPriorityBreakdown(
-                frequencyScore,
-                costlyScore,
-                trendScore,
-                phaseScore,
-                totalScore,
-                trainingScore),
-            status);
+            scoring.PriorityBreakdown,
+            scoring.Status);
     }
 
     private static TrainingPlanTopic CreateFallbackTopic(PlayerProfileReport profileReport)
@@ -291,217 +282,6 @@ public sealed class TrainingPlanService
         return topic.Blocks[0];
     }
 
-    private static string BuildChessRationale(int occurrences, int totalCentipawnLoss, int? averageCentipawnLoss, ProfileProgressDirection trendDirection, GamePhase? emphasisPhase)
-    {
-        string frequencyText = occurrences <= 0
-            ? "This theme has not appeared often yet, but it still deserves monitoring."
-            : occurrences == 1
-                ? "This theme already showed up in one analyzed mistake."
-                : $"This theme keeps coming back: {occurrences} analyzed mistakes point to the same habit.";
-
-        string costText = totalCentipawnLoss <= 0
-            ? "The current sample does not show a large material or evaluation cost yet."
-            : averageCentipawnLoss.HasValue
-                ? $"When it appears, it is expensive: it has cost about {totalCentipawnLoss} centipawns in total, around {averageCentipawnLoss.Value} on average."
-                : $"When it appears, it is expensive: it has cost about {totalCentipawnLoss} centipawns in total.";
-
-        string trendText = trendDirection switch
-        {
-            ProfileProgressDirection.Regressing => "Recent games suggest this problem is becoming more urgent, not less.",
-            ProfileProgressDirection.Improving => "Recent games look cleaner, so this can be trained without panic.",
-            ProfileProgressDirection.Stable => "Recent games show that this habit is still stable enough to justify focused work.",
-            _ => "There is not enough recent data yet, so the plan leans more on repeated mistakes than on form."
-        };
-
-        string phaseText = emphasisPhase.HasValue
-            ? $"It shows up most often in the {FormatPhase(emphasisPhase.Value).ToLowerInvariant()}, so that phase gets extra training time."
-            : "It is not tied strongly to one phase yet, so the plan keeps the work general.";
-
-        return $"{frequencyText} {costText} {trendText} {phaseText}";
-    }
-
-    private static string BuildWhyThisTopicNow(
-        int occurrences,
-        int totalCentipawnLoss,
-        int? averageCentipawnLoss,
-        ProfileProgressDirection trendDirection,
-        GamePhase? weakestPhase,
-        GamePhase? emphasisPhase,
-        List<string> relatedOpenings,
-        OpeningWeaknessReport? openingReport,
-        string label,
-        OpeningTrainingOutcomeSummary trainingSummary)
-    {
-        List<string> parts = [];
-
-        parts.Add(occurrences switch
-        {
-            <= 0 => "Frequency: the sample is still small, so this topic is tracked conservatively.",
-            1 => "Frequency: this theme already appeared in one analyzed mistake.",
-            _ => $"Frequency: this theme appeared {occurrences} times in analyzed mistakes."
-        });
-
-        parts.Add(totalCentipawnLoss <= 0
-            ? "CPL cost: the current sample does not show a large centipawn penalty yet."
-            : averageCentipawnLoss.HasValue
-                ? $"CPL cost: it has already cost {totalCentipawnLoss} centipawns in total, about {averageCentipawnLoss.Value} on average."
-                : $"CPL cost: it has already cost {totalCentipawnLoss} centipawns in total.");
-
-        parts.Add($"Trend: {DescribeTrend(trendDirection)}");
-
-        if (emphasisPhase.HasValue)
-        {
-            string phaseText = FormatPhase(emphasisPhase.Value);
-            if (weakestPhase.HasValue && weakestPhase.Value == emphasisPhase.Value)
-            {
-                parts.Add($"Weakest phase: it lines up with the current weakest phase, {phaseText}.");
-            }
-            else
-            {
-                parts.Add($"Weakest phase: it shows up most in {phaseText}, so the plan leans there now.");
-            }
-        }
-
-        if (relatedOpenings.Count > 0)
-        {
-            parts.Add($"Openings: it clusters around {string.Join(" / ", relatedOpenings.Select(TrainingTextFormatter.FormatOpening))}.");
-        }
-
-        if (string.Equals(label, "opening_principles", StringComparison.Ordinal)
-            && HasActionableOpeningWeakness(openingReport))
-        {
-            IReadOnlyList<OpeningWeaknessEntry> urgentOpenings = GetActionableOpenings(openingReport)
-                .Take(2)
-                .ToList();
-            parts.Add(
-                $"Opening trainer: add focused sessions for {string.Join(" / ", urgentOpenings.Select(item => TrainingTextFormatter.FormatOpening(item.Eco)))} because the opening report marks them as unstable or costly.");
-        }
-
-        if (IsOpeningTrainingRelevant(label, relatedOpenings, trainingSummary))
-        {
-            parts.Add(trainingSummary.AttemptCount == 0
-                ? "Training results: no completed opening-trainer attempts are recorded yet."
-                : $"Training results: {trainingSummary.CorrectCount} correct, {trainingSummary.PlayableCount} playable and {trainingSummary.WrongCount} wrong across {trainingSummary.AttemptCount} recorded opening-trainer attempts.");
-        }
-
-        return string.Join(" ", parts);
-    }
-
-    private static OpeningTrainingOutcomeSummary BuildTrainingSummary(IReadOnlyList<OpeningTrainingSessionResult>? history)
-    {
-        List<OpeningTrainingSessionResult> completed = (history ?? [])
-            .Where(result => result.Outcome == OpeningTrainingSessionOutcome.Completed)
-            .ToList();
-        int attemptCount = completed.Sum(result => result.AttemptCount);
-        int correctCount = completed.Sum(result => result.CorrectCount);
-        int playableCount = completed.Sum(result => result.PlayableCount);
-        int wrongCount = completed.Sum(result => result.WrongCount);
-        double accuracy = attemptCount == 0 ? 0 : (double)(correctCount + playableCount) / attemptCount;
-        double wrongRate = attemptCount == 0 ? 0 : (double)wrongCount / attemptCount;
-
-        return new OpeningTrainingOutcomeSummary(
-            completed.Count,
-            attemptCount,
-            correctCount,
-            playableCount,
-            wrongCount,
-            accuracy,
-            wrongRate,
-            completed.Count == 0 ? null : completed.Max(result => result.CompletedUtc),
-            completed
-                .SelectMany(result => result.RelatedOpenings)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList(),
-            completed
-                .SelectMany(result => result.ThemeLabels)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList());
-    }
-
-    private static int GetTrainingScore(
-        string label,
-        IReadOnlyList<string> relatedOpenings,
-        OpeningTrainingOutcomeSummary trainingSummary)
-    {
-        if (!IsOpeningTrainingRelevant(label, relatedOpenings, trainingSummary) || trainingSummary.AttemptCount == 0)
-        {
-            return 0;
-        }
-
-        if (trainingSummary.WrongRate >= 0.45)
-        {
-            return 260;
-        }
-
-        if (trainingSummary.WrongRate >= 0.25)
-        {
-            return 130;
-        }
-
-        return trainingSummary.Accuracy >= 0.80 ? -80 : 40;
-    }
-
-    private static TrainingPlanTopicStatus DetermineTopicStatus(
-        ProfileProgressDirection trendDirection,
-        OpeningTrainingOutcomeSummary trainingSummary,
-        string label,
-        IReadOnlyList<string> relatedOpenings,
-        OpeningWeaknessReport? openingReport)
-    {
-        if (IsOpeningTrainingRelevant(label, relatedOpenings, trainingSummary)
-            && trainingSummary.AttemptCount > 0
-            && trainingSummary.WrongRate >= 0.45)
-        {
-            return TrainingPlanTopicStatus.Urgent;
-        }
-
-        if (trendDirection == ProfileProgressDirection.Regressing
-            || (string.Equals(label, "opening_principles", StringComparison.Ordinal) && HasFixNowOpening(openingReport)))
-        {
-            return TrainingPlanTopicStatus.Urgent;
-        }
-
-        if (IsOpeningTrainingRelevant(label, relatedOpenings, trainingSummary)
-            && trainingSummary.AttemptCount >= 3
-            && trainingSummary.Accuracy >= 0.75)
-        {
-            return TrainingPlanTopicStatus.Improving;
-        }
-
-        if (trendDirection == ProfileProgressDirection.Improving)
-        {
-            return TrainingPlanTopicStatus.Improving;
-        }
-
-        if (trainingSummary.AttemptCount == 0 && trendDirection == ProfileProgressDirection.InsufficientData)
-        {
-            return TrainingPlanTopicStatus.NewWeakness;
-        }
-
-        return TrainingPlanTopicStatus.Stable;
-    }
-
-    private static bool IsOpeningTrainingRelevant(
-        string label,
-        IReadOnlyList<string> relatedOpenings,
-        OpeningTrainingOutcomeSummary trainingSummary)
-    {
-        if (string.Equals(label, "opening_principles", StringComparison.Ordinal))
-        {
-            return true;
-        }
-
-        return relatedOpenings.Count > 0
-            && trainingSummary.RelatedOpenings.Any(opening =>
-                relatedOpenings.Contains(opening, StringComparer.OrdinalIgnoreCase));
-    }
-
-    private static bool HasFixNowOpening(OpeningWeaknessReport? openingReport)
-    {
-        return openingReport is not null
-            && openingReport.WeakOpenings.Any(opening => opening.Category == OpeningWeaknessCategory.FixNow);
-    }
-
     private static List<TrainingPlanDashboardItem> BuildDashboard(
         PlayerProfileReport profileReport,
         OpeningWeaknessReport? openingReport,
@@ -561,49 +341,15 @@ public sealed class TrainingPlanService
             .Where(item => !string.IsNullOrWhiteSpace(item));
 
         if (string.Equals(label, "opening_principles", StringComparison.Ordinal)
-            && HasActionableOpeningWeakness(openingReport))
+            && TrainingPlanOpeningWeaknessSelector.HasActionableOpeningWeakness(openingReport))
         {
-            values = values.Concat(GetActionableOpenings(openingReport).Select(item => item.Eco));
+            values = values.Concat(TrainingPlanOpeningWeaknessSelector.GetActionableOpenings(openingReport).Select(item => item.Eco));
         }
 
         return values
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .Take(3)
             .ToList();
-    }
-
-    private static int GetOpeningWeaknessScore(string label, OpeningWeaknessReport? openingReport)
-    {
-        if (!string.Equals(label, "opening_principles", StringComparison.Ordinal)
-            || !HasActionableOpeningWeakness(openingReport))
-        {
-            return 0;
-        }
-
-        return GetActionableOpenings(openingReport)
-            .Take(3)
-            .Sum(opening => opening.Category == OpeningWeaknessCategory.FixNow ? 220 : 110);
-    }
-
-    private static bool HasActionableOpeningWeakness(OpeningWeaknessReport? openingReport)
-    {
-        return openingReport is not null
-            && openingReport.WeakOpenings.Any(opening =>
-                opening.Category is OpeningWeaknessCategory.FixNow or OpeningWeaknessCategory.ReviewLater);
-    }
-
-    private static IEnumerable<OpeningWeaknessEntry> GetActionableOpenings(OpeningWeaknessReport? openingReport)
-    {
-        if (openingReport is null)
-        {
-            return [];
-        }
-
-        return openingReport.WeakOpenings
-            .Where(opening => opening.Category is OpeningWeaknessCategory.FixNow or OpeningWeaknessCategory.ReviewLater)
-            .OrderBy(opening => opening.Category == OpeningWeaknessCategory.FixNow ? 0 : 1)
-            .ThenByDescending(opening => opening.AverageOpeningCentipawnLoss ?? 0)
-            .ThenByDescending(opening => opening.Count);
     }
 
     private static OpeningTrainingMode DetermineOpeningTrainingMode(TrainingBlockPurpose purpose)
@@ -614,17 +360,6 @@ public sealed class TrainingPlanService
             TrainingBlockPurpose.Maintain => OpeningTrainingMode.LineRecall,
             TrainingBlockPurpose.Checklist => OpeningTrainingMode.BranchAwareness,
             _ => OpeningTrainingMode.LineRecall
-        };
-    }
-
-    private static int GetTrendScore(ProfileProgressDirection direction)
-    {
-        return direction switch
-        {
-            ProfileProgressDirection.Regressing => 180,
-            ProfileProgressDirection.Stable => 60,
-            ProfileProgressDirection.Improving => -120,
-            _ => 0
         };
     }
 
@@ -640,29 +375,6 @@ public sealed class TrainingPlanService
             1 => TrainingPlanTopicCategory.CoreWeakness,
             2 => TrainingPlanTopicCategory.SecondaryWeakness,
             _ => TrainingPlanTopicCategory.MaintenanceTopic
-        };
-    }
-
-    private static int GetPhaseScore(PlayerProfileReport profileReport, GamePhase? emphasisPhase)
-    {
-        if (!emphasisPhase.HasValue)
-        {
-            return 0;
-        }
-
-        int index = profileReport.MistakesByPhase
-            .Select((item, itemIndex) => new { item.Phase, itemIndex })
-            .Where(item => item.Phase == emphasisPhase.Value)
-            .Select(item => item.itemIndex)
-            .DefaultIfEmpty(profileReport.MistakesByPhase.Count)
-            .First();
-
-        return index switch
-        {
-            0 => 90,
-            1 => 55,
-            2 => 25,
-            _ => 10
         };
     }
 
@@ -689,17 +401,6 @@ public sealed class TrainingPlanService
             ProfileProgressDirection.Improving => "Recent form is improving, so this becomes a lighter maintenance target.",
             ProfileProgressDirection.Stable => "The trend is stable, so this remains a reliable training target.",
             _ => "There is not enough trend data yet, so the ranking relies on mistake volume and cost."
-        };
-    }
-
-    private static string DescribeTrend(ProfileProgressDirection direction)
-    {
-        return direction switch
-        {
-            ProfileProgressDirection.Regressing => "regressing, so the topic gets extra urgency.",
-            ProfileProgressDirection.Improving => "improving, so the topic is shifted toward maintenance/review.",
-            ProfileProgressDirection.Stable => "stable, so it remains a consistent training target.",
-            _ => "insufficient data, so priority stays anchored to frequency and CPL cost."
         };
     }
 
