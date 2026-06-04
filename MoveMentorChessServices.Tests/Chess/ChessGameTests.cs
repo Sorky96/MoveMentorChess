@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using MoveMentorChessServices;
 using Xunit;
 
-namespace MoveMentorChessServices.Tests;
+namespace MoveMentorChessServices.Tests.Chess;
 
 public sealed class ChessGameTests
 {

@@ -2,7 +2,7 @@ using MoveMentorChess.Profiles;
 using MoveMentorChessServices;
 using Xunit;
 
-namespace MoveMentorChessServices.Tests;
+namespace MoveMentorChessServices.Tests.Training;
 
 public sealed class TrainingPlanDecompositionTests
 {

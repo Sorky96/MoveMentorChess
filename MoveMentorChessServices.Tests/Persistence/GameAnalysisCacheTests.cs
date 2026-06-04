@@ -4,7 +4,7 @@ using MoveMentorChess.Persistence;
 using MoveMentorChessServices;
 using Xunit;
 
-namespace MoveMentorChessServices.Tests;
+namespace MoveMentorChessServices.Tests.Persistence;
 
 public sealed class GameAnalysisCacheTests
 {

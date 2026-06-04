@@ -1,7 +1,7 @@
 using MoveMentorChess.Analysis;
 using Xunit;
 
-namespace MoveMentorChessServices.Tests;
+namespace MoveMentorChessServices.Tests.Analysis;
 
 public sealed class LocalModelAdviceResponseParserTests
 {

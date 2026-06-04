@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace MoveMentorChessServices.Tests;
+namespace MoveMentorChessServices.Tests.Profiles;
 
 public sealed class SpecialTrainingModeServiceTests
 {
