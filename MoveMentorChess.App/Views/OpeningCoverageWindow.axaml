@@ -8,7 +8,7 @@
         MinWidth="1080"
         MinHeight="700"
         WindowState="FullScreen"
-        SystemDecorations="None"
+        WindowDecorations="None"
         Title="Opening Coverage"
         Background="{DynamicResource ChromeBrush}">
   <Grid Margin="18" RowDefinitions="Auto,14,Auto,14,*">
@@ -25,7 +25,7 @@
                  Background="{DynamicResource ChromeBrush}"
                  Foreground="#EAF2F7"
                  BorderBrush="{DynamicResource PanelAccentBrush}"
-                 Watermark="Filter ECO or opening..."
+                 PlaceholderText="Filter ECO or opening..."
                  Text="{Binding FilterText}" />
 
         <ComboBox Grid.Column="2"

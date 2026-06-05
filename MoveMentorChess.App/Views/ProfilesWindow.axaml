@@ -8,7 +8,7 @@
         MinWidth="980"
         MinHeight="680"
         WindowState="FullScreen"
-        SystemDecorations="None"
+        WindowDecorations="None"
         Title="Player Coach"
         Background="{DynamicResource ChromeBrush}">
   <Grid RowDefinitions="Auto,*" Margin="18">
@@ -18,7 +18,7 @@
         <TextBox x:Name="FilterTextBox"
                  Width="320"
                  VerticalAlignment="Center"
-                 Watermark="Search analyzed players..."
+                 PlaceholderText="Search analyzed players..."
                  TextChanged="FilterTextBox_OnTextChanged" />
         <Button x:Name="ToggleProfilesButton"
                 Content="Hide players"

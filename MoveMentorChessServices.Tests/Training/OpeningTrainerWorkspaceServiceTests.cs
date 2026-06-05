@@ -1,7 +1,7 @@
 using MoveMentorChess.Persistence;
 using Xunit;
 
-namespace MoveMentorChessServices.Tests;
+namespace MoveMentorChessServices.Tests.Training;
 
 public sealed class OpeningTrainerWorkspaceServiceTests
 {

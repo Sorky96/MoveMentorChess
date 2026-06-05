@@ -6,7 +6,7 @@
         MinWidth="980"
         MinHeight="640"
         WindowState="FullScreen"
-        SystemDecorations="None"
+        WindowDecorations="None"
         Title="Saved Analyses"
         Background="{DynamicResource ChromeBrush}">
   <Grid Margin="18" RowDefinitions="Auto,*">
@@ -23,7 +23,7 @@
                  Background="{DynamicResource ChromeBrush}"
                  Foreground="#EAF2F7"
                  BorderBrush="{DynamicResource PanelAccentBrush}"
-                 Watermark="Filter by player, opening, result or labels..."
+                 PlaceholderText="Filter by player, opening, result or labels..."
                  TextChanged="FilterTextBox_OnTextChanged" />
         <Button x:Name="LoadGameButton"
                 Grid.Column="2"

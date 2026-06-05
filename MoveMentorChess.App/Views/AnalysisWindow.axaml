@@ -7,7 +7,7 @@
         MinWidth="920"
         MinHeight="620"
         WindowState="FullScreen"
-        SystemDecorations="None"
+        WindowDecorations="None"
         Title="Imported Game Analysis"
         Background="{DynamicResource ChromeBrush}">
   <Grid Margin="18" RowDefinitions="Auto,Auto,*">
@@ -567,14 +567,14 @@
                      Background="{DynamicResource ChromeBrush}"
                      Foreground="#EAF2F7"
                      BorderBrush="{DynamicResource PanelAccentBrush}"
-                     Watermark="custom label" />
+                     PlaceholderText="custom label" />
             <TextBox x:Name="FeedbackCommentTextBox"
                      Grid.Column="2"
                      Margin="8,0,0,0"
                      Background="{DynamicResource ChromeBrush}"
                      Foreground="#EAF2F7"
                      BorderBrush="{DynamicResource PanelAccentBrush}"
-                     Watermark="comment" />
+                     PlaceholderText="comment" />
             <Button x:Name="SaveManualCorrectionButton"
                     Grid.Column="3"
                     Margin="8,0,0,0"

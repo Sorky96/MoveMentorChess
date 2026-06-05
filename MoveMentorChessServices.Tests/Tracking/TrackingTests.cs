@@ -7,7 +7,7 @@ using MoveMentorChess.Tracking;
 using MoveMentorChessServices;
 using Xunit;
 
-namespace MoveMentorChessServices.Tests;
+namespace MoveMentorChessServices.Tests.Tracking;
 
 public sealed class TrackingTests
 {

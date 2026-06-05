@@ -6,7 +6,7 @@
         MinWidth="460"
         MinHeight="560"
         WindowState="FullScreen"
-        SystemDecorations="None"
+        WindowDecorations="None"
         Title="Settings"
         Background="{DynamicResource ChromeBrush}">
   <Grid RowDefinitions="*,Auto" Margin="18">
