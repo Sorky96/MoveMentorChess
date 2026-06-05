@@ -2,7 +2,7 @@ using MoveMentorChess.Analysis;
 using MoveMentorChess.Domain;
 using Xunit;
 
-namespace MoveMentorChessServices.Tests;
+namespace MoveMentorChessServices.Tests.Analysis;
 
 public sealed class AdviceQualityEvaluatorTests
 {

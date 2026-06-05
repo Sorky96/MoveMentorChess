@@ -3,7 +3,7 @@ using MoveMentorChess.Opening;
 using MoveMentorChessServices;
 using Xunit;
 
-namespace MoveMentorChessServices.Tests;
+namespace MoveMentorChessServices.Tests.Opening;
 
 public sealed class OpeningImportServiceTests
 {

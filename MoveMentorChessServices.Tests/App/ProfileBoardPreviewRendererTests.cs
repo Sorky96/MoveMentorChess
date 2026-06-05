@@ -3,7 +3,7 @@ using MoveMentorChess.App.ViewModels;
 using MoveMentorChess.App.Views;
 using Xunit;
 
-namespace MoveMentorChessServices.Tests;
+namespace MoveMentorChessServices.Tests.App;
 
 public sealed class ProfileBoardPreviewRendererTests
 {

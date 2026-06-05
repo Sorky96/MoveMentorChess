@@ -7,7 +7,7 @@
         MinWidth="980"
         MinHeight="640"
         WindowState="FullScreen"
-        SystemDecorations="None"
+        WindowDecorations="None"
         Title="Saved Games"
         Background="{DynamicResource ChromeBrush}">
   <Grid RowDefinitions="Auto,*" Margin="18">
@@ -20,7 +20,7 @@
                  Background="{DynamicResource ChromeBrush}"
                  Foreground="#EAF2F7"
                  BorderBrush="{DynamicResource PanelAccentBrush}"
-                 Watermark="Filter players/date..."
+                 PlaceholderText="Filter players/date..."
                  TextChanged="FilterTextBox_OnTextChanged" />
         <Button Content="Load Selected" Click="LoadSelectedButton_Click" />
         <Button Content="Delete Selected" Click="DeleteSelectedButton_Click" />
@@ -43,7 +43,7 @@
                    Background="{DynamicResource ChromeBrush}"
                    Foreground="#EAF2F7"
                    BorderBrush="{DynamicResource PanelAccentBrush}"
-                   Watermark="Filter Player"
+                   PlaceholderText="Filter Player"
                    TextChanged="ColumnFilterTextBox_OnTextChanged" />
           <TextBox x:Name="DateFilterTextBox"
                    Grid.Column="1"
@@ -51,7 +51,7 @@
                    Background="{DynamicResource ChromeBrush}"
                    Foreground="#EAF2F7"
                    BorderBrush="{DynamicResource PanelAccentBrush}"
-                   Watermark="Filter Date"
+                   PlaceholderText="Filter Date"
                    TextChanged="ColumnFilterTextBox_OnTextChanged" />
         </Grid>
       </Border>

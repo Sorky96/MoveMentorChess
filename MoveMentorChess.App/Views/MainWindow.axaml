@@ -13,7 +13,7 @@
         MinWidth="1160"
         MinHeight="700"
         WindowState="FullScreen"
-        SystemDecorations="None"
+        WindowDecorations="None"
         Background="{DynamicResource ChromeBrush}"
         Title="MoveMentor Chess">
   <Grid Margin="10" ColumnDefinitions="*,14,620" RowDefinitions="*,Auto">

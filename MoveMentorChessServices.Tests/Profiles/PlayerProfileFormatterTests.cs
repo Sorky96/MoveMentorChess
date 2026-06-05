@@ -3,7 +3,7 @@ using MoveMentorChess.Profiles;
 using MoveMentorChessServices;
 using Xunit;
 
-namespace MoveMentorChessServices.Tests;
+namespace MoveMentorChessServices.Tests.Profiles;
 
 public sealed class PlayerProfileFormatterTests
 {

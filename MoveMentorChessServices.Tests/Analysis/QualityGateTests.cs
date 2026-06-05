@@ -4,7 +4,7 @@ using MoveMentorChessServices;
 using System.Text.Json;
 using Xunit;
 
-namespace MoveMentorChessServices.Tests;
+namespace MoveMentorChessServices.Tests.Analysis;
 
 public sealed class QualityGateTests
 {

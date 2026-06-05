@@ -3,7 +3,7 @@ using System.IO;
 using MoveMentorChess.Tracking;
 using Xunit;
 
-namespace MoveMentorChessServices.Tests;
+namespace MoveMentorChessServices.Tests.Tracking;
 
 public sealed class TrackingLearnedBoardRecognizerTests
 {

@@ -12,7 +12,7 @@
         MinWidth="1180"
         MinHeight="760"
         WindowState="FullScreen"
-        SystemDecorations="None"
+        WindowDecorations="None"
         Background="{DynamicResource ChromeBrush}"
         Title="Opening Trainer"
         mc:Ignorable="d">
@@ -226,8 +226,8 @@
                   <StackPanel Spacing="8">
                     <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="Opening Catalog" />
                     <TextBlock Foreground="#9EB5C5" Text="Choose a specific line when you want to train outside today's lesson." TextWrapping="Wrap" />
-                    <TextBox Watermark="Filter openings or ECO" Text="{Binding FilterText}" />
-                    <TextBox Watermark="Override history key (optional)" Text="{Binding AdvancedPlayerKey}" />
+                    <TextBox PlaceholderText="Filter openings or ECO" Text="{Binding FilterText}" />
+                    <TextBox PlaceholderText="Override history key (optional)" Text="{Binding AdvancedPlayerKey}" />
                     <TextBlock Foreground="#9EB5C5" Text="{Binding PlayerKey, StringFormat='Active history key: {0}'}" TextWrapping="Wrap" />
                     <ComboBox ItemsSource="{Binding AvailableSides}" SelectedItem="{Binding SelectedSide}" />
                     <ComboBox ItemsSource="{Binding AvailableStrictnessOptions}" SelectedItem="{Binding SelectedStrictness}" />
