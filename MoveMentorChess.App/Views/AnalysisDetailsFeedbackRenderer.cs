@@ -35,14 +35,14 @@ internal sealed class AnalysisDetailsFeedbackRenderer(
 {
     public void ShowPlaceholder(string message)
     {
-        detailMoveTextBlock.Text = "No move selected";
+        detailMoveTextBlock.Text = message;
         detailBestMoveTextBlock.Text = string.Empty;
         detailQualityTextBlock.Text = string.Empty;
         detailLossTextBlock.Text = string.Empty;
         detailEvalSwingTextBlock.Text = string.Empty;
         detailEvalInterpretationTextBlock.Text = string.Empty;
         detailContextTextBlock.Text = string.Empty;
-        detailAdviceTextBlock.Text = message;
+        detailAdviceTextBlock.Text = string.Empty;
         detailWhyTextBlock.Text = string.Empty;
         detailTrainingHintTextBlock.Text = string.Empty;
         detailReviewActionTextBlock.Text = string.Empty;

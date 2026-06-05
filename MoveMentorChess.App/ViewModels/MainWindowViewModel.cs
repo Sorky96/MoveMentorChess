@@ -178,6 +178,26 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     public bool IsImportCancellationAvailable => IsBusy && importCancellationTokenSource is not null && !importCancellationTokenSource.IsCancellationRequested;
 
+    public bool IsEngineAvailable => engine is not null;
+
+    public bool IsEngineUnavailable => engine is null;
+
+    public bool HasImportedGame => importedGame is not null && importedReplay.Count > 0;
+
+    public string PrimaryNextStepTitle
+        => IsEngineUnavailable
+            ? "Set up Stockfish to unlock analysis"
+            : HasImportedGame
+                ? "Run analysis and find today's training focus"
+                : "Load a PGN to start your first review";
+
+    public string PrimaryNextStepDescription
+        => IsEngineUnavailable
+            ? "MoveMentor can still show the board, but engine review and training recommendations need a Stockfish executable."
+            : HasImportedGame
+                ? "The game is loaded. Analyze it to highlight the moves that cost the most and turn them into practice."
+                : "Paste a game or load a PGN file. MoveMentor will replay it, analyze mistakes, and suggest what to practice next.";
+
     public int EvaluationBarValue
     {
         get => evaluationBarValue;
@@ -378,6 +398,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             RefreshEngineSummary();
             RefreshImportedSummary();
             OnPropertyChanged(nameof(CanOpenImportedAnalysis));
+            OnPrimaryNextStepChanged();
             AnalysisMistakes.Clear();
             AnalysisDetails = "Imported game loaded. Choose a side and run analysis.";
             SaveImportedGame(parsedGame);
@@ -442,6 +463,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             ? "Saved game loaded, but it does not contain SAN moves."
             : $"Loaded saved game with {importedReplay.Count} plies.";
         OnPropertyChanged(nameof(CanOpenImportedAnalysis));
+        OnPrimaryNextStepChanged();
     }
 
     public void LoadAnalysisResult(GameAnalysisResult result)
@@ -1190,6 +1212,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             BestMoveArrows = [];
             OnPropertyChanged(nameof(BestMoveArrows));
             AnalyzeImportedGameCommand.RaiseCanExecuteChanged();
+            OnPrimaryNextStepChanged();
             return;
         }
 
@@ -1256,7 +1279,17 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         finally
         {
             AnalyzeImportedGameCommand.RaiseCanExecuteChanged();
+            OnPrimaryNextStepChanged();
         }
+    }
+
+    private void OnPrimaryNextStepChanged()
+    {
+        OnPropertyChanged(nameof(IsEngineAvailable));
+        OnPropertyChanged(nameof(IsEngineUnavailable));
+        OnPropertyChanged(nameof(HasImportedGame));
+        OnPropertyChanged(nameof(PrimaryNextStepTitle));
+        OnPropertyChanged(nameof(PrimaryNextStepDescription));
     }
 
     private void RefreshImportedSummary()

@@ -65,7 +65,8 @@
               Grid.Column="1"
               HorizontalAlignment="Right"
               Click="TestAdviceButton_Click"
-              Content="Test Advice Model" />
+              Content="Test Advice Model"
+              IsVisible="False" />
     </Grid>
 
     <Grid Grid.Row="2" Margin="0,16,0,0" ColumnDefinitions="360,*">

@@ -44,6 +44,10 @@ public partial class AnalysisWindow : Window
         InitializeSimilarMistakesRenderer();
         InitializeTimelineRenderer();
         InitializeResponsiveSnapshotSizing();
+        viewModel.ShowRunAnalysisPlaceholder();
+        RenderDetailsPlaceholder();
+        SyncInteractionState();
+        SyncFeedbackState();
     }
 
     public GameAnalysisResult? CurrentResult => viewModel.CurrentResult;

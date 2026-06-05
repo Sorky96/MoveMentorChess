@@ -38,6 +38,7 @@ internal sealed class AnalysisSnapshotRenderer(
 
     public void Reset()
     {
+        positionSnapshotPanel.IsVisible = false;
         positionSnapshotBoard.Fen = null;
         positionSnapshotBoard.Arrows = [];
         positionSnapshotBoard.SelectedSquare = null;
@@ -55,6 +56,7 @@ internal sealed class AnalysisSnapshotRenderer(
 
     public void Show(MoveAnalysisResult lead, string label)
     {
+        positionSnapshotPanel.IsVisible = true;
         snapshotLead = lead;
         snapshotLabel = label;
         snapshotMode = AnalysisSnapshotMode.Played;

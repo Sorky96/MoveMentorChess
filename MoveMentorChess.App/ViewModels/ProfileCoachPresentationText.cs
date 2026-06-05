@@ -285,7 +285,7 @@ internal static class ProfileCoachPresentationText
     public static string BuildSnapshotSummary(PlayerProfileReport report)
     {
         string cpl = report.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a";
-        return $"Across {report.GamesAnalyzed.ToString(CultureInfo.InvariantCulture)} games, the player averages CPL {cpl} with {report.HighlightedMistakes.ToString(CultureInfo.InvariantCulture)} highlighted mistakes.";
+        return $"Across {report.GamesAnalyzed.ToString(CultureInfo.InvariantCulture)} games, the player has an average loss score of {cpl} with {report.HighlightedMistakes.ToString(CultureInfo.InvariantCulture)} mistakes to practice.";
     }
 
     private static void TryAddFixFirst(List<string> items, IReadOnlyList<string> checklist, int index)

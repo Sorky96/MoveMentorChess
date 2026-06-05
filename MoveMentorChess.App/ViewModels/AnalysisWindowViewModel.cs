@@ -21,7 +21,7 @@ internal sealed class AnalysisWindowViewModel : ViewModelBase
     private string statusText = "Choose a side and run the analysis.";
     private string summaryText = string.Empty;
     private string adviceStatusText = string.Empty;
-    private string detailsPlaceholderText = "Run analysis to inspect highlighted mistakes.";
+    private string detailsPlaceholderText = "Run analysis to see the biggest mistakes, why they mattered, and what to practice next.";
     private IReadOnlyList<SelectedMistakeViewItem> visibleMistakes = [];
     private SelectedMistakeViewItem? selectedMistake;
     private AnalysisSideOption? selectedSideOption;
@@ -287,22 +287,22 @@ internal sealed class AnalysisWindowViewModel : ViewModelBase
     }
 
     public void ShowRunAnalysisPlaceholder()
-        => DetailsPlaceholderText = "Run analysis to inspect highlighted mistakes.";
+        => DetailsPlaceholderText = "Run analysis to see the biggest mistakes, why they mattered, and what to practice next.";
 
     public void ShowAnalyzingPlaceholder()
         => DetailsPlaceholderText = "The analysis engine is reviewing the imported game. This may take a moment.";
 
     public void ShowSelectMistakePlaceholder()
-        => DetailsPlaceholderText = "Select a highlighted mistake to inspect details.";
+        => DetailsPlaceholderText = "Select a mistake from the list to see the better move, the position snapshot, and a short training focus.";
 
     public void ShowNoFilterMatchesPlaceholder()
-        => DetailsPlaceholderText = "No items match the current filter.";
+        => DetailsPlaceholderText = "No mistakes match this filter. Try All highlights or switch the analyzed side.";
 
     public void ShowAnalysisFailedPlaceholder()
-        => DetailsPlaceholderText = "Analysis failed.";
+        => DetailsPlaceholderText = "Analysis could not finish. Check Stockfish settings, then run the analysis again.";
 
     public void ShowAllReviewedPlaceholder()
-        => DetailsPlaceholderText = "All visible highlights are reviewed.";
+        => DetailsPlaceholderText = "All visible mistakes are reviewed. Switch filters or return to the board to keep practicing.";
 
     public void MarkReviewed(MoveAnalysisResult lead)
     {

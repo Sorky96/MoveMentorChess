@@ -10,7 +10,11 @@
         Title="Settings"
         Background="{DynamicResource ChromeBrush}">
   <Grid RowDefinitions="*,Auto" Margin="18">
-    <Border Padding="16" CornerRadius="18" Background="{DynamicResource PanelBrush}">
+    <Border Padding="16"
+            CornerRadius="18"
+            Background="{DynamicResource PanelBrush}"
+            HorizontalAlignment="Center"
+            MaxWidth="1180">
       <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Spacing="16">
           <Grid ColumnDefinitions="*,Auto">
@@ -22,6 +26,22 @@
                        TextWrapping="Wrap"
                        Text="Choose how MoveMentor uses the local model and Stockfish on this machine." />
           </StackPanel>
+
+          <Border Padding="14"
+                  CornerRadius="10"
+                  Background="{DynamicResource ChromeBrush}"
+                  BorderBrush="{DynamicResource PanelAccentBrush}"
+                  BorderThickness="1">
+            <StackPanel Spacing="8">
+              <TextBlock Foreground="White"
+                         FontSize="16"
+                         FontWeight="SemiBold"
+                         Text="Setup checklist" />
+              <TextBlock Foreground="#D7E2EA"
+                         TextWrapping="Wrap"
+                         Text="1. Pick or auto-detect Stockfish. 2. Load a PGN from the board. 3. Run analysis. 4. Follow the training recommendation." />
+            </StackPanel>
+          </Border>
 
           <StackPanel Spacing="10">
             <TextBlock FontSize="18" FontWeight="SemiBold" Text="Model" />

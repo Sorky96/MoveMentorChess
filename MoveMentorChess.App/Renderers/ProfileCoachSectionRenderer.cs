@@ -68,8 +68,8 @@ internal static class ProfileCoachSectionRenderer
 
         wrap.Children.Add(CreateMetricTile("Games analyzed", report.GamesAnalyzed.ToString(CultureInfo.InvariantCulture)));
         wrap.Children.Add(CreateMetricTile("Moves analyzed", report.TotalAnalyzedMoves.ToString(CultureInfo.InvariantCulture)));
-        wrap.Children.Add(CreateMetricTile("Highlighted mistakes", report.HighlightedMistakes.ToString(CultureInfo.InvariantCulture)));
-        wrap.Children.Add(CreateMetricTile("Average CPL", report.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"));
+        wrap.Children.Add(CreateMetricTile("Mistakes to practice", report.HighlightedMistakes.ToString(CultureInfo.InvariantCulture)));
+        wrap.Children.Add(CreateMetricTile("Average loss", report.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"));
         if (report.RatingTrend.CurrentStrength is not null)
         {
             MoveMentorStrengthPoint strength = report.RatingTrend.CurrentStrength;
