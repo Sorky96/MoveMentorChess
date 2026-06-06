@@ -63,12 +63,20 @@ internal static class Program
 
     private static IAnalysisStore? TryCreateStore(string? databasePath)
     {
+        bool hasExplicitDatabasePath = !string.IsNullOrWhiteSpace(databasePath);
         string resolvedPath = string.IsNullOrWhiteSpace(databasePath)
             ? SqliteAnalysisStore.GetDefaultDatabasePath()
             : databasePath;
 
         if (!File.Exists(resolvedPath))
         {
+            if (hasExplicitDatabasePath)
+            {
+                throw new FileNotFoundException(
+                    $"The analysis database '{resolvedPath}' was not found.",
+                    resolvedPath);
+            }
+
             Console.WriteLine("No analysis database was found. Rendering built-in snapshot scenarios.");
             return SnapshotFixtureStore.Create();
         }
@@ -81,6 +89,13 @@ internal static class Program
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
+            if (hasExplicitDatabasePath)
+            {
+                throw new InvalidOperationException(
+                    $"Could not open analysis database '{resolvedPath}': {ex.Message}",
+                    ex);
+            }
+
             Console.WriteLine($"Could not open analysis database: {ex.Message}");
             Console.WriteLine("Rendering built-in snapshot scenarios instead.");
             return SnapshotFixtureStore.Create();
@@ -303,6 +318,7 @@ internal sealed class SnapshotFixtureStore :
     IOpeningTrainingTelemetryStore,
     IOpeningTreeStore
 {
+    private static readonly DateTime FixtureNowUtc = new(2026, 06, 06, 12, 00, 00, DateTimeKind.Utc);
     private const string StartFen = "rn1qkbnr/ppp2ppp/4p3/3pP3/3P4/2N2N2/PPP2PPP/R1BQKB1R b KQkq - 1 5";
     private const string AfterC5Fen = "rn1qkbnr/pp3ppp/4p3/2ppP3/3P4/2N2N2/PPP2PPP/R1BQKB1R w KQkq c6 0 6";
 
@@ -329,7 +345,7 @@ internal sealed class SnapshotFixtureStore :
 
     public static SnapshotFixtureStore Create() => new();
 
-    public void SaveImportedGame(ImportedGame game)
+    public void SaveImportedGame(ImportedGame importedGame)
     {
     }
 
@@ -337,10 +353,10 @@ internal sealed class SnapshotFixtureStore :
     {
     }
 
-    public bool TryLoadImportedGame(string gameFingerprint, out ImportedGame? game)
+    public bool TryLoadImportedGame(string gameFingerprint, out ImportedGame? importedGame)
     {
-        game = gameFingerprint == fingerprint ? this.game : null;
-        return game is not null;
+        importedGame = gameFingerprint == fingerprint ? this.game : null;
+        return importedGame is not null;
     }
 
     public bool DeleteImportedGame(string gameFingerprint) => false;
@@ -360,19 +376,19 @@ internal sealed class SnapshotFixtureStore :
                 game.BlackElo,
                 game.Metadata?.TimeControl,
                 game.Metadata?.TimeControlCategory ?? GameTimeControlCategory.Unknown,
-                DateTime.UtcNow)]
+                FixtureNowUtc)]
             : [];
 
     public IReadOnlyList<GameAnalysisResult> ListResults(string? filterText = null, int limit = 500)
         => MatchesFilter(filterText, "Snapshot Player") ? [result] : [];
 
-    public bool TryLoadResult(GameAnalysisCacheKey key, out GameAnalysisResult? result)
+    public bool TryLoadResult(GameAnalysisCacheKey key, out GameAnalysisResult? analysisResult)
     {
-        result = key.GameFingerprint == fingerprint ? this.result : null;
-        return result is not null;
+        analysisResult = key.GameFingerprint == fingerprint ? this.result : null;
+        return analysisResult is not null;
     }
 
-    public void SaveResult(GameAnalysisCacheKey key, GameAnalysisResult result)
+    public void SaveResult(GameAnalysisCacheKey key, GameAnalysisResult analysisResult)
     {
     }
 
@@ -489,7 +505,7 @@ internal sealed class SnapshotFixtureStore :
                 new OpeningLineMove(5, 3, PlayerSide.White, "e5", "e4e5", new OpeningPositionKey("after-d5"), rootPositionKey, true)
             ];
 
-    public void SaveOpeningTrainingSessionResult(OpeningTrainingSessionResult result)
+    public void SaveOpeningTrainingSessionResult(OpeningTrainingSessionResult sessionResult)
     {
     }
 
@@ -515,7 +531,7 @@ internal sealed class SnapshotFixtureStore :
         => [
             new OpeningTrainingTelemetryEvent(
                 OpeningTrainingTelemetryEvents.OpeningTrainerOpened,
-                DateTime.UtcNow.AddDays(-1),
+                FixtureNowUtc.AddDays(-1),
                 "snapshot-player",
                 lines[0].LineKey,
                 lines[0].OpeningKey,
@@ -642,7 +658,7 @@ internal sealed class SnapshotFixtureStore :
             game.Metadata?.EndTime,
             game.Metadata?.Termination,
             game.Metadata?.Link);
-        StoredAnalysisRunContext run = new(PlayerSide.White, 16, 3, 800, DateTime.UtcNow.AddHours(-2));
+        StoredAnalysisRunContext run = new(PlayerSide.White, 16, 3, 800, FixtureNowUtc.AddHours(-2));
 
         return result.MoveAnalyses
             .Select((move, index) => new StoredMoveAnalysis(
@@ -807,8 +823,8 @@ internal sealed class SnapshotFixtureStore :
             new OpeningReviewItem(
                 new OpeningBranchKey($"{lines[0].LineKey.Value}:c5"),
                 new OpeningPositionKey($"{lines[0].LineKey.Value}:after-c5"),
-                DateTime.UtcNow.AddDays(-4),
-                DateTime.UtcNow.AddDays(1),
+                FixtureNowUtc.AddDays(-4),
+                FixtureNowUtc.AddDays(1),
                 2.2,
                 1,
                 1,
@@ -823,8 +839,8 @@ internal sealed class SnapshotFixtureStore :
                 "snapshot-session-1",
                 "snapshot-player",
                 "Snapshot Player",
-                DateTime.UtcNow.AddDays(-2),
-                DateTime.UtcNow.AddDays(-2).AddMinutes(9),
+                FixtureNowUtc.AddDays(-2),
+                FixtureNowUtc.AddDays(-2).AddMinutes(9),
                 OpeningTrainingSessionOutcome.Completed,
                 OpeningTrainingStyle.Mixed,
                 OpeningTrainingStrictness.BookFlexible,
@@ -848,7 +864,7 @@ internal sealed class SnapshotFixtureStore :
                         "Bd3",
                         "f1d3",
                         OpeningTrainingScore.Wrong,
-                        DateTime.UtcNow.AddDays(-2),
+                        FixtureNowUtc.AddDays(-2),
                         new OpeningBranchKey($"{lines[0].LineKey.Value}:c5"),
                         new OpeningPositionKey($"{lines[0].LineKey.Value}:after-c5"),
                         lines[0].OpeningKey,

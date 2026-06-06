@@ -200,7 +200,8 @@
                         MaxWidth="620"
                         HorizontalAlignment="Center"
                         Spacing="14">
-              <TextBlock Text="Start with one analysis"
+              <TextBlock x:Name="AnalysisEmptyStateTitleTextBlock"
+                         Text="Start with one analysis"
                          FontSize="24"
                          FontWeight="Bold"
                          Foreground="#F5FAFD"

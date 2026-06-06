@@ -399,6 +399,7 @@ public partial class AnalysisWindow : Window
     private void RenderDetailsPlaceholder()
     {
         detailsFeedbackRenderer.ShowPlaceholder(viewModel.DetailsPlaceholderText);
+        AnalysisEmptyStateTitleTextBlock.Text = viewModel.DetailsPlaceholderTitle;
         AnalysisEmptyStateTextBlock.Text = viewModel.DetailsPlaceholderText;
         AnalysisEmptyStatePanel.IsVisible = true;
         AnalysisDetailsShell.IsVisible = false;

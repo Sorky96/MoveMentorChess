@@ -39,7 +39,7 @@
                          Text="Setup checklist" />
               <TextBlock Foreground="#D7E2EA"
                          TextWrapping="Wrap"
-                         Text="1. Pick or auto-detect Stockfish. 2. Load a PGN from the board. 3. Run analysis. 4. Follow the training recommendation." />
+                         Text="1. Pick or auto-detect Stockfish. 2. Import a PGN. 3. Run analysis. 4. Follow the training recommendation." />
             </StackPanel>
           </Border>
 

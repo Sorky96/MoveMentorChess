@@ -174,7 +174,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public bool CanOpenImportedAnalysis => importedGame is not null && !IsBusy;
+    public bool CanOpenImportedAnalysis => importedGame is not null && engine is not null && !IsBusy;
 
     public bool IsImportCancellationAvailable => IsBusy && importCancellationTokenSource is not null && !importCancellationTokenSource.IsCancellationRequested;
 
@@ -1288,6 +1288,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(IsEngineAvailable));
         OnPropertyChanged(nameof(IsEngineUnavailable));
         OnPropertyChanged(nameof(HasImportedGame));
+        OnPropertyChanged(nameof(CanOpenImportedAnalysis));
         OnPropertyChanged(nameof(PrimaryNextStepTitle));
         OnPropertyChanged(nameof(PrimaryNextStepDescription));
     }
