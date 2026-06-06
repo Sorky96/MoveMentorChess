@@ -44,6 +44,10 @@ public partial class AnalysisWindow : Window
         InitializeSimilarMistakesRenderer();
         InitializeTimelineRenderer();
         InitializeResponsiveSnapshotSizing();
+        viewModel.ShowRunAnalysisPlaceholder();
+        RenderDetailsPlaceholder();
+        SyncInteractionState();
+        SyncFeedbackState();
     }
 
     public GameAnalysisResult? CurrentResult => viewModel.CurrentResult;
@@ -395,6 +399,11 @@ public partial class AnalysisWindow : Window
     private void RenderDetailsPlaceholder()
     {
         detailsFeedbackRenderer.ShowPlaceholder(viewModel.DetailsPlaceholderText);
+        AnalysisEmptyStateTitleTextBlock.Text = viewModel.DetailsPlaceholderTitle;
+        AnalysisEmptyStateTextBlock.Text = viewModel.DetailsPlaceholderText;
+        AnalysisEmptyStatePanel.IsVisible = true;
+        AnalysisDetailsShell.IsVisible = false;
+        FeedbackShellPanel.IsVisible = false;
         snapshotRenderer.Reset();
         similarMistakesRenderer.Clear();
         TimelineSelectedTextBlock.Text = string.Empty;
@@ -402,6 +411,9 @@ public partial class AnalysisWindow : Window
 
     private void RenderSelectedDetails(AnalysisWindowSelectedDetails selectedDetails)
     {
+        AnalysisEmptyStatePanel.IsVisible = false;
+        AnalysisDetailsShell.IsVisible = true;
+        FeedbackShellPanel.IsVisible = true;
         detailsFeedbackRenderer.ShowDetails(selectedDetails.Details);
         RefreshReviewStatus(selectedDetails.Lead);
         snapshotRenderer.Show(selectedDetails.Lead, selectedDetails.Details.EffectiveLabel);
@@ -511,6 +523,7 @@ public partial class AnalysisWindow : Window
             viewModel.CanRunAnalysis,
             viewModel.IsAnalysisRunning,
             viewModel.CanUseSelectedMistake);
+        EmptyAnalyzeButton.IsEnabled = viewModel.CanRunAnalysis && !viewModel.IsAnalysisRunning;
     }
 
     private void SyncFeedbackState()

@@ -16,11 +16,13 @@
         WindowDecorations="None"
         Background="{DynamicResource ChromeBrush}"
         Title="MoveMentor Chess">
-  <Grid Margin="10" ColumnDefinitions="*,14,620" RowDefinitions="*,Auto">
+  <Grid Margin="10" ColumnDefinitions="*,14,720" RowDefinitions="*,Auto">
     <Border Background="{DynamicResource PanelBrush}" CornerRadius="18" Padding="10">
       <Grid RowDefinitions="*,Auto,Auto">
         <Viewbox Stretch="Uniform"
                  StretchDirection="Both"
+                 MaxWidth="980"
+                 MaxHeight="980"
                  HorizontalAlignment="Center"
                  VerticalAlignment="Center">
           <controls:ChessBoardView x:Name="BoardView"
@@ -49,8 +51,52 @@
     </Border>
 
     <Border Grid.Column="2" Background="{DynamicResource PanelBrush}" CornerRadius="18" Padding="10">
-      <Grid Margin="10" RowDefinitions="Auto,14,*" ColumnDefinitions="*,*">
-        <Grid Grid.ColumnSpan="2" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+      <Grid Margin="10" RowDefinitions="Auto,12,Auto,14,*" ColumnDefinitions="*,*">
+        <Border Grid.ColumnSpan="2"
+                Padding="14"
+                CornerRadius="10"
+                Background="{DynamicResource ChromeBrush}"
+                BorderBrush="{DynamicResource PanelAccentBrush}"
+                BorderThickness="1">
+          <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+            <TextBlock Foreground="White"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Text="{Binding PrimaryNextStepTitle}"
+                       TextWrapping="Wrap" />
+            <TextBlock Grid.Row="1"
+                       Margin="0,6,18,0"
+                       Foreground="#D7E2EA"
+                       Text="{Binding PrimaryNextStepDescription}"
+                       TextWrapping="Wrap" />
+            <StackPanel Grid.RowSpan="2"
+                        Grid.Column="1"
+                        MinWidth="178"
+                        VerticalAlignment="Center"
+                        Spacing="8">
+              <Button MinHeight="36"
+                      HorizontalAlignment="Stretch"
+                      HorizontalContentAlignment="Center"
+                      Click="SettingsButton_Click"
+                      Content="Configure engine"
+                      IsVisible="{Binding IsEngineUnavailable}" />
+              <Button MinHeight="36"
+                      HorizontalAlignment="Stretch"
+                      HorizontalContentAlignment="Center"
+                      Click="PgnImportButton_Click"
+                      Content="Paste PGN" />
+              <Button MinHeight="36"
+                      HorizontalAlignment="Stretch"
+                      HorizontalContentAlignment="Center"
+                      Click="AnalyzeImportedButton_Click"
+                      Content="Analyze game"
+                      IsEnabled="{Binding CanOpenImportedAnalysis}"
+                      IsVisible="{Binding HasImportedGame}" />
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
           <Button Grid.Row="0" Grid.Column="0" Height="36" Margin="0,0,6,0" HorizontalAlignment="Stretch" Click="PgnImportButton_Click" Content="PASTE PGN" />
           <Button Grid.Row="0" Grid.Column="1" Height="36" Margin="6,0,0,0" HorizontalAlignment="Stretch" Click="LoadPgnFileButton_Click" Content="LOAD PGN FILE" />
 
@@ -117,7 +163,7 @@
                   Content="CLOSE APP" />
         </Grid>
 
-        <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="*,*">
+        <Grid Grid.Row="4" Grid.ColumnSpan="2" ColumnDefinitions="*,*">
           <Grid RowDefinitions="32,*" Margin="0,0,6,0">
             <TextBlock VerticalAlignment="Center" Foreground="White" FontSize="16" Text="{Binding ImportedGameSummary}" />
             <Border Grid.Row="1" Background="{DynamicResource ChromeBrush}" BorderBrush="{DynamicResource PanelAccentBrush}" BorderThickness="1">

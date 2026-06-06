@@ -49,6 +49,23 @@ public sealed class OpeningTrainingPriorityServiceTests
     }
 
     [Fact]
+    public void BuildPriorities_UsesFallbackWhenOpeningNameIsMissing()
+    {
+        OpeningLineCatalogItem line = CreateLine() with
+        {
+            OpeningName = string.Empty
+        };
+        OpeningTrainingBranch branch = CreateBranch("Nf6", "g8f6", 2);
+        OpeningTrainerOverview overview = CreateOverview(line, [branch], []);
+        OpeningTrainingPriorityService service = new();
+
+        TrainingPriorityItem priority = Assert.Single(service.BuildPriorities(overview, [], []));
+
+        Assert.Contains("this opening line", priority.Summary, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("in .", priority.Summary, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void BuildGuidedStudySession_TargetsBranchAwarenessPosition()
     {
         OpeningLineCatalogItem line = CreateLine();

@@ -74,13 +74,17 @@ public sealed class OpeningTrainingPriorityService
                     ? $"{mistakeCount} mistake(s) against this reply in history. {response}"
                     : $"Book frequency {branch.Frequency}. {(isReviewed ? "Already seen, but still practical." : "Not covered in review history yet.")} {response}";
 
+            string openingName = string.IsNullOrWhiteSpace(overview.OpeningName)
+                ? "this opening line"
+                : overview.OpeningName;
+
             yield return new TrainingPriorityItem(
                 $"branch:{branch.BranchKey.Value}",
                 overview.LineKey,
                 action,
                 reason,
                 $"Answer {branch.OpponentMove}",
-                $"Prioritize this opponent reply in {overview.OpeningName}.",
+                $"Prioritize this opponent reply in {openingName}.",
                 evidence,
                 Math.Round(score, 2),
                 Math.Clamp(4 + branch.Continuation.Count, 5, 12),

@@ -21,7 +21,8 @@ internal sealed class AnalysisWindowViewModel : ViewModelBase
     private string statusText = "Choose a side and run the analysis.";
     private string summaryText = string.Empty;
     private string adviceStatusText = string.Empty;
-    private string detailsPlaceholderText = "Run analysis to inspect highlighted mistakes.";
+    private string detailsPlaceholderTitle = "Start with one analysis";
+    private string detailsPlaceholderText = "Run analysis to see the biggest mistakes, why they mattered, and what to practice next.";
     private IReadOnlyList<SelectedMistakeViewItem> visibleMistakes = [];
     private SelectedMistakeViewItem? selectedMistake;
     private AnalysisSideOption? selectedSideOption;
@@ -143,6 +144,12 @@ internal sealed class AnalysisWindowViewModel : ViewModelBase
     {
         get => detailsPlaceholderText;
         private set => SetProperty(ref detailsPlaceholderText, value);
+    }
+
+    public string DetailsPlaceholderTitle
+    {
+        get => detailsPlaceholderTitle;
+        private set => SetProperty(ref detailsPlaceholderTitle, value);
     }
 
     public IReadOnlyList<SelectedMistakeViewItem> VisibleMistakes
@@ -287,22 +294,40 @@ internal sealed class AnalysisWindowViewModel : ViewModelBase
     }
 
     public void ShowRunAnalysisPlaceholder()
-        => DetailsPlaceholderText = "Run analysis to inspect highlighted mistakes.";
+        => ShowDetailsPlaceholder(
+            "Start with one analysis",
+            "Run analysis to see the biggest mistakes, why they mattered, and what to practice next.");
 
     public void ShowAnalyzingPlaceholder()
-        => DetailsPlaceholderText = "The analysis engine is reviewing the imported game. This may take a moment.";
+        => ShowDetailsPlaceholder(
+            "Analysis is running",
+            "The analysis engine is reviewing the imported game. This may take a moment.");
 
     public void ShowSelectMistakePlaceholder()
-        => DetailsPlaceholderText = "Select a highlighted mistake to inspect details.";
+        => ShowDetailsPlaceholder(
+            "Select a mistake",
+            "Select a mistake from the list to see the better move, the position snapshot, and a short training focus.");
 
     public void ShowNoFilterMatchesPlaceholder()
-        => DetailsPlaceholderText = "No items match the current filter.";
+        => ShowDetailsPlaceholder(
+            "No matches for this filter",
+            "No mistakes match this filter. Try All highlights or switch the analyzed side.");
 
     public void ShowAnalysisFailedPlaceholder()
-        => DetailsPlaceholderText = "Analysis failed.";
+        => ShowDetailsPlaceholder(
+            "Analysis could not finish",
+            "Analysis could not finish. Check Stockfish settings, then run the analysis again.");
 
     public void ShowAllReviewedPlaceholder()
-        => DetailsPlaceholderText = "All visible highlights are reviewed.";
+        => ShowDetailsPlaceholder(
+            "All visible mistakes reviewed",
+            "All visible mistakes are reviewed. Switch filters or return to the board to keep practicing.");
+
+    private void ShowDetailsPlaceholder(string title, string body)
+    {
+        DetailsPlaceholderTitle = title;
+        DetailsPlaceholderText = body;
+    }
 
     public void MarkReviewed(MoveAnalysisResult lead)
     {

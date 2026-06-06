@@ -10,13 +10,13 @@ internal static class ProfileCoachPresentationText
         if (report.CostliestMistakeLabels.Count > 0)
         {
             ProfileCostlyLabelStat costly = report.CostliestMistakeLabels[0];
-            return $"{trend}. {summary} The most expensive pattern is {FormatMistakeLabel(costly.Label).ToLowerInvariant()}, costing {costly.TotalCentipawnLoss.ToString(CultureInfo.InvariantCulture)} total CPL.";
+            return $"{trend}. {summary} The most expensive pattern is {FormatMistakeLabel(costly.Label).ToLowerInvariant()}, costing {costly.TotalCentipawnLoss.ToString(CultureInfo.InvariantCulture)} total loss.";
         }
 
         if (report.MistakesByPhase.Count > 0)
         {
             ProfilePhaseStat phase = report.MistakesByPhase[0];
-            return $"{trend}. {summary} The issue shows up most in the {FormatPhase(phase.Phase).ToLowerInvariant()}, with {phase.Count.ToString(CultureInfo.InvariantCulture)} highlighted mistakes.";
+            return $"{trend}. {summary} The issue shows up most in the {FormatPhase(phase.Phase).ToLowerInvariant()}, with {phase.Count.ToString(CultureInfo.InvariantCulture)} mistakes to practice.";
         }
 
         return $"{trend}. {summary}";
@@ -285,7 +285,7 @@ internal static class ProfileCoachPresentationText
     public static string BuildSnapshotSummary(PlayerProfileReport report)
     {
         string cpl = report.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a";
-        return $"Across {report.GamesAnalyzed.ToString(CultureInfo.InvariantCulture)} games, the player averages CPL {cpl} with {report.HighlightedMistakes.ToString(CultureInfo.InvariantCulture)} highlighted mistakes.";
+        return $"Across {report.GamesAnalyzed.ToString(CultureInfo.InvariantCulture)} games, the player has an average loss score of {cpl} with {report.HighlightedMistakes.ToString(CultureInfo.InvariantCulture)} mistakes to practice.";
     }
 
     private static void TryAddFixFirst(List<string> items, IReadOnlyList<string> checklist, int index)
