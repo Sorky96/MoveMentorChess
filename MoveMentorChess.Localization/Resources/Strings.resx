@@ -70,6 +70,14 @@
   <data name="MainDialogAnalyze" xml:space="preserve"><value>Analyze</value></data>
   <data name="MainDialogLater" xml:space="preserve"><value>Later</value></data>
   <data name="MainDialogPgnAnalysisFinished" xml:space="preserve"><value>PGN analysis finished</value></data>
+  <data name="MainDialogOk" xml:space="preserve"><value>OK</value></data>
+  <data name="MainBulkAnalyzedPlayer" xml:space="preserve"><value>Analyzed player: {0}</value></data>
+  <data name="MainBulkDetectedPlayerNone" xml:space="preserve"><value>Detected player: none</value></data>
+  <data name="MainBulkNewAnalyses" xml:space="preserve"><value>New analyses: {0}</value></data>
+  <data name="MainBulkLoadedFromCache" xml:space="preserve"><value>Loaded from cache: {0}</value></data>
+  <data name="MainBulkSkipped" xml:space="preserve"><value>Skipped: {0}</value></data>
+  <data name="MainBulkFailed" xml:space="preserve"><value>Failed: {0}</value></data>
+  <data name="MainBulkFirstFailures" xml:space="preserve"><value>First failures:</value></data>
   <data name="AdviceLanguageInstruction" xml:space="preserve"><value>Write short_text, detailed_text, and training_hint in {0}. Keep JSON keys and chess notation unchanged.</value></data>
   <data name="AdviceDetailedPartsInstruction" xml:space="preserve"><value>For detailed_text, use exactly four short parts in this order: {0}:, {1}:, {2}:, {3}:.</value></data>
   <data name="AdviceExampleShortText" xml:space="preserve"><value>Write a brief summary of the mistake here.</value></data>
@@ -94,6 +102,72 @@
   <data name="AdviceTrainingAdvancedOpeningPrinciples" xml:space="preserve"><value>Review your first 10 moves and justify each one in terms of development, king safety and central influence.</value></data>
   <data name="AdviceTrainingAdvancedPieceActivity" xml:space="preserve"><value>Compare candidate moves by mobility gain, square quality and coordination rather than by surface-level safety alone.</value></data>
   <data name="AdviceTrainingAdvancedEndgameTechnique" xml:space="preserve"><value>Drill conversion and defensive endgames with emphasis on king activity and zugzwang awareness.</value></data>
+  <data name="AdviceHintMaterialLoss" xml:space="preserve"><value>Before committing, compare the material balance after the forcing reply.</value></data>
+  <data name="AdviceHintHangingPiece" xml:space="preserve"><value>After every move, check whether your moved piece is defended at least as many times as it is attacked.</value></data>
+  <data name="AdviceHintKingSafety" xml:space="preserve"><value>When your king is castled, treat pawn moves in front of it as a concession that needs concrete justification.</value></data>
+  <data name="AdviceHintOpeningPrinciples" xml:space="preserve"><value>In the opening, prefer development, king safety and central control before side pawn moves or early queen adventures.</value></data>
+  <data name="AdviceHintPieceActivity" xml:space="preserve"><value>In quieter middlegames, favor squares that increase your piece activity instead of moves that leave a piece sidelined or passive.</value></data>
+  <data name="AdviceHintEndgameTechnique" xml:space="preserve"><value>In endgames, calculate the simplest technical line and avoid moves that hand activity back to the opponent.</value></data>
+  <data name="AdviceHintGeneral" xml:space="preserve"><value>Pause on tactical turns and look for forcing replies before choosing a natural-looking move.</value></data>
+  <data name="AdviceProblemIntermediateCentipawns" xml:space="preserve"><value>The move {0} was a {1} because it worsened the position by roughly {2} centipawns.</value></data>
+  <data name="AdviceProblemIntermediateEvaluation" xml:space="preserve"><value>The move {0} was a {1} because the position became significantly less healthy afterwards.</value></data>
+  <data name="AdviceProblemBeginnerCentipawns" xml:space="preserve"><value>{0} was a {1} because it gave away roughly {2} centipawns of value.</value></data>
+  <data name="AdviceProblemBeginnerEvaluation" xml:space="preserve"><value>{0} was a {1} because it made your position much harder to handle.</value></data>
+  <data name="AdviceProblemAdvancedCentipawns" xml:space="preserve"><value>{0} qualifies as a {1} because the engine swing is about {2} centipawns and the position loses practical stability.</value></data>
+  <data name="AdviceProblemAdvancedEvaluation" xml:space="preserve"><value>{0} qualifies as a {1} because the evaluation shifts sharply even without a clean centipawn comparison.</value></data>
+  <data name="AdviceWhyMaterialLoss" xml:space="preserve"><value>The main issue was concrete material damage or a line that allowed the opponent to win material cleanly.</value></data>
+  <data name="AdviceWhyHangingPiece" xml:space="preserve"><value>The move left a piece insufficiently defended, so the opponent could challenge it immediately.</value></data>
+  <data name="AdviceWhyMissedTactic" xml:space="preserve"><value>The move missed a forcing tactical resource, either for you or for your opponent in reply.</value></data>
+  <data name="AdviceWhyKingSafety" xml:space="preserve"><value>The move loosened king safety and gave the opponent easier attacking targets or entry lines.</value></data>
+  <data name="AdviceWhyOpeningPrinciples" xml:space="preserve"><value>The move ignored core opening priorities such as development, king safety or central control.</value></data>
+  <data name="AdviceWhyPieceActivity" xml:space="preserve"><value>The move made one of your pieces less active and reduced your ability to fight for key squares.</value></data>
+  <data name="AdviceWhyEndgameTechnique" xml:space="preserve"><value>The move missed a cleaner technical plan and gave away useful activity in the endgame.</value></data>
+  <data name="AdviceWhyGeneral" xml:space="preserve"><value>The move created a practical problem that the opponent could exploit with more active play.</value></data>
+  <data name="AdviceWhyBeginnerMaterialLoss" xml:space="preserve"><value>The biggest problem is that you let the opponent win material.</value></data>
+  <data name="AdviceWhyBeginnerHangingPiece" xml:space="preserve"><value>The moved piece did not have enough protection after the move.</value></data>
+  <data name="AdviceWhyBeginnerMissedTactic" xml:space="preserve"><value>There was a forcing tactical idea in the position that was missed.</value></data>
+  <data name="AdviceWhyBeginnerKingSafety" xml:space="preserve"><value>The move made your king easier to attack.</value></data>
+  <data name="AdviceWhyBeginnerOpeningPrinciples" xml:space="preserve"><value>The move spent time on something less important than development or king safety.</value></data>
+  <data name="AdviceWhyBeginnerPieceActivity" xml:space="preserve"><value>The move placed your piece on a less useful square.</value></data>
+  <data name="AdviceWhyBeginnerEndgameTechnique" xml:space="preserve"><value>The move missed a simpler endgame plan.</value></data>
+  <data name="AdviceWhyBeginnerGeneral" xml:space="preserve"><value>The move allowed the opponent to improve too easily.</value></data>
+  <data name="AdviceWhyAdvancedMaterialLoss" xml:space="preserve"><value>The critical defect is a concrete forcing line in which your position fails the material balance test.</value></data>
+  <data name="AdviceWhyAdvancedHangingPiece" xml:space="preserve"><value>The move leaves the relocated piece tactically underprotected relative to the available attacking resources.</value></data>
+  <data name="AdviceWhyAdvancedMissedTactic" xml:space="preserve"><value>The position contains a forcing tactical resource that should dominate candidate-move selection.</value></data>
+  <data name="AdviceWhyAdvancedKingSafety" xml:space="preserve"><value>The move concedes king shelter, opening tactical access on files, diagonals or weakened color complexes.</value></data>
+  <data name="AdviceWhyAdvancedOpeningPrinciples" xml:space="preserve"><value>The move loses opening efficiency by neglecting development tempo, central influence or timely king safety.</value></data>
+  <data name="AdviceWhyAdvancedPieceActivity" xml:space="preserve"><value>The move lowers activity and coordination, so your piece contributes less to critical squares and plans.</value></data>
+  <data name="AdviceWhyAdvancedEndgameTechnique" xml:space="preserve"><value>The move yields technical control, often by underestimating king activity or the simplest conversion route.</value></data>
+  <data name="AdviceWhyAdvancedGeneral" xml:space="preserve"><value>The move creates an exploitable positional or tactical concession that improves the opponent's options.</value></data>
+  <data name="AdviceWatchMaterialLoss" xml:space="preserve"><value>Before you release the move, scan the forcing captures and ask what material remains after the sequence ends.</value></data>
+  <data name="AdviceWatchHangingPiece" xml:space="preserve"><value>A good trigger is to count attackers and defenders on the destination square before moving on.</value></data>
+  <data name="AdviceWatchMissedTactic" xml:space="preserve"><value>In sharp positions, pause for checks, captures and threats before trusting the first natural move.</value></data>
+  <data name="AdviceWatchKingSafety" xml:space="preserve"><value>Whenever your king shelter changes, double-check opened files, weakened diagonals and loose dark or light squares.</value></data>
+  <data name="AdviceWatchOpeningPrinciples" xml:space="preserve"><value>In the opening, ask whether the move develops a piece, improves king safety or meaningfully fights for the center.</value></data>
+  <data name="AdviceWatchPieceActivity" xml:space="preserve"><value>When no tactic is forcing the game, compare whether your move improves or reduces the mobility of the moved piece.</value></data>
+  <data name="AdviceWatchEndgameTechnique" xml:space="preserve"><value>In endgames, prefer the move that improves king activity or fixes the opponent's weaknesses with the least counterplay.</value></data>
+  <data name="AdviceWatchGeneral" xml:space="preserve"><value>Use the next similar position as a cue to slow down and verify the opponent's strongest forcing reply.</value></data>
+  <data name="AdviceWatchBeginnerMaterialLoss" xml:space="preserve"><value>A simple habit is to ask: after the obvious exchanges, who is up material?</value></data>
+  <data name="AdviceWatchBeginnerHangingPiece" xml:space="preserve"><value>Before moving on, count how many times the destination square is attacked and defended.</value></data>
+  <data name="AdviceWatchBeginnerMissedTactic" xml:space="preserve"><value>Look for checks, captures and threats before trusting a natural move.</value></data>
+  <data name="AdviceWatchBeginnerKingSafety" xml:space="preserve"><value>Any move near your king should make you ask what attacking lines just opened.</value></data>
+  <data name="AdviceWatchBeginnerOpeningPrinciples" xml:space="preserve"><value>In the opening, first try to develop pieces and get your king safe.</value></data>
+  <data name="AdviceWatchBeginnerPieceActivity" xml:space="preserve"><value>Ask whether the piece will be more active or less active after the move.</value></data>
+  <data name="AdviceWatchBeginnerEndgameTechnique" xml:space="preserve"><value>In the endgame, look for the move that activates your king or improves your simplest plan.</value></data>
+  <data name="AdviceWatchBeginnerGeneral" xml:space="preserve"><value>Use similar moments to slow down and check the opponent's best reply.</value></data>
+  <data name="AdviceWatchAdvancedMaterialLoss" xml:space="preserve"><value>Treat the position as a forcing-tree problem and verify whether the terminal material count still works for you.</value></data>
+  <data name="AdviceWatchAdvancedHangingPiece" xml:space="preserve"><value>Use attacker-defender accounting plus tactical motifs like overload or zwischenzug before accepting the destination square.</value></data>
+  <data name="AdviceWatchAdvancedMissedTactic" xml:space="preserve"><value>Candidate selection should begin with forcing resources, not with the most natural-looking improving move.</value></data>
+  <data name="AdviceWatchAdvancedKingSafety" xml:space="preserve"><value>Re-evaluate access routes to the king immediately after any shelter concession, especially files, diagonals and dark/light square complexes.</value></data>
+  <data name="AdviceWatchAdvancedOpeningPrinciples" xml:space="preserve"><value>Measure opening moves by tempo efficiency, development quality and whether they support a coherent central setup.</value></data>
+  <data name="AdviceWatchAdvancedPieceActivity" xml:space="preserve"><value>Compare candidate moves through activity metrics: mobility, square quality, coordination and restriction of counterplay.</value></data>
+  <data name="AdviceWatchAdvancedEndgameTechnique" xml:space="preserve"><value>In technical endgames, prioritize king activity and the line with the lowest counterplay, even if several moves keep the edge.</value></data>
+  <data name="AdviceWatchAdvancedGeneral" xml:space="preserve"><value>Use the position as a cue to run a stricter candidate-move and forcing-line verification pass.</value></data>
+  <data name="AdviceBetterCalmer" xml:space="preserve"><value>A calmer alternative kept the position healthier.</value></data>
+  <data name="AdviceBetterStronger" xml:space="preserve"><value>A stronger option was {0}.</value></data>
+  <data name="AdviceBetterOpeningBeginner" xml:space="preserve"><value>In {0}, development and king safety mattered more here.</value></data>
+  <data name="AdviceBetterOpeningIntermediate" xml:space="preserve"><value>In {0}, development was the more important priority in this moment.</value></data>
+  <data name="AdviceBetterOpeningAdvanced" xml:space="preserve"><value>In {0}, the better line respected development tempo and opening efficiency.</value></data>
   <data name="AdviceLostCentipawns" xml:space="preserve"><value>and lost about {0} centipawns</value></data>
   <data name="AdviceChangedEvaluation" xml:space="preserve"><value>and changed the evaluation sharply</value></data>
   <data name="AdviceQualityBlunder" xml:space="preserve"><value>blunder</value></data>

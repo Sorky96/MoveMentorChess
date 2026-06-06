@@ -67,6 +67,14 @@
   <data name="MainDialogAnalyze" xml:space="preserve"><value>Analizuj</value></data>
   <data name="MainDialogLater" xml:space="preserve"><value>Później</value></data>
   <data name="MainDialogPgnAnalysisFinished" xml:space="preserve"><value>Analiza PGN zakończona</value></data>
+  <data name="MainDialogOk" xml:space="preserve"><value>OK</value></data>
+  <data name="MainBulkAnalyzedPlayer" xml:space="preserve"><value>Analizowany gracz: {0}</value></data>
+  <data name="MainBulkDetectedPlayerNone" xml:space="preserve"><value>Wykryty gracz: brak</value></data>
+  <data name="MainBulkNewAnalyses" xml:space="preserve"><value>Nowe analizy: {0}</value></data>
+  <data name="MainBulkLoadedFromCache" xml:space="preserve"><value>Wczytane z pamięci podręcznej: {0}</value></data>
+  <data name="MainBulkSkipped" xml:space="preserve"><value>Pominięte: {0}</value></data>
+  <data name="MainBulkFailed" xml:space="preserve"><value>Nieudane: {0}</value></data>
+  <data name="MainBulkFirstFailures" xml:space="preserve"><value>Pierwsze błędy:</value></data>
   <data name="AdviceLanguageInstruction" xml:space="preserve"><value>Napisz short_text, detailed_text i training_hint po polsku. Zachowaj klucze JSON i notację szachową bez zmian.</value></data>
   <data name="AdviceDetailedPartsInstruction" xml:space="preserve"><value>W detailed_text użyj dokładnie czterech krótkich części w tej kolejności: {0}:, {1}:, {2}:, {3}:.</value></data>
   <data name="AdviceExampleShortText" xml:space="preserve"><value>Napisz krótkie podsumowanie błędu.</value></data>
@@ -91,6 +99,72 @@
   <data name="AdviceTrainingAdvancedOpeningPrinciples" xml:space="preserve"><value>Przejrzyj pierwsze 10 ruchów i uzasadnij każdy rozwojem, bezpieczeństwem króla oraz wpływem na centrum.</value></data>
   <data name="AdviceTrainingAdvancedPieceActivity" xml:space="preserve"><value>Porównuj kandydaty przez zysk mobilności, jakość pól i koordynację, nie tylko powierzchowne bezpieczeństwo.</value></data>
   <data name="AdviceTrainingAdvancedEndgameTechnique" xml:space="preserve"><value>Ćwicz końcówki techniczne i obronne z naciskiem na aktywność króla oraz świadomość zugzwangu.</value></data>
+  <data name="AdviceHintMaterialLoss" xml:space="preserve"><value>Przed decyzją porównaj bilans materiału po wymuszonej odpowiedzi.</value></data>
+  <data name="AdviceHintHangingPiece" xml:space="preserve"><value>Po każdym ruchu sprawdź, czy przesunięta figura jest broniona co najmniej tyle razy, ile jest atakowana.</value></data>
+  <data name="AdviceHintKingSafety" xml:space="preserve"><value>Gdy król jest po roszadzie, traktuj ruchy pionami przed nim jako ustępstwo wymagające konkretnego uzasadnienia.</value></data>
+  <data name="AdviceHintOpeningPrinciples" xml:space="preserve"><value>W debiucie stawiaj rozwój, bezpieczeństwo króla i kontrolę centrum przed bocznymi pionami lub wczesnymi wycieczkami hetmana.</value></data>
+  <data name="AdviceHintPieceActivity" xml:space="preserve"><value>W spokojniejszej grze środkowej wybieraj pola zwiększające aktywność figur zamiast ruchów, które zostawiają figurę na uboczu.</value></data>
+  <data name="AdviceHintEndgameTechnique" xml:space="preserve"><value>W końcówkach licz najprostszy techniczny wariant i unikaj ruchów oddających aktywność przeciwnikowi.</value></data>
+  <data name="AdviceHintGeneral" xml:space="preserve"><value>W taktycznych momentach zatrzymaj się i znajdź wymuszone odpowiedzi przed wyborem naturalnie wyglądającego ruchu.</value></data>
+  <data name="AdviceProblemIntermediateCentipawns" xml:space="preserve"><value>Ruch {0} był ruchem typu {1}, bo pogorszył pozycję o około {2} centypionów.</value></data>
+  <data name="AdviceProblemIntermediateEvaluation" xml:space="preserve"><value>Ruch {0} był ruchem typu {1}, bo po nim pozycja stała się wyraźnie mniej zdrowa.</value></data>
+  <data name="AdviceProblemBeginnerCentipawns" xml:space="preserve"><value>{0} to {1}, bo oddało około {2} centypionów wartości.</value></data>
+  <data name="AdviceProblemBeginnerEvaluation" xml:space="preserve"><value>{0} to {1}, bo znacznie utrudniło prowadzenie pozycji.</value></data>
+  <data name="AdviceProblemAdvancedCentipawns" xml:space="preserve"><value>{0} kwalifikuje się jako {1}, bo skok oceny silnika wynosi około {2} centypionów, a pozycja traci praktyczną stabilność.</value></data>
+  <data name="AdviceProblemAdvancedEvaluation" xml:space="preserve"><value>{0} kwalifikuje się jako {1}, bo ocena zmienia się ostro nawet bez czystego porównania centypionów.</value></data>
+  <data name="AdviceWhyMaterialLoss" xml:space="preserve"><value>Głównym problemem była konkretna strata materiału albo linia pozwalająca przeciwnikowi czysto wygrać materiał.</value></data>
+  <data name="AdviceWhyHangingPiece" xml:space="preserve"><value>Ruch zostawił figurę niedostatecznie bronioną, więc przeciwnik mógł od razu ją zaatakować.</value></data>
+  <data name="AdviceWhyMissedTactic" xml:space="preserve"><value>Ruch przeoczył wymuszający zasób taktyczny, dla ciebie albo jako odpowiedź przeciwnika.</value></data>
+  <data name="AdviceWhyKingSafety" xml:space="preserve"><value>Ruch poluzował bezpieczeństwo króla i dał przeciwnikowi łatwiejsze cele ataku lub linie wejścia.</value></data>
+  <data name="AdviceWhyOpeningPrinciples" xml:space="preserve"><value>Ruch zignorował główne priorytety debiutu: rozwój, bezpieczeństwo króla albo kontrolę centrum.</value></data>
+  <data name="AdviceWhyPieceActivity" xml:space="preserve"><value>Ruch zmniejszył aktywność jednej z figur i osłabił walkę o ważne pola.</value></data>
+  <data name="AdviceWhyEndgameTechnique" xml:space="preserve"><value>Ruch przeoczył czystszy plan techniczny i oddał użyteczną aktywność w końcówce.</value></data>
+  <data name="AdviceWhyGeneral" xml:space="preserve"><value>Ruch stworzył praktyczny problem, który przeciwnik mógł wykorzystać aktywniejszą grą.</value></data>
+  <data name="AdviceWhyBeginnerMaterialLoss" xml:space="preserve"><value>Największy problem: pozwalasz przeciwnikowi wygrać materiał.</value></data>
+  <data name="AdviceWhyBeginnerHangingPiece" xml:space="preserve"><value>Przesunięta figura nie miała po ruchu wystarczającej ochrony.</value></data>
+  <data name="AdviceWhyBeginnerMissedTactic" xml:space="preserve"><value>W pozycji była wymuszająca idea taktyczna, która została przeoczona.</value></data>
+  <data name="AdviceWhyBeginnerKingSafety" xml:space="preserve"><value>Ruch ułatwił atak na twojego króla.</value></data>
+  <data name="AdviceWhyBeginnerOpeningPrinciples" xml:space="preserve"><value>Ruch zużył tempo na coś mniej ważnego niż rozwój lub bezpieczeństwo króla.</value></data>
+  <data name="AdviceWhyBeginnerPieceActivity" xml:space="preserve"><value>Ruch postawił figurę na mniej użytecznym polu.</value></data>
+  <data name="AdviceWhyBeginnerEndgameTechnique" xml:space="preserve"><value>Ruch przeoczył prostszy plan końcowy.</value></data>
+  <data name="AdviceWhyBeginnerGeneral" xml:space="preserve"><value>Ruch pozwolił przeciwnikowi zbyt łatwo poprawić pozycję.</value></data>
+  <data name="AdviceWhyAdvancedMaterialLoss" xml:space="preserve"><value>Krytyczna wada to konkretna wymuszona linia, w której pozycja przegrywa test bilansu materiału.</value></data>
+  <data name="AdviceWhyAdvancedHangingPiece" xml:space="preserve"><value>Ruch zostawia przesuniętą figurę taktycznie niedobronioną względem dostępnych zasobów ataku.</value></data>
+  <data name="AdviceWhyAdvancedMissedTactic" xml:space="preserve"><value>Pozycja zawiera wymuszający zasób taktyczny, który powinien zdominować wybór ruchów kandydackich.</value></data>
+  <data name="AdviceWhyAdvancedKingSafety" xml:space="preserve"><value>Ruch oddaje osłonę króla, otwierając dostęp taktyczny po liniach, diagonalach lub osłabionych kompleksach pól.</value></data>
+  <data name="AdviceWhyAdvancedOpeningPrinciples" xml:space="preserve"><value>Ruch traci efektywność debiutową przez zaniedbanie tempa rozwoju, wpływu na centrum lub terminowego bezpieczeństwa króla.</value></data>
+  <data name="AdviceWhyAdvancedPieceActivity" xml:space="preserve"><value>Ruch obniża aktywność i koordynację, więc figura mniej pomaga w walce o kluczowe pola i plany.</value></data>
+  <data name="AdviceWhyAdvancedEndgameTechnique" xml:space="preserve"><value>Ruch oddaje kontrolę techniczną, często przez niedocenienie aktywności króla lub najprostszej drogi realizacji.</value></data>
+  <data name="AdviceWhyAdvancedGeneral" xml:space="preserve"><value>Ruch tworzy możliwe do wykorzystania ustępstwo pozycyjne lub taktyczne, które poprawia opcje przeciwnika.</value></data>
+  <data name="AdviceWatchMaterialLoss" xml:space="preserve"><value>Przed wypuszczeniem ruchu przeskanuj wymuszone bicia i zapytaj, jaki materiał zostaje po końcu sekwencji.</value></data>
+  <data name="AdviceWatchHangingPiece" xml:space="preserve"><value>Dobry wyzwalacz to policzenie atakujących i broniących pole docelowe przed wykonaniem ruchu.</value></data>
+  <data name="AdviceWatchMissedTactic" xml:space="preserve"><value>W ostrych pozycjach zatrzymaj się na szachy, bicia i groźby, zanim zaufasz pierwszemu naturalnemu ruchowi.</value></data>
+  <data name="AdviceWatchKingSafety" xml:space="preserve"><value>Gdy zmienia się osłona króla, sprawdź otwarte linie, osłabione diagonale oraz luźne jasne lub ciemne pola.</value></data>
+  <data name="AdviceWatchOpeningPrinciples" xml:space="preserve"><value>W debiucie pytaj, czy ruch rozwija figurę, poprawia bezpieczeństwo króla albo realnie walczy o centrum.</value></data>
+  <data name="AdviceWatchPieceActivity" xml:space="preserve"><value>Gdy taktyka nie wymusza gry, porównaj, czy ruch zwiększa czy zmniejsza mobilność przesuwanej figury.</value></data>
+  <data name="AdviceWatchEndgameTechnique" xml:space="preserve"><value>W końcówkach wybieraj ruch poprawiający aktywność króla lub naprawiający słabości przeciwnika z najmniejszą kontrgrą.</value></data>
+  <data name="AdviceWatchGeneral" xml:space="preserve"><value>Użyj podobnej pozycji jako sygnału, żeby zwolnić i sprawdzić najsilniejszą wymuszoną odpowiedź przeciwnika.</value></data>
+  <data name="AdviceWatchBeginnerMaterialLoss" xml:space="preserve"><value>Prosty nawyk: po oczywistych wymianach kto ma więcej materiału?</value></data>
+  <data name="AdviceWatchBeginnerHangingPiece" xml:space="preserve"><value>Zanim pójdziesz dalej, policz ile razy pole docelowe jest atakowane i bronione.</value></data>
+  <data name="AdviceWatchBeginnerMissedTactic" xml:space="preserve"><value>Szukaj szachów, bić i gróźb, zanim zaufasz naturalnemu ruchowi.</value></data>
+  <data name="AdviceWatchBeginnerKingSafety" xml:space="preserve"><value>Każdy ruch blisko króla powinien wywołać pytanie, jakie linie ataku właśnie się otworzyły.</value></data>
+  <data name="AdviceWatchBeginnerOpeningPrinciples" xml:space="preserve"><value>W debiucie najpierw rozwijaj figury i zabezpiecz króla.</value></data>
+  <data name="AdviceWatchBeginnerPieceActivity" xml:space="preserve"><value>Zapytaj, czy figura po ruchu będzie bardziej aktywna czy mniej aktywna.</value></data>
+  <data name="AdviceWatchBeginnerEndgameTechnique" xml:space="preserve"><value>W końcówce szukaj ruchu aktywującego króla albo poprawiającego najprostszy plan.</value></data>
+  <data name="AdviceWatchBeginnerGeneral" xml:space="preserve"><value>W podobnych momentach zwolnij i sprawdź najlepszą odpowiedź przeciwnika.</value></data>
+  <data name="AdviceWatchAdvancedMaterialLoss" xml:space="preserve"><value>Traktuj pozycję jak problem drzewa wymuszeń i sprawdź, czy końcowy bilans materiału nadal działa na twoją korzyść.</value></data>
+  <data name="AdviceWatchAdvancedHangingPiece" xml:space="preserve"><value>Przed zaakceptowaniem pola docelowego użyj rachunku atakujący-broniący oraz motywów taktycznych jak przeciążenie lub zwischenzug.</value></data>
+  <data name="AdviceWatchAdvancedMissedTactic" xml:space="preserve"><value>Wybór kandydatów powinien zaczynać się od zasobów wymuszających, nie od najbardziej naturalnego ruchu poprawiającego.</value></data>
+  <data name="AdviceWatchAdvancedKingSafety" xml:space="preserve"><value>Natychmiast po ustępstwie w osłonie przelicz drogi dostępu do króla, szczególnie linie, diagonale i kompleksy jasnych lub ciemnych pól.</value></data>
+  <data name="AdviceWatchAdvancedOpeningPrinciples" xml:space="preserve"><value>Mierz ruchy debiutowe efektywnością tempa, jakością rozwoju i tym, czy wspierają spójne ustawienie centralne.</value></data>
+  <data name="AdviceWatchAdvancedPieceActivity" xml:space="preserve"><value>Porównuj ruchy przez metryki aktywności: mobilność, jakość pól, koordynację i ograniczanie kontrgry.</value></data>
+  <data name="AdviceWatchAdvancedEndgameTechnique" xml:space="preserve"><value>W technicznych końcówkach priorytetem jest aktywność króla i linia z najmniejszą kontrgrą, nawet jeśli kilka ruchów utrzymuje przewagę.</value></data>
+  <data name="AdviceWatchAdvancedGeneral" xml:space="preserve"><value>Użyj pozycji jako sygnału do surowszej kontroli ruchów kandydackich i linii wymuszonych.</value></data>
+  <data name="AdviceBetterCalmer" xml:space="preserve"><value>Spokojniejsza alternatywa utrzymywała zdrowszą pozycję.</value></data>
+  <data name="AdviceBetterStronger" xml:space="preserve"><value>Silniejszą opcją było {0}.</value></data>
+  <data name="AdviceBetterOpeningBeginner" xml:space="preserve"><value>W {0} rozwój i bezpieczeństwo króla były tutaj ważniejsze.</value></data>
+  <data name="AdviceBetterOpeningIntermediate" xml:space="preserve"><value>W {0} rozwój był w tym momencie ważniejszym priorytetem.</value></data>
+  <data name="AdviceBetterOpeningAdvanced" xml:space="preserve"><value>W {0} lepsza linia respektowała tempo rozwoju i efektywność debiutową.</value></data>
   <data name="AdviceLostCentipawns" xml:space="preserve"><value>i stracił około {0} centypionów</value></data>
   <data name="AdviceChangedEvaluation" xml:space="preserve"><value>i mocno zmienił ocenę pozycji</value></data>
   <data name="AdviceQualityBlunder" xml:space="preserve"><value>podstawka</value></data>

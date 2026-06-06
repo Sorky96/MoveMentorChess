@@ -41,6 +41,72 @@
   <data name="AdviceWasQualityLoss" xml:space="preserve"><value>{0}: {1} foi uma {2}, {3}.</value></data>
   <data name="AdviceStrongerOption" xml:space="preserve"><value>Uma opção mais forte era {0}.</value></data>
   <data name="AdvicePattern" xml:space="preserve"><value>Isso combina com o padrão {0}.</value></data>
+  <data name="AdviceHintMaterialLoss" xml:space="preserve"><value>Antes de se comprometer, compare o balanço material depois da resposta forçada.</value></data>
+  <data name="AdviceHintHangingPiece" xml:space="preserve"><value>Depois de cada lance, verifique se a peça movida está defendida pelo menos tantas vezes quanto é atacada.</value></data>
+  <data name="AdviceHintKingSafety" xml:space="preserve"><value>Quando seu rei estiver roqueado, trate avanços de peões à frente dele como concessões que precisam de justificativa concreta.</value></data>
+  <data name="AdviceHintOpeningPrinciples" xml:space="preserve"><value>Na abertura, prefira desenvolvimento, segurança do rei e controle central antes de peões laterais ou aventuras cedo com a dama.</value></data>
+  <data name="AdviceHintPieceActivity" xml:space="preserve"><value>Em meios-jogos mais calmos, escolha casas que aumentem a atividade das peças em vez de deixá-las passivas ou fora do jogo.</value></data>
+  <data name="AdviceHintEndgameTechnique" xml:space="preserve"><value>Nos finais, calcule a linha técnica mais simples e evite lances que devolvam atividade ao adversário.</value></data>
+  <data name="AdviceHintGeneral" xml:space="preserve"><value>Em momentos táticos, pare e procure respostas forçadas antes de escolher um lance que apenas parece natural.</value></data>
+  <data name="AdviceProblemIntermediateCentipawns" xml:space="preserve"><value>O lance {0} foi um {1} porque piorou a posição em cerca de {2} centipawns.</value></data>
+  <data name="AdviceProblemIntermediateEvaluation" xml:space="preserve"><value>O lance {0} foi um {1} porque a posição ficou bem menos saudável depois.</value></data>
+  <data name="AdviceProblemBeginnerCentipawns" xml:space="preserve"><value>{0} foi um {1} porque entregou cerca de {2} centipawns de valor.</value></data>
+  <data name="AdviceProblemBeginnerEvaluation" xml:space="preserve"><value>{0} foi um {1} porque tornou sua posição muito mais difícil de conduzir.</value></data>
+  <data name="AdviceProblemAdvancedCentipawns" xml:space="preserve"><value>{0} se qualifica como {1} porque a oscilação do motor é de cerca de {2} centipawns e a posição perde estabilidade prática.</value></data>
+  <data name="AdviceProblemAdvancedEvaluation" xml:space="preserve"><value>{0} se qualifica como {1} porque a avaliação muda bruscamente mesmo sem uma comparação limpa em centipawns.</value></data>
+  <data name="AdviceWhyMaterialLoss" xml:space="preserve"><value>O problema principal foi dano material concreto ou uma linha que permitia ao adversário ganhar material de forma limpa.</value></data>
+  <data name="AdviceWhyHangingPiece" xml:space="preserve"><value>O lance deixou uma peça defendida de modo insuficiente, então o adversário podia contestá-la imediatamente.</value></data>
+  <data name="AdviceWhyMissedTactic" xml:space="preserve"><value>O lance perdeu um recurso tático forçado, para você ou para o adversário na resposta.</value></data>
+  <data name="AdviceWhyKingSafety" xml:space="preserve"><value>O lance afrouxou a segurança do rei e deu ao adversário alvos de ataque ou linhas de entrada mais fáceis.</value></data>
+  <data name="AdviceWhyOpeningPrinciples" xml:space="preserve"><value>O lance ignorou prioridades centrais da abertura, como desenvolvimento, segurança do rei ou controle do centro.</value></data>
+  <data name="AdviceWhyPieceActivity" xml:space="preserve"><value>O lance reduziu a atividade de uma das suas peças e diminuiu sua capacidade de lutar por casas-chave.</value></data>
+  <data name="AdviceWhyEndgameTechnique" xml:space="preserve"><value>O lance perdeu um plano técnico mais limpo e devolveu atividade útil no final.</value></data>
+  <data name="AdviceWhyGeneral" xml:space="preserve"><value>O lance criou um problema prático que o adversário podia explorar com jogo mais ativo.</value></data>
+  <data name="AdviceWhyBeginnerMaterialLoss" xml:space="preserve"><value>O maior problema é que você deixou o adversário ganhar material.</value></data>
+  <data name="AdviceWhyBeginnerHangingPiece" xml:space="preserve"><value>A peça movida não tinha proteção suficiente depois do lance.</value></data>
+  <data name="AdviceWhyBeginnerMissedTactic" xml:space="preserve"><value>Havia uma ideia tática forçada na posição que foi perdida.</value></data>
+  <data name="AdviceWhyBeginnerKingSafety" xml:space="preserve"><value>O lance tornou seu rei mais fácil de atacar.</value></data>
+  <data name="AdviceWhyBeginnerOpeningPrinciples" xml:space="preserve"><value>O lance gastou tempo com algo menos importante que desenvolvimento ou segurança do rei.</value></data>
+  <data name="AdviceWhyBeginnerPieceActivity" xml:space="preserve"><value>O lance colocou sua peça em uma casa menos útil.</value></data>
+  <data name="AdviceWhyBeginnerEndgameTechnique" xml:space="preserve"><value>O lance perdeu um plano de final mais simples.</value></data>
+  <data name="AdviceWhyBeginnerGeneral" xml:space="preserve"><value>O lance permitiu que o adversário melhorasse com facilidade demais.</value></data>
+  <data name="AdviceWhyAdvancedMaterialLoss" xml:space="preserve"><value>O defeito crítico é uma linha forçada concreta em que sua posição falha no teste de balanço material.</value></data>
+  <data name="AdviceWhyAdvancedHangingPiece" xml:space="preserve"><value>O lance deixa a peça realocada taticamente subdefendida em relação aos recursos de ataque disponíveis.</value></data>
+  <data name="AdviceWhyAdvancedMissedTactic" xml:space="preserve"><value>A posição contém um recurso tático forçado que deveria dominar a seleção de lances candidatos.</value></data>
+  <data name="AdviceWhyAdvancedKingSafety" xml:space="preserve"><value>O lance concede abrigo do rei, abrindo acesso tático por colunas, diagonais ou complexos de casas enfraquecidos.</value></data>
+  <data name="AdviceWhyAdvancedOpeningPrinciples" xml:space="preserve"><value>O lance perde eficiência de abertura ao negligenciar tempo de desenvolvimento, influência central ou segurança oportuna do rei.</value></data>
+  <data name="AdviceWhyAdvancedPieceActivity" xml:space="preserve"><value>O lance reduz atividade e coordenação, então sua peça contribui menos para casas e planos críticos.</value></data>
+  <data name="AdviceWhyAdvancedEndgameTechnique" xml:space="preserve"><value>O lance entrega controle técnico, muitas vezes por subestimar atividade do rei ou a rota de conversão mais simples.</value></data>
+  <data name="AdviceWhyAdvancedGeneral" xml:space="preserve"><value>O lance cria uma concessão posicional ou tática explorável que melhora as opções do adversário.</value></data>
+  <data name="AdviceWatchMaterialLoss" xml:space="preserve"><value>Antes de soltar o lance, verifique capturas forçadas e pergunte que material sobra no fim da sequência.</value></data>
+  <data name="AdviceWatchHangingPiece" xml:space="preserve"><value>Um bom gatilho é contar atacantes e defensores da casa de destino antes de seguir.</value></data>
+  <data name="AdviceWatchMissedTactic" xml:space="preserve"><value>Em posições agudas, pause para xeques, capturas e ameaças antes de confiar no primeiro lance natural.</value></data>
+  <data name="AdviceWatchKingSafety" xml:space="preserve"><value>Sempre que o abrigo do rei mudar, confira colunas abertas, diagonais enfraquecidas e casas claras ou escuras soltas.</value></data>
+  <data name="AdviceWatchOpeningPrinciples" xml:space="preserve"><value>Na abertura, pergunte se o lance desenvolve uma peça, melhora a segurança do rei ou disputa o centro de verdade.</value></data>
+  <data name="AdviceWatchPieceActivity" xml:space="preserve"><value>Quando nenhuma tática força o jogo, compare se seu lance melhora ou reduz a mobilidade da peça movida.</value></data>
+  <data name="AdviceWatchEndgameTechnique" xml:space="preserve"><value>Nos finais, prefira o lance que melhora a atividade do rei ou fixa fraquezas adversárias com o menor contrajogo.</value></data>
+  <data name="AdviceWatchGeneral" xml:space="preserve"><value>Use a próxima posição parecida como sinal para desacelerar e verificar a resposta forçada mais forte do adversário.</value></data>
+  <data name="AdviceWatchBeginnerMaterialLoss" xml:space="preserve"><value>Um hábito simples: depois das trocas óbvias, quem fica com mais material?</value></data>
+  <data name="AdviceWatchBeginnerHangingPiece" xml:space="preserve"><value>Antes de continuar, conte quantas vezes a casa de destino é atacada e defendida.</value></data>
+  <data name="AdviceWatchBeginnerMissedTactic" xml:space="preserve"><value>Procure xeques, capturas e ameaças antes de confiar em um lance natural.</value></data>
+  <data name="AdviceWatchBeginnerKingSafety" xml:space="preserve"><value>Qualquer lance perto do seu rei deve fazer você perguntar que linhas de ataque acabaram de abrir.</value></data>
+  <data name="AdviceWatchBeginnerOpeningPrinciples" xml:space="preserve"><value>Na abertura, primeiro desenvolva peças e deixe seu rei seguro.</value></data>
+  <data name="AdviceWatchBeginnerPieceActivity" xml:space="preserve"><value>Pergunte se a peça ficará mais ativa ou menos ativa depois do lance.</value></data>
+  <data name="AdviceWatchBeginnerEndgameTechnique" xml:space="preserve"><value>No final, procure o lance que ativa seu rei ou melhora seu plano mais simples.</value></data>
+  <data name="AdviceWatchBeginnerGeneral" xml:space="preserve"><value>Em momentos parecidos, desacelere e confira a melhor resposta do adversário.</value></data>
+  <data name="AdviceWatchAdvancedMaterialLoss" xml:space="preserve"><value>Trate a posição como uma árvore de linhas forçadas e verifique se a contagem final de material ainda funciona para você.</value></data>
+  <data name="AdviceWatchAdvancedHangingPiece" xml:space="preserve"><value>Use contagem de atacantes e defensores mais motivos como sobrecarga ou zwischenzug antes de aceitar a casa de destino.</value></data>
+  <data name="AdviceWatchAdvancedMissedTactic" xml:space="preserve"><value>A seleção de candidatos deve começar por recursos forçados, não pelo lance de melhora que parece mais natural.</value></data>
+  <data name="AdviceWatchAdvancedKingSafety" xml:space="preserve"><value>Reavalie rotas de acesso ao rei imediatamente após qualquer concessão de abrigo, especialmente colunas, diagonais e complexos de casas.</value></data>
+  <data name="AdviceWatchAdvancedOpeningPrinciples" xml:space="preserve"><value>Meça lances de abertura por eficiência de tempo, qualidade do desenvolvimento e apoio a uma estrutura central coerente.</value></data>
+  <data name="AdviceWatchAdvancedPieceActivity" xml:space="preserve"><value>Compare candidatos por métricas de atividade: mobilidade, qualidade de casas, coordenação e restrição de contrajogo.</value></data>
+  <data name="AdviceWatchAdvancedEndgameTechnique" xml:space="preserve"><value>Em finais técnicos, priorize atividade do rei e a linha com menor contrajogo, mesmo que vários lances mantenham a vantagem.</value></data>
+  <data name="AdviceWatchAdvancedGeneral" xml:space="preserve"><value>Use a posição como sinal para uma verificação mais rígida de candidatos e linhas forçadas.</value></data>
+  <data name="AdviceBetterCalmer" xml:space="preserve"><value>Uma alternativa mais calma mantinha a posição mais saudável.</value></data>
+  <data name="AdviceBetterStronger" xml:space="preserve"><value>Uma opção mais forte era {0}.</value></data>
+  <data name="AdviceBetterOpeningBeginner" xml:space="preserve"><value>Em {0}, desenvolvimento e segurança do rei importavam mais aqui.</value></data>
+  <data name="AdviceBetterOpeningIntermediate" xml:space="preserve"><value>Em {0}, desenvolvimento era a prioridade mais importante neste momento.</value></data>
+  <data name="AdviceBetterOpeningAdvanced" xml:space="preserve"><value>Em {0}, a linha melhor respeitava tempo de desenvolvimento e eficiência de abertura.</value></data>
   <data name="AdviceLostCentipawns" xml:space="preserve"><value>e perdeu cerca de {0} centipawns</value></data>
   <data name="AdviceQualityMistake" xml:space="preserve"><value>erro</value></data>
   <data name="AdviceQualityInaccuracy" xml:space="preserve"><value>imprecisão</value></data>
@@ -83,6 +149,14 @@
   <data name="MainDialogAnalyze" xml:space="preserve"><value>Analisar</value></data>
   <data name="MainDialogLater" xml:space="preserve"><value>Depois</value></data>
   <data name="MainDialogPgnAnalysisFinished" xml:space="preserve"><value>Análise PGN concluída</value></data>
+  <data name="MainDialogOk" xml:space="preserve"><value>OK</value></data>
+  <data name="MainBulkAnalyzedPlayer" xml:space="preserve"><value>Jogador analisado: {0}</value></data>
+  <data name="MainBulkDetectedPlayerNone" xml:space="preserve"><value>Jogador detectado: nenhum</value></data>
+  <data name="MainBulkNewAnalyses" xml:space="preserve"><value>Novas análises: {0}</value></data>
+  <data name="MainBulkLoadedFromCache" xml:space="preserve"><value>Carregadas do cache: {0}</value></data>
+  <data name="MainBulkSkipped" xml:space="preserve"><value>Ignoradas: {0}</value></data>
+  <data name="MainBulkFailed" xml:space="preserve"><value>Falharam: {0}</value></data>
+  <data name="MainBulkFirstFailures" xml:space="preserve"><value>Primeiras falhas:</value></data>
   <data name="AdviceDetailedPartsInstruction" xml:space="preserve"><value>Em detailed_text, use exatamente quatro partes curtas nesta ordem: {0}:, {1}:, {2}:, {3}:.</value></data>
   <data name="AdviceExampleShortText" xml:space="preserve"><value>Escreva aqui um breve resumo do erro.</value></data>
   <data name="AdviceExampleDetailedText" xml:space="preserve"><value>O que: diga brevemente o que deu errado. Por quê: explique o motivo tático ou posicional principal. Melhor: diga o lance melhor e por que ajudava. Na próxima vez: dê um padrão para notar mais cedo.</value></data>

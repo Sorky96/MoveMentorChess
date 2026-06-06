@@ -54,6 +54,72 @@
   <data name="AdviceWasQualityLoss" xml:space="preserve"><value>{0}: {1} war ein {2} {3}.</value></data>
   <data name="AdviceStrongerOption" xml:space="preserve"><value>Eine stärkere Option war {0}.</value></data>
   <data name="AdvicePattern" xml:space="preserve"><value>Es passt zum Muster {0}.</value></data>
+  <data name="AdviceHintMaterialLoss" xml:space="preserve"><value>Vergleiche vor der Entscheidung die Materialbilanz nach der erzwungenen Antwort.</value></data>
+  <data name="AdviceHintHangingPiece" xml:space="preserve"><value>Prüfe nach jedem Zug, ob die gezogene Figur mindestens so oft verteidigt wie angegriffen ist.</value></data>
+  <data name="AdviceHintKingSafety" xml:space="preserve"><value>Wenn dein König rochiert ist, behandle Bauernzüge vor ihm als Zugeständnis, das konkrete Rechtfertigung braucht.</value></data>
+  <data name="AdviceHintOpeningPrinciples" xml:space="preserve"><value>Bevorzuge in der Eröffnung Entwicklung, Königssicherheit und Zentrumskontrolle vor Randbauernzügen oder frühen Damenabenteuern.</value></data>
+  <data name="AdviceHintPieceActivity" xml:space="preserve"><value>Wähle in ruhigeren Mittelspielen Felder, die die Figurenaktivität erhöhen, statt eine Figur abseits oder passiv zu lassen.</value></data>
+  <data name="AdviceHintEndgameTechnique" xml:space="preserve"><value>Berechne im Endspiel die einfachste technische Linie und vermeide Züge, die dem Gegner Aktivität zurückgeben.</value></data>
+  <data name="AdviceHintGeneral" xml:space="preserve"><value>Halte in taktischen Momenten kurz an und suche erzwungene Antworten, bevor du einen natürlich wirkenden Zug wählst.</value></data>
+  <data name="AdviceProblemIntermediateCentipawns" xml:space="preserve"><value>Der Zug {0} war ein {1}, weil er die Stellung um ungefähr {2} Centipawns verschlechterte.</value></data>
+  <data name="AdviceProblemIntermediateEvaluation" xml:space="preserve"><value>Der Zug {0} war ein {1}, weil die Stellung danach deutlich weniger gesund wurde.</value></data>
+  <data name="AdviceProblemBeginnerCentipawns" xml:space="preserve"><value>{0} war ein {1}, weil er ungefähr {2} Centipawns Wert abgab.</value></data>
+  <data name="AdviceProblemBeginnerEvaluation" xml:space="preserve"><value>{0} war ein {1}, weil er deine Stellung viel schwerer zu handhaben machte.</value></data>
+  <data name="AdviceProblemAdvancedCentipawns" xml:space="preserve"><value>{0} zählt als {1}, weil der Engine-Ausschlag etwa {2} Centipawns beträgt und die Stellung praktische Stabilität verliert.</value></data>
+  <data name="AdviceProblemAdvancedEvaluation" xml:space="preserve"><value>{0} zählt als {1}, weil die Bewertung stark kippt, auch ohne sauberen Centipawn-Vergleich.</value></data>
+  <data name="AdviceWhyMaterialLoss" xml:space="preserve"><value>Das Hauptproblem war konkreter Materialschaden oder eine Linie, in der der Gegner sauber Material gewinnen konnte.</value></data>
+  <data name="AdviceWhyHangingPiece" xml:space="preserve"><value>Der Zug ließ eine Figur unzureichend verteidigt, sodass der Gegner sie sofort angreifen konnte.</value></data>
+  <data name="AdviceWhyMissedTactic" xml:space="preserve"><value>Der Zug verpasste eine erzwingende taktische Ressource, entweder für dich oder als gegnerische Antwort.</value></data>
+  <data name="AdviceWhyKingSafety" xml:space="preserve"><value>Der Zug lockerte die Königssicherheit und gab dem Gegner leichtere Angriffsziele oder Eindringlinien.</value></data>
+  <data name="AdviceWhyOpeningPrinciples" xml:space="preserve"><value>Der Zug ignorierte zentrale Eröffnungsprioritäten wie Entwicklung, Königssicherheit oder Zentrumskontrolle.</value></data>
+  <data name="AdviceWhyPieceActivity" xml:space="preserve"><value>Der Zug machte eine deiner Figuren weniger aktiv und schwächte den Kampf um wichtige Felder.</value></data>
+  <data name="AdviceWhyEndgameTechnique" xml:space="preserve"><value>Der Zug verpasste einen klareren technischen Plan und gab im Endspiel nützliche Aktivität ab.</value></data>
+  <data name="AdviceWhyGeneral" xml:space="preserve"><value>Der Zug schuf ein praktisches Problem, das der Gegner mit aktiverem Spiel ausnutzen konnte.</value></data>
+  <data name="AdviceWhyBeginnerMaterialLoss" xml:space="preserve"><value>Das größte Problem ist, dass du dem Gegner Materialgewinn erlaubst.</value></data>
+  <data name="AdviceWhyBeginnerHangingPiece" xml:space="preserve"><value>Die gezogene Figur hatte nach dem Zug nicht genug Schutz.</value></data>
+  <data name="AdviceWhyBeginnerMissedTactic" xml:space="preserve"><value>In der Stellung gab es eine erzwingende taktische Idee, die übersehen wurde.</value></data>
+  <data name="AdviceWhyBeginnerKingSafety" xml:space="preserve"><value>Der Zug machte deinen König leichter angreifbar.</value></data>
+  <data name="AdviceWhyBeginnerOpeningPrinciples" xml:space="preserve"><value>Der Zug verbrauchte Zeit für etwas weniger Wichtiges als Entwicklung oder Königssicherheit.</value></data>
+  <data name="AdviceWhyBeginnerPieceActivity" xml:space="preserve"><value>Der Zug stellte deine Figur auf ein weniger nützliches Feld.</value></data>
+  <data name="AdviceWhyBeginnerEndgameTechnique" xml:space="preserve"><value>Der Zug verpasste einen einfacheren Endspielplan.</value></data>
+  <data name="AdviceWhyBeginnerGeneral" xml:space="preserve"><value>Der Zug erlaubte dem Gegner zu leicht, sich zu verbessern.</value></data>
+  <data name="AdviceWhyAdvancedMaterialLoss" xml:space="preserve"><value>Der kritische Defekt ist eine konkrete erzwungene Linie, in der deine Stellung den Materialbilanz-Test verliert.</value></data>
+  <data name="AdviceWhyAdvancedHangingPiece" xml:space="preserve"><value>Der Zug lässt die versetzte Figur taktisch unterverteidigt im Verhältnis zu den verfügbaren Angriffsmitteln.</value></data>
+  <data name="AdviceWhyAdvancedMissedTactic" xml:space="preserve"><value>Die Stellung enthält eine erzwingende taktische Ressource, die die Kandidatenzugwahl bestimmen sollte.</value></data>
+  <data name="AdviceWhyAdvancedKingSafety" xml:space="preserve"><value>Der Zug gibt Königsschutz auf und öffnet taktischen Zugang über Linien, Diagonalen oder geschwächte Farbkomplexe.</value></data>
+  <data name="AdviceWhyAdvancedOpeningPrinciples" xml:space="preserve"><value>Der Zug verliert Eröffnungseffizienz, weil Entwicklungstempo, Zentrumeinfluss oder rechtzeitige Königssicherheit vernachlässigt werden.</value></data>
+  <data name="AdviceWhyAdvancedPieceActivity" xml:space="preserve"><value>Der Zug senkt Aktivität und Koordination, sodass deine Figur weniger zu kritischen Feldern und Plänen beiträgt.</value></data>
+  <data name="AdviceWhyAdvancedEndgameTechnique" xml:space="preserve"><value>Der Zug gibt technische Kontrolle ab, oft durch Unterschätzung von Königaktivität oder der einfachsten Verwertungsroute.</value></data>
+  <data name="AdviceWhyAdvancedGeneral" xml:space="preserve"><value>Der Zug erzeugt ein ausnutzbares positionelles oder taktisches Zugeständnis, das die gegnerischen Optionen verbessert.</value></data>
+  <data name="AdviceWatchMaterialLoss" xml:space="preserve"><value>Scanne vor dem Zug die erzwungenen Schlagzüge und frage, welches Material nach der Sequenz übrig bleibt.</value></data>
+  <data name="AdviceWatchHangingPiece" xml:space="preserve"><value>Ein guter Auslöser ist, Angreifer und Verteidiger des Zielfelds vor dem Weiterrechnen zu zählen.</value></data>
+  <data name="AdviceWatchMissedTactic" xml:space="preserve"><value>Halte in scharfen Stellungen für Schachs, Schlagzüge und Drohungen an, bevor du dem ersten natürlichen Zug vertraust.</value></data>
+  <data name="AdviceWatchKingSafety" xml:space="preserve"><value>Wenn sich der Königsschutz ändert, prüfe offene Linien, geschwächte Diagonalen und lockere helle oder dunkle Felder.</value></data>
+  <data name="AdviceWatchOpeningPrinciples" xml:space="preserve"><value>Frage in der Eröffnung, ob der Zug eine Figur entwickelt, Königssicherheit verbessert oder sinnvoll ums Zentrum kämpft.</value></data>
+  <data name="AdviceWatchPieceActivity" xml:space="preserve"><value>Wenn keine Taktik zwingt, vergleiche, ob dein Zug die Mobilität der gezogenen Figur verbessert oder verringert.</value></data>
+  <data name="AdviceWatchEndgameTechnique" xml:space="preserve"><value>Bevorzuge im Endspiel den Zug, der Königaktivität verbessert oder gegnerische Schwächen mit der geringsten Gegenspielchance fixiert.</value></data>
+  <data name="AdviceWatchGeneral" xml:space="preserve"><value>Nutze die nächste ähnliche Stellung als Signal, langsamer zu werden und die stärkste erzwungene Antwort des Gegners zu prüfen.</value></data>
+  <data name="AdviceWatchBeginnerMaterialLoss" xml:space="preserve"><value>Eine einfache Gewohnheit: Nach den offensichtlichen Tauschen, wer hat mehr Material?</value></data>
+  <data name="AdviceWatchBeginnerHangingPiece" xml:space="preserve"><value>Zähle vor dem Weiterziehen, wie oft das Zielfeld angegriffen und verteidigt ist.</value></data>
+  <data name="AdviceWatchBeginnerMissedTactic" xml:space="preserve"><value>Suche Schachs, Schlagzüge und Drohungen, bevor du einem natürlichen Zug vertraust.</value></data>
+  <data name="AdviceWatchBeginnerKingSafety" xml:space="preserve"><value>Jeder Zug nahe deinem König sollte fragen lassen, welche Angriffslinien gerade geöffnet wurden.</value></data>
+  <data name="AdviceWatchBeginnerOpeningPrinciples" xml:space="preserve"><value>Entwickle in der Eröffnung zuerst Figuren und bringe deinen König in Sicherheit.</value></data>
+  <data name="AdviceWatchBeginnerPieceActivity" xml:space="preserve"><value>Frage, ob die Figur nach dem Zug aktiver oder weniger aktiv sein wird.</value></data>
+  <data name="AdviceWatchBeginnerEndgameTechnique" xml:space="preserve"><value>Suche im Endspiel den Zug, der deinen König aktiviert oder deinen einfachsten Plan verbessert.</value></data>
+  <data name="AdviceWatchBeginnerGeneral" xml:space="preserve"><value>Verlangsame in ähnlichen Momenten und prüfe die beste Antwort des Gegners.</value></data>
+  <data name="AdviceWatchAdvancedMaterialLoss" xml:space="preserve"><value>Behandle die Stellung als Erzwingungsbaum und prüfe, ob die endgültige Materialbilanz noch für dich funktioniert.</value></data>
+  <data name="AdviceWatchAdvancedHangingPiece" xml:space="preserve"><value>Nutze Angreifer-Verteidiger-Rechnung plus Motive wie Überlastung oder Zwischenzug, bevor du das Zielfeld akzeptierst.</value></data>
+  <data name="AdviceWatchAdvancedMissedTactic" xml:space="preserve"><value>Die Kandidatenauswahl sollte mit erzwingenden Ressourcen beginnen, nicht mit dem natürlichsten Verbesserungszug.</value></data>
+  <data name="AdviceWatchAdvancedKingSafety" xml:space="preserve"><value>Bewerte nach jedem Schutz-Zugeständnis sofort die Zugangswege zum König neu, besonders Linien, Diagonalen und Farbkomplexe.</value></data>
+  <data name="AdviceWatchAdvancedOpeningPrinciples" xml:space="preserve"><value>Messe Eröffnungszüge an Tempoeffizienz, Entwicklungsqualität und daran, ob sie einen kohärenten Zentrumsaufbau unterstützen.</value></data>
+  <data name="AdviceWatchAdvancedPieceActivity" xml:space="preserve"><value>Vergleiche Kandidaten über Aktivitätsmetriken: Mobilität, Feldqualität, Koordination und Einschränkung von Gegenspiel.</value></data>
+  <data name="AdviceWatchAdvancedEndgameTechnique" xml:space="preserve"><value>Priorisiere in technischen Endspielen Königaktivität und die Linie mit dem geringsten Gegenspiel, auch wenn mehrere Züge den Vorteil halten.</value></data>
+  <data name="AdviceWatchAdvancedGeneral" xml:space="preserve"><value>Nutze die Stellung als Signal für eine strengere Prüfung von Kandidatenzügen und erzwungenen Linien.</value></data>
+  <data name="AdviceBetterCalmer" xml:space="preserve"><value>Eine ruhigere Alternative hielt die Stellung gesünder.</value></data>
+  <data name="AdviceBetterStronger" xml:space="preserve"><value>Eine stärkere Option war {0}.</value></data>
+  <data name="AdviceBetterOpeningBeginner" xml:space="preserve"><value>In {0} waren Entwicklung und Königssicherheit hier wichtiger.</value></data>
+  <data name="AdviceBetterOpeningIntermediate" xml:space="preserve"><value>In {0} war Entwicklung in diesem Moment die wichtigere Priorität.</value></data>
+  <data name="AdviceBetterOpeningAdvanced" xml:space="preserve"><value>In {0} respektierte die bessere Linie Entwicklungstempo und Eröffnungseffizienz.</value></data>
   <data name="AdviceLostCentipawns" xml:space="preserve"><value>und verlor etwa {0} Centipawns</value></data>
   <data name="AdviceQualityMistake" xml:space="preserve"><value>Fehler</value></data>
   <data name="AdviceQualityInaccuracy" xml:space="preserve"><value>Ungenauigkeit</value></data>
@@ -89,6 +155,14 @@
   <data name="MainDialogAnalyze" xml:space="preserve"><value>Analysieren</value></data>
   <data name="MainDialogLater" xml:space="preserve"><value>Später</value></data>
   <data name="MainDialogPgnAnalysisFinished" xml:space="preserve"><value>PGN-Analyse abgeschlossen</value></data>
+  <data name="MainDialogOk" xml:space="preserve"><value>OK</value></data>
+  <data name="MainBulkAnalyzedPlayer" xml:space="preserve"><value>Analysierter Spieler: {0}</value></data>
+  <data name="MainBulkDetectedPlayerNone" xml:space="preserve"><value>Erkannter Spieler: keiner</value></data>
+  <data name="MainBulkNewAnalyses" xml:space="preserve"><value>Neue Analysen: {0}</value></data>
+  <data name="MainBulkLoadedFromCache" xml:space="preserve"><value>Aus dem Cache geladen: {0}</value></data>
+  <data name="MainBulkSkipped" xml:space="preserve"><value>Übersprungen: {0}</value></data>
+  <data name="MainBulkFailed" xml:space="preserve"><value>Fehlgeschlagen: {0}</value></data>
+  <data name="MainBulkFirstFailures" xml:space="preserve"><value>Erste Fehler:</value></data>
   <data name="AdviceExampleShortText" xml:space="preserve"><value>Schreibe hier eine kurze Zusammenfassung des Fehlers.</value></data>
   <data name="AdviceExampleDetailedText" xml:space="preserve"><value>Was: Sage kurz, was schiefging. Warum: Erkläre den taktischen oder positionellen Kern. Besser: Nenne den besseren Zug und warum er half. Nächstes Mal: Gib ein Muster, das früher erkannt werden sollte.</value></data>
   <data name="AdviceExampleTrainingHint" xml:space="preserve"><value>Gib eine kurze, konkrete Regel, die der Spieler behalten kann.</value></data>

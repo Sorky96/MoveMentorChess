@@ -42,6 +42,72 @@
   <data name="AdviceWasQualityLoss" xml:space="preserve"><value>{0}：{1} 是一步{2}，{3}。</value></data>
   <data name="AdviceStrongerOption" xml:space="preserve"><value>更强的选择是 {0}。</value></data>
   <data name="AdvicePattern" xml:space="preserve"><value>它符合 {0} 模式。</value></data>
+  <data name="AdviceHintMaterialLoss" xml:space="preserve"><value>落子前，先比较对方强制回应后的子力平衡。</value></data>
+  <data name="AdviceHintHangingPiece" xml:space="preserve"><value>每步棋后检查移动的棋子是否至少被防守到和被攻击一样多。</value></data>
+  <data name="AdviceHintKingSafety" xml:space="preserve"><value>王已易位时，王前兵的移动都要当作需要具体理由的让步。</value></data>
+  <data name="AdviceHintOpeningPrinciples" xml:space="preserve"><value>开局优先出子、王安全和控制中心，再考虑边兵或过早出后。</value></data>
+  <data name="AdviceHintPieceActivity" xml:space="preserve"><value>在较安静的中局，优先选择提高棋子活跃度的格子，避免让棋子边缘化或被动。</value></data>
+  <data name="AdviceHintEndgameTechnique" xml:space="preserve"><value>残局中计算最简单的技术路线，避免把活跃度还给对手。</value></data>
+  <data name="AdviceHintGeneral" xml:space="preserve"><value>在战术转折点先停下来找强制回应，再选择看起来自然的走法。</value></data>
+  <data name="AdviceProblemIntermediateCentipawns" xml:space="preserve"><value>{0} 是一步 {1}，因为它让局面大约恶化了 {2} 厘兵。</value></data>
+  <data name="AdviceProblemIntermediateEvaluation" xml:space="preserve"><value>{0} 是一步 {1}，因为之后局面明显不健康。</value></data>
+  <data name="AdviceProblemBeginnerCentipawns" xml:space="preserve"><value>{0} 是 {1}，因为大约送出了 {2} 厘兵的价值。</value></data>
+  <data name="AdviceProblemBeginnerEvaluation" xml:space="preserve"><value>{0} 是 {1}，因为它让你的局面更难处理。</value></data>
+  <data name="AdviceProblemAdvancedCentipawns" xml:space="preserve"><value>{0} 可判为 {1}，因为引擎摆动约 {2} 厘兵，局面失去实战稳定性。</value></data>
+  <data name="AdviceProblemAdvancedEvaluation" xml:space="preserve"><value>{0} 可判为 {1}，因为即使没有清晰的厘兵比较，评估也明显跳变。</value></data>
+  <data name="AdviceWhyMaterialLoss" xml:space="preserve"><value>主要问题是具体的子力损失，或允许对手干净赢子的路线。</value></data>
+  <data name="AdviceWhyHangingPiece" xml:space="preserve"><value>这步让棋子防守不足，所以对手可以马上挑战它。</value></data>
+  <data name="AdviceWhyMissedTactic" xml:space="preserve"><value>这步错过了强制性的战术资源，可能是你的机会，也可能是对手的回应。</value></data>
+  <data name="AdviceWhyKingSafety" xml:space="preserve"><value>这步削弱了王的安全，给对手更容易的攻击目标或进入路线。</value></data>
+  <data name="AdviceWhyOpeningPrinciples" xml:space="preserve"><value>这步忽略了开局核心优先级，如出子、王安全或中心控制。</value></data>
+  <data name="AdviceWhyPieceActivity" xml:space="preserve"><value>这步降低了一枚棋子的活跃度，也削弱了争夺关键格的能力。</value></data>
+  <data name="AdviceWhyEndgameTechnique" xml:space="preserve"><value>这步错过了更清晰的技术计划，并在残局中交出了有用的活跃度。</value></data>
+  <data name="AdviceWhyGeneral" xml:space="preserve"><value>这步制造了一个实战问题，对手可以用更主动的方式利用。</value></data>
+  <data name="AdviceWhyBeginnerMaterialLoss" xml:space="preserve"><value>最大的问题是你让对手赢子。</value></data>
+  <data name="AdviceWhyBeginnerHangingPiece" xml:space="preserve"><value>移动后的棋子保护不够。</value></data>
+  <data name="AdviceWhyBeginnerMissedTactic" xml:space="preserve"><value>局面里有一个被错过的强制战术想法。</value></data>
+  <data name="AdviceWhyBeginnerKingSafety" xml:space="preserve"><value>这步让你的王更容易被攻击。</value></data>
+  <data name="AdviceWhyBeginnerOpeningPrinciples" xml:space="preserve"><value>这步把时间花在了比出子或王安全更不重要的事情上。</value></data>
+  <data name="AdviceWhyBeginnerPieceActivity" xml:space="preserve"><value>这步把棋子放到了不太有用的格子。</value></data>
+  <data name="AdviceWhyBeginnerEndgameTechnique" xml:space="preserve"><value>这步错过了更简单的残局计划。</value></data>
+  <data name="AdviceWhyBeginnerGeneral" xml:space="preserve"><value>这步让对手太容易改善局面。</value></data>
+  <data name="AdviceWhyAdvancedMaterialLoss" xml:space="preserve"><value>关键缺陷是一条具体的强制路线，最终子力平衡对你不利。</value></data>
+  <data name="AdviceWhyAdvancedHangingPiece" xml:space="preserve"><value>这步让移位后的棋子相对于可用攻击资源来说战术上防守不足。</value></data>
+  <data name="AdviceWhyAdvancedMissedTactic" xml:space="preserve"><value>局面包含强制战术资源，本应主导候选着选择。</value></data>
+  <data name="AdviceWhyAdvancedKingSafety" xml:space="preserve"><value>这步让出王的庇护，打开了通过线、斜线或弱色格的战术通道。</value></data>
+  <data name="AdviceWhyAdvancedOpeningPrinciples" xml:space="preserve"><value>这步忽视发展节奏、中心影响或及时的王安全，从而损失开局效率。</value></data>
+  <data name="AdviceWhyAdvancedPieceActivity" xml:space="preserve"><value>这步降低活跃度和协调性，使棋子对关键格和计划贡献更少。</value></data>
+  <data name="AdviceWhyAdvancedEndgameTechnique" xml:space="preserve"><value>这步交出技术控制，常见原因是低估王的活跃度或最简单的转化路线。</value></data>
+  <data name="AdviceWhyAdvancedGeneral" xml:space="preserve"><value>这步形成可被利用的位置或战术让步，改善了对手选择。</value></data>
+  <data name="AdviceWatchMaterialLoss" xml:space="preserve"><value>落子前扫描强制吃子，并问自己序列结束后还剩什么子力。</value></data>
+  <data name="AdviceWatchHangingPiece" xml:space="preserve"><value>一个好触发点是先数目标格的攻击者和防守者。</value></data>
+  <data name="AdviceWatchMissedTactic" xml:space="preserve"><value>在尖锐局面中，先停下来看将军、吃子和威胁，再相信第一个自然走法。</value></data>
+  <data name="AdviceWatchKingSafety" xml:space="preserve"><value>只要王的庇护改变，就复查开放线、削弱的斜线以及松动的深浅色格。</value></data>
+  <data name="AdviceWatchOpeningPrinciples" xml:space="preserve"><value>开局时问这步是否出子、提高王安全，或真正争夺中心。</value></data>
+  <data name="AdviceWatchPieceActivity" xml:space="preserve"><value>没有强制战术时，比较这步是提高还是降低移动棋子的机动性。</value></data>
+  <data name="AdviceWatchEndgameTechnique" xml:space="preserve"><value>残局中优先选择提高王活跃度，或以最少反击固定对手弱点的走法。</value></data>
+  <data name="AdviceWatchGeneral" xml:space="preserve"><value>把下一次类似局面当作放慢速度、检查对手最强强制回应的信号。</value></data>
+  <data name="AdviceWatchBeginnerMaterialLoss" xml:space="preserve"><value>简单习惯：明显交换之后，谁多子？</value></data>
+  <data name="AdviceWatchBeginnerHangingPiece" xml:space="preserve"><value>继续前，数一数目标格被攻击和被防守的次数。</value></data>
+  <data name="AdviceWatchBeginnerMissedTactic" xml:space="preserve"><value>先找将军、吃子和威胁，再相信自然走法。</value></data>
+  <data name="AdviceWatchBeginnerKingSafety" xml:space="preserve"><value>任何靠近你王的走法，都要问刚刚打开了哪些攻击线。</value></data>
+  <data name="AdviceWatchBeginnerOpeningPrinciples" xml:space="preserve"><value>开局先出子，并让王安全。</value></data>
+  <data name="AdviceWatchBeginnerPieceActivity" xml:space="preserve"><value>问自己这枚棋子走后会更活跃还是更被动。</value></data>
+  <data name="AdviceWatchBeginnerEndgameTechnique" xml:space="preserve"><value>残局中寻找能激活王或改善最简单计划的走法。</value></data>
+  <data name="AdviceWatchBeginnerGeneral" xml:space="preserve"><value>类似时刻放慢速度，检查对手最佳回应。</value></data>
+  <data name="AdviceWatchAdvancedMaterialLoss" xml:space="preserve"><value>把局面当作强制树问题，确认终点子力计算仍然对你成立。</value></data>
+  <data name="AdviceWatchAdvancedHangingPiece" xml:space="preserve"><value>接受目标格前，用攻击者-防守者计算，并检查过载或中间着等战术主题。</value></data>
+  <data name="AdviceWatchAdvancedMissedTactic" xml:space="preserve"><value>候选着选择应从强制资源开始，而不是从最自然的改善着开始。</value></data>
+  <data name="AdviceWatchAdvancedKingSafety" xml:space="preserve"><value>任何王翼庇护让步后，立即重新评估通向王的路线，尤其是线、斜线和色格群。</value></data>
+  <data name="AdviceWatchAdvancedOpeningPrinciples" xml:space="preserve"><value>用节奏效率、出子质量以及是否支持连贯中心结构来衡量开局走法。</value></data>
+  <data name="AdviceWatchAdvancedPieceActivity" xml:space="preserve"><value>通过活跃度指标比较候选着：机动性、格子质量、协调性和限制反击。</value></data>
+  <data name="AdviceWatchAdvancedEndgameTechnique" xml:space="preserve"><value>技术残局中优先王的活跃度和反击最少的路线，即使多步棋都能保住优势。</value></data>
+  <data name="AdviceWatchAdvancedGeneral" xml:space="preserve"><value>把该局面当作更严格检查候选着和强制路线的信号。</value></data>
+  <data name="AdviceBetterCalmer" xml:space="preserve"><value>更冷静的选择能保持更健康的局面。</value></data>
+  <data name="AdviceBetterStronger" xml:space="preserve"><value>更强的选择是 {0}。</value></data>
+  <data name="AdviceBetterOpeningBeginner" xml:space="preserve"><value>在 {0} 中，出子和王安全在这里更重要。</value></data>
+  <data name="AdviceBetterOpeningIntermediate" xml:space="preserve"><value>在 {0} 中，此刻发展是更重要的优先事项。</value></data>
+  <data name="AdviceBetterOpeningAdvanced" xml:space="preserve"><value>在 {0} 中，更好的路线尊重发展节奏和开局效率。</value></data>
   <data name="AdviceLostCentipawns" xml:space="preserve"><value>大约损失 {0} 厘兵</value></data>
   <data name="AdviceQualityMistake" xml:space="preserve"><value>错误</value></data>
   <data name="AdviceQualityInaccuracy" xml:space="preserve"><value>不精确</value></data>
@@ -84,6 +150,14 @@
   <data name="MainDialogAnalyze" xml:space="preserve"><value>分析</value></data>
   <data name="MainDialogLater" xml:space="preserve"><value>稍后</value></data>
   <data name="MainDialogPgnAnalysisFinished" xml:space="preserve"><value>PGN 分析完成</value></data>
+  <data name="MainDialogOk" xml:space="preserve"><value>确定</value></data>
+  <data name="MainBulkAnalyzedPlayer" xml:space="preserve"><value>分析棋手：{0}</value></data>
+  <data name="MainBulkDetectedPlayerNone" xml:space="preserve"><value>检测到的棋手：无</value></data>
+  <data name="MainBulkNewAnalyses" xml:space="preserve"><value>新分析：{0}</value></data>
+  <data name="MainBulkLoadedFromCache" xml:space="preserve"><value>从缓存加载：{0}</value></data>
+  <data name="MainBulkSkipped" xml:space="preserve"><value>已跳过：{0}</value></data>
+  <data name="MainBulkFailed" xml:space="preserve"><value>失败：{0}</value></data>
+  <data name="MainBulkFirstFailures" xml:space="preserve"><value>前几个失败：</value></data>
   <data name="AdviceExampleShortText" xml:space="preserve"><value>在这里写一个简短的错误总结。</value></data>
   <data name="AdviceExampleDetailedText" xml:space="preserve"><value>问题：简要说明哪里出了问题。原因：解释核心的战术或局面原因。更好：指出更好的走法以及它为什么有帮助。下次注意：给出一个应更早发现的模式。</value></data>
   <data name="AdviceExampleTrainingHint" xml:space="preserve"><value>给棋手一条简短、可执行、容易记住的规则。</value></data>

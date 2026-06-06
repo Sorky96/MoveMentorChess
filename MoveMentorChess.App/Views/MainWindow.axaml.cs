@@ -347,7 +347,7 @@ public partial class MainWindow : Window
 
     private async Task ShowInfoDialogAsync(string title, string message)
     {
-        await ShowConfirmationDialogAsync(title, message, "OK", null);
+        await ShowConfirmationDialogAsync(title, message, Localizer.Text(LocalizedStrings.MainDialogOk), null);
     }
 
     private async Task<bool> ShowConfirmationDialogAsync(string title, string message, string acceptText, string? cancelText)
@@ -433,16 +433,16 @@ public partial class MainWindow : Window
     private static string BuildBulkAnalysisSummary(BulkPgnAnalysisResult result)
     {
         string player = string.IsNullOrWhiteSpace(result.PrimaryPlayer)
-            ? "Detected player: none"
-            : $"Analyzed player: {result.PrimaryPlayer}";
+            ? Localizer.Text(LocalizedStrings.MainBulkDetectedPlayerNone)
+            : Localizer.Format(LocalizedStrings.MainBulkAnalyzedPlayer, result.PrimaryPlayer);
         string summary =
-            $"{player}\n\nNew analyses: {result.AnalyzedGames}\nLoaded from cache: {result.CachedGames}\nSkipped: {result.SkippedGames}\nFailed: {result.FailedGames}";
+            $"{player}\n\n{Localizer.Format(LocalizedStrings.MainBulkNewAnalyses, result.AnalyzedGames)}\n{Localizer.Format(LocalizedStrings.MainBulkLoadedFromCache, result.CachedGames)}\n{Localizer.Format(LocalizedStrings.MainBulkSkipped, result.SkippedGames)}\n{Localizer.Format(LocalizedStrings.MainBulkFailed, result.FailedGames)}";
 
         if (result.FailureMessages.Count == 0)
         {
             return summary;
         }
 
-        return summary + "\n\nFirst failures:\n" + string.Join("\n", result.FailureMessages);
+        return summary + $"\n\n{Localizer.Text(LocalizedStrings.MainBulkFirstFailures)}\n" + string.Join("\n", result.FailureMessages);
     }
 }

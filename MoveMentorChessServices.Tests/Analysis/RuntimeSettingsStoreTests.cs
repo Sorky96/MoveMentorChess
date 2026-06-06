@@ -15,7 +15,7 @@ public sealed class RuntimeSettingsStoreTests
         StockfishSettingsStore.Save(settings, environment);
         StockfishSettings loaded = StockfishSettingsStore.Load(environment);
 
-        string expectedPath = Path.Combine(@"C:\local-app-data", "MoveMentorChessServices", "settings", "stockfish-settings.json");
+        string expectedPath = Path.Join(@"C:\local-app-data", "MoveMentorChessServices", "settings", "stockfish-settings.json");
         Assert.Equal(expectedPath, StockfishSettingsStore.GetSettingsPath(environment));
         Assert.Contains(Path.GetDirectoryName(expectedPath)!, environment.CreatedDirectories);
         Assert.Equal(StockfishSettings.Default.Threads, loaded.Threads);
@@ -39,7 +39,7 @@ public sealed class RuntimeSettingsStoreTests
         LlamaGpuSettingsStore.Save(settings, environment);
         LlamaGpuSettings loaded = LlamaGpuSettingsStore.Load(environment);
 
-        string expectedPath = Path.Combine(@"C:\app-base", "MoveMentorChessServices", "settings", "llama-gpu-settings.json");
+        string expectedPath = Path.Join(@"C:\app-base", "MoveMentorChessServices", "settings", "llama-gpu-settings.json");
         Assert.Equal(expectedPath, LlamaGpuSettingsStore.GetSettingsPath(environment));
         Assert.True(loaded.UseFullGpuPower);
         Assert.Equal(ExplanationLevel.Advanced, loaded.DefaultExplanationLevel);
@@ -66,7 +66,7 @@ public sealed class RuntimeSettingsStoreTests
         ApplicationSettingsStore.Save(new ApplicationSettings("de-DE"), environment);
         ApplicationSettings loaded = ApplicationSettingsStore.Load(environment);
 
-        string expectedPath = Path.Combine(@"C:\local-app-data", "MoveMentorChessServices", "settings", "application-settings.json");
+        string expectedPath = Path.Join(@"C:\local-app-data", "MoveMentorChessServices", "settings", "application-settings.json");
         Assert.Equal(expectedPath, ApplicationSettingsStore.GetSettingsPath(environment));
         Assert.Equal("de", loaded.CultureName);
 

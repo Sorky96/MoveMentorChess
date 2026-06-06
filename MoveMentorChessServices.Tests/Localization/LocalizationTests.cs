@@ -42,9 +42,10 @@ public sealed class LocalizationTests
     [Fact]
     public void Localizer_FallsBackToEnglishForUnsupportedCulture()
     {
-        Localizer.UseCulture("xx-XX");
-
-        Assert.Equal("Opening review", Localizer.Text(LocalizedStrings.TrainingBlockOpeningReview));
+        WithCulture("xx-XX", () =>
+        {
+            Assert.Equal("Opening review", Localizer.Text(LocalizedStrings.TrainingBlockOpeningReview));
+        });
     }
 
     [Fact]
@@ -52,11 +53,11 @@ public sealed class LocalizationTests
     {
         string resourceDirectory = FindResourceDirectory();
         string[] cultures = ["de", "pl", "pt-BR", "zh-CN"];
-        string[] neutralKeys = ReadResourceKeys(Path.Combine(resourceDirectory, "Strings.resx"));
+        string[] neutralKeys = ReadResourceKeys(Path.Join(resourceDirectory, "Strings.resx"));
 
         foreach (string culture in cultures)
         {
-            string[] localizedKeys = ReadResourceKeys(Path.Combine(resourceDirectory, $"Strings.{culture}.resx"));
+            string[] localizedKeys = ReadResourceKeys(Path.Join(resourceDirectory, $"Strings.{culture}.resx"));
             Assert.Empty(neutralKeys.Except(localizedKeys, StringComparer.Ordinal));
             Assert.Empty(localizedKeys.Except(neutralKeys, StringComparer.Ordinal));
         }
@@ -65,7 +66,8 @@ public sealed class LocalizationTests
     [Fact]
     public void Localizer_UsesPolishFewPluralForm()
     {
-        Localizer.UseCulture("pl");
+        WithCulture("pl", () =>
+        {
 
         Assert.Equal("2 błędy", Localizer.Plural(
             2,
@@ -77,35 +79,39 @@ public sealed class LocalizationTests
             LocalizedStrings.CountOneMistake,
             LocalizedStrings.CountFewMistakes,
             LocalizedStrings.CountManyMistakes));
+        });
     }
 
     [Fact]
     public void AdvicePrompt_IncludesSelectedOutputLanguageAndKeepsJsonKeys()
     {
-        Localizer.UseCulture("pl");
-        LocalModelAdviceRequest request = new(
-            CreateReplayPly(),
-            MoveQualityBucket.Mistake,
-            new MistakeTag("opening_principles", 0.9, []),
-            "e2e4",
-            120,
-            ExplanationLevel.Intermediate,
-            null,
-            string.Empty);
+        WithCulture("pl", () =>
+        {
+            LocalModelAdviceRequest request = new(
+                CreateReplayPly(),
+                MoveQualityBucket.Mistake,
+                new MistakeTag("opening_principles", 0.9, []),
+                "e2e4",
+                120,
+                ExplanationLevel.Intermediate,
+                null,
+                string.Empty);
 
-        string prompt = AdvicePromptFormatter.BuildPrompt(request);
+            string prompt = AdvicePromptFormatter.BuildPrompt(request);
 
-        Assert.Contains("po polsku", prompt, StringComparison.Ordinal);
-        Assert.Contains("short_text", prompt, StringComparison.Ordinal);
-        Assert.Contains("detailed_text", prompt, StringComparison.Ordinal);
-        Assert.Contains("training_hint", prompt, StringComparison.Ordinal);
-        Assert.Contains("referenced_best_move_uci", prompt, StringComparison.Ordinal);
+            Assert.Contains("po polsku", prompt, StringComparison.Ordinal);
+            Assert.Contains("short_text", prompt, StringComparison.Ordinal);
+            Assert.Contains("detailed_text", prompt, StringComparison.Ordinal);
+            Assert.Contains("training_hint", prompt, StringComparison.Ordinal);
+            Assert.Contains("referenced_best_move_uci", prompt, StringComparison.Ordinal);
+        });
     }
 
     [Fact]
     public void TemplateAdviceGenerator_UsesLocalizedHeadingsAndPatternNames()
     {
-        Localizer.UseCulture("de");
+        WithCulture("de", () =>
+        {
         TemplateAdviceGenerator generator = new();
 
         MoveExplanation explanation = generator.Generate(
@@ -117,6 +123,7 @@ public sealed class LocalizationTests
 
         Assert.Contains("Was:", explanation.DetailedText, StringComparison.Ordinal);
         Assert.Contains("hängende Figur", explanation.ShortText, StringComparison.Ordinal);
+        });
     }
 
     private static ReplayPly CreateReplayPly()
@@ -147,7 +154,7 @@ public sealed class LocalizationTests
         DirectoryInfo? directory = new(AppContext.BaseDirectory);
         while (directory is not null)
         {
-            string candidate = Path.Combine(directory.FullName, "MoveMentorChess.Localization", "Resources");
+            string candidate = Path.Join(directory.FullName, "MoveMentorChess.Localization", "Resources");
             if (Directory.Exists(candidate))
             {
                 return candidate;
@@ -168,5 +175,19 @@ public sealed class LocalizationTests
             .Where(key => !string.IsNullOrWhiteSpace(key))
             .Order(StringComparer.Ordinal)
             .ToArray();
+    }
+
+    private static void WithCulture(string cultureName, Action assertions)
+    {
+        string previousCulture = Localizer.CurrentCulture.Name;
+        Localizer.UseCulture(cultureName);
+        try
+        {
+            assertions();
+        }
+        finally
+        {
+            Localizer.UseCulture(previousCulture);
+        }
     }
 }

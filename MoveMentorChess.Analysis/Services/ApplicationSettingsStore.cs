@@ -74,7 +74,7 @@ public static class ApplicationSettingsStore
             baseDirectory = environment.BaseDirectory;
         }
 
-        return Path.Combine(baseDirectory, "MoveMentorChessServices", "settings", "application-settings.json");
+        return Path.Join(baseDirectory, "MoveMentorChessServices", "settings", "application-settings.json");
     }
 
     private static ApplicationSettings Normalize(ApplicationSettings? settings)
