@@ -1,4 +1,5 @@
 using System.Globalization;
+using MoveMentorChess.Localization;
 
 namespace MoveMentorChess.Profiles;
 
@@ -8,13 +9,13 @@ public static class PlayerProfileTextFormatter
     {
         return label switch
         {
-            "hanging_piece" => "Loose pieces",
-            "missed_tactic" => "Missed tactics",
-            "opening_principles" => "Opening discipline",
-            "king_safety" => "King safety",
-            "endgame_technique" => "Endgame technique",
-            "material_loss" => "Material losses",
-            "piece_activity" => "Passive pieces",
+            "hanging_piece" => Localizer.Text(LocalizedStrings.AdvicePatternHangingPiece),
+            "missed_tactic" => Localizer.Text(LocalizedStrings.AdvicePatternMissedTactic),
+            "opening_principles" => Localizer.Text(LocalizedStrings.AdvicePatternOpeningPrinciples),
+            "king_safety" => Localizer.Text(LocalizedStrings.AdvicePatternKingSafety),
+            "endgame_technique" => Localizer.Text(LocalizedStrings.AdvicePatternEndgameTechnique),
+            "material_loss" => Localizer.Text(LocalizedStrings.AdvicePatternMaterialLoss),
+            "piece_activity" => Localizer.Text(LocalizedStrings.AdvicePatternPieceActivity),
             _ => CultureInfo.InvariantCulture.TextInfo.ToTitleCase((label ?? string.Empty).Replace('_', ' ').ToLowerInvariant())
         };
     }
@@ -23,9 +24,9 @@ public static class PlayerProfileTextFormatter
     {
         return phase switch
         {
-            GamePhase.Opening => "Opening",
-            GamePhase.Middlegame => "Middlegame",
-            GamePhase.Endgame => "Endgame",
+            GamePhase.Opening => Localizer.Text(LocalizedStrings.FormatPhaseOpening),
+            GamePhase.Middlegame => Localizer.Text(LocalizedStrings.FormatPhaseMiddlegame),
+            GamePhase.Endgame => Localizer.Text(LocalizedStrings.FormatPhaseEndgame),
             _ => phase.ToString()
         };
     }
@@ -34,7 +35,7 @@ public static class PlayerProfileTextFormatter
     {
         string description = OpeningCatalog.Describe(eco);
         return string.IsNullOrWhiteSpace(description)
-            ? "Mixed openings"
+            ? Localizer.Text(LocalizedStrings.FormatMixedOpenings)
             : description;
     }
 
@@ -42,21 +43,25 @@ public static class PlayerProfileTextFormatter
     {
         return direction switch
         {
-            ProfileProgressDirection.Improving => "Improving lately",
-            ProfileProgressDirection.Stable => "Mostly stable",
-            ProfileProgressDirection.Regressing => "Results slipped recently",
-            _ => "Need more games"
+            ProfileProgressDirection.Improving => Localizer.Text(LocalizedStrings.TrendImproving),
+            ProfileProgressDirection.Stable => Localizer.Text(LocalizedStrings.TrendStable),
+            ProfileProgressDirection.Regressing => Localizer.Text(LocalizedStrings.TrendRegressing),
+            _ => Localizer.Text(LocalizedStrings.TrendNeedMoreGames)
         };
     }
 
     public static string FormatTimes(int count)
     {
-        return count == 1 ? "1 time" : $"{count} times";
+        return count == 1
+            ? Localizer.Text(LocalizedStrings.CountOneTime)
+            : Localizer.Format(LocalizedStrings.CountManyTimes, count);
     }
 
     public static string FormatMistakeCount(int count)
     {
-        return count == 1 ? "1 mistake" : $"{count} mistakes";
+        return count == 1
+            ? Localizer.Text(LocalizedStrings.CountOneMistake)
+            : Localizer.Format(LocalizedStrings.CountManyMistakes, count);
     }
 
     public static string FormatExampleRank(ProfileMistakeExampleRank rank)
@@ -74,11 +79,11 @@ public static class PlayerProfileTextFormatter
     {
         return kind switch
         {
-            TrainingBlockKind.Tactics => "Tactics",
-            TrainingBlockKind.OpeningReview => "Opening review",
-            TrainingBlockKind.EndgameDrill => "Endgame drill",
-            TrainingBlockKind.GameReview => "Game review",
-            TrainingBlockKind.SlowPlayFocus => "Slow play focus",
+            TrainingBlockKind.Tactics => Localizer.Text(LocalizedStrings.TrainingBlockTactics),
+            TrainingBlockKind.OpeningReview => Localizer.Text(LocalizedStrings.TrainingBlockOpeningReview),
+            TrainingBlockKind.EndgameDrill => Localizer.Text(LocalizedStrings.TrainingBlockEndgameDrill),
+            TrainingBlockKind.GameReview => Localizer.Text(LocalizedStrings.TrainingBlockGameReview),
+            TrainingBlockKind.SlowPlayFocus => Localizer.Text(LocalizedStrings.TrainingBlockSlowPlayFocus),
             _ => kind.ToString()
         };
     }
@@ -87,9 +92,9 @@ public static class PlayerProfileTextFormatter
     {
         return purpose switch
         {
-            TrainingBlockPurpose.Repair => "Repair",
-            TrainingBlockPurpose.Maintain => "Maintain",
-            TrainingBlockPurpose.Checklist => "Checklist",
+            TrainingBlockPurpose.Repair => Localizer.Text(LocalizedStrings.TrainingPurposeRepair),
+            TrainingBlockPurpose.Maintain => Localizer.Text(LocalizedStrings.TrainingPurposeMaintain),
+            TrainingBlockPurpose.Checklist => Localizer.Text(LocalizedStrings.TrainingPurposeChecklist),
             _ => purpose.ToString()
         };
     }

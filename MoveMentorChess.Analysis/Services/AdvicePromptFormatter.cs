@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using MoveMentorChess.Localization;
 
 namespace MoveMentorChess.Analysis;
 
@@ -138,8 +139,14 @@ public static class AdvicePromptFormatter
         // Output format instruction + one-shot example.
         builder.AppendLine("Reply with ONLY a JSON object. No markdown, no explanation outside the JSON.");
         builder.AppendLine("Keys: short_text, detailed_text, training_hint, referenced_best_move_uci, referenced_label, confidence.");
+        builder.AppendLine(Localizer.Format(LocalizedStrings.AdviceLanguageInstruction, Localizer.CurrentLanguage.EnglishName));
         builder.AppendLine(BuildLengthInstruction(request.ExplanationLevel));
-        builder.AppendLine("For detailed_text, use exactly four short parts in this order: What:, Why:, Better:, Watch next time:.");
+        builder.AppendLine(Localizer.Format(
+            LocalizedStrings.AdviceDetailedPartsInstruction,
+            Localizer.Text(LocalizedStrings.AdviceWhat),
+            Localizer.Text(LocalizedStrings.AdviceWhy),
+            Localizer.Text(LocalizedStrings.AdviceBetter),
+            Localizer.Text(LocalizedStrings.AdviceWatchNextTime)));
         builder.AppendLine("referenced_best_move_uci must exactly equal the input best move UCI. referenced_label must exactly equal the input pattern. confidence must be a number from 0 to 1.");
         builder.AppendLine();
         builder.AppendLine("IMPORTANT: You must write about THIS specific position. Generate NEW text.");
@@ -148,14 +155,16 @@ public static class AdvicePromptFormatter
         builder.AppendLine("Example format (DO NOT copy these values, write your own analysis):");
         builder.AppendLine("""
             {
-              "short_text": "Write a brief summary of the mistake here.",
-              "detailed_text": "What: Briefly state what went wrong. Why: Briefly explain the core tactical or positional reason. Better: Name the better move and why it helped. Watch next time: Give one pattern to notice earlier.",
-              "training_hint": "Provide a short, actionable rule for the player to remember.",
+              "short_text": "{0}",
+              "detailed_text": "{1}",
+              "training_hint": "{2}",
               "referenced_best_move_uci": "e2e4",
               "referenced_label": "opening_principles",
               "confidence": 0.82
             }
-            """);
+            """.Replace("{0}", Localizer.Text(LocalizedStrings.AdviceExampleShortText), StringComparison.Ordinal)
+            .Replace("{1}", Localizer.Text(LocalizedStrings.AdviceExampleDetailedText), StringComparison.Ordinal)
+            .Replace("{2}", Localizer.Text(LocalizedStrings.AdviceExampleTrainingHint), StringComparison.Ordinal));
         return builder.ToString().Trim();
     }
 

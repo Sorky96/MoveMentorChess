@@ -16,13 +16,14 @@
             HorizontalAlignment="Center"
             MaxWidth="1180">
       <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Spacing="16">
+        <StackPanel Spacing="16" Margin="0,0,18,0">
           <Grid ColumnDefinitions="*,Auto">
-            <TextBlock FontSize="24" FontWeight="Bold" Text="Settings" />
-            <Button Grid.Column="1" Click="CancelButton_Click" Content="Close" />
+            <TextBlock x:Name="TitleTextBlock" FontSize="24" FontWeight="Bold" Text="Settings" />
+            <Button x:Name="CloseButton" Grid.Column="1" Click="CancelButton_Click" Content="Close" />
           </Grid>
           <StackPanel Spacing="10">
-            <TextBlock Foreground="#D7E2EA"
+            <TextBlock x:Name="IntroTextBlock"
+                       Foreground="#D7E2EA"
                        TextWrapping="Wrap"
                        Text="Choose how MoveMentor uses the local model and Stockfish on this machine." />
           </StackPanel>
@@ -33,32 +34,40 @@
                   BorderBrush="{DynamicResource PanelAccentBrush}"
                   BorderThickness="1">
             <StackPanel Spacing="8">
-              <TextBlock Foreground="White"
+              <TextBlock x:Name="SetupChecklistTitleTextBlock"
+                         Foreground="White"
                          FontSize="16"
                          FontWeight="SemiBold"
                          Text="Setup checklist" />
-              <TextBlock Foreground="#D7E2EA"
+              <TextBlock x:Name="SetupChecklistBodyTextBlock"
+                         Foreground="#D7E2EA"
                          TextWrapping="Wrap"
                          Text="1. Pick or auto-detect Stockfish. 2. Import a PGN. 3. Run analysis. 4. Follow the training recommendation." />
             </StackPanel>
           </Border>
 
           <StackPanel Spacing="10">
-            <TextBlock FontSize="18" FontWeight="SemiBold" Text="Model" />
+            <TextBlock x:Name="LanguageLabelTextBlock" FontSize="18" FontWeight="SemiBold" Text="Language" />
+            <ComboBox x:Name="LanguageComboBox" />
+          </StackPanel>
+
+          <StackPanel Spacing="10">
+            <TextBlock x:Name="ModelTitleTextBlock" FontSize="18" FontWeight="SemiBold" Text="Model" />
             <CheckBox x:Name="FullGpuPowerCheckBox"
                       Content="Use full GPU power for the local model" />
-            <TextBlock Foreground="#D7E2EA" Text="llama-server.exe path (optional)" />
+            <TextBlock x:Name="LlamaPathLabelTextBlock" Foreground="#D7E2EA" Text="llama-server.exe path (optional)" />
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
               <TextBox x:Name="LlamaServerPathTextBox"
                        PlaceholderText="Auto-detect llama-server.exe" />
-              <Button Grid.Column="1"
-                      MinWidth="96"
+              <Button x:Name="BrowseLlamaButton"
+                      Grid.Column="1"
+                      MinWidth="110"
                       Content="Browse"
                       Click="BrowseLlamaServerButton_Click" />
             </Grid>
-            <TextBlock Foreground="#D7E2EA" Text="Explanation level" />
+            <TextBlock x:Name="ExplanationLevelLabelTextBlock" Foreground="#D7E2EA" Text="Explanation level" />
             <ComboBox x:Name="ExplanationLevelComboBox" />
-            <TextBlock Foreground="#D7E2EA" Text="Narration style" />
+            <TextBlock x:Name="NarrationStyleLabelTextBlock" Foreground="#D7E2EA" Text="Narration style" />
             <ComboBox x:Name="NarrationStyleComboBox" />
             <TextBlock x:Name="ModeDescriptionTextBlock"
                        Foreground="#D7E2EA"
@@ -66,37 +75,38 @@
           </StackPanel>
 
           <StackPanel Spacing="10">
-            <TextBlock FontSize="18" FontWeight="SemiBold" Text="Stockfish" />
-            <TextBlock Foreground="#D7E2EA" Text="stockfish.exe path" />
+            <TextBlock x:Name="StockfishTitleTextBlock" FontSize="18" FontWeight="SemiBold" Text="Stockfish" />
+            <TextBlock x:Name="StockfishPathLabelTextBlock" Foreground="#D7E2EA" Text="stockfish.exe path" />
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
               <TextBox x:Name="StockfishPathTextBox"
                        PlaceholderText="Auto-detect stockfish.exe" />
-              <Button Grid.Column="1"
-                      MinWidth="96"
+              <Button x:Name="BrowseStockfishButton"
+                      Grid.Column="1"
+                      MinWidth="110"
                       Content="Browse"
                       Click="BrowseStockfishButton_Click" />
             </Grid>
-            <TextBlock Foreground="#D7E2EA" Text="Engine threads" />
+            <TextBlock x:Name="EngineThreadsLabelTextBlock" Foreground="#D7E2EA" Text="Engine threads" />
             <NumericUpDown x:Name="StockfishThreadsNumeric"
                            Minimum="1"
                            Maximum="64"
                            Increment="1" />
-            <TextBlock Foreground="#D7E2EA" Text="Hash memory (MB)" />
+            <TextBlock x:Name="HashMemoryLabelTextBlock" Foreground="#D7E2EA" Text="Hash memory (MB)" />
             <NumericUpDown x:Name="StockfishHashNumeric"
                            Minimum="16"
                            Maximum="4096"
                            Increment="16" />
-            <TextBlock Foreground="#D7E2EA" Text="Bulk analysis depth" />
+            <TextBlock x:Name="BulkDepthLabelTextBlock" Foreground="#D7E2EA" Text="Bulk analysis depth" />
             <NumericUpDown x:Name="BulkDepthNumeric"
                            Minimum="1"
                            Maximum="30"
                            Increment="1" />
-            <TextBlock Foreground="#D7E2EA" Text="Bulk analysis MultiPV" />
+            <TextBlock x:Name="BulkMultiPvLabelTextBlock" Foreground="#D7E2EA" Text="Bulk analysis MultiPV" />
             <NumericUpDown x:Name="BulkMultiPvNumeric"
                            Minimum="1"
                            Maximum="5"
                            Increment="1" />
-            <TextBlock Foreground="#D7E2EA" Text="Bulk analysis move time (ms)" />
+            <TextBlock x:Name="BulkMoveTimeLabelTextBlock" Foreground="#D7E2EA" Text="Bulk analysis move time (ms)" />
             <NumericUpDown x:Name="BulkMoveTimeNumeric"
                            Minimum="25"
                            Maximum="5000"
@@ -117,7 +127,8 @@
             HorizontalAlignment="Center"
             MaxWidth="1180">
       <Grid ColumnDefinitions="*,Auto">
-        <TextBlock Foreground="#9EB5C5"
+        <TextBlock x:Name="FooterTextBlock"
+                   Foreground="#9EB5C5"
                    VerticalAlignment="Center"
                    Text="Save when Stockfish is detected or after choosing a custom path."
                    TextWrapping="Wrap" />
@@ -125,8 +136,8 @@
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Spacing="10">
-          <Button Content="Cancel" Click="CancelButton_Click" />
-          <Button Content="Save" Click="SaveButton_Click" />
+          <Button x:Name="CancelButton" Content="Cancel" Click="CancelButton_Click" />
+          <Button x:Name="SaveButton" Content="Save" Click="SaveButton_Click" />
         </StackPanel>
       </Grid>
     </Border>

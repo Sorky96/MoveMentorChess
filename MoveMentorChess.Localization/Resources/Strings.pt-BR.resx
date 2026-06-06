@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader><resheader name="version"><value>2.0</value></resheader><resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader><resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="SettingsTitle" xml:space="preserve"><value>Configurações</value></data>
+  <data name="SettingsClose" xml:space="preserve"><value>Fechar</value></data>
+  <data name="SettingsIntro" xml:space="preserve"><value>Escolha como o MoveMentor usa idioma, modelo local e Stockfish neste computador.</value></data>
+  <data name="SettingsLanguage" xml:space="preserve"><value>Idioma</value></data>
+  <data name="SettingsModel" xml:space="preserve"><value>Modelo</value></data>
+  <data name="SettingsUseFullGpu" xml:space="preserve"><value>Usar toda a potência da GPU para o modelo local</value></data>
+  <data name="SettingsBrowse" xml:space="preserve"><value>Procurar</value></data>
+  <data name="SettingsExplanationLevel" xml:space="preserve"><value>Nível da explicação</value></data>
+  <data name="SettingsNarrationStyle" xml:space="preserve"><value>Estilo de narração</value></data>
+  <data name="SettingsStockfish" xml:space="preserve"><value>Stockfish</value></data>
+  <data name="SettingsCancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="SettingsSave" xml:space="preserve"><value>Salvar</value></data>
+  <data name="ExplanationBeginner" xml:space="preserve"><value>Iniciante</value></data>
+  <data name="ExplanationIntermediate" xml:space="preserve"><value>Intermediário</value></data>
+  <data name="ExplanationAdvanced" xml:space="preserve"><value>Avançado</value></data>
+  <data name="MainRotateBoard" xml:space="preserve"><value>GIRAR TABULEIRO</value></data>
+  <data name="MainUndo" xml:space="preserve"><value>DESFAZER</value></data>
+  <data name="MainConfigureEngine" xml:space="preserve"><value>Configurar engine</value></data>
+  <data name="MainPastePgn" xml:space="preserve"><value>COLAR PGN</value></data>
+  <data name="MainAnalyzeGame" xml:space="preserve"><value>Analisar partida</value></data>
+  <data name="MainLoadPgnFile" xml:space="preserve"><value>CARREGAR PGN</value></data>
+  <data name="MainApplyNext" xml:space="preserve"><value>APLICAR PRÓXIMO</value></data>
+  <data name="MainApplySelected" xml:space="preserve"><value>APLICAR SELECIONADO</value></data>
+  <data name="MainAnalyzeImported" xml:space="preserve"><value>ANALISAR IMPORTADO</value></data>
+  <data name="MainPlayerCoach" xml:space="preserve"><value>TREINADOR DO JOGADOR</value></data>
+  <data name="MainSavedAnalyses" xml:space="preserve"><value>ANÁLISES SALVAS</value></data>
+  <data name="MainLoadSaved" xml:space="preserve"><value>CARREGAR SALVO</value></data>
+  <data name="MainOpeningTrainer" xml:space="preserve"><value>TREINADOR DE ABERTURAS</value></data>
+  <data name="MainSettings" xml:space="preserve"><value>CONFIGURAÇÕES</value></data>
+  <data name="MainOpeningCoverage" xml:space="preserve"><value>COBERTURA DE ABERTURAS</value></data>
+  <data name="MainCloseApp" xml:space="preserve"><value>FECHAR APP</value></data>
+  <data name="AdviceLanguageInstruction" xml:space="preserve"><value>Escreva short_text, detailed_text e training_hint em português do Brasil. Mantenha as chaves JSON e a notação de xadrez sem alterações.</value></data>
+  <data name="AdviceWhat" xml:space="preserve"><value>O que</value></data>
+  <data name="AdviceWhy" xml:space="preserve"><value>Por quê</value></data>
+  <data name="AdviceBetter" xml:space="preserve"><value>Melhor</value></data>
+  <data name="AdviceWatchNextTime" xml:space="preserve"><value>Na próxima vez</value></data>
+  <data name="AdvicePracticalView" xml:space="preserve"><value>Visão prática</value></data>
+  <data name="AdviceWasQualityLoss" xml:space="preserve"><value>{0}: {1} foi uma {2}, {3}.</value></data>
+  <data name="AdviceStrongerOption" xml:space="preserve"><value>Uma opção mais forte era {0}.</value></data>
+  <data name="AdvicePattern" xml:space="preserve"><value>Isso combina com o padrão {0}.</value></data>
+  <data name="AdviceLostCentipawns" xml:space="preserve"><value>e perdeu cerca de {0} centipawns</value></data>
+  <data name="AdviceQualityMistake" xml:space="preserve"><value>erro</value></data>
+  <data name="AdviceQualityInaccuracy" xml:space="preserve"><value>imprecisão</value></data>
+  <data name="AdvicePatternHangingPiece" xml:space="preserve"><value>peça pendurada</value></data>
+  <data name="FormatPhaseOpening" xml:space="preserve"><value>Abertura</value></data>
+  <data name="FormatPhaseMiddlegame" xml:space="preserve"><value>Meio-jogo</value></data>
+  <data name="FormatPhaseEndgame" xml:space="preserve"><value>Final</value></data>
+</root>

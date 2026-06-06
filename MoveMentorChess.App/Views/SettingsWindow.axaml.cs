@@ -2,32 +2,40 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using MoveMentorChess.Analysis;
+using MoveMentorChess.Localization;
 
 namespace MoveMentorChess.App.Views;
 
 public partial class SettingsWindow : Window
 {
     public SettingsWindow()
-        : this(LlamaGpuSettingsStore.Load(), StockfishSettingsStore.Load())
+        : this(LlamaGpuSettingsStore.Load(), StockfishSettingsStore.Load(), ApplicationSettingsStore.Load())
     {
     }
 
-    public SettingsWindow(LlamaGpuSettings settings, StockfishSettings stockfishSettings)
+    public SettingsWindow(
+        LlamaGpuSettings settings,
+        StockfishSettings stockfishSettings,
+        ApplicationSettings applicationSettings)
     {
         InitializeComponent();
+        Localizer.UseApplicationCulture(applicationSettings.CultureName);
+        ApplyLocalizedText();
+        LanguageComboBox.ItemsSource = LanguageCatalog.SupportedLanguages;
+        LanguageComboBox.SelectedItem = LanguageCatalog.Resolve(applicationSettings.CultureName);
         ExplanationLevelComboBox.ItemsSource = new[]
         {
-            new ExplanationLevelOption(ExplanationLevel.Beginner, "Beginner"),
-            new ExplanationLevelOption(ExplanationLevel.Intermediate, "Intermediate"),
-            new ExplanationLevelOption(ExplanationLevel.Advanced, "Advanced")
+            new ExplanationLevelOption(ExplanationLevel.Beginner, Localizer.Text(LocalizedStrings.ExplanationBeginner)),
+            new ExplanationLevelOption(ExplanationLevel.Intermediate, Localizer.Text(LocalizedStrings.ExplanationIntermediate)),
+            new ExplanationLevelOption(ExplanationLevel.Advanced, Localizer.Text(LocalizedStrings.ExplanationAdvanced))
         };
         NarrationStyleComboBox.ItemsSource = new[]
         {
-            new NarrationStyleOption(AdviceNarrationStyle.RegularTrainer, "Regular Trainer"),
-            new NarrationStyleOption(AdviceNarrationStyle.LevyRozman, "Levy Rozman"),
-            new NarrationStyleOption(AdviceNarrationStyle.HikaruNakamura, "Hikaru Nakamura"),
-            new NarrationStyleOption(AdviceNarrationStyle.BotezLive, "BotezLive"),
-            new NarrationStyleOption(AdviceNarrationStyle.WittyAlien, "Witty Alien")
+            new NarrationStyleOption(AdviceNarrationStyle.RegularTrainer, Localizer.Text(LocalizedStrings.NarrationRegularTrainer)),
+            new NarrationStyleOption(AdviceNarrationStyle.LevyRozman, Localizer.Text(LocalizedStrings.NarrationLevyRozman)),
+            new NarrationStyleOption(AdviceNarrationStyle.HikaruNakamura, Localizer.Text(LocalizedStrings.NarrationHikaruNakamura)),
+            new NarrationStyleOption(AdviceNarrationStyle.BotezLive, Localizer.Text(LocalizedStrings.NarrationBotezLive)),
+            new NarrationStyleOption(AdviceNarrationStyle.WittyAlien, Localizer.Text(LocalizedStrings.NarrationWittyAlien))
         };
 
         FullGpuPowerCheckBox.IsChecked = settings.UseFullGpuPower;
@@ -74,8 +82,15 @@ public partial class SettingsWindow : Window
             ReadInt(BulkMoveTimeNumeric, StockfishSettings.Default.BulkAnalysisMoveTimeMs),
             PathHelpers.NormalizePath(StockfishPathTextBox.Text));
 
+    public ApplicationSettings SelectedApplicationSettings =>
+        new(LanguageComboBox.SelectedItem is LanguageOption language
+            ? language.CultureName
+            : LanguageCatalog.English.CultureName);
+
     private void SaveButton_Click(object? sender, RoutedEventArgs e)
     {
+        ApplicationSettingsStore.Save(SelectedApplicationSettings);
+        Localizer.UseApplicationCulture(SelectedApplicationSettings.CultureName);
         LlamaGpuSettingsStore.Save(SelectedSettings);
         StockfishSettingsStore.Save(SelectedStockfishSettings);
         LlamaCppServerManager.Instance.Shutdown();
@@ -109,15 +124,50 @@ public partial class SettingsWindow : Window
     {
         bool useFullGpuPower = FullGpuPowerCheckBox.IsChecked == true;
         ModeDescriptionTextBlock.Text = useFullGpuPower
-            ? $"Full GPU mode is enabled. llama.cpp will request '-ngl {LlamaGpuSettingsResolver.FullGpuLayersArgument}', which means pushing all possible model layers onto the GPU."
-            : $"Balanced mode is enabled. llama.cpp will request '-ngl {LlamaGpuSettingsResolver.BalancedGpuLayersArgument}', which is safer on smaller cards and remains the default.";
+            ? Localizer.Format(LocalizedStrings.SettingsFullGpuDescription, LlamaGpuSettingsResolver.FullGpuLayersArgument)
+            : Localizer.Format(LocalizedStrings.SettingsBalancedGpuDescription, LlamaGpuSettingsResolver.BalancedGpuLayersArgument);
     }
 
     private void RefreshStockfishDescription()
     {
         StockfishSettings settings = SelectedStockfishSettings;
-        StockfishDescriptionTextBlock.Text =
-            $"Stockfish will use {settings.Threads} thread(s), {settings.HashMb} MB hash, and bulk PGN analysis will run at depth {settings.BulkAnalysisDepth}, MultiPV {settings.BulkAnalysisMultiPv}, {settings.BulkAnalysisMoveTimeMs} ms per position.";
+        StockfishDescriptionTextBlock.Text = Localizer.Format(
+            LocalizedStrings.SettingsStockfishDescription,
+            settings.Threads,
+            settings.HashMb,
+            settings.BulkAnalysisDepth,
+            settings.BulkAnalysisMultiPv,
+            settings.BulkAnalysisMoveTimeMs);
+    }
+
+    private void ApplyLocalizedText()
+    {
+        Title = Localizer.Text(LocalizedStrings.SettingsTitle);
+        TitleTextBlock.Text = Localizer.Text(LocalizedStrings.SettingsTitle);
+        CloseButton.Content = Localizer.Text(LocalizedStrings.SettingsClose);
+        IntroTextBlock.Text = Localizer.Text(LocalizedStrings.SettingsIntro);
+        SetupChecklistTitleTextBlock.Text = Localizer.Text(LocalizedStrings.SettingsSetupChecklistTitle);
+        SetupChecklistBodyTextBlock.Text = Localizer.Text(LocalizedStrings.SettingsSetupChecklistBody);
+        LanguageLabelTextBlock.Text = Localizer.Text(LocalizedStrings.SettingsLanguage);
+        ModelTitleTextBlock.Text = Localizer.Text(LocalizedStrings.SettingsModel);
+        FullGpuPowerCheckBox.Content = Localizer.Text(LocalizedStrings.SettingsUseFullGpu);
+        LlamaPathLabelTextBlock.Text = Localizer.Text(LocalizedStrings.SettingsLlamaPath);
+        LlamaServerPathTextBox.PlaceholderText = Localizer.Text(LocalizedStrings.SettingsLlamaPlaceholder);
+        BrowseLlamaButton.Content = Localizer.Text(LocalizedStrings.SettingsBrowse);
+        ExplanationLevelLabelTextBlock.Text = Localizer.Text(LocalizedStrings.SettingsExplanationLevel);
+        NarrationStyleLabelTextBlock.Text = Localizer.Text(LocalizedStrings.SettingsNarrationStyle);
+        StockfishTitleTextBlock.Text = Localizer.Text(LocalizedStrings.SettingsStockfish);
+        StockfishPathLabelTextBlock.Text = Localizer.Text(LocalizedStrings.SettingsStockfishPath);
+        StockfishPathTextBox.PlaceholderText = Localizer.Text(LocalizedStrings.SettingsStockfishPlaceholder);
+        BrowseStockfishButton.Content = Localizer.Text(LocalizedStrings.SettingsBrowse);
+        EngineThreadsLabelTextBlock.Text = Localizer.Text(LocalizedStrings.SettingsEngineThreads);
+        HashMemoryLabelTextBlock.Text = Localizer.Text(LocalizedStrings.SettingsHashMemory);
+        BulkDepthLabelTextBlock.Text = Localizer.Text(LocalizedStrings.SettingsBulkDepth);
+        BulkMultiPvLabelTextBlock.Text = Localizer.Text(LocalizedStrings.SettingsBulkMultiPv);
+        BulkMoveTimeLabelTextBlock.Text = Localizer.Text(LocalizedStrings.SettingsBulkMoveTime);
+        FooterTextBlock.Text = Localizer.Text(LocalizedStrings.SettingsFooter);
+        CancelButton.Content = Localizer.Text(LocalizedStrings.SettingsCancel);
+        SaveButton.Content = Localizer.Text(LocalizedStrings.SettingsSave);
     }
 
     private static int ReadInt(NumericUpDown numeric, int fallback)

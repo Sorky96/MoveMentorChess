@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="SettingsTitle" xml:space="preserve"><value>Settings</value></data>
+  <data name="SettingsClose" xml:space="preserve"><value>Close</value></data>
+  <data name="SettingsIntro" xml:space="preserve"><value>Choose how MoveMentor uses language, the local model and Stockfish on this machine.</value></data>
+  <data name="SettingsSetupChecklistTitle" xml:space="preserve"><value>Setup checklist</value></data>
+  <data name="SettingsSetupChecklistBody" xml:space="preserve"><value>1. Pick a language. 2. Pick or auto-detect Stockfish. 3. Import a PGN. 4. Run analysis. 5. Follow the training recommendation.</value></data>
+  <data name="SettingsLanguage" xml:space="preserve"><value>Language</value></data>
+  <data name="SettingsModel" xml:space="preserve"><value>Model</value></data>
+  <data name="SettingsUseFullGpu" xml:space="preserve"><value>Use full GPU power for the local model</value></data>
+  <data name="SettingsLlamaPath" xml:space="preserve"><value>llama-server.exe path (optional)</value></data>
+  <data name="SettingsLlamaPlaceholder" xml:space="preserve"><value>Auto-detect llama-server.exe</value></data>
+  <data name="SettingsBrowse" xml:space="preserve"><value>Browse</value></data>
+  <data name="SettingsExplanationLevel" xml:space="preserve"><value>Explanation level</value></data>
+  <data name="SettingsNarrationStyle" xml:space="preserve"><value>Narration style</value></data>
+  <data name="SettingsStockfish" xml:space="preserve"><value>Stockfish</value></data>
+  <data name="SettingsStockfishPath" xml:space="preserve"><value>stockfish.exe path</value></data>
+  <data name="SettingsStockfishPlaceholder" xml:space="preserve"><value>Auto-detect stockfish.exe</value></data>
+  <data name="SettingsEngineThreads" xml:space="preserve"><value>Engine threads</value></data>
+  <data name="SettingsHashMemory" xml:space="preserve"><value>Hash memory (MB)</value></data>
+  <data name="SettingsBulkDepth" xml:space="preserve"><value>Bulk analysis depth</value></data>
+  <data name="SettingsBulkMultiPv" xml:space="preserve"><value>Bulk analysis MultiPV</value></data>
+  <data name="SettingsBulkMoveTime" xml:space="preserve"><value>Bulk analysis move time (ms)</value></data>
+  <data name="SettingsFooter" xml:space="preserve"><value>Save when Stockfish is detected or after choosing a custom path.</value></data>
+  <data name="SettingsCancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="SettingsSave" xml:space="preserve"><value>Save</value></data>
+  <data name="SettingsFullGpuDescription" xml:space="preserve"><value>Full GPU mode is enabled. llama.cpp will request '-ngl {0}', which means pushing all possible model layers onto the GPU.</value></data>
+  <data name="SettingsBalancedGpuDescription" xml:space="preserve"><value>Balanced mode is enabled. llama.cpp will request '-ngl {0}', which is safer on smaller cards and remains the default.</value></data>
+  <data name="SettingsStockfishDescription" xml:space="preserve"><value>Stockfish will use {0} thread(s), {1} MB hash, and bulk PGN analysis will run at depth {2}, MultiPV {3}, {4} ms per position.</value></data>
+  <data name="ExplanationBeginner" xml:space="preserve"><value>Beginner</value></data>
+  <data name="ExplanationIntermediate" xml:space="preserve"><value>Intermediate</value></data>
+  <data name="ExplanationAdvanced" xml:space="preserve"><value>Advanced</value></data>
+  <data name="NarrationRegularTrainer" xml:space="preserve"><value>Regular Trainer</value></data>
+  <data name="NarrationLevyRozman" xml:space="preserve"><value>Levy Rozman</value></data>
+  <data name="NarrationHikaruNakamura" xml:space="preserve"><value>Hikaru Nakamura</value></data>
+  <data name="NarrationBotezLive" xml:space="preserve"><value>BotezLive</value></data>
+  <data name="NarrationWittyAlien" xml:space="preserve"><value>Witty Alien</value></data>
+  <data name="MainRotateBoard" xml:space="preserve"><value>ROTATE BOARD</value></data>
+  <data name="MainUndo" xml:space="preserve"><value>UNDO</value></data>
+  <data name="MainConfigureEngine" xml:space="preserve"><value>Configure engine</value></data>
+  <data name="MainPastePgn" xml:space="preserve"><value>PASTE PGN</value></data>
+  <data name="MainAnalyzeGame" xml:space="preserve"><value>Analyze game</value></data>
+  <data name="MainLoadPgnFile" xml:space="preserve"><value>LOAD PGN FILE</value></data>
+  <data name="MainApplyNext" xml:space="preserve"><value>APPLY NEXT</value></data>
+  <data name="MainApplySelected" xml:space="preserve"><value>APPLY SELECTED</value></data>
+  <data name="MainAnalyzeImported" xml:space="preserve"><value>ANALYZE IMPORTED</value></data>
+  <data name="MainPlayerCoach" xml:space="preserve"><value>PLAYER COACH</value></data>
+  <data name="MainSavedAnalyses" xml:space="preserve"><value>SAVED ANALYSES</value></data>
+  <data name="MainLoadSaved" xml:space="preserve"><value>LOAD SAVED</value></data>
+  <data name="MainOpeningTrainer" xml:space="preserve"><value>OPENING TRAINER</value></data>
+  <data name="MainSettings" xml:space="preserve"><value>SETTINGS</value></data>
+  <data name="MainOpeningCoverage" xml:space="preserve"><value>OPENING COVERAGE</value></data>
+  <data name="MainCloseApp" xml:space="preserve"><value>CLOSE APP</value></data>
+  <data name="AdviceLanguageInstruction" xml:space="preserve"><value>Write short_text, detailed_text, and training_hint in {0}. Keep JSON keys and chess notation unchanged.</value></data>
+  <data name="AdviceDetailedPartsInstruction" xml:space="preserve"><value>For detailed_text, use exactly four short parts in this order: {0}:, {1}:, {2}:, {3}:.</value></data>
+  <data name="AdviceExampleShortText" xml:space="preserve"><value>Write a brief summary of the mistake here.</value></data>
+  <data name="AdviceExampleDetailedText" xml:space="preserve"><value>What: Briefly state what went wrong. Why: Briefly explain the core tactical or positional reason. Better: Name the better move and why it helped. Watch next time: Give one pattern to notice earlier.</value></data>
+  <data name="AdviceExampleTrainingHint" xml:space="preserve"><value>Provide a short, actionable rule for the player to remember.</value></data>
+  <data name="AdviceWhat" xml:space="preserve"><value>What</value></data>
+  <data name="AdviceWhy" xml:space="preserve"><value>Why</value></data>
+  <data name="AdviceBetter" xml:space="preserve"><value>Better</value></data>
+  <data name="AdviceWatchNextTime" xml:space="preserve"><value>Watch next time</value></data>
+  <data name="AdviceSimpleView" xml:space="preserve"><value>Simple view</value></data>
+  <data name="AdvicePracticalView" xml:space="preserve"><value>Practical view</value></data>
+  <data name="AdviceEngineView" xml:space="preserve"><value>Engine view</value></data>
+  <data name="AdviceWasQualityLoss" xml:space="preserve"><value>{0}: {1} was a {2} {3}.</value></data>
+  <data name="AdviceStrongerOption" xml:space="preserve"><value>A stronger option was {0}.</value></data>
+  <data name="AdvicePattern" xml:space="preserve"><value>It fits the {0} pattern.</value></data>
+  <data name="AdviceTrainingBeginner" xml:space="preserve"><value>Next time, use one simple habit: {0}</value></data>
+  <data name="AdviceTrainingIntermediate" xml:space="preserve"><value>Watch next time for this trigger: {0}</value></data>
+  <data name="AdviceLostCentipawns" xml:space="preserve"><value>and lost about {0} centipawns</value></data>
+  <data name="AdviceChangedEvaluation" xml:space="preserve"><value>and changed the evaluation sharply</value></data>
+  <data name="AdviceQualityBlunder" xml:space="preserve"><value>blunder</value></data>
+  <data name="AdviceQualityMistake" xml:space="preserve"><value>mistake</value></data>
+  <data name="AdviceQualityInaccuracy" xml:space="preserve"><value>inaccuracy</value></data>
+  <data name="AdviceQualityGood" xml:space="preserve"><value>move</value></data>
+  <data name="AdvicePatternMaterialLoss" xml:space="preserve"><value>Material losses</value></data>
+  <data name="AdvicePatternHangingPiece" xml:space="preserve"><value>Loose pieces</value></data>
+  <data name="AdvicePatternMissedTactic" xml:space="preserve"><value>Missed tactics</value></data>
+  <data name="AdvicePatternOpeningPrinciples" xml:space="preserve"><value>Opening discipline</value></data>
+  <data name="AdvicePatternKingSafety" xml:space="preserve"><value>King safety</value></data>
+  <data name="AdvicePatternPieceActivity" xml:space="preserve"><value>Passive pieces</value></data>
+  <data name="AdvicePatternEndgameTechnique" xml:space="preserve"><value>Endgame technique</value></data>
+  <data name="AdvicePatternGeneral" xml:space="preserve"><value>general</value></data>
+  <data name="FormatPhaseOpening" xml:space="preserve"><value>Opening</value></data>
+  <data name="FormatPhaseMiddlegame" xml:space="preserve"><value>Middlegame</value></data>
+  <data name="FormatPhaseEndgame" xml:space="preserve"><value>Endgame</value></data>
+  <data name="FormatMixedOpenings" xml:space="preserve"><value>Mixed openings</value></data>
+  <data name="TrendImproving" xml:space="preserve"><value>Improving lately</value></data>
+  <data name="TrendStable" xml:space="preserve"><value>Mostly stable</value></data>
+  <data name="TrendRegressing" xml:space="preserve"><value>Results slipped recently</value></data>
+  <data name="TrendNeedMoreGames" xml:space="preserve"><value>Need more games</value></data>
+  <data name="TrainingBlockTactics" xml:space="preserve"><value>Tactics</value></data>
+  <data name="TrainingBlockOpeningReview" xml:space="preserve"><value>Opening review</value></data>
+  <data name="TrainingBlockEndgameDrill" xml:space="preserve"><value>Endgame drill</value></data>
+  <data name="TrainingBlockGameReview" xml:space="preserve"><value>Game review</value></data>
+  <data name="TrainingBlockSlowPlayFocus" xml:space="preserve"><value>Slow play focus</value></data>
+  <data name="TrainingPurposeRepair" xml:space="preserve"><value>Repair</value></data>
+  <data name="TrainingPurposeMaintain" xml:space="preserve"><value>Maintain</value></data>
+  <data name="TrainingPurposeChecklist" xml:space="preserve"><value>Checklist</value></data>
+  <data name="CountOneTime" xml:space="preserve"><value>1 time</value></data>
+  <data name="CountManyTimes" xml:space="preserve"><value>{0} times</value></data>
+  <data name="CountOneMistake" xml:space="preserve"><value>1 mistake</value></data>
+  <data name="CountManyMistakes" xml:space="preserve"><value>{0} mistakes</value></data>
+</root>

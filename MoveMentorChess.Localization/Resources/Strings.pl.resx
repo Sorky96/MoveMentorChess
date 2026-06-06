@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader><resheader name="version"><value>2.0</value></resheader><resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader><resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="SettingsTitle" xml:space="preserve"><value>Ustawienia</value></data>
+  <data name="SettingsClose" xml:space="preserve"><value>Zamknij</value></data>
+  <data name="SettingsIntro" xml:space="preserve"><value>Wybierz, jak MoveMentor używa języka, lokalnego modelu i Stockfisha na tym komputerze.</value></data>
+  <data name="SettingsSetupChecklistTitle" xml:space="preserve"><value>Lista konfiguracji</value></data>
+  <data name="SettingsSetupChecklistBody" xml:space="preserve"><value>1. Wybierz język. 2. Wybierz lub wykryj Stockfisha. 3. Zaimportuj PGN. 4. Uruchom analizę. 5. Wykonaj rekomendację treningową.</value></data>
+  <data name="SettingsLanguage" xml:space="preserve"><value>Język</value></data>
+  <data name="SettingsModel" xml:space="preserve"><value>Model</value></data>
+  <data name="SettingsUseFullGpu" xml:space="preserve"><value>Użyj pełnej mocy GPU dla lokalnego modelu</value></data>
+  <data name="SettingsLlamaPath" xml:space="preserve"><value>Ścieżka llama-server.exe (opcjonalnie)</value></data>
+  <data name="SettingsLlamaPlaceholder" xml:space="preserve"><value>Automatycznie wykryj llama-server.exe</value></data>
+  <data name="SettingsBrowse" xml:space="preserve"><value>Przeglądaj</value></data>
+  <data name="SettingsExplanationLevel" xml:space="preserve"><value>Poziom wyjaśnień</value></data>
+  <data name="SettingsNarrationStyle" xml:space="preserve"><value>Styl narracji</value></data>
+  <data name="SettingsStockfish" xml:space="preserve"><value>Stockfish</value></data>
+  <data name="SettingsStockfishPath" xml:space="preserve"><value>Ścieżka stockfish.exe</value></data>
+  <data name="SettingsStockfishPlaceholder" xml:space="preserve"><value>Automatycznie wykryj stockfish.exe</value></data>
+  <data name="SettingsEngineThreads" xml:space="preserve"><value>Wątki silnika</value></data>
+  <data name="SettingsHashMemory" xml:space="preserve"><value>Pamięć hash (MB)</value></data>
+  <data name="SettingsBulkDepth" xml:space="preserve"><value>Głębokość analizy PGN</value></data>
+  <data name="SettingsBulkMultiPv" xml:space="preserve"><value>MultiPV analizy PGN</value></data>
+  <data name="SettingsBulkMoveTime" xml:space="preserve"><value>Czas na ruch w analizie PGN (ms)</value></data>
+  <data name="SettingsFooter" xml:space="preserve"><value>Zapisz po wykryciu Stockfisha albo wybraniu własnej ścieżki.</value></data>
+  <data name="SettingsCancel" xml:space="preserve"><value>Anuluj</value></data>
+  <data name="SettingsSave" xml:space="preserve"><value>Zapisz</value></data>
+  <data name="SettingsFullGpuDescription" xml:space="preserve"><value>Tryb pełnego GPU jest włączony. llama.cpp użyje '-ngl {0}', czyli przeniesie możliwie wiele warstw modelu na GPU.</value></data>
+  <data name="SettingsBalancedGpuDescription" xml:space="preserve"><value>Tryb zbalansowany jest włączony. llama.cpp użyje '-ngl {0}', co jest bezpieczniejsze dla mniejszych kart i pozostaje domyślne.</value></data>
+  <data name="SettingsStockfishDescription" xml:space="preserve"><value>Stockfish użyje {0} wątków, {1} MB hash, a analiza PGN uruchomi się z głębokością {2}, MultiPV {3}, {4} ms na pozycję.</value></data>
+  <data name="ExplanationBeginner" xml:space="preserve"><value>Początkujący</value></data>
+  <data name="ExplanationIntermediate" xml:space="preserve"><value>Średni</value></data>
+  <data name="ExplanationAdvanced" xml:space="preserve"><value>Zaawansowany</value></data>
+  <data name="NarrationRegularTrainer" xml:space="preserve"><value>Zwykły trener</value></data>
+  <data name="NarrationWittyAlien" xml:space="preserve"><value>Dowcipny kosmita</value></data>
+  <data name="MainRotateBoard" xml:space="preserve"><value>OBRÓĆ SZACHOWNICĘ</value></data>
+  <data name="MainUndo" xml:space="preserve"><value>COFNIJ</value></data>
+  <data name="MainConfigureEngine" xml:space="preserve"><value>Skonfiguruj silnik</value></data>
+  <data name="MainPastePgn" xml:space="preserve"><value>WKLEJ PGN</value></data>
+  <data name="MainAnalyzeGame" xml:space="preserve"><value>Analizuj partię</value></data>
+  <data name="MainLoadPgnFile" xml:space="preserve"><value>WCZYTAJ PLIK PGN</value></data>
+  <data name="MainApplyNext" xml:space="preserve"><value>ZASTOSUJ NASTĘPNY</value></data>
+  <data name="MainApplySelected" xml:space="preserve"><value>ZASTOSUJ WYBRANY</value></data>
+  <data name="MainAnalyzeImported" xml:space="preserve"><value>ANALIZUJ IMPORT</value></data>
+  <data name="MainPlayerCoach" xml:space="preserve"><value>TRENER GRACZA</value></data>
+  <data name="MainSavedAnalyses" xml:space="preserve"><value>ZAPISANE ANALIZY</value></data>
+  <data name="MainLoadSaved" xml:space="preserve"><value>WCZYTAJ ZAPIS</value></data>
+  <data name="MainOpeningTrainer" xml:space="preserve"><value>TRENER DEBIUTÓW</value></data>
+  <data name="MainSettings" xml:space="preserve"><value>USTAWIENIA</value></data>
+  <data name="MainOpeningCoverage" xml:space="preserve"><value>POKRYCIE DEBIUTÓW</value></data>
+  <data name="MainCloseApp" xml:space="preserve"><value>ZAMKNIJ APLIKACJĘ</value></data>
+  <data name="AdviceLanguageInstruction" xml:space="preserve"><value>Napisz short_text, detailed_text i training_hint po polsku. Zachowaj klucze JSON i notację szachową bez zmian.</value></data>
+  <data name="AdviceDetailedPartsInstruction" xml:space="preserve"><value>W detailed_text użyj dokładnie czterech krótkich części w tej kolejności: {0}:, {1}:, {2}:, {3}:.</value></data>
+  <data name="AdviceExampleShortText" xml:space="preserve"><value>Napisz krótkie podsumowanie błędu.</value></data>
+  <data name="AdviceExampleDetailedText" xml:space="preserve"><value>Co: Krótko powiedz, co poszło źle. Dlaczego: Wyjaśnij główny powód taktyczny lub pozycyjny. Lepiej: Podaj lepszy ruch i czemu pomagał. Następnym razem: Daj jeden wzorzec do wcześniejszego zauważenia.</value></data>
+  <data name="AdviceExampleTrainingHint" xml:space="preserve"><value>Podaj krótką, praktyczną zasadę do zapamiętania.</value></data>
+  <data name="AdviceWhat" xml:space="preserve"><value>Co</value></data>
+  <data name="AdviceWhy" xml:space="preserve"><value>Dlaczego</value></data>
+  <data name="AdviceBetter" xml:space="preserve"><value>Lepiej</value></data>
+  <data name="AdviceWatchNextTime" xml:space="preserve"><value>Następnym razem</value></data>
+  <data name="AdviceSimpleView" xml:space="preserve"><value>Prosto</value></data>
+  <data name="AdvicePracticalView" xml:space="preserve"><value>Praktycznie</value></data>
+  <data name="AdviceEngineView" xml:space="preserve"><value>Według silnika</value></data>
+  <data name="AdviceWasQualityLoss" xml:space="preserve"><value>{0}: {1} to był ruch typu {2}, {3}.</value></data>
+  <data name="AdviceStrongerOption" xml:space="preserve"><value>Silniejszą opcją było {0}.</value></data>
+  <data name="AdvicePattern" xml:space="preserve"><value>Pasuje do wzorca: {0}.</value></data>
+  <data name="AdviceTrainingBeginner" xml:space="preserve"><value>Następnym razem użyj prostego nawyku: {0}</value></data>
+  <data name="AdviceTrainingIntermediate" xml:space="preserve"><value>Następnym razem zwróć uwagę na ten sygnał: {0}</value></data>
+  <data name="AdviceLostCentipawns" xml:space="preserve"><value>i stracił około {0} centypionów</value></data>
+  <data name="AdviceChangedEvaluation" xml:space="preserve"><value>i mocno zmienił ocenę pozycji</value></data>
+  <data name="AdviceQualityBlunder" xml:space="preserve"><value>podstawka</value></data>
+  <data name="AdviceQualityMistake" xml:space="preserve"><value>błąd</value></data>
+  <data name="AdviceQualityInaccuracy" xml:space="preserve"><value>niedokładność</value></data>
+  <data name="AdviceQualityGood" xml:space="preserve"><value>ruch</value></data>
+  <data name="AdvicePatternMaterialLoss" xml:space="preserve"><value>strata materiału</value></data>
+  <data name="AdvicePatternHangingPiece" xml:space="preserve"><value>wisząca figura</value></data>
+  <data name="AdvicePatternMissedTactic" xml:space="preserve"><value>przeoczona taktyka</value></data>
+  <data name="AdvicePatternOpeningPrinciples" xml:space="preserve"><value>zasady debiutu</value></data>
+  <data name="AdvicePatternKingSafety" xml:space="preserve"><value>bezpieczeństwo króla</value></data>
+  <data name="AdvicePatternPieceActivity" xml:space="preserve"><value>aktywność figur</value></data>
+  <data name="AdvicePatternEndgameTechnique" xml:space="preserve"><value>technika końcówek</value></data>
+  <data name="AdvicePatternGeneral" xml:space="preserve"><value>ogólny</value></data>
+  <data name="FormatPhaseOpening" xml:space="preserve"><value>Debiut</value></data>
+  <data name="FormatPhaseMiddlegame" xml:space="preserve"><value>Gra środkowa</value></data>
+  <data name="FormatPhaseEndgame" xml:space="preserve"><value>Końcówka</value></data>
+  <data name="FormatMixedOpenings" xml:space="preserve"><value>Różne debiuty</value></data>
+  <data name="TrendImproving" xml:space="preserve"><value>Ostatnio lepiej</value></data>
+  <data name="TrendStable" xml:space="preserve"><value>Raczej stabilnie</value></data>
+  <data name="TrendRegressing" xml:space="preserve"><value>Wyniki ostatnio spadły</value></data>
+  <data name="TrendNeedMoreGames" xml:space="preserve"><value>Potrzeba więcej partii</value></data>
+  <data name="TrainingBlockTactics" xml:space="preserve"><value>Taktyka</value></data>
+  <data name="TrainingBlockOpeningReview" xml:space="preserve"><value>Powtórka debiutu</value></data>
+  <data name="TrainingBlockEndgameDrill" xml:space="preserve"><value>Ćwiczenie końcówek</value></data>
+  <data name="TrainingBlockGameReview" xml:space="preserve"><value>Analiza partii</value></data>
+  <data name="TrainingBlockSlowPlayFocus" xml:space="preserve"><value>Skupienie na wolniejszej grze</value></data>
+  <data name="TrainingPurposeRepair" xml:space="preserve"><value>Naprawa</value></data>
+  <data name="TrainingPurposeMaintain" xml:space="preserve"><value>Utrzymanie</value></data>
+  <data name="TrainingPurposeChecklist" xml:space="preserve"><value>Lista kontrolna</value></data>
+  <data name="CountOneTime" xml:space="preserve"><value>1 raz</value></data>
+  <data name="CountManyTimes" xml:space="preserve"><value>{0} razy</value></data>
+  <data name="CountOneMistake" xml:space="preserve"><value>1 błąd</value></data>
+  <data name="CountManyMistakes" xml:space="preserve"><value>{0} błędów</value></data>
+</root>

@@ -44,8 +44,8 @@
         </StackPanel>
 
         <StackPanel Grid.Row="2" Margin="10,12,10,10" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
-          <Button Width="140" Command="{Binding RotateBoardCommand}" Content="ROTATE BOARD" />
-          <Button Width="100" Command="{Binding UndoCommand}" Content="UNDO" />
+          <Button x:Name="RotateBoardButton" Width="140" Command="{Binding RotateBoardCommand}" Content="ROTATE BOARD" />
+          <Button x:Name="UndoButton" Width="100" Command="{Binding UndoCommand}" Content="UNDO" />
         </StackPanel>
       </Grid>
     </Border>
@@ -74,18 +74,21 @@
                         MinWidth="178"
                         VerticalAlignment="Center"
                         Spacing="8">
-              <Button MinHeight="36"
+              <Button x:Name="ConfigureEngineButton"
+                      MinHeight="36"
                       HorizontalAlignment="Stretch"
                       HorizontalContentAlignment="Center"
                       Click="SettingsButton_Click"
                       Content="Configure engine"
                       IsVisible="{Binding IsEngineUnavailable}" />
-              <Button MinHeight="36"
+              <Button x:Name="HeroPastePgnButton"
+                      MinHeight="36"
                       HorizontalAlignment="Stretch"
                       HorizontalContentAlignment="Center"
                       Click="PgnImportButton_Click"
                       Content="Paste PGN" />
-              <Button MinHeight="36"
+              <Button x:Name="HeroAnalyzeGameButton"
+                      MinHeight="36"
                       HorizontalAlignment="Stretch"
                       HorizontalContentAlignment="Center"
                       Click="AnalyzeImportedButton_Click"
@@ -97,13 +100,14 @@
         </Border>
 
         <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
-          <Button Grid.Row="0" Grid.Column="0" Height="36" Margin="0,0,6,0" HorizontalAlignment="Stretch" Click="PgnImportButton_Click" Content="PASTE PGN" />
-          <Button Grid.Row="0" Grid.Column="1" Height="36" Margin="6,0,0,0" HorizontalAlignment="Stretch" Click="LoadPgnFileButton_Click" Content="LOAD PGN FILE" />
+          <Button x:Name="PastePgnButton" Grid.Row="0" Grid.Column="0" Height="36" Margin="0,0,6,0" HorizontalAlignment="Stretch" Click="PgnImportButton_Click" Content="PASTE PGN" />
+          <Button x:Name="LoadPgnFileButton" Grid.Row="0" Grid.Column="1" Height="36" Margin="6,0,0,0" HorizontalAlignment="Stretch" Click="LoadPgnFileButton_Click" Content="LOAD PGN FILE" />
 
-          <Button Grid.Row="1" Grid.Column="0" Height="36" Margin="0,8,6,0" HorizontalAlignment="Stretch" Command="{Binding ApplyNextImportedMoveCommand}" Content="APPLY NEXT" />
-          <Button Grid.Row="1" Grid.Column="1" Height="36" Margin="6,8,0,0" HorizontalAlignment="Stretch" Command="{Binding ApplySelectedImportedMoveCommand}" Content="APPLY SELECTED" />
+          <Button x:Name="ApplyNextButton" Grid.Row="1" Grid.Column="0" Height="36" Margin="0,8,6,0" HorizontalAlignment="Stretch" Command="{Binding ApplyNextImportedMoveCommand}" Content="APPLY NEXT" />
+          <Button x:Name="ApplySelectedButton" Grid.Row="1" Grid.Column="1" Height="36" Margin="6,8,0,0" HorizontalAlignment="Stretch" Command="{Binding ApplySelectedImportedMoveCommand}" Content="APPLY SELECTED" />
 
-          <Button Grid.Row="2"
+          <Button x:Name="AnalyzeImportedButton"
+                  Grid.Row="2"
                   Grid.Column="0"
                   Height="36"
                   Margin="0,8,6,0"
@@ -111,16 +115,18 @@
                   Click="AnalyzeImportedButton_Click"
                   Content="ANALYZE IMPORTED"
                   IsEnabled="{Binding CanOpenImportedAnalysis}" />
-          <Button Grid.Row="2" Grid.Column="1" Height="36" Margin="6,8,0,0" HorizontalAlignment="Stretch" Click="ProfilesButton_Click" Content="PLAYER COACH" />
+          <Button x:Name="PlayerCoachButton" Grid.Row="2" Grid.Column="1" Height="36" Margin="6,8,0,0" HorizontalAlignment="Stretch" Click="ProfilesButton_Click" Content="PLAYER COACH" />
 
-          <Button Grid.Row="3"
+          <Button x:Name="SavedAnalysesButton"
+                  Grid.Row="3"
                   Grid.Column="0"
                   Height="36"
                   Margin="0,8,6,0"
                   HorizontalAlignment="Stretch"
                   Click="SavedAnalysesButton_Click"
                   Content="SAVED ANALYSES" />
-          <Button Grid.Row="3"
+          <Button x:Name="LoadSavedButton"
+                  Grid.Row="3"
                   Grid.Column="1"
                   Height="36"
                   Margin="6,8,0,0"
@@ -128,7 +134,8 @@
                   Click="LoadSavedButton_Click"
                   Content="LOAD SAVED" />
 
-          <Button Grid.Row="4"
+          <Button x:Name="OpeningTrainerButton"
+                  Grid.Row="4"
                   Grid.Column="0"
                   Height="36"
                   Margin="0,8,6,0"
@@ -136,7 +143,8 @@
                   Click="OpeningTrainerButton_Click"
                   Content="OPENING TRAINER" />
 
-          <Button Grid.Row="4"
+          <Button x:Name="SettingsButton"
+                  Grid.Row="4"
                   Grid.Column="1"
                   Height="36"
                   Margin="6,8,0,0"
@@ -144,7 +152,8 @@
                   Click="SettingsButton_Click"
                   Content="SETTINGS" />
 
-          <Button Grid.Row="5"
+          <Button x:Name="OpeningCoverageButton"
+                  Grid.Row="5"
                   Grid.Column="0"
                   Grid.ColumnSpan="2"
                   Height="36"
@@ -153,7 +162,8 @@
                   Click="OpeningCoverageButton_Click"
                   Content="OPENING COVERAGE" />
 
-          <Button Grid.Row="6"
+          <Button x:Name="CloseAppButton"
+                  Grid.Row="6"
                   Grid.Column="0"
                   Grid.ColumnSpan="2"
                   Height="36"

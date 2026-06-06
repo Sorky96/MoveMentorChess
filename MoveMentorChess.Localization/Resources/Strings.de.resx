@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader><resheader name="version"><value>2.0</value></resheader><resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader><resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="SettingsTitle" xml:space="preserve"><value>Einstellungen</value></data>
+  <data name="SettingsClose" xml:space="preserve"><value>Schließen</value></data>
+  <data name="SettingsIntro" xml:space="preserve"><value>Wähle, wie MoveMentor Sprache, lokales Modell und Stockfish auf diesem Computer nutzt.</value></data>
+  <data name="SettingsSetupChecklistTitle" xml:space="preserve"><value>Einrichtungscheckliste</value></data>
+  <data name="SettingsSetupChecklistBody" xml:space="preserve"><value>1. Sprache wählen. 2. Stockfish wählen oder erkennen. 3. PGN importieren. 4. Analyse starten. 5. Trainingsempfehlung folgen.</value></data>
+  <data name="SettingsLanguage" xml:space="preserve"><value>Sprache</value></data>
+  <data name="SettingsModel" xml:space="preserve"><value>Modell</value></data>
+  <data name="SettingsUseFullGpu" xml:space="preserve"><value>Volle GPU-Leistung für das lokale Modell verwenden</value></data>
+  <data name="SettingsLlamaPath" xml:space="preserve"><value>Pfad zu llama-server.exe (optional)</value></data>
+  <data name="SettingsLlamaPlaceholder" xml:space="preserve"><value>llama-server.exe automatisch erkennen</value></data>
+  <data name="SettingsBrowse" xml:space="preserve"><value>Durchsuchen</value></data>
+  <data name="SettingsExplanationLevel" xml:space="preserve"><value>Erklärungsniveau</value></data>
+  <data name="SettingsNarrationStyle" xml:space="preserve"><value>Erzählstil</value></data>
+  <data name="SettingsStockfish" xml:space="preserve"><value>Stockfish</value></data>
+  <data name="SettingsStockfishPath" xml:space="preserve"><value>Pfad zu stockfish.exe</value></data>
+  <data name="SettingsStockfishPlaceholder" xml:space="preserve"><value>stockfish.exe automatisch erkennen</value></data>
+  <data name="SettingsEngineThreads" xml:space="preserve"><value>Engine-Threads</value></data>
+  <data name="SettingsHashMemory" xml:space="preserve"><value>Hash-Speicher (MB)</value></data>
+  <data name="SettingsBulkDepth" xml:space="preserve"><value>Tiefe der Massenanalyse</value></data>
+  <data name="SettingsBulkMultiPv" xml:space="preserve"><value>MultiPV der Massenanalyse</value></data>
+  <data name="SettingsBulkMoveTime" xml:space="preserve"><value>Zugzeit der Massenanalyse (ms)</value></data>
+  <data name="SettingsFooter" xml:space="preserve"><value>Speichern, wenn Stockfish erkannt wurde oder ein eigener Pfad gewählt ist.</value></data>
+  <data name="SettingsCancel" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="SettingsSave" xml:space="preserve"><value>Speichern</value></data>
+  <data name="ExplanationBeginner" xml:space="preserve"><value>Anfänger</value></data>
+  <data name="ExplanationIntermediate" xml:space="preserve"><value>Mittel</value></data>
+  <data name="ExplanationAdvanced" xml:space="preserve"><value>Fortgeschritten</value></data>
+  <data name="MainRotateBoard" xml:space="preserve"><value>BRETT DREHEN</value></data>
+  <data name="MainUndo" xml:space="preserve"><value>RÜCKGÄNGIG</value></data>
+  <data name="MainConfigureEngine" xml:space="preserve"><value>Engine konfigurieren</value></data>
+  <data name="MainPastePgn" xml:space="preserve"><value>PGN EINFÜGEN</value></data>
+  <data name="MainAnalyzeGame" xml:space="preserve"><value>Partie analysieren</value></data>
+  <data name="MainLoadPgnFile" xml:space="preserve"><value>PGN-DATEI LADEN</value></data>
+  <data name="MainApplyNext" xml:space="preserve"><value>NÄCHSTEN ANWENDEN</value></data>
+  <data name="MainApplySelected" xml:space="preserve"><value>AUSGEWÄHLTEN ANWENDEN</value></data>
+  <data name="MainAnalyzeImported" xml:space="preserve"><value>IMPORT ANALYSIEREN</value></data>
+  <data name="MainPlayerCoach" xml:space="preserve"><value>SPIELER-COACH</value></data>
+  <data name="MainSavedAnalyses" xml:space="preserve"><value>GESPEICHERTE ANALYSEN</value></data>
+  <data name="MainLoadSaved" xml:space="preserve"><value>GESPEICHERTES LADEN</value></data>
+  <data name="MainOpeningTrainer" xml:space="preserve"><value>ERÖFFNUNGSTRAINER</value></data>
+  <data name="MainSettings" xml:space="preserve"><value>EINSTELLUNGEN</value></data>
+  <data name="MainOpeningCoverage" xml:space="preserve"><value>ERÖFFNUNGSABDECKUNG</value></data>
+  <data name="MainCloseApp" xml:space="preserve"><value>APP SCHLIESSEN</value></data>
+  <data name="AdviceLanguageInstruction" xml:space="preserve"><value>Schreibe short_text, detailed_text und training_hint auf Deutsch. JSON-Schlüssel und Schachnotation bleiben unverändert.</value></data>
+  <data name="AdviceDetailedPartsInstruction" xml:space="preserve"><value>Verwende in detailed_text genau vier kurze Teile in dieser Reihenfolge: {0}:, {1}:, {2}:, {3}:.</value></data>
+  <data name="AdviceWhat" xml:space="preserve"><value>Was</value></data>
+  <data name="AdviceWhy" xml:space="preserve"><value>Warum</value></data>
+  <data name="AdviceBetter" xml:space="preserve"><value>Besser</value></data>
+  <data name="AdviceWatchNextTime" xml:space="preserve"><value>Nächstes Mal</value></data>
+  <data name="AdvicePracticalView" xml:space="preserve"><value>Praktische Sicht</value></data>
+  <data name="AdviceWasQualityLoss" xml:space="preserve"><value>{0}: {1} war ein {2} {3}.</value></data>
+  <data name="AdviceStrongerOption" xml:space="preserve"><value>Eine stärkere Option war {0}.</value></data>
+  <data name="AdvicePattern" xml:space="preserve"><value>Es passt zum Muster {0}.</value></data>
+  <data name="AdviceLostCentipawns" xml:space="preserve"><value>und verlor etwa {0} Centipawns</value></data>
+  <data name="AdviceQualityMistake" xml:space="preserve"><value>Fehler</value></data>
+  <data name="AdviceQualityInaccuracy" xml:space="preserve"><value>Ungenauigkeit</value></data>
+  <data name="AdvicePatternHangingPiece" xml:space="preserve"><value>hängende Figur</value></data>
+  <data name="FormatPhaseOpening" xml:space="preserve"><value>Eröffnung</value></data>
+  <data name="FormatPhaseMiddlegame" xml:space="preserve"><value>Mittelspiel</value></data>
+  <data name="FormatPhaseEndgame" xml:space="preserve"><value>Endspiel</value></data>
+  <data name="FormatMixedOpenings" xml:space="preserve"><value>Gemischte Eröffnungen</value></data>
+  <data name="TrendImproving" xml:space="preserve"><value>Zuletzt verbessert</value></data>
+  <data name="TrendStable" xml:space="preserve"><value>Meist stabil</value></data>
+  <data name="TrendRegressing" xml:space="preserve"><value>Ergebnisse sind zuletzt gefallen</value></data>
+  <data name="TrendNeedMoreGames" xml:space="preserve"><value>Mehr Partien nötig</value></data>
+</root>

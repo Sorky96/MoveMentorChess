@@ -1,6 +1,7 @@
 using System.Globalization;
 using MoveMentorChess.Analysis;
 using MoveMentorChess.Engine;
+using MoveMentorChess.Localization;
 
 namespace MoveMentorChess.Presentation.Models;
 
@@ -77,9 +78,9 @@ public static class AnalysisMistakePresentation
     {
         return phase switch
         {
-            GamePhase.Opening => "opening",
-            GamePhase.Middlegame => "middlegame",
-            GamePhase.Endgame => "endgame",
+            GamePhase.Opening => Localizer.Text(LocalizedStrings.FormatPhaseOpening).ToLowerInvariant(),
+            GamePhase.Middlegame => Localizer.Text(LocalizedStrings.FormatPhaseMiddlegame).ToLowerInvariant(),
+            GamePhase.Endgame => Localizer.Text(LocalizedStrings.FormatPhaseEndgame).ToLowerInvariant(),
             _ => phase.ToString()
         };
     }
@@ -88,13 +89,15 @@ public static class AnalysisMistakePresentation
     {
         return label switch
         {
-            "hanging_piece" => "Loose piece",
-            "missed_tactic" => "Missed tactics",
-            "opening_principles" => "Opening discipline",
-            "king_safety" => "King safety",
-            "endgame_technique" => "Endgame technique",
-            "material_loss" => "Material loss",
-            "piece_activity" => "Passive pieces",
+            "hanging_piece" when Localizer.CurrentLanguage.Language == ApplicationLanguage.English => "Loose piece",
+            "hanging_piece" => Localizer.Text(LocalizedStrings.AdvicePatternHangingPiece),
+            "missed_tactic" => Localizer.Text(LocalizedStrings.AdvicePatternMissedTactic),
+            "opening_principles" => Localizer.Text(LocalizedStrings.AdvicePatternOpeningPrinciples),
+            "king_safety" => Localizer.Text(LocalizedStrings.AdvicePatternKingSafety),
+            "endgame_technique" => Localizer.Text(LocalizedStrings.AdvicePatternEndgameTechnique),
+            "material_loss" when Localizer.CurrentLanguage.Language == ApplicationLanguage.English => "Material loss",
+            "material_loss" => Localizer.Text(LocalizedStrings.AdvicePatternMaterialLoss),
+            "piece_activity" => Localizer.Text(LocalizedStrings.AdvicePatternPieceActivity),
             _ => CultureInfo.InvariantCulture.TextInfo.ToTitleCase(label.Replace('_', ' ').ToLowerInvariant())
         };
     }

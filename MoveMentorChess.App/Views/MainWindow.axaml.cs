@@ -8,6 +8,7 @@ using Avalonia.Platform.Storage;
 using MoveMentorChess.App.Composition;
 using MoveMentorChess.App.Controls;
 using MoveMentorChess.App.ViewModels;
+using MoveMentorChess.Localization;
 using MoveMentorChess.Persistence;
 
 namespace MoveMentorChess.App.Views;
@@ -46,6 +47,7 @@ public partial class MainWindow : Window
         this.profilesWindowFactory = profilesWindowFactory ?? throw new ArgumentNullException(nameof(profilesWindowFactory));
         this.dialogDataService = dialogDataService ?? throw new ArgumentNullException(nameof(dialogDataService));
         InitializeComponent();
+        ApplyLocalizedText();
         Opened += (_, _) =>
         {
             if (DataContext is MainWindowViewModel viewModel)
@@ -268,6 +270,7 @@ public partial class MainWindow : Window
         bool? saved = await dialog.ShowDialog<bool?>(this);
         if (saved == true && DataContext is MainWindowViewModel viewModel)
         {
+            ApplyLocalizedText();
             viewModel.ReloadEngineSettings();
         }
     }
@@ -308,6 +311,27 @@ public partial class MainWindow : Window
     private void CloseButton_Click(object? sender, RoutedEventArgs e)
     {
         Close();
+    }
+
+    private void ApplyLocalizedText()
+    {
+        RotateBoardButton.Content = Localizer.Text(LocalizedStrings.MainRotateBoard);
+        UndoButton.Content = Localizer.Text(LocalizedStrings.MainUndo);
+        ConfigureEngineButton.Content = Localizer.Text(LocalizedStrings.MainConfigureEngine);
+        HeroPastePgnButton.Content = Localizer.Text(LocalizedStrings.MainPastePgn);
+        HeroAnalyzeGameButton.Content = Localizer.Text(LocalizedStrings.MainAnalyzeGame);
+        PastePgnButton.Content = Localizer.Text(LocalizedStrings.MainPastePgn);
+        LoadPgnFileButton.Content = Localizer.Text(LocalizedStrings.MainLoadPgnFile);
+        ApplyNextButton.Content = Localizer.Text(LocalizedStrings.MainApplyNext);
+        ApplySelectedButton.Content = Localizer.Text(LocalizedStrings.MainApplySelected);
+        AnalyzeImportedButton.Content = Localizer.Text(LocalizedStrings.MainAnalyzeImported);
+        PlayerCoachButton.Content = Localizer.Text(LocalizedStrings.MainPlayerCoach);
+        SavedAnalysesButton.Content = Localizer.Text(LocalizedStrings.MainSavedAnalyses);
+        LoadSavedButton.Content = Localizer.Text(LocalizedStrings.MainLoadSaved);
+        OpeningTrainerButton.Content = Localizer.Text(LocalizedStrings.MainOpeningTrainer);
+        SettingsButton.Content = Localizer.Text(LocalizedStrings.MainSettings);
+        OpeningCoverageButton.Content = Localizer.Text(LocalizedStrings.MainOpeningCoverage);
+        CloseAppButton.Content = Localizer.Text(LocalizedStrings.MainCloseApp);
     }
 
     private async Task<LegalMoveInfo?> ShowPromotionDialogAsync(IReadOnlyList<LegalMoveInfo> moves)

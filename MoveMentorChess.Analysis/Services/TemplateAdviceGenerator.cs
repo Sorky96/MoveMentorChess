@@ -1,3 +1,5 @@
+using MoveMentorChess.Localization;
+
 namespace MoveMentorChess.Analysis;
 
 public sealed class TemplateAdviceGenerator : IAdviceGenerator
@@ -21,10 +23,10 @@ public sealed class TemplateAdviceGenerator : IAdviceGenerator
         ArgumentNullException.ThrowIfNull(replay);
 
         string label = tag?.Label ?? "general";
-        string qualityText = quality.ToString().ToLowerInvariant();
+        string qualityText = FormatQuality(quality);
         string lossText = centipawnLoss is int cp
-            ? $"and lost about {cp} centipawns"
-            : "and changed the evaluation sharply";
+            ? Localizer.Format(LocalizedStrings.AdviceLostCentipawns, cp)
+            : Localizer.Text(LocalizedStrings.AdviceChangedEvaluation);
         string bestMoveText = context?.PromptContext?.BestMoveSan ?? FormatMoveFromFen(replay.FenBefore, bestMoveUci);
         string openingName = context?.PromptContext?.OpeningName ?? string.Empty;
 
@@ -91,14 +93,14 @@ public sealed class TemplateAdviceGenerator : IAdviceGenerator
         return level switch
         {
             ExplanationLevel.Beginner => string.IsNullOrWhiteSpace(bestMoveText)
-                ? $"Simple view: {replay.San} was a {qualityText} {lossText}. The main theme was {DisplayLabel(label)}."
-                : $"Simple view: {replay.San} was a {qualityText} {lossText}. A stronger option was {bestMoveText}.",
+                ? $"{Localizer.Format(LocalizedStrings.AdviceWasQualityLoss, Localizer.Text(LocalizedStrings.AdviceSimpleView), replay.San, qualityText, lossText)} {Localizer.Format(LocalizedStrings.AdvicePattern, DisplayLabel(label))}"
+                : $"{Localizer.Format(LocalizedStrings.AdviceWasQualityLoss, Localizer.Text(LocalizedStrings.AdviceSimpleView), replay.San, qualityText, lossText)} {Localizer.Format(LocalizedStrings.AdviceStrongerOption, bestMoveText)}",
             ExplanationLevel.Advanced => string.IsNullOrWhiteSpace(bestMoveText)
-                ? $"Engine view: {replay.San} was a {qualityText} in the {DisplayLabel(label)} pattern {lossText}."
-                : $"Engine view: {replay.San} was a {qualityText} in the {DisplayLabel(label)} pattern {lossText}. A stronger option was {bestMoveText}.",
+                ? $"{Localizer.Format(LocalizedStrings.AdviceWasQualityLoss, Localizer.Text(LocalizedStrings.AdviceEngineView), replay.San, qualityText, lossText)} {Localizer.Format(LocalizedStrings.AdvicePattern, DisplayLabel(label))}"
+                : $"{Localizer.Format(LocalizedStrings.AdviceWasQualityLoss, Localizer.Text(LocalizedStrings.AdviceEngineView), replay.San, qualityText, lossText)} {Localizer.Format(LocalizedStrings.AdviceStrongerOption, bestMoveText)}",
             _ => string.IsNullOrWhiteSpace(bestMoveText)
-                ? $"Practical view: {replay.San} was a {qualityText} {lossText}. It fits the {DisplayLabel(label)} pattern."
-                : $"Practical view: {replay.San} was a {qualityText} {lossText}. A stronger option was {bestMoveText}."
+                ? $"{Localizer.Format(LocalizedStrings.AdviceWasQualityLoss, Localizer.Text(LocalizedStrings.AdvicePracticalView), replay.San, qualityText, lossText)} {Localizer.Format(LocalizedStrings.AdvicePattern, DisplayLabel(label))}"
+                : $"{Localizer.Format(LocalizedStrings.AdviceWasQualityLoss, Localizer.Text(LocalizedStrings.AdvicePracticalView), replay.San, qualityText, lossText)} {Localizer.Format(LocalizedStrings.AdviceStrongerOption, bestMoveText)}"
         };
     }
 
@@ -137,7 +139,7 @@ public sealed class TemplateAdviceGenerator : IAdviceGenerator
     {
         return level switch
         {
-            ExplanationLevel.Beginner => $"Next time, use one simple habit: {baseHint}",
+            ExplanationLevel.Beginner => Localizer.Format(LocalizedStrings.AdviceTrainingBeginner, baseHint),
             ExplanationLevel.Advanced => label switch
             {
                 "material_loss" => "Train this by checking forcing continuations until the resulting material balance is completely clear.",
@@ -149,7 +151,7 @@ public sealed class TemplateAdviceGenerator : IAdviceGenerator
                 "endgame_technique" => "Drill conversion and defensive endgames with emphasis on king activity and zugzwang awareness.",
                 _ => baseHint
             },
-            _ => $"Watch next time for this trigger: {baseHint}"
+            _ => Localizer.Format(LocalizedStrings.AdviceTrainingIntermediate, baseHint)
         };
     }
 
@@ -287,10 +289,10 @@ public sealed class TemplateAdviceGenerator : IAdviceGenerator
     private static string ComposeDetailedStructure(string what, string why, string better, string watch)
     {
         return string.Join(" ",
-            PrefixSection("What", what),
-            PrefixSection("Why", why),
-            PrefixSection("Better", better),
-            PrefixSection("Watch next time", watch));
+            PrefixSection(Localizer.Text(LocalizedStrings.AdviceWhat), what),
+            PrefixSection(Localizer.Text(LocalizedStrings.AdviceWhy), why),
+            PrefixSection(Localizer.Text(LocalizedStrings.AdviceBetter), better),
+            PrefixSection(Localizer.Text(LocalizedStrings.AdviceWatchNextTime), watch));
     }
 
     private static string PrefixSection(string heading, string text)
@@ -307,7 +309,29 @@ public sealed class TemplateAdviceGenerator : IAdviceGenerator
 
     private static string DisplayLabel(string label)
     {
-        return label.Replace('_', ' ');
+        return label switch
+        {
+            "material_loss" => Localizer.Text(LocalizedStrings.AdvicePatternMaterialLoss),
+            "hanging_piece" => Localizer.Text(LocalizedStrings.AdvicePatternHangingPiece),
+            "missed_tactic" => Localizer.Text(LocalizedStrings.AdvicePatternMissedTactic),
+            "opening_principles" => Localizer.Text(LocalizedStrings.AdvicePatternOpeningPrinciples),
+            "king_safety" => Localizer.Text(LocalizedStrings.AdvicePatternKingSafety),
+            "piece_activity" => Localizer.Text(LocalizedStrings.AdvicePatternPieceActivity),
+            "endgame_technique" => Localizer.Text(LocalizedStrings.AdvicePatternEndgameTechnique),
+            "general" => Localizer.Text(LocalizedStrings.AdvicePatternGeneral),
+            _ => label.Replace('_', ' ')
+        };
+    }
+
+    private static string FormatQuality(MoveQualityBucket quality)
+    {
+        return quality switch
+        {
+            MoveQualityBucket.Blunder => Localizer.Text(LocalizedStrings.AdviceQualityBlunder),
+            MoveQualityBucket.Mistake => Localizer.Text(LocalizedStrings.AdviceQualityMistake),
+            MoveQualityBucket.Inaccuracy => Localizer.Text(LocalizedStrings.AdviceQualityInaccuracy),
+            _ => Localizer.Text(LocalizedStrings.AdviceQualityGood)
+        };
     }
 
     private static string FormatMoveFromFen(string fenBefore, string? uciMove)

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader><resheader name="version"><value>2.0</value></resheader><resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader><resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="SettingsTitle" xml:space="preserve"><value>设置</value></data>
+  <data name="SettingsClose" xml:space="preserve"><value>关闭</value></data>
+  <data name="SettingsIntro" xml:space="preserve"><value>选择 MoveMentor 在此电脑上使用语言、本地模型和 Stockfish 的方式。</value></data>
+  <data name="SettingsLanguage" xml:space="preserve"><value>语言</value></data>
+  <data name="SettingsModel" xml:space="preserve"><value>模型</value></data>
+  <data name="SettingsUseFullGpu" xml:space="preserve"><value>本地模型使用全部 GPU 性能</value></data>
+  <data name="SettingsBrowse" xml:space="preserve"><value>浏览</value></data>
+  <data name="SettingsExplanationLevel" xml:space="preserve"><value>讲解级别</value></data>
+  <data name="SettingsNarrationStyle" xml:space="preserve"><value>叙述风格</value></data>
+  <data name="SettingsStockfish" xml:space="preserve"><value>Stockfish</value></data>
+  <data name="SettingsCancel" xml:space="preserve"><value>取消</value></data>
+  <data name="SettingsSave" xml:space="preserve"><value>保存</value></data>
+  <data name="ExplanationBeginner" xml:space="preserve"><value>初学者</value></data>
+  <data name="ExplanationIntermediate" xml:space="preserve"><value>中级</value></data>
+  <data name="ExplanationAdvanced" xml:space="preserve"><value>高级</value></data>
+  <data name="MainRotateBoard" xml:space="preserve"><value>旋转棋盘</value></data>
+  <data name="MainUndo" xml:space="preserve"><value>撤销</value></data>
+  <data name="MainConfigureEngine" xml:space="preserve"><value>配置引擎</value></data>
+  <data name="MainPastePgn" xml:space="preserve"><value>粘贴 PGN</value></data>
+  <data name="MainAnalyzeGame" xml:space="preserve"><value>分析对局</value></data>
+  <data name="MainLoadPgnFile" xml:space="preserve"><value>加载 PGN 文件</value></data>
+  <data name="MainApplyNext" xml:space="preserve"><value>应用下一步</value></data>
+  <data name="MainApplySelected" xml:space="preserve"><value>应用所选</value></data>
+  <data name="MainAnalyzeImported" xml:space="preserve"><value>分析导入</value></data>
+  <data name="MainPlayerCoach" xml:space="preserve"><value>棋手教练</value></data>
+  <data name="MainSavedAnalyses" xml:space="preserve"><value>已保存分析</value></data>
+  <data name="MainLoadSaved" xml:space="preserve"><value>加载保存</value></data>
+  <data name="MainOpeningTrainer" xml:space="preserve"><value>开局训练</value></data>
+  <data name="MainSettings" xml:space="preserve"><value>设置</value></data>
+  <data name="MainOpeningCoverage" xml:space="preserve"><value>开局覆盖</value></data>
+  <data name="MainCloseApp" xml:space="preserve"><value>关闭应用</value></data>
+  <data name="AdviceLanguageInstruction" xml:space="preserve"><value>请用简体中文编写 short_text、detailed_text 和 training_hint。JSON 键名和国际象棋记号保持不变。</value></data>
+  <data name="AdviceDetailedPartsInstruction" xml:space="preserve"><value>detailed_text 必须按此顺序包含四个短部分：{0}:、{1}:、{2}:、{3}:。</value></data>
+  <data name="AdviceWhat" xml:space="preserve"><value>问题</value></data>
+  <data name="AdviceWhy" xml:space="preserve"><value>原因</value></data>
+  <data name="AdviceBetter" xml:space="preserve"><value>更好</value></data>
+  <data name="AdviceWatchNextTime" xml:space="preserve"><value>下次注意</value></data>
+  <data name="AdvicePracticalView" xml:space="preserve"><value>实战角度</value></data>
+  <data name="AdviceWasQualityLoss" xml:space="preserve"><value>{0}：{1} 是一步{2}，{3}。</value></data>
+  <data name="AdviceStrongerOption" xml:space="preserve"><value>更强的选择是 {0}。</value></data>
+  <data name="AdvicePattern" xml:space="preserve"><value>它符合 {0} 模式。</value></data>
+  <data name="AdviceLostCentipawns" xml:space="preserve"><value>大约损失 {0} 厘兵</value></data>
+  <data name="AdviceQualityMistake" xml:space="preserve"><value>错误</value></data>
+  <data name="AdviceQualityInaccuracy" xml:space="preserve"><value>不精确</value></data>
+  <data name="AdvicePatternHangingPiece" xml:space="preserve"><value>悬子</value></data>
+  <data name="FormatPhaseOpening" xml:space="preserve"><value>开局</value></data>
+  <data name="FormatPhaseMiddlegame" xml:space="preserve"><value>中局</value></data>
+  <data name="FormatPhaseEndgame" xml:space="preserve"><value>残局</value></data>
+</root>
