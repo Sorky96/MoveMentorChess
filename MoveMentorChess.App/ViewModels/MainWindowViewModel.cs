@@ -1,10 +1,12 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using Avalonia.Media;
 using MoveMentorChess.Analysis;
 using MoveMentorChess.App.Composition;
 using MoveMentorChess.Engine;
+using MoveMentorChess.Localization;
 using MoveMentorChess.Opening;
 using MoveMentorChess.Persistence;
 
@@ -29,12 +31,12 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private Func<IReadOnlyList<LegalMoveInfo>, Task<LegalMoveInfo?>>? promotionMoveSelector;
     private string? selectedSquare;
     private string? previewTargetSquare;
-    private string statusMessage = "MoveMentor Chess is ready.";
-    private string importedGameSummary = "Imported moves: none";
-    private string suggestionText = "Engine suggestions: unavailable";
-    private string evaluationText = "Evaluation: unavailable";
+    private string statusMessage = Localizer.Text(LocalizedStrings.MainReady);
+    private string importedGameSummary = Localizer.Text(LocalizedStrings.MainImportedMovesNone);
+    private string suggestionText = Localizer.Text(LocalizedStrings.MainEngineSuggestionsUnavailable);
+    private string evaluationText = Localizer.Text(LocalizedStrings.MainEvaluationUnavailable);
     private string analysisDetails = "Load a PGN and run analysis to inspect mistakes.";
-    private string pieceMoveOptionsHeader = "Selected piece: none";
+    private string pieceMoveOptionsHeader = Localizer.Text(LocalizedStrings.MainSelectedPieceNone);
     private ImportedMoveItemViewModel? selectedImportedMove;
     private PieceMoveOptionViewModel? selectedPieceMoveOption;
     private bool rotateBoard;
@@ -186,17 +188,17 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     public string PrimaryNextStepTitle
         => IsEngineUnavailable
-            ? "Set up Stockfish to unlock analysis"
+            ? Localizer.Text(LocalizedStrings.MainPrimarySetupStockfish)
             : HasImportedGame
-                ? "Run analysis and find today's training focus"
-                : "Load a PGN to start your first review";
+                ? Localizer.Text(LocalizedStrings.MainPrimaryRunAnalysis)
+                : Localizer.Text(LocalizedStrings.MainPrimaryLoadPgn);
 
     public string PrimaryNextStepDescription
         => IsEngineUnavailable
-            ? "MoveMentor can still show the board, but engine review and training recommendations need a Stockfish executable."
+            ? Localizer.Text(LocalizedStrings.MainPrimarySetupStockfishDescription)
             : HasImportedGame
-                ? "The game is loaded. Analyze it to highlight the moves that cost the most and turn them into practice."
-                : "Paste a game or load a PGN file. MoveMentor will replay it, analyze mistakes, and suggest what to practice next.";
+                ? Localizer.Text(LocalizedStrings.MainPrimaryRunAnalysisDescription)
+                : Localizer.Text(LocalizedStrings.MainPrimaryLoadPgnDescription);
 
     public int EvaluationBarValue
     {
@@ -1206,8 +1208,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (engine is null)
         {
-            SuggestionText = "Engine suggestions: unavailable";
-            EvaluationText = "Evaluation: unavailable";
+            SuggestionText = Localizer.Text(LocalizedStrings.MainEngineSuggestionsUnavailable);
+            EvaluationText = Localizer.Text(LocalizedStrings.MainEvaluationUnavailable);
             EvaluationBarValue = 50;
             BestMoveArrows = [];
             OnPropertyChanged(nameof(BestMoveArrows));
@@ -1222,8 +1224,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             engine.SetPositionFen(currentFen);
             string[] moves = engine.GetTopMoves(3).ToArray();
             SuggestionText = moves.Length == 0
-                ? "Top moves: none"
-                : "Top moves: " + string.Join(", ", moves);
+                ? Localizer.Text(LocalizedStrings.MainTopMovesNone)
+                : Localizer.Format(LocalizedStrings.MainTopMoves, string.Join(", ", moves));
             BestMoveArrows = moves
                 .Where(move => move.Length >= 4)
                 .Select((move, index) => new BoardArrowViewModel(
@@ -1241,7 +1243,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             EvaluationSummary? evaluation = engine.GetEvaluationSummary();
             if (evaluation is null)
             {
-                EvaluationText = "Evaluation: unavailable";
+                EvaluationText = Localizer.Text(LocalizedStrings.MainEvaluationUnavailable);
                 EvaluationBarValue = 50;
             }
             else if (evaluation.MateIn is int mateIn)
@@ -1249,8 +1251,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 int signedMate = chessGame.WhiteToMove ? mateIn : -mateIn;
                 bool whiteWinning = signedMate > 0;
                 EvaluationText = whiteWinning
-                    ? $"Evaluation: White mates in {Math.Abs(signedMate)}"
-                    : $"Evaluation: Black mates in {Math.Abs(signedMate)}";
+                    ? Localizer.Format(LocalizedStrings.MainEvaluationWhiteMates, Math.Abs(signedMate))
+                    : Localizer.Format(LocalizedStrings.MainEvaluationBlackMates, Math.Abs(signedMate));
                 EvaluationBarValue = whiteWinning ? 100 : 0;
             }
             else
@@ -1261,16 +1263,16 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 double normalized = Math.Clamp((pawns + 5.0) / 10.0, 0.0, 1.0);
                 EvaluationBarValue = (int)Math.Round(normalized * 100);
                 EvaluationText = Math.Abs(pawns) < 0.15
-                    ? "Evaluation: even"
+                    ? Localizer.Text(LocalizedStrings.MainEvaluationEven)
                     : pawns > 0
-                        ? $"Evaluation: White {pawns:+0.0;-0.0;0.0}"
-                        : $"Evaluation: Black +{Math.Abs(pawns):0.0}";
+                        ? Localizer.Format(LocalizedStrings.MainEvaluationWhite, pawns.ToString("+0.0;-0.0;0.0", CultureInfo.InvariantCulture))
+                        : Localizer.Format(LocalizedStrings.MainEvaluationBlack, Math.Abs(pawns).ToString("0.0", CultureInfo.InvariantCulture));
             }
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
-            SuggestionText = "Engine suggestions: unavailable";
-            EvaluationText = "Evaluation: unavailable";
+            SuggestionText = Localizer.Text(LocalizedStrings.MainEngineSuggestionsUnavailable);
+            EvaluationText = Localizer.Text(LocalizedStrings.MainEvaluationUnavailable);
             EvaluationBarValue = 50;
             BestMoveArrows = [];
             OnPropertyChanged(nameof(BestMoveArrows));
@@ -1297,15 +1299,24 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (importedGame is null || importedReplay.Count == 0)
         {
-            ImportedGameSummary = "Imported moves: none";
+            ImportedGameSummary = Localizer.Text(LocalizedStrings.MainImportedMovesNone);
             return;
         }
 
-        string players = $"{importedGame.WhitePlayer ?? "White"} vs {importedGame.BlackPlayer ?? "Black"}";
-        string result = string.IsNullOrWhiteSpace(importedGame.Result) ? "Result: ?" : $"Result: {importedGame.Result}";
+        string players = $"{importedGame.WhitePlayer ?? Localizer.Text(LocalizedStrings.CommonWhite)} vs {importedGame.BlackPlayer ?? Localizer.Text(LocalizedStrings.CommonBlack)}";
+        string result = string.IsNullOrWhiteSpace(importedGame.Result)
+            ? Localizer.Text(LocalizedStrings.MainResultUnknown)
+            : Localizer.Format(LocalizedStrings.SavedAnalysesResult, importedGame.Result);
         string eco = string.IsNullOrWhiteSpace(importedGame.Eco) ? string.Empty : $" | {OpeningCatalog.Describe(importedGame.Eco)}";
         string date = string.IsNullOrWhiteSpace(importedGame.DateText) ? string.Empty : $" | {importedGame.DateText}";
-        ImportedGameSummary = $"Imported moves: {importedCursor}/{importedReplay.Count} applied | {players}{Environment.NewLine}{result}{date}{eco}";
+        ImportedGameSummary = Localizer.Format(
+            LocalizedStrings.MainImportedMovesSummary,
+            importedCursor,
+            importedReplay.Count,
+            players,
+            result,
+            date,
+            eco);
     }
 
     private void RefreshBoard()
@@ -1342,13 +1353,13 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private void UpdatePieceMoveOptions(string fromSquare, string pieceName, List<LegalMoveInfo> movesForPiece)
     {
         PieceMoveOptions.Clear();
-        PieceMoveOptionsHeader = $"Selected piece: {pieceName} from {fromSquare} | legal moves: {movesForPiece.Count}";
+        PieceMoveOptionsHeader = Localizer.Format(LocalizedStrings.MainSelectedPieceHeader, pieceName, fromSquare, movesForPiece.Count);
         PreviewTargetSquare = null;
         SelectedPieceMoveOption = null;
 
         if (movesForPiece.Count == 0)
         {
-            PieceMoveOptions.Add(new PieceMoveOptionViewModel("-", string.Empty, "No legal moves for this piece.", string.Empty, false));
+            PieceMoveOptions.Add(new PieceMoveOptionViewModel("-", string.Empty, Localizer.Text(LocalizedStrings.MainNoLegalMovesForPiece), string.Empty, false));
             return;
         }
 
@@ -1388,8 +1399,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private void ClearPieceMoveOptions()
     {
         PieceMoveOptions.Clear();
-        PieceMoveOptionsHeader = "Selected piece: none";
-        PieceMoveOptions.Add(new PieceMoveOptionViewModel("-", string.Empty, "Select a piece to inspect all legal moves.", string.Empty, false));
+        PieceMoveOptionsHeader = Localizer.Text(LocalizedStrings.MainSelectedPieceNone);
+        PieceMoveOptions.Add(new PieceMoveOptionViewModel("-", string.Empty, Localizer.Text(LocalizedStrings.MainSelectPieceInspectMoves), string.Empty, false));
     }
 
     private PieceMovePresentation BuildPieceMovePresentation(LegalMoveInfo move, string currentFen, string perspectiveSide, EngineAnalysis? baselineAnalysis, string? bestMoveUci)

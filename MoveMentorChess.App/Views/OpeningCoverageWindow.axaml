@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:MoveMentorChess.App.ViewModels"
+        xmlns:loc="using:MoveMentorChess.App.Localization"
         x:Class="MoveMentorChess.App.Views.OpeningCoverageWindow"
         x:DataType="vm:OpeningCoverageWindowViewModel"
         Width="1260"
@@ -9,13 +10,13 @@
         MinHeight="700"
         WindowState="FullScreen"
         WindowDecorations="None"
-        Title="Opening Coverage"
+        Title="{loc:Localize OpeningCoverageTitle}"
         Background="{DynamicResource ChromeBrush}">
   <Grid Margin="18" RowDefinitions="Auto,14,Auto,14,*">
     <Border Padding="16" CornerRadius="18" Background="{DynamicResource PanelBrush}">
       <Grid ColumnDefinitions="*,260,180,Auto,Auto" RowDefinitions="Auto">
         <StackPanel Spacing="4">
-          <TextBlock Foreground="White" FontSize="24" FontWeight="Bold" Text="Opening Coverage" />
+          <TextBlock Foreground="White" FontSize="24" FontWeight="Bold" Text="{loc:Localize OpeningCoverageTitle}" />
           <TextBlock Foreground="#9EB5C5" Text="{Binding StatusText}" TextWrapping="Wrap" />
         </StackPanel>
 
@@ -25,7 +26,7 @@
                  Background="{DynamicResource ChromeBrush}"
                  Foreground="#EAF2F7"
                  BorderBrush="{DynamicResource PanelAccentBrush}"
-                 PlaceholderText="Filter ECO or opening..."
+                 PlaceholderText="{loc:Localize OpeningCoverageFilterPlaceholder}"
                  Text="{Binding FilterText}" />
 
         <ComboBox Grid.Column="2"
@@ -41,43 +42,43 @@
                 Margin="10,0,0,0"
                 VerticalAlignment="Center"
                 Command="{Binding RefreshCommand}"
-                Content="Refresh" />
+                Content="{loc:Localize OpeningTrainerRefresh}" />
         <Button Grid.Column="4"
                 Margin="10,0,0,0"
                 VerticalAlignment="Center"
                 Click="CloseButton_Click"
-                Content="Close" />
+                Content="{loc:Localize SettingsClose}" />
       </Grid>
     </Border>
 
     <Grid Grid.Row="2" ColumnDefinitions="*,*,*,*,*">
       <Border Margin="0,0,6,0" Padding="14" CornerRadius="14" Background="{DynamicResource PanelBrush}">
         <StackPanel Spacing="4">
-          <TextBlock Foreground="#9EB5C5" Text="Lines" />
+          <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningCoverageLines}" />
           <TextBlock Foreground="White" FontSize="26" FontWeight="Bold" Text="{Binding TotalLinesText}" />
         </StackPanel>
       </Border>
       <Border Grid.Column="1" Margin="6,0" Padding="14" CornerRadius="14" Background="{DynamicResource PanelBrush}">
         <StackPanel Spacing="4">
-          <TextBlock Foreground="#9EB5C5" Text="Due Today" />
+          <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningCoverageDueToday}" />
           <TextBlock Foreground="White" FontSize="26" FontWeight="Bold" Text="{Binding DueReviewText}" />
         </StackPanel>
       </Border>
       <Border Grid.Column="2" Margin="6,0" Padding="14" CornerRadius="14" Background="{DynamicResource PanelBrush}">
         <StackPanel Spacing="4">
-          <TextBlock Foreground="#9EB5C5" Text="Weak Branches" />
+          <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningCoverageWeakBranches}" />
           <TextBlock Foreground="White" FontSize="26" FontWeight="Bold" Text="{Binding WeakBranchesText}" />
         </StackPanel>
       </Border>
       <Border Grid.Column="3" Margin="6,0" Padding="14" CornerRadius="14" Background="{DynamicResource PanelBrush}">
         <StackPanel Spacing="4">
-          <TextBlock Foreground="#9EB5C5" Text="Avg Coverage" />
+          <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningCoverageAverageCoverage}" />
           <TextBlock Foreground="White" FontSize="26" FontWeight="Bold" Text="{Binding AverageCoverageText}" />
         </StackPanel>
       </Border>
       <Border Grid.Column="4" Margin="6,0,0,0" Padding="14" CornerRadius="14" Background="{DynamicResource PanelBrush}">
         <StackPanel Spacing="4">
-          <TextBlock Foreground="#9EB5C5" Text="Missing ECO" />
+          <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningCoverageMissingEco}" />
           <TextBlock Foreground="White" FontSize="26" FontWeight="Bold" Text="{Binding MissingEcoText}" />
         </StackPanel>
       </Border>
@@ -125,13 +126,13 @@
       <Border Grid.Column="2" Padding="16" CornerRadius="18" Background="{DynamicResource PanelBrush}">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
           <StackPanel Spacing="12">
-            <TextBlock Foreground="#9EB5C5" FontSize="14" FontWeight="SemiBold" Text="Selected line" />
+            <TextBlock Foreground="#9EB5C5" FontSize="14" FontWeight="SemiBold" Text="{loc:Localize OpeningCoverageSelectedLine}" />
             <TextBlock Foreground="White" FontSize="24" FontWeight="Bold" Text="{Binding SelectedLine.DisplayName}" TextWrapping="Wrap" />
             <TextBlock Foreground="#D7E2EA" Text="{Binding SelectedLine.SideText}" />
 
             <Border Padding="14" CornerRadius="12" Background="{DynamicResource ChromeBrush}">
               <StackPanel Spacing="8">
-                <TextBlock Foreground="White" FontSize="17" FontWeight="SemiBold" Text="Coverage" />
+                <TextBlock Foreground="White" FontSize="17" FontWeight="SemiBold" Text="{loc:Localize OpeningCoverageCoverage}" />
                 <ProgressBar Minimum="0" Maximum="100" Height="12" Value="{Binding SelectedLine.CoveragePercent}" />
                 <TextBlock Foreground="#D7E2EA" Text="{Binding SelectedLine.BranchText}" TextWrapping="Wrap" />
                 <TextBlock Foreground="#D7E2EA" Text="{Binding SelectedLine.WeakBranchText}" TextWrapping="Wrap" />
@@ -141,7 +142,7 @@
 
             <Border Padding="14" CornerRadius="12" Background="{DynamicResource ChromeBrush}">
               <StackPanel Spacing="8">
-                <TextBlock Foreground="White" FontSize="17" FontWeight="SemiBold" Text="Repertoire Map" />
+                <TextBlock Foreground="White" FontSize="17" FontWeight="SemiBold" Text="{loc:Localize OpeningCoverageRepertoireMap}" />
                 <TextBlock Foreground="#D7E2EA" Text="{Binding SelectedLine.MainLineText}" TextWrapping="Wrap" />
                 <TextBlock Foreground="#9EB5C5" Text="{Binding SelectedLine.StatusText}" TextWrapping="Wrap" />
               </StackPanel>
@@ -153,7 +154,7 @@
                     FontSize="16"
                     FontWeight="SemiBold"
                     Click="PracticeSelectedButton_Click"
-                    Content="Practice selected line" />
+                    Content="{loc:Localize OpeningCoveragePracticeSelectedLine}" />
           </StackPanel>
         </ScrollViewer>
       </Border>

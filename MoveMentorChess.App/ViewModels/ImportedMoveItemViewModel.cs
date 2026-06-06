@@ -1,4 +1,5 @@
 using System.Globalization;
+using MoveMentorChess.Localization;
 
 namespace MoveMentorChess.App.ViewModels;
 
@@ -75,7 +76,7 @@ public sealed class ImportedMoveItemViewModel : ViewModelBase
     public void ApplyAnalysis(MoveAnalysisResult analysis)
     {
         HasAnalysisLabel = true;
-        QualityLabel = analysis.Quality.ToString();
+        QualityLabel = FormatQuality(analysis.Quality);
         QualityLabelBrush = GetQualityBrush(analysis.Quality);
         QualityLabelForeground = GetQualityForeground(analysis.Quality);
         EvalDeltaText = FormatEvalDelta(analysis.EvalBeforeCp, analysis.EvalAfterCp, analysis.BestMateIn, analysis.PlayedMateIn);
@@ -107,6 +108,23 @@ public sealed class ImportedMoveItemViewModel : ViewModelBase
         string before = beforeMate?.ToString(CultureInfo.InvariantCulture) ?? "?";
         string after = afterMate?.ToString(CultureInfo.InvariantCulture) ?? "?";
         return $"{before}->{after}";
+    }
+
+    private static string FormatQuality(MoveQualityBucket quality)
+    {
+        return quality switch
+        {
+            MoveQualityBucket.Book => Localizer.Text(LocalizedStrings.QualityBook),
+            MoveQualityBucket.Brilliant => Localizer.Text(LocalizedStrings.QualityBrilliant),
+            MoveQualityBucket.Great => Localizer.Text(LocalizedStrings.QualityGreat),
+            MoveQualityBucket.Best => Localizer.Text(LocalizedStrings.QualityBest),
+            MoveQualityBucket.Excellent => Localizer.Text(LocalizedStrings.QualityExcellent),
+            MoveQualityBucket.Good => Localizer.Text(LocalizedStrings.AdviceQualityGood),
+            MoveQualityBucket.Inaccuracy => Localizer.Text(LocalizedStrings.AdviceQualityInaccuracy),
+            MoveQualityBucket.Mistake => Localizer.Text(LocalizedStrings.AdviceQualityMistake),
+            MoveQualityBucket.Blunder => Localizer.Text(LocalizedStrings.AdviceQualityBlunder),
+            _ => quality.ToString()
+        };
     }
 
     private static string GetQualityBrush(MoveQualityBucket quality)

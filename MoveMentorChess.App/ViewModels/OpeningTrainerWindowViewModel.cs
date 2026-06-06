@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Avalonia.Media;
+using MoveMentorChess.Localization;
 using static MoveMentorChess.App.ViewModels.OpeningTrainerPresentationText;
 using MoveMentorChess.Persistence;
 using MoveMentorChess.Training;
@@ -49,14 +50,14 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     private RepertoireSide selectedSide = RepertoireSide.Both;
     private OpeningTrainingStrictness selectedStrictness = OpeningTrainingStrictness.BookFlexible;
     private string previewFen = new ChessGame().GetFen();
-    private string summaryText = "Choose an opening to preview the plan.";
-    private string opponentSummary = "Common replies will appear here.";
-    private string coverageText = "No practice history yet.";
-    private string coverageExplanation = "Pick an opening to see what is ready and what needs another pass.";
-    private string currentPrompt = "Practice is idle.";
+    private string summaryText = Localizer.Text("OpeningTrainerChooseOpeningPreview");
+    private string opponentSummary = Localizer.Text("OpeningTrainerCommonRepliesPlaceholder");
+    private string coverageText = Localizer.Text("OpeningTrainerNoPracticeHistory");
+    private string coverageExplanation = Localizer.Text("OpeningTrainerPickOpeningCoverage");
+    private string currentPrompt = Localizer.Text("OpeningTrainerPracticeIdle");
     private string currentWhy = string.Empty;
-    private string currentHintText = "Hints will appear here when you ask for one.";
-    private string currentHintLevel = "No hint used";
+    private string currentHintText = Localizer.Text("OpeningTrainerHintsPlaceholder");
+    private string currentHintLevel = Localizer.Text("OpeningTrainerNoHintUsed");
     private string moveInput = string.Empty;
     private string resultText = string.Empty;
     private string studyFeedbackText = string.Empty;
@@ -218,6 +219,8 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         ? AdvancedPlayerKey.Trim()
         : SelectedProfileChoice?.PlayerKey ?? "opening-coach:both";
 
+    public string ActiveHistoryKeyText => Localizer.Format("OpeningTrainerActiveHistoryKey", PlayerKey);
+
     public string AdvancedPlayerKey
     {
         get => advancedPlayerKey;
@@ -226,6 +229,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             if (SetProperty(ref advancedPlayerKey, value))
             {
                 OnPropertyChanged(nameof(PlayerKey));
+                OnPropertyChanged(nameof(ActiveHistoryKeyText));
                 RefreshTodayRecommendation();
                 LoadOverview();
             }
@@ -240,6 +244,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             if (SetProperty(ref selectedProfileChoice, value))
             {
                 OnPropertyChanged(nameof(PlayerKey));
+                OnPropertyChanged(nameof(ActiveHistoryKeyText));
                 OnPropertyChanged(nameof(SelectedProfileSummary));
                 if (value is not null && selectedSide != value.Side)
                 {

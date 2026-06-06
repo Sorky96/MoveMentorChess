@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="using:MoveMentorChess.App.Localization"
         xmlns:vm="using:MoveMentorChess.App.ViewModels"
         xmlns:controls="using:Avalonia.Controls"
         x:Class="MoveMentorChess.App.Views.ProfilesWindow"
@@ -9,27 +10,27 @@
         MinHeight="680"
         WindowState="FullScreen"
         WindowDecorations="None"
-        Title="Player Coach"
+        Title="{loc:Localize ProfilesTitle}"
         Background="{DynamicResource ChromeBrush}">
   <Grid RowDefinitions="Auto,*" Margin="18">
     <Border Padding="16" CornerRadius="18" Background="{DynamicResource PanelBrush}">
       <StackPanel Orientation="Horizontal" Spacing="12">
-        <TextBlock VerticalAlignment="Center" FontSize="24" FontWeight="Bold" Text="Player Coach" />
+        <TextBlock VerticalAlignment="Center" FontSize="24" FontWeight="Bold" Text="{loc:Localize ProfilesTitle}" />
         <TextBox x:Name="FilterTextBox"
                  Width="320"
                  VerticalAlignment="Center"
-                 PlaceholderText="Search analyzed players..."
+                 PlaceholderText="{loc:Localize ProfilesSearchPlaceholder}"
                  TextChanged="FilterTextBox_OnTextChanged" />
         <Button x:Name="ToggleProfilesButton"
-                Content="Hide players"
+                Content="{loc:Localize ProfilesHidePlayers}"
                 Click="ToggleProfilesButton_Click" />
         <Button x:Name="CoachModeButton"
-                Content="Coach"
+                Content="{loc:Localize ProfilesCoach}"
                 Click="CoachModeButton_Click" />
         <Button x:Name="EvidenceModeButton"
-                Content="Evidence"
+                Content="{loc:Localize ProfilesEvidence}"
                 Click="EvidenceModeButton_Click" />
-        <Button Content="Back to board" Click="CloseButton_Click" />
+        <Button Content="{loc:Localize ProfilesBackToBoard}" Click="CloseButton_Click" />
       </StackPanel>
     </Border>
 
@@ -40,7 +41,7 @@
       </Grid.ColumnDefinitions>
       <Border x:Name="ProfilesPanel" Padding="16" CornerRadius="18" Background="{DynamicResource PanelBrush}">
         <StackPanel Spacing="10">
-          <TextBlock FontSize="18" FontWeight="SemiBold" Text="Analyzed players" />
+          <TextBlock FontSize="18" FontWeight="SemiBold" Text="{loc:Localize ProfilesAnalyzedPlayers}" />
           <ListBox x:Name="ProfilesListBox"
                    Background="Transparent"
                    SelectionChanged="ProfilesListBox_OnSelectionChanged">

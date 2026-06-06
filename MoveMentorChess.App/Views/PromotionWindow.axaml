@@ -1,15 +1,16 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="using:MoveMentorChess.App.Localization"
         x:Class="MoveMentorChess.App.Views.PromotionWindow"
         Width="460"
         Height="250"
         MinWidth="420"
         MinHeight="220"
-        Title="Choose Promotion"
+        Title="{loc:Localize PromotionTitle}"
         Background="{DynamicResource ChromeBrush}">
   <Border Margin="18" Padding="18" CornerRadius="18" Background="{DynamicResource PanelBrush}">
     <Grid RowDefinitions="Auto,Auto,*,Auto">
-      <TextBlock Text="Choose promotion piece"
+      <TextBlock Text="{loc:Localize PromotionChoosePiece}"
                  FontSize="26"
                  FontWeight="Bold"
                  Foreground="White" />
@@ -17,7 +18,7 @@
                  Margin="0,8,0,0"
                  Foreground="#D7E2EA"
                  TextWrapping="Wrap"
-                 Text="The selected move reaches the back rank. Pick the piece you want to promote to." />
+                 Text="{loc:Localize PromotionIntro}" />
 
       <UniformGrid Grid.Row="2"
                    Margin="0,18,0,0"
@@ -34,7 +35,7 @@
                   Orientation="Horizontal"
                   HorizontalAlignment="Right"
                   Spacing="10">
-        <Button Width="96" Click="CancelButton_Click" Content="Cancel" />
+        <Button Width="96" Click="CancelButton_Click" Content="{loc:Localize SettingsCancel}" />
       </StackPanel>
     </Grid>
   </Border>

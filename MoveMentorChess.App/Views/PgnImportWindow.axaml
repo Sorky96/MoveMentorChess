@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="using:MoveMentorChess.App.Localization"
         x:Class="MoveMentorChess.App.Views.PgnImportWindow"
         Width="900"
         Height="620"
@@ -7,19 +8,19 @@
         MinHeight="520"
         WindowState="FullScreen"
         WindowDecorations="None"
-        Title="PGN Import"
+        Title="{loc:Localize PgnImportTitle}"
         Background="{DynamicResource ChromeBrush}">
   <Grid RowDefinitions="*,Auto" Margin="18">
     <Border Padding="16" CornerRadius="18" Background="{DynamicResource PanelBrush}">
       <Grid RowDefinitions="Auto,Auto,*">
         <Grid ColumnDefinitions="*,Auto">
-          <TextBlock FontSize="24" FontWeight="Bold" Text="Import PGN" />
-          <Button Grid.Column="1" Click="CancelButton_Click" Content="Close" />
+          <TextBlock FontSize="24" FontWeight="Bold" Text="{loc:Localize PgnImportHeading}" />
+          <Button Grid.Column="1" Click="CancelButton_Click" Content="{loc:Localize SettingsClose}" />
         </Grid>
         <TextBlock Grid.Row="1"
                    Margin="0,12,0,12"
                    Foreground="#D7E2EA"
-                   Text="Paste the full PGN file. Once imported, the game will immediately appear on the board and be saved locally." />
+                   Text="{loc:Localize PgnImportIntro}" />
         <TextBox x:Name="PgnTextBox"
                  Grid.Row="2"
                  AcceptsReturn="True"
@@ -40,8 +41,8 @@
                 Orientation="Horizontal"
                 HorizontalAlignment="Right"
                 Spacing="10">
-      <Button Content="Cancel" Click="CancelButton_Click" />
-      <Button Content="Import" Click="ImportButton_Click" />
+      <Button Content="{loc:Localize SettingsCancel}" Click="CancelButton_Click" />
+      <Button Content="{loc:Localize PgnImportImport}" Click="ImportButton_Click" />
     </StackPanel>
   </Grid>
 </Window>

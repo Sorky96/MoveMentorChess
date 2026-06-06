@@ -133,4 +133,166 @@
   <data name="CountOneMistake" xml:space="preserve"><value>1 mistake</value></data>
   <data name="CountFewMistakes" xml:space="preserve"><value>{0} mistakes</value></data>
   <data name="CountManyMistakes" xml:space="preserve"><value>{0} mistakes</value></data>
+  <data name="MainReady" xml:space="preserve"><value>MoveMentor Chess is ready.</value></data>
+  <data name="MainReadyEngineLoaded" xml:space="preserve"><value>MoveMentor Chess is ready. External chess engine loaded from {0}.</value></data>
+  <data name="MainReadyEngineUnavailable" xml:space="preserve"><value>MoveMentor Chess is ready, but the analysis engine is unavailable. {0}</value></data>
+  <data name="MainEngineSuggestionsUnavailable" xml:space="preserve"><value>Engine suggestions: unavailable</value></data>
+  <data name="MainTopMovesNone" xml:space="preserve"><value>Top moves: none</value></data>
+  <data name="MainTopMoves" xml:space="preserve"><value>Top moves: {0}</value></data>
+  <data name="MainEvaluationUnavailable" xml:space="preserve"><value>Evaluation: unavailable</value></data>
+  <data name="MainEvaluationEven" xml:space="preserve"><value>Evaluation: even</value></data>
+  <data name="MainEvaluationWhiteMates" xml:space="preserve"><value>Evaluation: White mates in {0}</value></data>
+  <data name="MainEvaluationBlackMates" xml:space="preserve"><value>Evaluation: Black mates in {0}</value></data>
+  <data name="MainEvaluationWhite" xml:space="preserve"><value>Evaluation: White {0}</value></data>
+  <data name="MainEvaluationBlack" xml:space="preserve"><value>Evaluation: Black +{0}</value></data>
+  <data name="MainImportedMovesNone" xml:space="preserve"><value>Imported moves: none</value></data>
+  <data name="MainImportedMovesSummary" xml:space="preserve"><value>Imported moves: {0}/{1} applied | {2}{3}{4}{5}</value></data>
+  <data name="MainResultUnknown" xml:space="preserve"><value>Result: ?</value></data>
+  <data name="MainSelectedPieceNone" xml:space="preserve"><value>Selected piece: none</value></data>
+  <data name="MainSelectedPieceHeader" xml:space="preserve"><value>Selected piece: {0} from {1} | legal moves: {2}</value></data>
+  <data name="MainNoLegalMovesForPiece" xml:space="preserve"><value>No legal moves for this piece.</value></data>
+  <data name="MainSelectPieceInspectMoves" xml:space="preserve"><value>Select a piece to inspect all legal moves.</value></data>
+  <data name="MainPrimarySetupStockfish" xml:space="preserve"><value>Set up Stockfish to unlock analysis</value></data>
+  <data name="MainPrimarySetupStockfishDescription" xml:space="preserve"><value>MoveMentor can still show the board, but engine review and training recommendations need a Stockfish executable.</value></data>
+  <data name="MainPrimaryRunAnalysis" xml:space="preserve"><value>Run analysis and find today's training focus</value></data>
+  <data name="MainPrimaryRunAnalysisDescription" xml:space="preserve"><value>The game is loaded. Analyze it to highlight the moves that cost the most and turn them into practice.</value></data>
+  <data name="MainPrimaryLoadPgn" xml:space="preserve"><value>Load a PGN to start your first review</value></data>
+  <data name="MainPrimaryLoadPgnDescription" xml:space="preserve"><value>Paste a game or load a PGN file. MoveMentor will replay it, analyze mistakes, and suggest what to practice next.</value></data>
+  <data name="CommonWhite" xml:space="preserve"><value>White</value></data>
+  <data name="CommonBlack" xml:space="preserve"><value>Black</value></data>
+  <data name="CommonUnknown" xml:space="preserve"><value>?</value></data>
+  <data name="QualityBook" xml:space="preserve"><value>Book</value></data>
+  <data name="QualityBrilliant" xml:space="preserve"><value>Brilliant</value></data>
+  <data name="QualityGreat" xml:space="preserve"><value>Great</value></data>
+  <data name="QualityBest" xml:space="preserve"><value>Best</value></data>
+  <data name="QualityExcellent" xml:space="preserve"><value>Excellent</value></data>
+  <data name="SavedAnalysesTitle" xml:space="preserve"><value>Saved Analyses</value></data>
+  <data name="SavedAnalysesFilterPlaceholder" xml:space="preserve"><value>Filter by player, opening, result or labels...</value></data>
+  <data name="SavedAnalysesLoadGame" xml:space="preserve"><value>Load Game</value></data>
+  <data name="SavedAnalysesOpenAnalysis" xml:space="preserve"><value>Open Analysis</value></data>
+  <data name="SavedAnalysesDeleteSelected" xml:space="preserve"><value>Delete Selected</value></data>
+  <data name="SavedAnalysesPlayers" xml:space="preserve"><value>Players</value></data>
+  <data name="SavedAnalysesSideHeader" xml:space="preserve"><value>Side</value></data>
+  <data name="SavedAnalysesDateHeader" xml:space="preserve"><value>Date</value></data>
+  <data name="SavedAnalysesOpeningHeader" xml:space="preserve"><value>Opening</value></data>
+  <data name="SavedAnalysesMarks" xml:space="preserve"><value>Marks</value></data>
+  <data name="SavedAnalysesNoMatches" xml:space="preserve"><value>No saved analyses match the current filter.</value></data>
+  <data name="SavedAnalysesSelectPrompt" xml:space="preserve"><value>Select a saved analysis to inspect the cached result.</value></data>
+  <data name="SavedAnalysesSide" xml:space="preserve"><value>Side: {0}</value></data>
+  <data name="SavedAnalysesDate" xml:space="preserve"><value>Date: {0}</value></data>
+  <data name="SavedAnalysesResult" xml:space="preserve"><value>Result: {0}</value></data>
+  <data name="SavedAnalysesOpening" xml:space="preserve"><value>Opening: {0}</value></data>
+  <data name="SavedAnalysesMoveLabels" xml:space="preserve"><value>Move labels: {0}</value></data>
+  <data name="SavedAnalysesHighlights" xml:space="preserve"><value>Highlights: {0} total</value></data>
+  <data name="SavedAnalysesBreakdown" xml:space="preserve"><value>Breakdown: {0} blunders, {1} mistakes, {2} inaccuracies</value></data>
+  <data name="SavedAnalysesTopLabels" xml:space="preserve"><value>Top labels:</value></data>
+  <data name="SavedAnalysesTopHighlightedMistakes" xml:space="preserve"><value>Top highlighted mistakes:</value></data>
+  <data name="SavedAnalysesCpl" xml:space="preserve"><value>CPL {0}</value></data>
+  <data name="SavedAnalysesOpenInstructions" xml:space="preserve"><value>Use 'Open Analysis' to reopen the full analyzer on cached data, or 'Load Game' to bring the PGN back to the main board.</value></data>
+  <data name="SavedAnalysesLoadInstructions" xml:space="preserve"><value>Use 'Load Game' to bring the PGN back to the main board. Open Analysis is unavailable because the analysis engine is not loaded.</value></data>
+  <data name="OpeningTrainerTitle" xml:space="preserve"><value>Opening Trainer</value></data>
+  <data name="OpeningTrainerTrainingProgress" xml:space="preserve"><value>Training Progress</value></data>
+  <data name="OpeningTrainerTodaysRecommendation" xml:space="preserve"><value>Today's recommendation</value></data>
+  <data name="OpeningTrainerRecommended" xml:space="preserve"><value>Recommended</value></data>
+  <data name="OpeningTrainerSkipBriefing" xml:space="preserve"><value>Skip briefing and practice now</value></data>
+  <data name="OpeningTrainerWhyThisMatters" xml:space="preserve"><value>Why this matters</value></data>
+  <data name="OpeningTrainerWhatYouWillPractice" xml:space="preserve"><value>What you will practice</value></data>
+  <data name="OpeningTrainerTrainingIntensity" xml:space="preserve"><value>Training intensity</value></data>
+  <data name="OpeningTrainerDueNow" xml:space="preserve"><value>Due now</value></data>
+  <data name="OpeningTrainerThisWeeksPractice" xml:space="preserve"><value>This week's practice</value></data>
+  <data name="OpeningTrainerLaterOptionalRepairs" xml:space="preserve"><value>Later / optional repairs</value></data>
+  <data name="OpeningTrainerCurrentCoverage" xml:space="preserve"><value>Your current coverage</value></data>
+  <data name="OpeningTrainerOpeningMap" xml:space="preserve"><value>Opening map</value></data>
+  <data name="OpeningTrainerOpponentReplies" xml:space="preserve"><value>Opponent replies</value></data>
+  <data name="OpeningTrainerMostCommonReplies" xml:space="preserve"><value>Most common replies</value></data>
+  <data name="OpeningTrainerAdvancedOptions" xml:space="preserve"><value>Advanced Options</value></data>
+  <data name="OpeningTrainerOpeningCatalog" xml:space="preserve"><value>Opening Catalog</value></data>
+  <data name="OpeningTrainerOpeningCatalogHelp" xml:space="preserve"><value>Choose a specific line when you want to train outside today's lesson.</value></data>
+  <data name="OpeningTrainerFilterOpenings" xml:space="preserve"><value>Filter openings or ECO</value></data>
+  <data name="OpeningTrainerOverrideHistoryKey" xml:space="preserve"><value>Override history key (optional)</value></data>
+  <data name="OpeningTrainerActiveHistoryKey" xml:space="preserve"><value>Active history key: {0}</value></data>
+  <data name="OpeningTrainerRefresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="OpeningTrainerSeePlan" xml:space="preserve"><value>See Plan</value></data>
+  <data name="OpeningTrainerSpecialModes" xml:space="preserve"><value>Special Modes</value></data>
+  <data name="OpeningTrainerUnderstandIdea" xml:space="preserve"><value>Understand The Idea</value></data>
+  <data name="OpeningTrainerStartPracticeFromMemory" xml:space="preserve"><value>Start Practice From Memory</value></data>
+  <data name="OpeningTrainerBack" xml:space="preserve"><value>Back</value></data>
+  <data name="OpeningTrainerClearMoves" xml:space="preserve"><value>clear moves</value></data>
+  <data name="OpeningTrainerStillUseful" xml:space="preserve"><value>still useful</value></data>
+  <data name="OpeningTrainerRepeatTargets" xml:space="preserve"><value>repeat targets</value></data>
+  <data name="OpeningTrainerSubmitAnswer" xml:space="preserve"><value>Submit Answer</value></data>
+  <data name="OpeningTrainerHint" xml:space="preserve"><value>Hint</value></data>
+  <data name="OpeningTrainerTryFromMemoryFirst" xml:space="preserve"><value>Try From Memory First</value></data>
+  <data name="OpeningTrainerLineReference" xml:space="preserve"><value>Line Reference</value></data>
+  <data name="OpeningTrainerWhatThisPositionTrains" xml:space="preserve"><value>What This Position Trains</value></data>
+  <data name="OpeningTrainerAttemptHistory" xml:space="preserve"><value>Attempt history</value></data>
+  <data name="OpeningTrainerPreviousPosition" xml:space="preserve"><value>Previous Position</value></data>
+  <data name="OpeningTrainerRestartStudy" xml:space="preserve"><value>Restart Study</value></data>
+  <data name="OpeningTrainerReviewAndContinue" xml:space="preserve"><value>Review And Continue</value></data>
+  <data name="OpeningTrainerCompleted" xml:space="preserve"><value>Completed</value></data>
+  <data name="OpeningTrainerClear" xml:space="preserve"><value>Clear</value></data>
+  <data name="OpeningTrainerUsefulAlternatives" xml:space="preserve"><value>Useful alternatives</value></data>
+  <data name="OpeningTrainerHintsUsed" xml:space="preserve"><value>Hints used</value></data>
+  <data name="OpeningTrainerToRevisit" xml:space="preserve"><value>To revisit</value></data>
+  <data name="OpeningTrainerMainRepairPoint" xml:space="preserve"><value>Main repair point</value></data>
+  <data name="OpeningTrainerReviewFocus" xml:space="preserve"><value>Review Focus</value></data>
+  <data name="OpeningTrainerBackToOverview" xml:space="preserve"><value>Back to overview</value></data>
+  <data name="OpeningTrainerChooseNextPlan" xml:space="preserve"><value>Choose Your Next Training Plan</value></data>
+  <data name="OpeningTrainerRecommendedNext" xml:space="preserve"><value>Recommended next</value></data>
+  <data name="OpeningTrainerOtherUsefulChoices" xml:space="preserve"><value>Other useful choices</value></data>
+  <data name="OpeningTrainerSessionRecap" xml:space="preserve"><value>Session Recap</value></data>
+  <data name="OpeningTrainerAdvancedDetails" xml:space="preserve"><value>Advanced Details</value></data>
+  <data name="OpeningTrainerDiagnosticReviewPositions" xml:space="preserve"><value>Diagnostic review positions</value></data>
+  <data name="OpeningTrainerPositionId" xml:space="preserve"><value>PositionId</value></data>
+  <data name="OpeningTrainerAttempt" xml:space="preserve"><value>Attempt</value></data>
+  <data name="OpeningTrainerReason" xml:space="preserve"><value>Reason</value></data>
+  <data name="OpeningTrainerMoveLog" xml:space="preserve"><value>Move Log</value></data>
+  <data name="OpeningTrainerSavedProgress" xml:space="preserve"><value>Your saved progress</value></data>
+  <data name="OpeningTrainerWhyLineWorks" xml:space="preserve"><value>Why This Line Works</value></data>
+  <data name="OpeningTrainerRememberThis" xml:space="preserve"><value>Remember this</value></data>
+  <data name="OpeningTrainerPlanBeforeMoves" xml:space="preserve"><value>Plan Before Moves</value></data>
+  <data name="OpeningTrainerLineToRemember" xml:space="preserve"><value>Line To Remember</value></data>
+  <data name="OpeningTrainerMoveNotesHelp" xml:space="preserve"><value>Move notes appear only as short tags while you review the line.</value></data>
+  <data name="OpeningTrainerTodaysFocus" xml:space="preserve"><value>Today's Focus</value></data>
+  <data name="OpeningTrainerPracticeFromMemory" xml:space="preserve"><value>Practice From Memory</value></data>
+  <data name="OpeningTrainerYourMove" xml:space="preserve"><value>Your move</value></data>
+  <data name="OpeningTrainerChooseOpeningPreview" xml:space="preserve"><value>Choose an opening to preview the plan.</value></data>
+  <data name="OpeningTrainerCommonRepliesPlaceholder" xml:space="preserve"><value>Common replies will appear here.</value></data>
+  <data name="OpeningTrainerNoPracticeHistory" xml:space="preserve"><value>No practice history yet.</value></data>
+  <data name="OpeningTrainerPickOpeningCoverage" xml:space="preserve"><value>Pick an opening to see what is ready and what needs another pass.</value></data>
+  <data name="OpeningTrainerPracticeIdle" xml:space="preserve"><value>Practice is idle.</value></data>
+  <data name="OpeningTrainerHintsPlaceholder" xml:space="preserve"><value>Hints will appear here when you ask for one.</value></data>
+  <data name="OpeningTrainerNoHintUsed" xml:space="preserve"><value>No hint used</value></data>
+  <data name="PgnImportTitle" xml:space="preserve"><value>PGN Import</value></data>
+  <data name="PgnImportHeading" xml:space="preserve"><value>Import PGN</value></data>
+  <data name="PgnImportIntro" xml:space="preserve"><value>Paste the full PGN file. Once imported, the game will immediately appear on the board and be saved locally.</value></data>
+  <data name="PgnImportImport" xml:space="preserve"><value>Import</value></data>
+  <data name="SavedGamesTitle" xml:space="preserve"><value>Saved Games</value></data>
+  <data name="SavedGamesFilterPlaceholder" xml:space="preserve"><value>Filter players/date...</value></data>
+  <data name="SavedGamesLoadSelected" xml:space="preserve"><value>Load Selected</value></data>
+  <data name="SavedGamesPlayer" xml:space="preserve"><value>Player</value></data>
+  <data name="SavedGamesLoadHint" xml:space="preserve"><value>Double click or use Load Selected</value></data>
+  <data name="SavedGamesFilterPlayer" xml:space="preserve"><value>Filter Player</value></data>
+  <data name="SavedGamesFilterDate" xml:space="preserve"><value>Filter Date</value></data>
+  <data name="PromotionTitle" xml:space="preserve"><value>Choose Promotion</value></data>
+  <data name="PromotionChoosePiece" xml:space="preserve"><value>Choose promotion piece</value></data>
+  <data name="PromotionIntro" xml:space="preserve"><value>The selected move reaches the back rank. Pick the piece you want to promote to.</value></data>
+  <data name="OpeningCoverageTitle" xml:space="preserve"><value>Opening Coverage</value></data>
+  <data name="OpeningCoverageFilterPlaceholder" xml:space="preserve"><value>Filter ECO or opening...</value></data>
+  <data name="OpeningCoverageLines" xml:space="preserve"><value>Lines</value></data>
+  <data name="OpeningCoverageDueToday" xml:space="preserve"><value>Due Today</value></data>
+  <data name="OpeningCoverageWeakBranches" xml:space="preserve"><value>Weak Branches</value></data>
+  <data name="OpeningCoverageAverageCoverage" xml:space="preserve"><value>Avg Coverage</value></data>
+  <data name="OpeningCoverageMissingEco" xml:space="preserve"><value>Missing ECO</value></data>
+  <data name="OpeningCoverageSelectedLine" xml:space="preserve"><value>Selected line</value></data>
+  <data name="OpeningCoverageCoverage" xml:space="preserve"><value>Coverage</value></data>
+  <data name="OpeningCoverageRepertoireMap" xml:space="preserve"><value>Repertoire Map</value></data>
+  <data name="OpeningCoveragePracticeSelectedLine" xml:space="preserve"><value>Practice selected line</value></data>
+  <data name="ProfilesTitle" xml:space="preserve"><value>Player Coach</value></data>
+  <data name="ProfilesSearchPlaceholder" xml:space="preserve"><value>Search analyzed players...</value></data>
+  <data name="ProfilesHidePlayers" xml:space="preserve"><value>Hide players</value></data>
+  <data name="ProfilesCoach" xml:space="preserve"><value>Coach</value></data>
+  <data name="ProfilesEvidence" xml:space="preserve"><value>Evidence</value></data>
+  <data name="ProfilesBackToBoard" xml:space="preserve"><value>Back to board</value></data>
+  <data name="ProfilesAnalyzedPlayers" xml:space="preserve"><value>Analyzed players</value></data>
 </root>

@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="using:MoveMentorChess.App.Localization"
         xmlns:vm="using:MoveMentorChess.App.ViewModels"
         x:Class="MoveMentorChess.App.Views.SavedGamesWindow"
         Width="1160"
@@ -8,32 +9,32 @@
         MinHeight="640"
         WindowState="FullScreen"
         WindowDecorations="None"
-        Title="Saved Games"
+        Title="{loc:Localize SavedGamesTitle}"
         Background="{DynamicResource ChromeBrush}">
   <Grid RowDefinitions="Auto,*" Margin="18">
     <Border Padding="16" CornerRadius="18" Background="{DynamicResource PanelBrush}">
       <StackPanel Orientation="Horizontal" Spacing="12">
-        <TextBlock VerticalAlignment="Center" FontSize="24" FontWeight="Bold" Text="Saved Games" />
+        <TextBlock VerticalAlignment="Center" FontSize="24" FontWeight="Bold" Text="{loc:Localize SavedGamesTitle}" />
         <TextBox x:Name="FilterTextBox"
                  Width="320"
                  VerticalAlignment="Center"
                  Background="{DynamicResource ChromeBrush}"
                  Foreground="#EAF2F7"
                  BorderBrush="{DynamicResource PanelAccentBrush}"
-                 PlaceholderText="Filter players/date..."
+                 PlaceholderText="{loc:Localize SavedGamesFilterPlaceholder}"
                  TextChanged="FilterTextBox_OnTextChanged" />
-        <Button Content="Load Selected" Click="LoadSelectedButton_Click" />
-        <Button Content="Delete Selected" Click="DeleteSelectedButton_Click" />
-        <Button Content="Close" Click="CancelButton_Click" />
+        <Button Content="{loc:Localize SavedGamesLoadSelected}" Click="LoadSelectedButton_Click" />
+        <Button Content="{loc:Localize SavedAnalysesDeleteSelected}" Click="DeleteSelectedButton_Click" />
+        <Button Content="{loc:Localize SettingsClose}" Click="CancelButton_Click" />
       </StackPanel>
     </Border>
 
     <Grid Grid.Row="1" Margin="0,14,0,0" RowDefinitions="Auto,Auto,*">
       <Border Padding="12" CornerRadius="18" Background="{DynamicResource PanelBrush}">
         <Grid ColumnDefinitions="2.6*,1.2*,Auto">
-          <Button Grid.Column="0" HorizontalAlignment="Stretch" Click="SortPlayerButton_Click" Content="Player" />
-          <Button Grid.Column="1" Margin="8,0,0,0" HorizontalAlignment="Stretch" Click="SortDateButton_Click" Content="Date" />
-          <TextBlock Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center" Foreground="#D7E2EA" Text="Double click or use Load Selected" />
+          <Button Grid.Column="0" HorizontalAlignment="Stretch" Click="SortPlayerButton_Click" Content="{loc:Localize SavedGamesPlayer}" />
+          <Button Grid.Column="1" Margin="8,0,0,0" HorizontalAlignment="Stretch" Click="SortDateButton_Click" Content="{loc:Localize SavedAnalysesDateHeader}" />
+          <TextBlock Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center" Foreground="#D7E2EA" Text="{loc:Localize SavedGamesLoadHint}" />
         </Grid>
       </Border>
 
@@ -43,7 +44,7 @@
                    Background="{DynamicResource ChromeBrush}"
                    Foreground="#EAF2F7"
                    BorderBrush="{DynamicResource PanelAccentBrush}"
-                   PlaceholderText="Filter Player"
+                   PlaceholderText="{loc:Localize SavedGamesFilterPlayer}"
                    TextChanged="ColumnFilterTextBox_OnTextChanged" />
           <TextBox x:Name="DateFilterTextBox"
                    Grid.Column="1"
@@ -51,7 +52,7 @@
                    Background="{DynamicResource ChromeBrush}"
                    Foreground="#EAF2F7"
                    BorderBrush="{DynamicResource PanelAccentBrush}"
-                   PlaceholderText="Filter Date"
+                   PlaceholderText="{loc:Localize SavedGamesFilterDate}"
                    TextChanged="ColumnFilterTextBox_OnTextChanged" />
         </Grid>
       </Border>
