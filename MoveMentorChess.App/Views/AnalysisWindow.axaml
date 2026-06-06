@@ -189,7 +189,53 @@
       </Grid>
 
       <Grid Grid.Column="1" Margin="14,0,0,0" RowDefinitions="*,Auto">
-        <Border Background="#101820" BorderBrush="#395061" BorderThickness="1" CornerRadius="8" Padding="12">
+        <Border x:Name="AnalysisEmptyStatePanel"
+                Background="#101820"
+                BorderBrush="#395061"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="24">
+          <Grid RowDefinitions="*,Auto,*">
+            <StackPanel Grid.Row="1"
+                        MaxWidth="620"
+                        HorizontalAlignment="Center"
+                        Spacing="14">
+              <TextBlock Text="Start with one analysis"
+                         FontSize="24"
+                         FontWeight="Bold"
+                         Foreground="#F5FAFD"
+                         TextAlignment="Center"
+                         TextWrapping="Wrap" />
+              <TextBlock x:Name="AnalysisEmptyStateTextBlock"
+                         FontSize="15"
+                         Foreground="#D7E2EA"
+                         TextAlignment="Center"
+                         TextWrapping="Wrap" />
+              <StackPanel Orientation="Horizontal"
+                          HorizontalAlignment="Center"
+                          Spacing="10">
+                <Button x:Name="EmptyAnalyzeButton"
+                        MinWidth="140"
+                        MinHeight="38"
+                        HorizontalContentAlignment="Center"
+                        Click="AnalyzeButton_Click"
+                        Content="Run analysis" />
+                <Button MinWidth="140"
+                        MinHeight="38"
+                        HorizontalContentAlignment="Center"
+                        Click="CloseButton_Click"
+                        Content="Back to board" />
+              </StackPanel>
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <Border x:Name="AnalysisDetailsShell"
+                Background="#101820"
+                BorderBrush="#395061"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="12">
           <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="12">
               <Border Background="#152531" BorderBrush="#496173" BorderThickness="1" CornerRadius="6" Padding="14">
@@ -536,7 +582,8 @@
             </StackPanel>
           </ScrollViewer>
         </Border>
-        <StackPanel Grid.Row="1"
+        <StackPanel x:Name="FeedbackShellPanel"
+                    Grid.Row="1"
                     Margin="0,10,0,0"
                     Spacing="8">
           <Expander Header="Improve advice" IsExpanded="False">

@@ -127,7 +127,7 @@ public sealed class HeuristicPlayerProfileFormatter : IPlayerProfileFormatter
     private static string BuildDeepDive(PlayerProfileReport report, string phase, string opening)
     {
         string cpl = report.AverageCentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a";
-        return $"Deep dive: the profile is based on {report.GamesAnalyzed} games, {report.TotalAnalyzedMoves} analyzed moves, and {report.HighlightedMistakes} highlighted mistakes. Average CPL is {cpl}. The main cluster appears in the {phase} and around {opening}.";
+        return $"Deep dive: the profile is based on {report.GamesAnalyzed} games, {report.TotalAnalyzedMoves} analyzed moves, and {report.HighlightedMistakes} mistakes to practice. Average loss is {cpl}. The main cluster appears in the {phase} and around {opening}.";
     }
 
     private enum ProfileFormatterField

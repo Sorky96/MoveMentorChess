@@ -10,13 +10,13 @@ internal static class ProfileCoachPresentationText
         if (report.CostliestMistakeLabels.Count > 0)
         {
             ProfileCostlyLabelStat costly = report.CostliestMistakeLabels[0];
-            return $"{trend}. {summary} The most expensive pattern is {FormatMistakeLabel(costly.Label).ToLowerInvariant()}, costing {costly.TotalCentipawnLoss.ToString(CultureInfo.InvariantCulture)} total CPL.";
+            return $"{trend}. {summary} The most expensive pattern is {FormatMistakeLabel(costly.Label).ToLowerInvariant()}, costing {costly.TotalCentipawnLoss.ToString(CultureInfo.InvariantCulture)} total loss.";
         }
 
         if (report.MistakesByPhase.Count > 0)
         {
             ProfilePhaseStat phase = report.MistakesByPhase[0];
-            return $"{trend}. {summary} The issue shows up most in the {FormatPhase(phase.Phase).ToLowerInvariant()}, with {phase.Count.ToString(CultureInfo.InvariantCulture)} highlighted mistakes.";
+            return $"{trend}. {summary} The issue shows up most in the {FormatPhase(phase.Phase).ToLowerInvariant()}, with {phase.Count.ToString(CultureInfo.InvariantCulture)} mistakes to practice.";
         }
 
         return $"{trend}. {summary}";

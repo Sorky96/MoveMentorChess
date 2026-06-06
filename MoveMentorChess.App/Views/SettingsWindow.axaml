@@ -109,13 +109,26 @@
       </ScrollViewer>
     </Border>
 
-    <StackPanel Grid.Row="1"
-                Margin="0,14,0,0"
-                Orientation="Horizontal"
-                HorizontalAlignment="Right"
-                Spacing="10">
-      <Button Content="Cancel" Click="CancelButton_Click" />
-      <Button Content="Save" Click="SaveButton_Click" />
-    </StackPanel>
+    <Border Grid.Row="1"
+            Margin="0,14,0,0"
+            Padding="12"
+            CornerRadius="10"
+            Background="{DynamicResource PanelBrush}"
+            HorizontalAlignment="Center"
+            MaxWidth="1180">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Foreground="#9EB5C5"
+                   VerticalAlignment="Center"
+                   Text="Save when Stockfish is detected or after choosing a custom path."
+                   TextWrapping="Wrap" />
+        <StackPanel Grid.Column="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="10">
+          <Button Content="Cancel" Click="CancelButton_Click" />
+          <Button Content="Save" Click="SaveButton_Click" />
+        </StackPanel>
+      </Grid>
+    </Border>
   </Grid>
 </Window>

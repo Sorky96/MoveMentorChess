@@ -16,11 +16,13 @@
         WindowDecorations="None"
         Background="{DynamicResource ChromeBrush}"
         Title="MoveMentor Chess">
-  <Grid Margin="10" ColumnDefinitions="*,14,620" RowDefinitions="*,Auto">
+  <Grid Margin="10" ColumnDefinitions="*,14,720" RowDefinitions="*,Auto">
     <Border Background="{DynamicResource PanelBrush}" CornerRadius="18" Padding="10">
       <Grid RowDefinitions="*,Auto,Auto">
         <Viewbox Stretch="Uniform"
                  StretchDirection="Both"
+                 MaxWidth="980"
+                 MaxHeight="980"
                  HorizontalAlignment="Center"
                  VerticalAlignment="Center">
           <controls:ChessBoardView x:Name="BoardView"
