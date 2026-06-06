@@ -29,6 +29,8 @@ public static class LocalizedStrings
     public const string SettingsFullGpuDescription = nameof(SettingsFullGpuDescription);
     public const string SettingsBalancedGpuDescription = nameof(SettingsBalancedGpuDescription);
     public const string SettingsStockfishDescription = nameof(SettingsStockfishDescription);
+    public const string SettingsSelectStockfishExecutable = nameof(SettingsSelectStockfishExecutable);
+    public const string SettingsSelectLlamaServerExecutable = nameof(SettingsSelectLlamaServerExecutable);
     public const string ExplanationBeginner = nameof(ExplanationBeginner);
     public const string ExplanationIntermediate = nameof(ExplanationIntermediate);
     public const string ExplanationAdvanced = nameof(ExplanationAdvanced);
@@ -54,6 +56,19 @@ public static class LocalizedStrings
     public const string MainSettings = nameof(MainSettings);
     public const string MainOpeningCoverage = nameof(MainOpeningCoverage);
     public const string MainCloseApp = nameof(MainCloseApp);
+    public const string MainDialogLoadPgnFile = nameof(MainDialogLoadPgnFile);
+    public const string MainDialogCouldNotReadPgnFile = nameof(MainDialogCouldNotReadPgnFile);
+    public const string MainDialogNoReplayableGames = nameof(MainDialogNoReplayableGames);
+    public const string MainDialogLoadedGamesEngineUnavailable = nameof(MainDialogLoadedGamesEngineUnavailable);
+    public const string MainDialogAnalyzeImportedGamesTitle = nameof(MainDialogAnalyzeImportedGamesTitle);
+    public const string MainDialogLoadedGames = nameof(MainDialogLoadedGames);
+    public const string MainDialogSkippedGames = nameof(MainDialogSkippedGames);
+    public const string MainDialogNoRecurringPlayer = nameof(MainDialogNoRecurringPlayer);
+    public const string MainDialogDetectedPlayer = nameof(MainDialogDetectedPlayer);
+    public const string MainDialogAnalyzeNow = nameof(MainDialogAnalyzeNow);
+    public const string MainDialogAnalyze = nameof(MainDialogAnalyze);
+    public const string MainDialogLater = nameof(MainDialogLater);
+    public const string MainDialogPgnAnalysisFinished = nameof(MainDialogPgnAnalysisFinished);
 
     public const string AdviceLanguageInstruction = nameof(AdviceLanguageInstruction);
     public const string AdviceDetailedPartsInstruction = nameof(AdviceDetailedPartsInstruction);
@@ -72,6 +87,13 @@ public static class LocalizedStrings
     public const string AdvicePattern = nameof(AdvicePattern);
     public const string AdviceTrainingBeginner = nameof(AdviceTrainingBeginner);
     public const string AdviceTrainingIntermediate = nameof(AdviceTrainingIntermediate);
+    public const string AdviceTrainingAdvancedMaterialLoss = nameof(AdviceTrainingAdvancedMaterialLoss);
+    public const string AdviceTrainingAdvancedHangingPiece = nameof(AdviceTrainingAdvancedHangingPiece);
+    public const string AdviceTrainingAdvancedMissedTactic = nameof(AdviceTrainingAdvancedMissedTactic);
+    public const string AdviceTrainingAdvancedKingSafety = nameof(AdviceTrainingAdvancedKingSafety);
+    public const string AdviceTrainingAdvancedOpeningPrinciples = nameof(AdviceTrainingAdvancedOpeningPrinciples);
+    public const string AdviceTrainingAdvancedPieceActivity = nameof(AdviceTrainingAdvancedPieceActivity);
+    public const string AdviceTrainingAdvancedEndgameTechnique = nameof(AdviceTrainingAdvancedEndgameTechnique);
     public const string AdviceLostCentipawns = nameof(AdviceLostCentipawns);
     public const string AdviceChangedEvaluation = nameof(AdviceChangedEvaluation);
     public const string AdviceQualityBlunder = nameof(AdviceQualityBlunder);
@@ -86,6 +108,9 @@ public static class LocalizedStrings
     public const string AdvicePatternPieceActivity = nameof(AdvicePatternPieceActivity);
     public const string AdvicePatternEndgameTechnique = nameof(AdvicePatternEndgameTechnique);
     public const string AdvicePatternGeneral = nameof(AdvicePatternGeneral);
+    public const string HeuristicHintOpening = nameof(HeuristicHintOpening);
+    public const string HeuristicHintMiddlegame = nameof(HeuristicHintMiddlegame);
+    public const string HeuristicHintEndgame = nameof(HeuristicHintEndgame);
 
     public const string FormatPhaseOpening = nameof(FormatPhaseOpening);
     public const string FormatPhaseMiddlegame = nameof(FormatPhaseMiddlegame);
@@ -104,7 +129,9 @@ public static class LocalizedStrings
     public const string TrainingPurposeMaintain = nameof(TrainingPurposeMaintain);
     public const string TrainingPurposeChecklist = nameof(TrainingPurposeChecklist);
     public const string CountOneTime = nameof(CountOneTime);
+    public const string CountFewTimes = nameof(CountFewTimes);
     public const string CountManyTimes = nameof(CountManyTimes);
     public const string CountOneMistake = nameof(CountOneMistake);
+    public const string CountFewMistakes = nameof(CountFewMistakes);
     public const string CountManyMistakes = nameof(CountManyMistakes);
 }

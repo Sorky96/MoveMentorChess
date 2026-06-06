@@ -26,9 +26,9 @@ public sealed class LocalHeuristicAdviceGenerator : IAdviceGenerator
 
         string phaseHint = replay.Phase switch
         {
-            GamePhase.Opening => $"{Localizer.Text(LocalizedStrings.FormatPhaseOpening)}: review this pattern in your first 10 moves.",
-            GamePhase.Middlegame => $"{Localizer.Text(LocalizedStrings.FormatPhaseMiddlegame)}: compare plans and forcing replies before committing.",
-            GamePhase.Endgame => $"{Localizer.Text(LocalizedStrings.FormatPhaseEndgame)}: activity and technique matter more than cosmetic moves.",
+            GamePhase.Opening => Localizer.Text(LocalizedStrings.HeuristicHintOpening),
+            GamePhase.Middlegame => Localizer.Text(LocalizedStrings.HeuristicHintMiddlegame),
+            GamePhase.Endgame => Localizer.Text(LocalizedStrings.HeuristicHintEndgame),
             _ => string.Empty
         };
 

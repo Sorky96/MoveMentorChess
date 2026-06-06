@@ -52,16 +52,20 @@ public static class PlayerProfileTextFormatter
 
     public static string FormatTimes(int count)
     {
-        return count == 1
-            ? Localizer.Text(LocalizedStrings.CountOneTime)
-            : Localizer.Format(LocalizedStrings.CountManyTimes, count);
+        return Localizer.Plural(
+            count,
+            LocalizedStrings.CountOneTime,
+            LocalizedStrings.CountFewTimes,
+            LocalizedStrings.CountManyTimes);
     }
 
     public static string FormatMistakeCount(int count)
     {
-        return count == 1
-            ? Localizer.Text(LocalizedStrings.CountOneMistake)
-            : Localizer.Format(LocalizedStrings.CountManyMistakes, count);
+        return Localizer.Plural(
+            count,
+            LocalizedStrings.CountOneMistake,
+            LocalizedStrings.CountFewMistakes,
+            LocalizedStrings.CountManyMistakes);
     }
 
     public static string FormatExampleRank(ProfileMistakeExampleRank rank)

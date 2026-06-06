@@ -89,13 +89,11 @@ public static class AnalysisMistakePresentation
     {
         return label switch
         {
-            "hanging_piece" when Localizer.CurrentLanguage.Language == ApplicationLanguage.English => "Loose piece",
             "hanging_piece" => Localizer.Text(LocalizedStrings.AdvicePatternHangingPiece),
             "missed_tactic" => Localizer.Text(LocalizedStrings.AdvicePatternMissedTactic),
             "opening_principles" => Localizer.Text(LocalizedStrings.AdvicePatternOpeningPrinciples),
             "king_safety" => Localizer.Text(LocalizedStrings.AdvicePatternKingSafety),
             "endgame_technique" => Localizer.Text(LocalizedStrings.AdvicePatternEndgameTechnique),
-            "material_loss" when Localizer.CurrentLanguage.Language == ApplicationLanguage.English => "Material loss",
             "material_loss" => Localizer.Text(LocalizedStrings.AdvicePatternMaterialLoss),
             "piece_activity" => Localizer.Text(LocalizedStrings.AdvicePatternPieceActivity),
             _ => CultureInfo.InvariantCulture.TextInfo.ToTitleCase(label.Replace('_', ' ').ToLowerInvariant())

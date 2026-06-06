@@ -119,7 +119,7 @@ public partial class MainWindow : Window
 
         IReadOnlyList<IStorageFile> files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Load PGN file",
+            Title = Localizer.Text(LocalizedStrings.MainDialogLoadPgnFile),
             AllowMultiple = false,
             FileTypeFilter =
             [
@@ -153,42 +153,46 @@ public partial class MainWindow : Window
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
-            await ShowInfoDialogAsync("Load PGN file", $"Could not read PGN file.\n{ex.Message}");
+            await ShowInfoDialogAsync(
+                Localizer.Text(LocalizedStrings.MainDialogLoadPgnFile),
+                $"{Localizer.Text(LocalizedStrings.MainDialogCouldNotReadPgnFile)}\n{ex.Message}");
             return;
         }
 
         PgnFileImportResult importResult = viewModel.ImportPgnGames(parseResult);
         if (importResult.ImportedGames == 0)
         {
-            await ShowInfoDialogAsync("Load PGN file", "No replayable games were found in the selected PGN file.");
+            await ShowInfoDialogAsync(
+                Localizer.Text(LocalizedStrings.MainDialogLoadPgnFile),
+                Localizer.Text(LocalizedStrings.MainDialogNoReplayableGames));
             return;
         }
 
         if (!viewModel.HasAnalysisEngine())
         {
             await ShowInfoDialogAsync(
-                "Load PGN file",
-                $"Loaded {importResult.ImportedGames} games. The analysis engine is unavailable, so bulk analysis cannot start now.");
+                Localizer.Text(LocalizedStrings.MainDialogLoadPgnFile),
+                Localizer.Format(LocalizedStrings.MainDialogLoadedGamesEngineUnavailable, importResult.ImportedGames));
             return;
         }
 
         string skippedText = importResult.SkippedGames > 0
-            ? $" Skipped {importResult.SkippedGames} games that could not be parsed or replayed."
+            ? $" {Localizer.Format(LocalizedStrings.MainDialogSkippedGames, importResult.SkippedGames)}"
             : string.Empty;
         string? primaryPlayer = MainWindowViewModel.DetectPrimaryPlayer(importResult.Games);
         string analysisTargetText = string.IsNullOrWhiteSpace(primaryPlayer)
-            ? "No recurring player could be detected, so analysis will use the currently selected side."
-            : $"Detected player: {primaryPlayer}. Only that player's moves will be analyzed, as White or Black depending on each game.";
+            ? Localizer.Text(LocalizedStrings.MainDialogNoRecurringPlayer)
+            : Localizer.Format(LocalizedStrings.MainDialogDetectedPlayer, primaryPlayer);
         bool analyze = await ShowConfirmationDialogAsync(
-            "Analyze imported games?",
-            $"Loaded {importResult.ImportedGames} games from the PGN file.{skippedText}\n\n{analysisTargetText}\n\nAnalyze now? This can take a long time.",
-            "Analyze",
-            "Later");
+            Localizer.Text(LocalizedStrings.MainDialogAnalyzeImportedGamesTitle),
+            $"{Localizer.Format(LocalizedStrings.MainDialogLoadedGames, importResult.ImportedGames)}{skippedText}\n\n{analysisTargetText}\n\n{Localizer.Text(LocalizedStrings.MainDialogAnalyzeNow)}",
+            Localizer.Text(LocalizedStrings.MainDialogAnalyze),
+            Localizer.Text(LocalizedStrings.MainDialogLater));
 
         if (analyze)
         {
             BulkPgnAnalysisResult analysisResult = await viewModel.AnalyzeImportedGamesAsync(importResult.Games);
-            await ShowInfoDialogAsync("PGN analysis finished", BuildBulkAnalysisSummary(analysisResult));
+            await ShowInfoDialogAsync(Localizer.Text(LocalizedStrings.MainDialogPgnAnalysisFinished), BuildBulkAnalysisSummary(analysisResult));
         }
     }
 

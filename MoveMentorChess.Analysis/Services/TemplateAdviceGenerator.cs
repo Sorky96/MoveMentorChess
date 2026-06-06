@@ -142,13 +142,13 @@ public sealed class TemplateAdviceGenerator : IAdviceGenerator
             ExplanationLevel.Beginner => Localizer.Format(LocalizedStrings.AdviceTrainingBeginner, baseHint),
             ExplanationLevel.Advanced => label switch
             {
-                "material_loss" => "Train this by checking forcing continuations until the resulting material balance is completely clear.",
-                "hanging_piece" => "Train board scanning with attacker-defender counts before and after every candidate move.",
-                "missed_tactic" => "Train this with short tactical calculation drills that force you to enumerate checks, captures and threats first.",
-                "king_safety" => "Review positions where a single pawn move changed diagonal or file access toward the king.",
-                "opening_principles" => "Review your first 10 moves and justify each one in terms of development, king safety and central influence.",
-                "piece_activity" => "Compare candidate moves by mobility gain, square quality and coordination rather than by surface-level safety alone.",
-                "endgame_technique" => "Drill conversion and defensive endgames with emphasis on king activity and zugzwang awareness.",
+                "material_loss" => Localizer.Text(LocalizedStrings.AdviceTrainingAdvancedMaterialLoss),
+                "hanging_piece" => Localizer.Text(LocalizedStrings.AdviceTrainingAdvancedHangingPiece),
+                "missed_tactic" => Localizer.Text(LocalizedStrings.AdviceTrainingAdvancedMissedTactic),
+                "king_safety" => Localizer.Text(LocalizedStrings.AdviceTrainingAdvancedKingSafety),
+                "opening_principles" => Localizer.Text(LocalizedStrings.AdviceTrainingAdvancedOpeningPrinciples),
+                "piece_activity" => Localizer.Text(LocalizedStrings.AdviceTrainingAdvancedPieceActivity),
+                "endgame_technique" => Localizer.Text(LocalizedStrings.AdviceTrainingAdvancedEndgameTechnique),
                 _ => baseHint
             },
             _ => Localizer.Format(LocalizedStrings.AdviceTrainingIntermediate, baseHint)

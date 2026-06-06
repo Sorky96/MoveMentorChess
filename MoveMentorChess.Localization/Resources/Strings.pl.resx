@@ -28,10 +28,15 @@
   <data name="SettingsFullGpuDescription" xml:space="preserve"><value>Tryb pełnego GPU jest włączony. llama.cpp użyje '-ngl {0}', czyli przeniesie możliwie wiele warstw modelu na GPU.</value></data>
   <data name="SettingsBalancedGpuDescription" xml:space="preserve"><value>Tryb zbalansowany jest włączony. llama.cpp użyje '-ngl {0}', co jest bezpieczniejsze dla mniejszych kart i pozostaje domyślne.</value></data>
   <data name="SettingsStockfishDescription" xml:space="preserve"><value>Stockfish użyje {0} wątków, {1} MB hash, a analiza PGN uruchomi się z głębokością {2}, MultiPV {3}, {4} ms na pozycję.</value></data>
+  <data name="SettingsSelectStockfishExecutable" xml:space="preserve"><value>Wybierz stockfish.exe</value></data>
+  <data name="SettingsSelectLlamaServerExecutable" xml:space="preserve"><value>Wybierz llama-server.exe</value></data>
   <data name="ExplanationBeginner" xml:space="preserve"><value>Początkujący</value></data>
   <data name="ExplanationIntermediate" xml:space="preserve"><value>Średni</value></data>
   <data name="ExplanationAdvanced" xml:space="preserve"><value>Zaawansowany</value></data>
   <data name="NarrationRegularTrainer" xml:space="preserve"><value>Zwykły trener</value></data>
+  <data name="NarrationLevyRozman" xml:space="preserve"><value>Levy Rozman</value></data>
+  <data name="NarrationHikaruNakamura" xml:space="preserve"><value>Hikaru Nakamura</value></data>
+  <data name="NarrationBotezLive" xml:space="preserve"><value>BotezLive</value></data>
   <data name="NarrationWittyAlien" xml:space="preserve"><value>Dowcipny kosmita</value></data>
   <data name="MainRotateBoard" xml:space="preserve"><value>OBRÓĆ SZACHOWNICĘ</value></data>
   <data name="MainUndo" xml:space="preserve"><value>COFNIJ</value></data>
@@ -49,6 +54,19 @@
   <data name="MainSettings" xml:space="preserve"><value>USTAWIENIA</value></data>
   <data name="MainOpeningCoverage" xml:space="preserve"><value>POKRYCIE DEBIUTÓW</value></data>
   <data name="MainCloseApp" xml:space="preserve"><value>ZAMKNIJ APLIKACJĘ</value></data>
+  <data name="MainDialogLoadPgnFile" xml:space="preserve"><value>Wczytaj plik PGN</value></data>
+  <data name="MainDialogCouldNotReadPgnFile" xml:space="preserve"><value>Nie udało się odczytać pliku PGN.</value></data>
+  <data name="MainDialogNoReplayableGames" xml:space="preserve"><value>W wybranym pliku PGN nie znaleziono partii możliwych do odtworzenia.</value></data>
+  <data name="MainDialogLoadedGamesEngineUnavailable" xml:space="preserve"><value>Wczytano {0} partii. Silnik analizy jest niedostępny, więc analiza zbiorcza nie może teraz wystartować.</value></data>
+  <data name="MainDialogAnalyzeImportedGamesTitle" xml:space="preserve"><value>Analizować zaimportowane partie?</value></data>
+  <data name="MainDialogLoadedGames" xml:space="preserve"><value>Wczytano {0} partii z pliku PGN.</value></data>
+  <data name="MainDialogSkippedGames" xml:space="preserve"><value>Pominięto {0} partii, których nie udało się sparsować lub odtworzyć.</value></data>
+  <data name="MainDialogNoRecurringPlayer" xml:space="preserve"><value>Nie wykryto powtarzającego się gracza, więc analiza użyje aktualnie wybranej strony.</value></data>
+  <data name="MainDialogDetectedPlayer" xml:space="preserve"><value>Wykryty gracz: {0}. Analizowane będą tylko jego ruchy, jako białych albo czarnych zależnie od partii.</value></data>
+  <data name="MainDialogAnalyzeNow" xml:space="preserve"><value>Analizować teraz? To może długo potrwać.</value></data>
+  <data name="MainDialogAnalyze" xml:space="preserve"><value>Analizuj</value></data>
+  <data name="MainDialogLater" xml:space="preserve"><value>Później</value></data>
+  <data name="MainDialogPgnAnalysisFinished" xml:space="preserve"><value>Analiza PGN zakończona</value></data>
   <data name="AdviceLanguageInstruction" xml:space="preserve"><value>Napisz short_text, detailed_text i training_hint po polsku. Zachowaj klucze JSON i notację szachową bez zmian.</value></data>
   <data name="AdviceDetailedPartsInstruction" xml:space="preserve"><value>W detailed_text użyj dokładnie czterech krótkich części w tej kolejności: {0}:, {1}:, {2}:, {3}:.</value></data>
   <data name="AdviceExampleShortText" xml:space="preserve"><value>Napisz krótkie podsumowanie błędu.</value></data>
@@ -66,6 +84,13 @@
   <data name="AdvicePattern" xml:space="preserve"><value>Pasuje do wzorca: {0}.</value></data>
   <data name="AdviceTrainingBeginner" xml:space="preserve"><value>Następnym razem użyj prostego nawyku: {0}</value></data>
   <data name="AdviceTrainingIntermediate" xml:space="preserve"><value>Następnym razem zwróć uwagę na ten sygnał: {0}</value></data>
+  <data name="AdviceTrainingAdvancedMaterialLoss" xml:space="preserve"><value>Ćwicz to, sprawdzając wymuszone kontynuacje aż do całkowicie jasnego bilansu materiału.</value></data>
+  <data name="AdviceTrainingAdvancedHangingPiece" xml:space="preserve"><value>Ćwicz skanowanie szachownicy przez liczenie atakujących i broniących przed oraz po każdym kandydacie.</value></data>
+  <data name="AdviceTrainingAdvancedMissedTactic" xml:space="preserve"><value>Ćwicz krótkie zadania taktyczne, które wymuszają najpierw listę szachów, bić i gróźb.</value></data>
+  <data name="AdviceTrainingAdvancedKingSafety" xml:space="preserve"><value>Przeglądaj pozycje, w których jeden ruch pionem zmienił dostęp do króla po przekątnej albo linii.</value></data>
+  <data name="AdviceTrainingAdvancedOpeningPrinciples" xml:space="preserve"><value>Przejrzyj pierwsze 10 ruchów i uzasadnij każdy rozwojem, bezpieczeństwem króla oraz wpływem na centrum.</value></data>
+  <data name="AdviceTrainingAdvancedPieceActivity" xml:space="preserve"><value>Porównuj kandydaty przez zysk mobilności, jakość pól i koordynację, nie tylko powierzchowne bezpieczeństwo.</value></data>
+  <data name="AdviceTrainingAdvancedEndgameTechnique" xml:space="preserve"><value>Ćwicz końcówki techniczne i obronne z naciskiem na aktywność króla oraz świadomość zugzwangu.</value></data>
   <data name="AdviceLostCentipawns" xml:space="preserve"><value>i stracił około {0} centypionów</value></data>
   <data name="AdviceChangedEvaluation" xml:space="preserve"><value>i mocno zmienił ocenę pozycji</value></data>
   <data name="AdviceQualityBlunder" xml:space="preserve"><value>podstawka</value></data>
@@ -80,6 +105,9 @@
   <data name="AdvicePatternPieceActivity" xml:space="preserve"><value>aktywność figur</value></data>
   <data name="AdvicePatternEndgameTechnique" xml:space="preserve"><value>technika końcówek</value></data>
   <data name="AdvicePatternGeneral" xml:space="preserve"><value>ogólny</value></data>
+  <data name="HeuristicHintOpening" xml:space="preserve"><value>Debiut: przejrzyj ten wzorzec w pierwszych 10 ruchach.</value></data>
+  <data name="HeuristicHintMiddlegame" xml:space="preserve"><value>Gra środkowa: porównaj plany i wymuszone odpowiedzi przed wykonaniem ruchu.</value></data>
+  <data name="HeuristicHintEndgame" xml:space="preserve"><value>Końcówka: aktywność i technika są ważniejsze niż kosmetyczne ruchy.</value></data>
   <data name="FormatPhaseOpening" xml:space="preserve"><value>Debiut</value></data>
   <data name="FormatPhaseMiddlegame" xml:space="preserve"><value>Gra środkowa</value></data>
   <data name="FormatPhaseEndgame" xml:space="preserve"><value>Końcówka</value></data>
@@ -97,7 +125,9 @@
   <data name="TrainingPurposeMaintain" xml:space="preserve"><value>Utrzymanie</value></data>
   <data name="TrainingPurposeChecklist" xml:space="preserve"><value>Lista kontrolna</value></data>
   <data name="CountOneTime" xml:space="preserve"><value>1 raz</value></data>
+  <data name="CountFewTimes" xml:space="preserve"><value>{0} razy</value></data>
   <data name="CountManyTimes" xml:space="preserve"><value>{0} razy</value></data>
   <data name="CountOneMistake" xml:space="preserve"><value>1 błąd</value></data>
+  <data name="CountFewMistakes" xml:space="preserve"><value>{0} błędy</value></data>
   <data name="CountManyMistakes" xml:space="preserve"><value>{0} błędów</value></data>
 </root>

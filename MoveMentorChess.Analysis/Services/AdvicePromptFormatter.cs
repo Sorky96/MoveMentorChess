@@ -1,11 +1,14 @@
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
 using MoveMentorChess.Localization;
 
 namespace MoveMentorChess.Analysis;
 
 public static class AdvicePromptFormatter
 {
+    private static readonly JsonSerializerOptions PromptJsonOptions = new() { WriteIndented = true };
+
     public static string BuildPrompt(LocalModelAdviceRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -153,18 +156,17 @@ public static class AdvicePromptFormatter
         builder.AppendLine(CultureInfo.InvariantCulture, $"Refer to the actual move ({request.Replay.San}), the actual best move ({request.Context?.PromptContext?.BestMoveSan ?? request.BestMoveUci ?? "unknown"}), and the actual pattern ({request.Tag?.Label ?? "general"}).");
         builder.AppendLine();
         builder.AppendLine("Example format (DO NOT copy these values, write your own analysis):");
-        builder.AppendLine("""
+        builder.AppendLine(JsonSerializer.Serialize(
+            new Dictionary<string, object>
             {
-              "short_text": "{0}",
-              "detailed_text": "{1}",
-              "training_hint": "{2}",
-              "referenced_best_move_uci": "e2e4",
-              "referenced_label": "opening_principles",
-              "confidence": 0.82
-            }
-            """.Replace("{0}", Localizer.Text(LocalizedStrings.AdviceExampleShortText), StringComparison.Ordinal)
-            .Replace("{1}", Localizer.Text(LocalizedStrings.AdviceExampleDetailedText), StringComparison.Ordinal)
-            .Replace("{2}", Localizer.Text(LocalizedStrings.AdviceExampleTrainingHint), StringComparison.Ordinal));
+                ["short_text"] = Localizer.Text(LocalizedStrings.AdviceExampleShortText),
+                ["detailed_text"] = Localizer.Text(LocalizedStrings.AdviceExampleDetailedText),
+                ["training_hint"] = Localizer.Text(LocalizedStrings.AdviceExampleTrainingHint),
+                ["referenced_best_move_uci"] = "e2e4",
+                ["referenced_label"] = "opening_principles",
+                ["confidence"] = 0.82
+            },
+            PromptJsonOptions));
         return builder.ToString().Trim();
     }
 

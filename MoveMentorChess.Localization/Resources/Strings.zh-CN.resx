@@ -49,4 +49,85 @@
   <data name="FormatPhaseOpening" xml:space="preserve"><value>开局</value></data>
   <data name="FormatPhaseMiddlegame" xml:space="preserve"><value>中局</value></data>
   <data name="FormatPhaseEndgame" xml:space="preserve"><value>残局</value></data>
+  <data name="SettingsSetupChecklistTitle" xml:space="preserve"><value>设置清单</value></data>
+  <data name="SettingsSetupChecklistBody" xml:space="preserve"><value>1. 选择语言。2. 选择或自动检测 Stockfish。3. 导入 PGN。4. 运行分析。5. 跟随训练建议。</value></data>
+  <data name="SettingsLlamaPath" xml:space="preserve"><value>llama-server.exe 路径（可选）</value></data>
+  <data name="SettingsLlamaPlaceholder" xml:space="preserve"><value>自动检测 llama-server.exe</value></data>
+  <data name="SettingsStockfishPath" xml:space="preserve"><value>stockfish.exe 路径</value></data>
+  <data name="SettingsStockfishPlaceholder" xml:space="preserve"><value>自动检测 stockfish.exe</value></data>
+  <data name="SettingsEngineThreads" xml:space="preserve"><value>引擎线程</value></data>
+  <data name="SettingsHashMemory" xml:space="preserve"><value>Hash 内存 (MB)</value></data>
+  <data name="SettingsBulkDepth" xml:space="preserve"><value>批量分析深度</value></data>
+  <data name="SettingsBulkMultiPv" xml:space="preserve"><value>批量分析 MultiPV</value></data>
+  <data name="SettingsBulkMoveTime" xml:space="preserve"><value>批量分析每步时间 (ms)</value></data>
+  <data name="SettingsFooter" xml:space="preserve"><value>检测到 Stockfish 或选择自定义路径后保存。</value></data>
+  <data name="SettingsFullGpuDescription" xml:space="preserve"><value>完整 GPU 模式已启用。llama.cpp 将请求 '-ngl {0}'，尽可能把模型层放到 GPU 上。</value></data>
+  <data name="SettingsBalancedGpuDescription" xml:space="preserve"><value>均衡模式已启用。llama.cpp 将请求 '-ngl {0}'，这对较小显卡更安全，也是默认设置。</value></data>
+  <data name="SettingsStockfishDescription" xml:space="preserve"><value>Stockfish 将使用 {0} 个线程、{1} MB hash，批量 PGN 分析将以深度 {2}、MultiPV {3}、每个局面 {4} ms 运行。</value></data>
+  <data name="SettingsSelectStockfishExecutable" xml:space="preserve"><value>选择 stockfish.exe</value></data>
+  <data name="SettingsSelectLlamaServerExecutable" xml:space="preserve"><value>选择 llama-server.exe</value></data>
+  <data name="NarrationRegularTrainer" xml:space="preserve"><value>普通教练</value></data>
+  <data name="NarrationLevyRozman" xml:space="preserve"><value>Levy Rozman</value></data>
+  <data name="NarrationHikaruNakamura" xml:space="preserve"><value>Hikaru Nakamura</value></data>
+  <data name="NarrationBotezLive" xml:space="preserve"><value>BotezLive</value></data>
+  <data name="NarrationWittyAlien" xml:space="preserve"><value>幽默外星人</value></data>
+  <data name="MainDialogLoadPgnFile" xml:space="preserve"><value>加载 PGN 文件</value></data>
+  <data name="MainDialogCouldNotReadPgnFile" xml:space="preserve"><value>无法读取 PGN 文件。</value></data>
+  <data name="MainDialogNoReplayableGames" xml:space="preserve"><value>所选 PGN 文件中没有可复盘的对局。</value></data>
+  <data name="MainDialogLoadedGamesEngineUnavailable" xml:space="preserve"><value>已加载 {0} 盘棋。分析引擎不可用，因此现在无法开始批量分析。</value></data>
+  <data name="MainDialogAnalyzeImportedGamesTitle" xml:space="preserve"><value>分析导入的对局？</value></data>
+  <data name="MainDialogLoadedGames" xml:space="preserve"><value>已从 PGN 文件加载 {0} 盘棋。</value></data>
+  <data name="MainDialogSkippedGames" xml:space="preserve"><value>跳过了 {0} 盘无法解析或复盘的棋局。</value></data>
+  <data name="MainDialogNoRecurringPlayer" xml:space="preserve"><value>未检测到重复出现的棋手，因此分析将使用当前选择的阵营。</value></data>
+  <data name="MainDialogDetectedPlayer" xml:space="preserve"><value>检测到棋手：{0}。只会分析该棋手的走法，根据每盘棋分别作为白方或黑方。</value></data>
+  <data name="MainDialogAnalyzeNow" xml:space="preserve"><value>现在分析吗？这可能需要较长时间。</value></data>
+  <data name="MainDialogAnalyze" xml:space="preserve"><value>分析</value></data>
+  <data name="MainDialogLater" xml:space="preserve"><value>稍后</value></data>
+  <data name="MainDialogPgnAnalysisFinished" xml:space="preserve"><value>PGN 分析完成</value></data>
+  <data name="AdviceExampleShortText" xml:space="preserve"><value>在这里写一个简短的错误总结。</value></data>
+  <data name="AdviceExampleDetailedText" xml:space="preserve"><value>问题：简要说明哪里出了问题。原因：解释核心的战术或局面原因。更好：指出更好的走法以及它为什么有帮助。下次注意：给出一个应更早发现的模式。</value></data>
+  <data name="AdviceExampleTrainingHint" xml:space="preserve"><value>给棋手一条简短、可执行、容易记住的规则。</value></data>
+  <data name="AdviceSimpleView" xml:space="preserve"><value>简单看法</value></data>
+  <data name="AdviceEngineView" xml:space="preserve"><value>引擎视角</value></data>
+  <data name="AdviceTrainingBeginner" xml:space="preserve"><value>下次使用一个简单习惯：{0}</value></data>
+  <data name="AdviceTrainingIntermediate" xml:space="preserve"><value>下次注意这个触发点：{0}</value></data>
+  <data name="AdviceTrainingAdvancedMaterialLoss" xml:space="preserve"><value>训练时检查强制变化，直到最终物质得失完全清楚。</value></data>
+  <data name="AdviceTrainingAdvancedHangingPiece" xml:space="preserve"><value>训练棋盘扫描：每个候选着法前后都数清攻击者和防守者。</value></data>
+  <data name="AdviceTrainingAdvancedMissedTactic" xml:space="preserve"><value>用短战术题训练，强迫自己先列出将军、吃子和威胁。</value></data>
+  <data name="AdviceTrainingAdvancedKingSafety" xml:space="preserve"><value>复盘那些一个兵的移动改变了通向王的斜线或直线的局面。</value></data>
+  <data name="AdviceTrainingAdvancedOpeningPrinciples" xml:space="preserve"><value>复盘前 10 步，并用出子、王的安全和中心影响力解释每一步。</value></data>
+  <data name="AdviceTrainingAdvancedPieceActivity" xml:space="preserve"><value>比较候选着法时看机动性、格子质量和协调性，而不只看表面安全。</value></data>
+  <data name="AdviceTrainingAdvancedEndgameTechnique" xml:space="preserve"><value>训练技术性和防守性残局，重点关注王的活跃度和等着意识。</value></data>
+  <data name="AdviceChangedEvaluation" xml:space="preserve"><value>并明显改变了局面评估</value></data>
+  <data name="AdviceQualityBlunder" xml:space="preserve"><value>大错</value></data>
+  <data name="AdviceQualityGood" xml:space="preserve"><value>走法</value></data>
+  <data name="AdvicePatternMaterialLoss" xml:space="preserve"><value>丢失子力</value></data>
+  <data name="AdvicePatternMissedTactic" xml:space="preserve"><value>错过战术</value></data>
+  <data name="AdvicePatternOpeningPrinciples" xml:space="preserve"><value>开局纪律</value></data>
+  <data name="AdvicePatternKingSafety" xml:space="preserve"><value>王的安全</value></data>
+  <data name="AdvicePatternPieceActivity" xml:space="preserve"><value>子力被动</value></data>
+  <data name="AdvicePatternEndgameTechnique" xml:space="preserve"><value>残局技术</value></data>
+  <data name="AdvicePatternGeneral" xml:space="preserve"><value>一般问题</value></data>
+  <data name="HeuristicHintOpening" xml:space="preserve"><value>开局：在前 10 步中复盘这个模式。</value></data>
+  <data name="HeuristicHintMiddlegame" xml:space="preserve"><value>中局：落子前比较计划和强制回应。</value></data>
+  <data name="HeuristicHintEndgame" xml:space="preserve"><value>残局：活跃度和技术比表面好看的走法更重要。</value></data>
+  <data name="FormatMixedOpenings" xml:space="preserve"><value>混合开局</value></data>
+  <data name="TrendImproving" xml:space="preserve"><value>最近在进步</value></data>
+  <data name="TrendStable" xml:space="preserve"><value>基本稳定</value></data>
+  <data name="TrendRegressing" xml:space="preserve"><value>最近成绩下滑</value></data>
+  <data name="TrendNeedMoreGames" xml:space="preserve"><value>需要更多对局</value></data>
+  <data name="TrainingBlockTactics" xml:space="preserve"><value>战术</value></data>
+  <data name="TrainingBlockOpeningReview" xml:space="preserve"><value>开局复盘</value></data>
+  <data name="TrainingBlockEndgameDrill" xml:space="preserve"><value>残局训练</value></data>
+  <data name="TrainingBlockGameReview" xml:space="preserve"><value>对局复盘</value></data>
+  <data name="TrainingBlockSlowPlayFocus" xml:space="preserve"><value>慢棋专注</value></data>
+  <data name="TrainingPurposeRepair" xml:space="preserve"><value>修复</value></data>
+  <data name="TrainingPurposeMaintain" xml:space="preserve"><value>保持</value></data>
+  <data name="TrainingPurposeChecklist" xml:space="preserve"><value>检查清单</value></data>
+  <data name="CountOneTime" xml:space="preserve"><value>1 次</value></data>
+  <data name="CountFewTimes" xml:space="preserve"><value>{0} 次</value></data>
+  <data name="CountManyTimes" xml:space="preserve"><value>{0} 次</value></data>
+  <data name="CountOneMistake" xml:space="preserve"><value>1 个错误</value></data>
+  <data name="CountFewMistakes" xml:space="preserve"><value>{0} 个错误</value></data>
+  <data name="CountManyMistakes" xml:space="preserve"><value>{0} 个错误</value></data>
 </root>

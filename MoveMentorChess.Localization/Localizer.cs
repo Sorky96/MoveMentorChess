@@ -58,8 +58,48 @@ public static class Localizer
 
     public static string Plural(int count, string singularKey, string pluralKey)
     {
-        return count == 1
-            ? Format(singularKey, count)
-            : Format(pluralKey, count);
+        return Plural(count, singularKey, pluralKey, pluralKey);
+    }
+
+    public static string Plural(int count, string singularKey, string fewKey, string manyKey)
+    {
+        string selectedKey = SelectPluralForm(count) switch
+        {
+            PluralForm.One => singularKey,
+            PluralForm.Few => fewKey,
+            _ => manyKey
+        };
+
+        return Format(selectedKey, count);
+    }
+
+    private static PluralForm SelectPluralForm(int count)
+    {
+        int absolute = Math.Abs(count);
+        if (CurrentLanguage.Language == ApplicationLanguage.Polish)
+        {
+            int mod10 = absolute % 10;
+            int mod100 = absolute % 100;
+            if (absolute == 1)
+            {
+                return PluralForm.One;
+            }
+
+            if (mod10 is >= 2 and <= 4 && mod100 is < 12 or > 14)
+            {
+                return PluralForm.Few;
+            }
+
+            return PluralForm.Many;
+        }
+
+        return absolute == 1 ? PluralForm.One : PluralForm.Many;
+    }
+
+    private enum PluralForm
+    {
+        One,
+        Few,
+        Many
     }
 }

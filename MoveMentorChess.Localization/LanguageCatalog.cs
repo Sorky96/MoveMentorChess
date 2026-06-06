@@ -7,8 +7,8 @@ public static class LanguageCatalog
     private static readonly LanguageOption[] Options =
     [
         new(ApplicationLanguage.English, "en", "English", "English"),
-        new(ApplicationLanguage.ChineseSimplified, "zh-CN", "Chinese (Simplified)", "简体中文"),
-        new(ApplicationLanguage.PortugueseBrazil, "pt-BR", "Portuguese (Brazil)", "Português (Brasil)"),
+        new(ApplicationLanguage.ChineseSimplified, "zh-CN", "Chinese (Simplified)", "\u7b80\u4f53\u4e2d\u6587"),
+        new(ApplicationLanguage.PortugueseBrazil, "pt-BR", "Portuguese (Brazil)", "Portugu\u00eas (Brasil)"),
         new(ApplicationLanguage.Polish, "pl", "Polish", "Polski"),
         new(ApplicationLanguage.German, "de", "German", "Deutsch")
     ];
@@ -35,7 +35,7 @@ public static class LanguageCatalog
         {
             return ResolveDefault(CultureInfo.GetCultureInfo(cultureName.Trim()));
         }
-        catch (CultureNotFoundException)
+        catch (Exception ex) when (ex is CultureNotFoundException or ArgumentException)
         {
             return English;
         }

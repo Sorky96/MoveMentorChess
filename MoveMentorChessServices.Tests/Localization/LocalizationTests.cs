@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Collections;
+using System.Resources;
 using MoveMentorChess.Analysis;
 using MoveMentorChess.Localization;
 using Xunit;
@@ -16,6 +18,19 @@ public sealed class LocalizationTests
     }
 
     [Fact]
+    public void LanguageOptions_CacheCultureAndValidateCultureNames()
+    {
+        LanguageOption language = LanguageCatalog.Resolve("pt-BR");
+
+        Assert.Same(language.Culture, language.Culture);
+        Assert.Throws<ArgumentException>(() => new LanguageOption(
+            ApplicationLanguage.English,
+            "xx-INVALID",
+            "Invalid",
+            "Invalid"));
+    }
+
+    [Fact]
     public void LanguageCatalog_ResolvesSystemLanguageWithEnglishFallback()
     {
         Assert.Equal("pl", LanguageCatalog.ResolveDefault(CultureInfo.GetCultureInfo("pl-PL")).CultureName);
@@ -25,11 +40,43 @@ public sealed class LocalizationTests
     }
 
     [Fact]
-    public void Localizer_FallsBackToEnglishForMissingResourceKeys()
+    public void Localizer_FallsBackToEnglishForUnsupportedCulture()
     {
-        Localizer.UseCulture("zh-CN");
+        Localizer.UseCulture("xx-XX");
 
         Assert.Equal("Opening review", Localizer.Text(LocalizedStrings.TrainingBlockOpeningReview));
+    }
+
+    [Fact]
+    public void ResourceFiles_HaveMatchingKeySets()
+    {
+        string resourceDirectory = FindResourceDirectory();
+        string[] cultures = ["de", "pl", "pt-BR", "zh-CN"];
+        string[] neutralKeys = ReadResourceKeys(Path.Combine(resourceDirectory, "Strings.resx"));
+
+        foreach (string culture in cultures)
+        {
+            string[] localizedKeys = ReadResourceKeys(Path.Combine(resourceDirectory, $"Strings.{culture}.resx"));
+            Assert.Empty(neutralKeys.Except(localizedKeys, StringComparer.Ordinal));
+            Assert.Empty(localizedKeys.Except(neutralKeys, StringComparer.Ordinal));
+        }
+    }
+
+    [Fact]
+    public void Localizer_UsesPolishFewPluralForm()
+    {
+        Localizer.UseCulture("pl");
+
+        Assert.Equal("2 błędy", Localizer.Plural(
+            2,
+            LocalizedStrings.CountOneMistake,
+            LocalizedStrings.CountFewMistakes,
+            LocalizedStrings.CountManyMistakes));
+        Assert.Equal("5 błędów", Localizer.Plural(
+            5,
+            LocalizedStrings.CountOneMistake,
+            LocalizedStrings.CountFewMistakes,
+            LocalizedStrings.CountManyMistakes));
     }
 
     [Fact]
@@ -93,5 +140,33 @@ public sealed class LocalizationTests
             false,
             false,
             false);
+    }
+
+    private static string FindResourceDirectory()
+    {
+        DirectoryInfo? directory = new(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            string candidate = Path.Combine(directory.FullName, "MoveMentorChess.Localization", "Resources");
+            if (Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new InvalidOperationException("Could not find localization resources.");
+    }
+
+    private static string[] ReadResourceKeys(string path)
+    {
+        using ResXResourceReader reader = new(path);
+        return reader
+            .Cast<DictionaryEntry>()
+            .Select(entry => entry.Key?.ToString() ?? string.Empty)
+            .Where(key => !string.IsNullOrWhiteSpace(key))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
     }
 }

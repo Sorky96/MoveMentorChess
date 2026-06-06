@@ -48,4 +48,86 @@
   <data name="FormatPhaseOpening" xml:space="preserve"><value>Abertura</value></data>
   <data name="FormatPhaseMiddlegame" xml:space="preserve"><value>Meio-jogo</value></data>
   <data name="FormatPhaseEndgame" xml:space="preserve"><value>Final</value></data>
+  <data name="SettingsSetupChecklistTitle" xml:space="preserve"><value>Lista de configuração</value></data>
+  <data name="SettingsSetupChecklistBody" xml:space="preserve"><value>1. Escolha um idioma. 2. Escolha ou detecte o Stockfish. 3. Importe um PGN. 4. Execute a análise. 5. Siga a recomendação de treino.</value></data>
+  <data name="SettingsLlamaPath" xml:space="preserve"><value>Caminho do llama-server.exe (opcional)</value></data>
+  <data name="SettingsLlamaPlaceholder" xml:space="preserve"><value>Detectar llama-server.exe automaticamente</value></data>
+  <data name="SettingsStockfishPath" xml:space="preserve"><value>Caminho do stockfish.exe</value></data>
+  <data name="SettingsStockfishPlaceholder" xml:space="preserve"><value>Detectar stockfish.exe automaticamente</value></data>
+  <data name="SettingsEngineThreads" xml:space="preserve"><value>Threads da engine</value></data>
+  <data name="SettingsHashMemory" xml:space="preserve"><value>Memória hash (MB)</value></data>
+  <data name="SettingsBulkDepth" xml:space="preserve"><value>Profundidade da análise em lote</value></data>
+  <data name="SettingsBulkMultiPv" xml:space="preserve"><value>MultiPV da análise em lote</value></data>
+  <data name="SettingsBulkMoveTime" xml:space="preserve"><value>Tempo por lance na análise em lote (ms)</value></data>
+  <data name="SettingsFooter" xml:space="preserve"><value>Salve quando o Stockfish for detectado ou depois de escolher um caminho personalizado.</value></data>
+  <data name="SettingsFullGpuDescription" xml:space="preserve"><value>O modo de GPU completa está ativado. O llama.cpp solicitará '-ngl {0}', enviando o máximo possível de camadas do modelo para a GPU.</value></data>
+  <data name="SettingsBalancedGpuDescription" xml:space="preserve"><value>O modo equilibrado está ativado. O llama.cpp solicitará '-ngl {0}', o que é mais seguro em placas menores e continua sendo o padrão.</value></data>
+  <data name="SettingsStockfishDescription" xml:space="preserve"><value>O Stockfish usará {0} thread(s), {1} MB de hash, e a análise em lote de PGN rodará na profundidade {2}, MultiPV {3}, {4} ms por posição.</value></data>
+  <data name="SettingsSelectStockfishExecutable" xml:space="preserve"><value>Selecionar stockfish.exe</value></data>
+  <data name="SettingsSelectLlamaServerExecutable" xml:space="preserve"><value>Selecionar llama-server.exe</value></data>
+  <data name="NarrationRegularTrainer" xml:space="preserve"><value>Treinador normal</value></data>
+  <data name="NarrationLevyRozman" xml:space="preserve"><value>Levy Rozman</value></data>
+  <data name="NarrationHikaruNakamura" xml:space="preserve"><value>Hikaru Nakamura</value></data>
+  <data name="NarrationBotezLive" xml:space="preserve"><value>BotezLive</value></data>
+  <data name="NarrationWittyAlien" xml:space="preserve"><value>Alien espirituoso</value></data>
+  <data name="MainDialogLoadPgnFile" xml:space="preserve"><value>Carregar arquivo PGN</value></data>
+  <data name="MainDialogCouldNotReadPgnFile" xml:space="preserve"><value>Não foi possível ler o arquivo PGN.</value></data>
+  <data name="MainDialogNoReplayableGames" xml:space="preserve"><value>Nenhuma partida reproduzível foi encontrada no arquivo PGN selecionado.</value></data>
+  <data name="MainDialogLoadedGamesEngineUnavailable" xml:space="preserve"><value>{0} partidas carregadas. A engine de análise está indisponível, então a análise em lote não pode começar agora.</value></data>
+  <data name="MainDialogAnalyzeImportedGamesTitle" xml:space="preserve"><value>Analisar partidas importadas?</value></data>
+  <data name="MainDialogLoadedGames" xml:space="preserve"><value>{0} partidas carregadas do arquivo PGN.</value></data>
+  <data name="MainDialogSkippedGames" xml:space="preserve"><value>{0} partidas ignoradas porque não puderam ser interpretadas ou reproduzidas.</value></data>
+  <data name="MainDialogNoRecurringPlayer" xml:space="preserve"><value>Nenhum jogador recorrente foi detectado, então a análise usará o lado selecionado no momento.</value></data>
+  <data name="MainDialogDetectedPlayer" xml:space="preserve"><value>Jogador detectado: {0}. Apenas os lances desse jogador serão analisados, como brancas ou pretas conforme cada partida.</value></data>
+  <data name="MainDialogAnalyzeNow" xml:space="preserve"><value>Analisar agora? Isso pode levar bastante tempo.</value></data>
+  <data name="MainDialogAnalyze" xml:space="preserve"><value>Analisar</value></data>
+  <data name="MainDialogLater" xml:space="preserve"><value>Depois</value></data>
+  <data name="MainDialogPgnAnalysisFinished" xml:space="preserve"><value>Análise PGN concluída</value></data>
+  <data name="AdviceDetailedPartsInstruction" xml:space="preserve"><value>Em detailed_text, use exatamente quatro partes curtas nesta ordem: {0}:, {1}:, {2}:, {3}:.</value></data>
+  <data name="AdviceExampleShortText" xml:space="preserve"><value>Escreva aqui um breve resumo do erro.</value></data>
+  <data name="AdviceExampleDetailedText" xml:space="preserve"><value>O que: diga brevemente o que deu errado. Por quê: explique o motivo tático ou posicional principal. Melhor: diga o lance melhor e por que ajudava. Na próxima vez: dê um padrão para notar mais cedo.</value></data>
+  <data name="AdviceExampleTrainingHint" xml:space="preserve"><value>Dê uma regra curta e prática para o jogador lembrar.</value></data>
+  <data name="AdviceSimpleView" xml:space="preserve"><value>Visão simples</value></data>
+  <data name="AdviceEngineView" xml:space="preserve"><value>Visão da engine</value></data>
+  <data name="AdviceTrainingBeginner" xml:space="preserve"><value>Na próxima vez, use um hábito simples: {0}</value></data>
+  <data name="AdviceTrainingIntermediate" xml:space="preserve"><value>Na próxima vez, observe este gatilho: {0}</value></data>
+  <data name="AdviceTrainingAdvancedMaterialLoss" xml:space="preserve"><value>Treine verificando continuações forçadas até que o balanço material fique totalmente claro.</value></data>
+  <data name="AdviceTrainingAdvancedHangingPiece" xml:space="preserve"><value>Treine a varredura do tabuleiro contando atacantes e defensores antes e depois de cada lance candidato.</value></data>
+  <data name="AdviceTrainingAdvancedMissedTactic" xml:space="preserve"><value>Treine com exercícios táticos curtos que obriguem você a listar primeiro xeques, capturas e ameaças.</value></data>
+  <data name="AdviceTrainingAdvancedKingSafety" xml:space="preserve"><value>Revise posições em que um único lance de peão mudou o acesso ao rei por diagonais ou colunas.</value></data>
+  <data name="AdviceTrainingAdvancedOpeningPrinciples" xml:space="preserve"><value>Revise seus primeiros 10 lances e justifique cada um por desenvolvimento, segurança do rei e influência central.</value></data>
+  <data name="AdviceTrainingAdvancedPieceActivity" xml:space="preserve"><value>Compare lances candidatos por ganho de mobilidade, qualidade das casas e coordenação, não só por segurança aparente.</value></data>
+  <data name="AdviceTrainingAdvancedEndgameTechnique" xml:space="preserve"><value>Treine finais técnicos e defensivos com foco em atividade do rei e consciência de zugzwang.</value></data>
+  <data name="AdviceChangedEvaluation" xml:space="preserve"><value>e mudou bastante a avaliação</value></data>
+  <data name="AdviceQualityBlunder" xml:space="preserve"><value>erro grave</value></data>
+  <data name="AdviceQualityGood" xml:space="preserve"><value>lance</value></data>
+  <data name="AdvicePatternMaterialLoss" xml:space="preserve"><value>perda de material</value></data>
+  <data name="AdvicePatternMissedTactic" xml:space="preserve"><value>tática perdida</value></data>
+  <data name="AdvicePatternOpeningPrinciples" xml:space="preserve"><value>disciplina de abertura</value></data>
+  <data name="AdvicePatternKingSafety" xml:space="preserve"><value>segurança do rei</value></data>
+  <data name="AdvicePatternPieceActivity" xml:space="preserve"><value>peças passivas</value></data>
+  <data name="AdvicePatternEndgameTechnique" xml:space="preserve"><value>técnica de final</value></data>
+  <data name="AdvicePatternGeneral" xml:space="preserve"><value>geral</value></data>
+  <data name="HeuristicHintOpening" xml:space="preserve"><value>Abertura: revise este padrão nos seus primeiros 10 lances.</value></data>
+  <data name="HeuristicHintMiddlegame" xml:space="preserve"><value>Meio-jogo: compare planos e respostas forçadas antes de se comprometer.</value></data>
+  <data name="HeuristicHintEndgame" xml:space="preserve"><value>Final: atividade e técnica importam mais do que lances cosméticos.</value></data>
+  <data name="FormatMixedOpenings" xml:space="preserve"><value>Aberturas variadas</value></data>
+  <data name="TrendImproving" xml:space="preserve"><value>Melhorando ultimamente</value></data>
+  <data name="TrendStable" xml:space="preserve"><value>Quase estável</value></data>
+  <data name="TrendRegressing" xml:space="preserve"><value>Resultados caíram recentemente</value></data>
+  <data name="TrendNeedMoreGames" xml:space="preserve"><value>Precisa de mais partidas</value></data>
+  <data name="TrainingBlockTactics" xml:space="preserve"><value>Tática</value></data>
+  <data name="TrainingBlockOpeningReview" xml:space="preserve"><value>Revisão de abertura</value></data>
+  <data name="TrainingBlockEndgameDrill" xml:space="preserve"><value>Treino de finais</value></data>
+  <data name="TrainingBlockGameReview" xml:space="preserve"><value>Revisão de partida</value></data>
+  <data name="TrainingBlockSlowPlayFocus" xml:space="preserve"><value>Foco em jogo lento</value></data>
+  <data name="TrainingPurposeRepair" xml:space="preserve"><value>Corrigir</value></data>
+  <data name="TrainingPurposeMaintain" xml:space="preserve"><value>Manter</value></data>
+  <data name="TrainingPurposeChecklist" xml:space="preserve"><value>Checklist</value></data>
+  <data name="CountOneTime" xml:space="preserve"><value>1 vez</value></data>
+  <data name="CountFewTimes" xml:space="preserve"><value>{0} vezes</value></data>
+  <data name="CountManyTimes" xml:space="preserve"><value>{0} vezes</value></data>
+  <data name="CountOneMistake" xml:space="preserve"><value>1 erro</value></data>
+  <data name="CountFewMistakes" xml:space="preserve"><value>{0} erros</value></data>
+  <data name="CountManyMistakes" xml:space="preserve"><value>{0} erros</value></data>
 </root>

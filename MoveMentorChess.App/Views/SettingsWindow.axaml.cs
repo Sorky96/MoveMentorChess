@@ -104,7 +104,7 @@ public partial class SettingsWindow : Window
 
     private async void BrowseStockfishButton_Click(object? sender, RoutedEventArgs e)
     {
-        string? path = await PickExecutablePathAsync("Select stockfish.exe");
+        string? path = await PickExecutablePathAsync(Localizer.Text(LocalizedStrings.SettingsSelectStockfishExecutable));
         if (!string.IsNullOrWhiteSpace(path))
         {
             StockfishPathTextBox.Text = path;
@@ -113,7 +113,7 @@ public partial class SettingsWindow : Window
 
     private async void BrowseLlamaServerButton_Click(object? sender, RoutedEventArgs e)
     {
-        string? path = await PickExecutablePathAsync("Select llama-server.exe");
+        string? path = await PickExecutablePathAsync(Localizer.Text(LocalizedStrings.SettingsSelectLlamaServerExecutable));
         if (!string.IsNullOrWhiteSpace(path))
         {
             LlamaServerPathTextBox.Text = path;

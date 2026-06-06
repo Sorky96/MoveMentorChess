@@ -111,9 +111,11 @@ internal static class ProfileCoachPresentationText
         };
     }
 
-    public static string FormatTimes(int count) => count == 1
-        ? Localizer.Text(LocalizedStrings.CountOneTime)
-        : Localizer.Format(LocalizedStrings.CountManyTimes, count);
+    public static string FormatTimes(int count) => Localizer.Plural(
+        count,
+        LocalizedStrings.CountOneTime,
+        LocalizedStrings.CountFewTimes,
+        LocalizedStrings.CountManyTimes);
 
     public static string FormatChartDate(DateTime? date)
     {

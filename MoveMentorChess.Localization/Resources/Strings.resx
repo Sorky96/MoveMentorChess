@@ -31,6 +31,8 @@
   <data name="SettingsFullGpuDescription" xml:space="preserve"><value>Full GPU mode is enabled. llama.cpp will request '-ngl {0}', which means pushing all possible model layers onto the GPU.</value></data>
   <data name="SettingsBalancedGpuDescription" xml:space="preserve"><value>Balanced mode is enabled. llama.cpp will request '-ngl {0}', which is safer on smaller cards and remains the default.</value></data>
   <data name="SettingsStockfishDescription" xml:space="preserve"><value>Stockfish will use {0} thread(s), {1} MB hash, and bulk PGN analysis will run at depth {2}, MultiPV {3}, {4} ms per position.</value></data>
+  <data name="SettingsSelectStockfishExecutable" xml:space="preserve"><value>Select stockfish.exe</value></data>
+  <data name="SettingsSelectLlamaServerExecutable" xml:space="preserve"><value>Select llama-server.exe</value></data>
   <data name="ExplanationBeginner" xml:space="preserve"><value>Beginner</value></data>
   <data name="ExplanationIntermediate" xml:space="preserve"><value>Intermediate</value></data>
   <data name="ExplanationAdvanced" xml:space="preserve"><value>Advanced</value></data>
@@ -55,6 +57,19 @@
   <data name="MainSettings" xml:space="preserve"><value>SETTINGS</value></data>
   <data name="MainOpeningCoverage" xml:space="preserve"><value>OPENING COVERAGE</value></data>
   <data name="MainCloseApp" xml:space="preserve"><value>CLOSE APP</value></data>
+  <data name="MainDialogLoadPgnFile" xml:space="preserve"><value>Load PGN file</value></data>
+  <data name="MainDialogCouldNotReadPgnFile" xml:space="preserve"><value>Could not read PGN file.</value></data>
+  <data name="MainDialogNoReplayableGames" xml:space="preserve"><value>No replayable games were found in the selected PGN file.</value></data>
+  <data name="MainDialogLoadedGamesEngineUnavailable" xml:space="preserve"><value>Loaded {0} games. The analysis engine is unavailable, so bulk analysis cannot start now.</value></data>
+  <data name="MainDialogAnalyzeImportedGamesTitle" xml:space="preserve"><value>Analyze imported games?</value></data>
+  <data name="MainDialogLoadedGames" xml:space="preserve"><value>Loaded {0} games from the PGN file.</value></data>
+  <data name="MainDialogSkippedGames" xml:space="preserve"><value>Skipped {0} games that could not be parsed or replayed.</value></data>
+  <data name="MainDialogNoRecurringPlayer" xml:space="preserve"><value>No recurring player could be detected, so analysis will use the currently selected side.</value></data>
+  <data name="MainDialogDetectedPlayer" xml:space="preserve"><value>Detected player: {0}. Only that player's moves will be analyzed, as White or Black depending on each game.</value></data>
+  <data name="MainDialogAnalyzeNow" xml:space="preserve"><value>Analyze now? This can take a long time.</value></data>
+  <data name="MainDialogAnalyze" xml:space="preserve"><value>Analyze</value></data>
+  <data name="MainDialogLater" xml:space="preserve"><value>Later</value></data>
+  <data name="MainDialogPgnAnalysisFinished" xml:space="preserve"><value>PGN analysis finished</value></data>
   <data name="AdviceLanguageInstruction" xml:space="preserve"><value>Write short_text, detailed_text, and training_hint in {0}. Keep JSON keys and chess notation unchanged.</value></data>
   <data name="AdviceDetailedPartsInstruction" xml:space="preserve"><value>For detailed_text, use exactly four short parts in this order: {0}:, {1}:, {2}:, {3}:.</value></data>
   <data name="AdviceExampleShortText" xml:space="preserve"><value>Write a brief summary of the mistake here.</value></data>
@@ -72,6 +87,13 @@
   <data name="AdvicePattern" xml:space="preserve"><value>It fits the {0} pattern.</value></data>
   <data name="AdviceTrainingBeginner" xml:space="preserve"><value>Next time, use one simple habit: {0}</value></data>
   <data name="AdviceTrainingIntermediate" xml:space="preserve"><value>Watch next time for this trigger: {0}</value></data>
+  <data name="AdviceTrainingAdvancedMaterialLoss" xml:space="preserve"><value>Train this by checking forcing continuations until the resulting material balance is completely clear.</value></data>
+  <data name="AdviceTrainingAdvancedHangingPiece" xml:space="preserve"><value>Train board scanning with attacker-defender counts before and after every candidate move.</value></data>
+  <data name="AdviceTrainingAdvancedMissedTactic" xml:space="preserve"><value>Train this with short tactical calculation drills that force you to enumerate checks, captures and threats first.</value></data>
+  <data name="AdviceTrainingAdvancedKingSafety" xml:space="preserve"><value>Review positions where a single pawn move changed diagonal or file access toward the king.</value></data>
+  <data name="AdviceTrainingAdvancedOpeningPrinciples" xml:space="preserve"><value>Review your first 10 moves and justify each one in terms of development, king safety and central influence.</value></data>
+  <data name="AdviceTrainingAdvancedPieceActivity" xml:space="preserve"><value>Compare candidate moves by mobility gain, square quality and coordination rather than by surface-level safety alone.</value></data>
+  <data name="AdviceTrainingAdvancedEndgameTechnique" xml:space="preserve"><value>Drill conversion and defensive endgames with emphasis on king activity and zugzwang awareness.</value></data>
   <data name="AdviceLostCentipawns" xml:space="preserve"><value>and lost about {0} centipawns</value></data>
   <data name="AdviceChangedEvaluation" xml:space="preserve"><value>and changed the evaluation sharply</value></data>
   <data name="AdviceQualityBlunder" xml:space="preserve"><value>blunder</value></data>
@@ -86,6 +108,9 @@
   <data name="AdvicePatternPieceActivity" xml:space="preserve"><value>Passive pieces</value></data>
   <data name="AdvicePatternEndgameTechnique" xml:space="preserve"><value>Endgame technique</value></data>
   <data name="AdvicePatternGeneral" xml:space="preserve"><value>general</value></data>
+  <data name="HeuristicHintOpening" xml:space="preserve"><value>Opening: review this pattern in your first 10 moves.</value></data>
+  <data name="HeuristicHintMiddlegame" xml:space="preserve"><value>Middlegame: compare plans and forcing replies before committing.</value></data>
+  <data name="HeuristicHintEndgame" xml:space="preserve"><value>Endgame: activity and technique matter more than cosmetic moves.</value></data>
   <data name="FormatPhaseOpening" xml:space="preserve"><value>Opening</value></data>
   <data name="FormatPhaseMiddlegame" xml:space="preserve"><value>Middlegame</value></data>
   <data name="FormatPhaseEndgame" xml:space="preserve"><value>Endgame</value></data>
@@ -103,7 +128,9 @@
   <data name="TrainingPurposeMaintain" xml:space="preserve"><value>Maintain</value></data>
   <data name="TrainingPurposeChecklist" xml:space="preserve"><value>Checklist</value></data>
   <data name="CountOneTime" xml:space="preserve"><value>1 time</value></data>
+  <data name="CountFewTimes" xml:space="preserve"><value>{0} times</value></data>
   <data name="CountManyTimes" xml:space="preserve"><value>{0} times</value></data>
   <data name="CountOneMistake" xml:space="preserve"><value>1 mistake</value></data>
+  <data name="CountFewMistakes" xml:space="preserve"><value>{0} mistakes</value></data>
   <data name="CountManyMistakes" xml:space="preserve"><value>{0} mistakes</value></data>
 </root>
