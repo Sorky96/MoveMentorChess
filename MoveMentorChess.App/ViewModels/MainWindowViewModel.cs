@@ -965,7 +965,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
         if (AnalysisMistakes.Count == 0)
         {
-            AnalysisDetails = "No mistakes match the selected filter.";
+            AnalysisDetails = Localizer.Text(LocalizedStrings.MainNoMistakesMatchSelectedFilter);
             return;
         }
 
@@ -1303,7 +1303,13 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        string players = $"{importedGame.WhitePlayer ?? Localizer.Text(LocalizedStrings.CommonWhite)} vs {importedGame.BlackPlayer ?? Localizer.Text(LocalizedStrings.CommonBlack)}";
+        string whitePlayer = string.IsNullOrWhiteSpace(importedGame.WhitePlayer)
+            ? Localizer.Text(LocalizedStrings.CommonWhite)
+            : importedGame.WhitePlayer;
+        string blackPlayer = string.IsNullOrWhiteSpace(importedGame.BlackPlayer)
+            ? Localizer.Text(LocalizedStrings.CommonBlack)
+            : importedGame.BlackPlayer;
+        string players = Localizer.Format(LocalizedStrings.CommonPlayersVersus, whitePlayer, blackPlayer);
         string result = string.IsNullOrWhiteSpace(importedGame.Result)
             ? Localizer.Text(LocalizedStrings.MainResultUnknown)
             : Localizer.Format(LocalizedStrings.SavedAnalysesResult, importedGame.Result);
@@ -1593,18 +1599,34 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         string? primaryPlayer)
     {
         string playerText = string.IsNullOrWhiteSpace(primaryPlayer)
-            ? side.ToString()
-            : $"{primaryPlayer} as {side}";
-        string players = $"{game.WhitePlayer ?? "White"} vs {game.BlackPlayer ?? "Black"}";
-        return $"Analyzing PGN file {current}/{total}: {players} ({playerText})...";
+            ? FormatPlayerSide(side)
+            : Localizer.Format(LocalizedStrings.MainPrimaryPlayerAsSide, primaryPlayer, FormatPlayerSide(side));
+        string players = FormatImportedPlayers(game);
+        return Localizer.Format(LocalizedStrings.MainAnalyzingPgnFileStatus, current, total, players, playerText);
     }
 
     private static string BuildAnalysisFailureMessage(ImportedGame game, PlayerSide side, Exception ex)
     {
-        string players = $"{game.WhitePlayer ?? "White"} vs {game.BlackPlayer ?? "Black"}";
+        string players = FormatImportedPlayers(game);
         string date = string.IsNullOrWhiteSpace(game.DateText) ? string.Empty : $" {game.DateText}";
-        return $"{players}{date}, {side}: {ex.Message}";
+        return Localizer.Format(LocalizedStrings.MainAnalysisFailureSummary, players, date, FormatPlayerSide(side), ex.Message);
     }
+
+    private static string FormatImportedPlayers(ImportedGame game)
+    {
+        string whitePlayer = string.IsNullOrWhiteSpace(game.WhitePlayer)
+            ? Localizer.Text(LocalizedStrings.CommonWhite)
+            : game.WhitePlayer;
+        string blackPlayer = string.IsNullOrWhiteSpace(game.BlackPlayer)
+            ? Localizer.Text(LocalizedStrings.CommonBlack)
+            : game.BlackPlayer;
+        return Localizer.Format(LocalizedStrings.CommonPlayersVersus, whitePlayer, blackPlayer);
+    }
+
+    private static string FormatPlayerSide(PlayerSide side)
+        => side == PlayerSide.White
+            ? Localizer.Text(LocalizedStrings.CommonWhite)
+            : Localizer.Text(LocalizedStrings.CommonBlack);
 
     private static bool TryParseSquare(string square, out (int X, int Y) point)
     {

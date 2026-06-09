@@ -15,6 +15,8 @@ public interface IRuntimeSettingsEnvironment
     void WriteAllText(string path, string contents);
 
     void ReplaceFile(string sourcePath, string destinationPath);
+
+    void DeleteFile(string path);
 }
 
 public sealed class SystemRuntimeSettingsEnvironment : IRuntimeSettingsEnvironment
@@ -47,4 +49,6 @@ public sealed class SystemRuntimeSettingsEnvironment : IRuntimeSettingsEnvironme
 
         File.Move(sourcePath, destinationPath);
     }
+
+    public void DeleteFile(string path) => File.Delete(path);
 }

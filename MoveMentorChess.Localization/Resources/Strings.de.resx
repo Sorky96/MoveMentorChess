@@ -223,6 +223,7 @@
   <data name="MainImportedMovesSummary" xml:space="preserve"><value>Importierte Züge: {0}/{1} angewendet | {2}{3}{4}{5}</value></data>
   <data name="MainAnalysisPlaceholder" xml:space="preserve"><value>Lade eine PGN und starte die Analyse, um Fehler zu prüfen.</value></data>
   <data name="MainRunAnalysisPlaceholder" xml:space="preserve"><value>Starte die Analyse, um Fehler zu prüfen.</value></data>
+  <data name="MainNoMistakesMatchSelectedFilter" xml:space="preserve"><value>Keine Fehler passen zum gewählten Filter.</value></data>
   <data name="MainResultUnknown" xml:space="preserve"><value>Ergebnis: ?</value></data>
   <data name="MainSelectedPieceNone" xml:space="preserve"><value>Ausgewählte Figur: keine</value></data>
   <data name="MainSelectedPieceHeader" xml:space="preserve"><value>Ausgewählte Figur: {0} von {1} | legale Züge: {2}</value></data>
@@ -234,9 +235,16 @@
   <data name="MainPrimaryRunAnalysisDescription" xml:space="preserve"><value>Die Partie ist geladen. Analysiere sie, um die teuersten Züge zu markieren und daraus Training zu machen.</value></data>
   <data name="MainPrimaryLoadPgn" xml:space="preserve"><value>PGN laden, um die erste Prüfung zu starten</value></data>
   <data name="MainPrimaryLoadPgnDescription" xml:space="preserve"><value>Füge eine Partie ein oder lade eine PGN-Datei. MoveMentor spielt sie nach, analysiert Fehler und schlägt Training vor.</value></data>
+  <data name="MainPrimaryPlayerAsSide" xml:space="preserve"><value>{0} als {1}</value></data>
+  <data name="MainAnalyzingPgnFileStatus" xml:space="preserve"><value>Analysiere PGN-Datei {0}/{1}: {2} ({3})...</value></data>
+  <data name="MainAnalysisFailureSummary" xml:space="preserve"><value>{0}{1}, {2}: {3}</value></data>
   <data name="CommonWhite" xml:space="preserve"><value>Weiß</value></data>
   <data name="CommonBlack" xml:space="preserve"><value>Schwarz</value></data>
   <data name="CommonUnknown" xml:space="preserve"><value>?</value></data>
+  <data name="CommonPlayersVersus" xml:space="preserve"><value>{0} gegen {1}</value></data>
+  <data name="CommonNotAvailable" xml:space="preserve"><value>n. v.</value></data>
+  <data name="CommonUnclassified" xml:space="preserve"><value>Nicht klassifiziert</value></data>
+  <data name="CommonFieldSeparator" xml:space="preserve"><value> | </value></data>
   <data name="QualityBook" xml:space="preserve"><value>Buch</value></data>
   <data name="QualityBrilliant" xml:space="preserve"><value>Brillant</value></data>
   <data name="QualityGreat" xml:space="preserve"><value>Großartig</value></data>
@@ -246,6 +254,10 @@
   <data name="QualityInaccuracy" xml:space="preserve"><value>Ungenauigkeit</value></data>
   <data name="QualityMistake" xml:space="preserve"><value>Fehler</value></data>
   <data name="QualityBlunder" xml:space="preserve"><value>Patzer</value></data>
+  <data name="AnalysisImpactForcedMateAllowed" xml:space="preserve"><value>erzwungenes Matt zugelassen</value></data>
+  <data name="AnalysisImpactWinningTacticMissed" xml:space="preserve"><value>gewinnende Taktik verpasst</value></data>
+  <data name="AnalysisImpactMateRouteChanged" xml:space="preserve"><value>Mattweg verändert</value></data>
+  <data name="AnalysisImpactEvaluationLoss" xml:space="preserve"><value>Bewertungsverlust {0} cp</value></data>
   <data name="SavedAnalysesTitle" xml:space="preserve"><value>Gespeicherte Analysen</value></data>
   <data name="SavedAnalysesFilterPlaceholder" xml:space="preserve"><value>Nach Spieler, Eröffnung, Ergebnis oder Labels filtern...</value></data>
   <data name="SavedAnalysesLoadGame" xml:space="preserve"><value>Partie laden</value></data>
@@ -381,4 +393,70 @@
   <data name="ProfilesEvidence" xml:space="preserve"><value>Belege</value></data>
   <data name="ProfilesBackToBoard" xml:space="preserve"><value>Zurück zum Brett</value></data>
   <data name="ProfilesAnalyzedPlayers" xml:space="preserve"><value>Analysierte Spieler</value></data>
+  <data name="OpeningTrainerProfileWhiteName" xml:space="preserve"><value>Weiß spielen</value></data>
+  <data name="OpeningTrainerProfileWhiteDescription" xml:space="preserve"><value>Erstelle das heutige Training aus deinem Weiß-Repertoire.</value></data>
+  <data name="OpeningTrainerProfileBlackName" xml:space="preserve"><value>Schwarz spielen</value></data>
+  <data name="OpeningTrainerProfileBlackDescription" xml:space="preserve"><value>Erstelle das heutige Training aus deinem Schwarz-Repertoire.</value></data>
+  <data name="OpeningTrainerProfileBothName" xml:space="preserve"><value>Beide Seiten</value></data>
+  <data name="OpeningTrainerProfileBothDescription" xml:space="preserve"><value>Nutze das volle Repertoire für die heutige Trainingsauswahl.</value></data>
+  <data name="OpeningTrainerIntensitySafeName" xml:space="preserve"><value>Sichere Wiederholung</value></data>
+  <data name="OpeningTrainerIntensitySafeDescription" xml:space="preserve"><value>Nur fällige bekannte Stellungen.</value></data>
+  <data name="OpeningTrainerIntensityBalancedName" xml:space="preserve"><value>Ausgewogen</value></data>
+  <data name="OpeningTrainerIntensityBalancedDescription" xml:space="preserve"><value>Fällige Stellungen plus schwache Zweige.</value></data>
+  <data name="OpeningTrainerIntensityChallengeName" xml:space="preserve"><value>Herausforderung</value></data>
+  <data name="OpeningTrainerIntensityChallengeDescription" xml:space="preserve"><value>Fügt weniger vertraute gegnerische Antworten hinzu.</value></data>
+  <data name="OpeningTrainerSelectedProfilePlaceholder" xml:space="preserve"><value>Wähle, wie das heutige Training aus deinem Repertoire wählen soll.</value></data>
+  <data name="OpeningTrainerNoRecommendation" xml:space="preserve"><value>Keine Empfehlung verfügbar</value></data>
+  <data name="OpeningTrainerImportTheoryForRecommendations" xml:space="preserve"><value>Importiere Eröffnungstheorie, um Empfehlungen zu aktivieren.</value></data>
+  <data name="OpeningTrainerRecommendationMeta" xml:space="preserve"><value>{0} | {1} | etwa {2} Min.</value></data>
+  <data name="OpeningTrainerNeedsOpeningLine" xml:space="preserve"><value>Der Trainer benötigt mindestens eine verfügbare Eröffnungslinie.</value></data>
+  <data name="OpeningTrainerStartPractice" xml:space="preserve"><value>Training starten</value></data>
+  <data name="OpeningTrainerChooseOpeningFirst" xml:space="preserve"><value>Zuerst eine Eröffnung wählen</value></data>
+  <data name="OpeningTrainerNoActiveTheory" xml:space="preserve"><value>Keine aktive Theorie</value></data>
+  <data name="OpeningTrainerWhiteRepertoire" xml:space="preserve"><value>Weiß-Repertoire</value></data>
+  <data name="OpeningTrainerBlackRepertoire" xml:space="preserve"><value>Schwarz-Repertoire</value></data>
+  <data name="OpeningTrainerBothSides" xml:space="preserve"><value>Beide Seiten</value></data>
+  <data name="OpeningTrainerDurationAfterImport" xml:space="preserve"><value>Dauer erscheint nach dem Import</value></data>
+  <data name="OpeningTrainerAboutMinutes" xml:space="preserve"><value>Etwa {0} Min.</value></data>
+  <data name="OpeningTrainerNoPositionsToTrain" xml:space="preserve"><value>Keine Stellungen zum Trainieren</value></data>
+  <data name="OpeningTrainerPositionsBranches" xml:space="preserve"><value>{0} Stellungen / Zweige</value></data>
+  <data name="OpeningTrainerTheoryGames" xml:space="preserve"><value>{0} Theoriepartien</value></data>
+  <data name="OpeningTrainerImportOrChooseOpening" xml:space="preserve"><value>Importiere oder wähle eine Eröffnung, um das heutige Training zu starten.</value></data>
+  <data name="OpeningTrainerRecommendedTodayUnavailable" xml:space="preserve"><value>Heute empfohlen: vor dem Start eine Eröffnung importieren oder wählen.</value></data>
+  <data name="OpeningTrainerTodayDecisionSummary" xml:space="preserve"><value>Heute: {0} Wiederholungsstellungen aus einer {1}-Zug-Linie, ca. {2}, {3}-Repertoire.</value></data>
+  <data name="OpeningTrainerStartSequenceSafe" xml:space="preserve"><value>Beginnt mit fälligen bekannten Stellungen. Reparaturen schwacher Zweige bleiben optional.</value></data>
+  <data name="OpeningTrainerStartSequenceChallenge" xml:space="preserve"><value>Beginnt mit fälligen Stellungen und fügt dann weniger vertraute gegnerische Antworten hinzu.</value></data>
+  <data name="OpeningTrainerStartSequenceBalanced" xml:space="preserve"><value>Beginnt mit fälligen Stellungen und repariert dann schwache Zweige.</value></data>
+  <data name="OpeningTrainerTheoryReasonPlaceholder" xml:space="preserve"><value>Sobald Theorie verfügbar ist, erklärt der Trainer, warum diese Linie jetzt der sicherste Einsatz deiner Zeit ist.</value></data>
+  <data name="OpeningTrainerReviewDueScheduled" xml:space="preserve"><value>Diese Wiederholung ist fällig, weil einige geplante Elemente ihr Wiederholungsfenster überschritten haben.</value></data>
+  <data name="OpeningTrainerModeContextSafe" xml:space="preserve"><value>Sichere Wiederholung lässt die Reparatur schwacher Zweige optional.</value></data>
+  <data name="OpeningTrainerModeContextChallenge" xml:space="preserve"><value>Der Herausforderungsmodus fügt nach der Hauptlinie weniger vertraute gegnerische Antworten hinzu.</value></data>
+  <data name="OpeningTrainerModeContextBalanced" xml:space="preserve"><value>Der ausgewogene Modus repariert nach der Hauptlinie schwache Zweige.</value></data>
+  <data name="OpeningTrainerGoalRepairWeakBranches" xml:space="preserve"><value>Ziel: Hauptaufbau bestätigen und {0} schwache Zweige reparieren.</value></data>
+  <data name="OpeningTrainerGoalStableRecall" xml:space="preserve"><value>Ziel: Hauptaufbau bestätigen und Erinnerung stabil halten.</value></data>
+  <data name="OpeningTrainerRecommendedBecause" xml:space="preserve"><value>Empfohlen, weil...</value></data>
+  <data name="OpeningTrainerReadyWhenYouAre" xml:space="preserve"><value>Bereit, wenn du bereit bist</value></data>
+  <data name="OpeningTrainerStartGuidedTraining" xml:space="preserve"><value>Geführtes Training starten</value></data>
+  <data name="OpeningTrainerImportOpeningsFirst" xml:space="preserve"><value>Zuerst Eröffnungen importieren</value></data>
+  <data name="OpeningTrainerSelectedIntensityPlaceholder" xml:space="preserve"><value>Wähle, wie vorsichtig sich das heutige Training anfühlen soll.</value></data>
+  <data name="OpeningTrainerTrainingRhythmTitle" xml:space="preserve"><value>Dein Trainingsrhythmus</value></data>
+  <data name="OpeningTrainerTrainingRhythmPlaceholder" xml:space="preserve"><value>Dein Trainingsrhythmus erscheint nach dem Laden lokaler Theorie.</value></data>
+  <data name="OpeningTrainerStartSessionForProgress" xml:space="preserve"><value>Starte eine Sitzung, um Repertoirefortschritt aufzubauen.</value></data>
+  <data name="OpeningTrainerProgressMovesAccepted" xml:space="preserve"><value>{0} Züge geübt, {1:0.#}% akzeptiert.</value></data>
+  <data name="OpeningTrainerOneTry" xml:space="preserve"><value>1 Versuch</value></data>
+  <data name="OpeningTrainerManyTries" xml:space="preserve"><value>{0} Versuche</value></data>
+  <data name="OpeningTrainerOnTrack" xml:space="preserve"><value>auf Kurs</value></data>
+  <data name="OpeningTrainerStatusWithPractice" xml:space="preserve"><value>{0} - {1} - {2}</value></data>
+  <data name="OpeningTrainerStageSelectionTitle" xml:space="preserve"><value>Heutiges Training wählen</value></data>
+  <data name="OpeningTrainerStageOverviewTitle" xml:space="preserve"><value>Idee verstehen</value></data>
+  <data name="OpeningTrainerStageStudyTitle" xml:space="preserve"><value>Aus dem Gedächtnis üben</value></data>
+  <data name="OpeningTrainerStageResultsTitle" xml:space="preserve"><value>Prüfen und fortfahren</value></data>
+  <data name="OpeningTrainerStageSelectionDescription" xml:space="preserve"><value>Beginne mit der heutigen Empfehlung und nutze erweiterte Optionen nur für eine bestimmte Linie.</value></data>
+  <data name="OpeningTrainerStageOverviewDescription" xml:space="preserve"><value>Sieh Idee, häufige Antworten und Fokus, bevor du aus dem Gedächtnis übst.</value></data>
+  <data name="OpeningTrainerStageStudyDescription" xml:space="preserve"><value>Rufe den Zug zuerst ab und nutze Hinweise nur, wenn du einen kleinen Schubs brauchst.</value></data>
+  <data name="OpeningTrainerStageResultsDescription" xml:space="preserve"><value>Sieh, was stabil ist, was Wiederholung braucht und welche nächste Aktion sinnvoll ist.</value></data>
+  <data name="OpeningTrainerStageProgress" xml:space="preserve"><value>Stufe {0} von {1} - {2}</value></data>
+  <data name="OpeningTrainerNoOpeningSelected" xml:space="preserve"><value>Keine Eröffnung ausgewählt</value></data>
+  <data name="OpeningTrainerChooseItemFromList" xml:space="preserve"><value>Ein Element aus der Liste wählen</value></data>
+  <data name="OpeningTrainerSideRepertoire" xml:space="preserve"><value>{0}-Repertoire</value></data>
 </root>

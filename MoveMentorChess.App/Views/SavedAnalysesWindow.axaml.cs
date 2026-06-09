@@ -100,7 +100,10 @@ public partial class SavedAnalysesWindow : Window
         AnalysesListBox.ItemsSource = filtered
             .Select(result => new SavedAnalysisListItem(
                 result,
-                $"{result.Game.WhitePlayer ?? Localizer.Text(LocalizedStrings.CommonWhite)} vs {result.Game.BlackPlayer ?? Localizer.Text(LocalizedStrings.CommonBlack)}",
+                Localizer.Format(
+                    LocalizedStrings.CommonPlayersVersus,
+                    string.IsNullOrWhiteSpace(result.Game.WhitePlayer) ? Localizer.Text(LocalizedStrings.CommonWhite) : result.Game.WhitePlayer,
+                    string.IsNullOrWhiteSpace(result.Game.BlackPlayer) ? Localizer.Text(LocalizedStrings.CommonBlack) : result.Game.BlackPlayer),
                 result.AnalyzedSide == PlayerSide.White ? Localizer.Text(LocalizedStrings.CommonWhite) : Localizer.Text(LocalizedStrings.CommonBlack),
                 string.IsNullOrWhiteSpace(result.Game.DateText) ? Localizer.Text(LocalizedStrings.CommonUnknown) : result.Game.DateText!,
                 OpeningCatalog.GetName(result.Game.Eco),
@@ -147,7 +150,13 @@ public partial class SavedAnalysesWindow : Window
             .ToList();
 
         StringBuilder builder = new();
-        builder.AppendLine(CultureInfo.InvariantCulture, $"{result.Game.WhitePlayer ?? Localizer.Text(LocalizedStrings.CommonWhite)} vs {result.Game.BlackPlayer ?? Localizer.Text(LocalizedStrings.CommonBlack)}");
+        string whitePlayer = string.IsNullOrWhiteSpace(result.Game.WhitePlayer)
+            ? Localizer.Text(LocalizedStrings.CommonWhite)
+            : result.Game.WhitePlayer;
+        string blackPlayer = string.IsNullOrWhiteSpace(result.Game.BlackPlayer)
+            ? Localizer.Text(LocalizedStrings.CommonBlack)
+            : result.Game.BlackPlayer;
+        builder.AppendLine(Localizer.Format(LocalizedStrings.CommonPlayersVersus, whitePlayer, blackPlayer));
         builder.AppendLine(Localizer.Format(LocalizedStrings.SavedAnalysesSide, FormatSide(result.AnalyzedSide)));
         builder.AppendLine(Localizer.Format(LocalizedStrings.SavedAnalysesDate, result.Game.DateText ?? Localizer.Text(LocalizedStrings.CommonUnknown)));
         builder.AppendLine(Localizer.Format(LocalizedStrings.SavedAnalysesResult, result.Game.Result ?? Localizer.Text(LocalizedStrings.CommonUnknown)));
@@ -183,7 +192,12 @@ public partial class SavedAnalysesWindow : Window
                 }
 
                 string moveLabel = $"{lead.Replay.MoveNumber}{(lead.Replay.Side == PlayerSide.White ? "." : "...")} {lead.Replay.San}";
-                builder.AppendLine(CultureInfo.InvariantCulture, $"- {moveLabel} | {FormatQuality(mistake.Quality)} | {FormatMistakeLabel(mistake.Tag?.Label ?? "unclassified")} | {Localizer.Format(LocalizedStrings.SavedAnalysesCpl, lead.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a")}");
+                string separator = Localizer.Text(LocalizedStrings.CommonFieldSeparator);
+                string label = FormatMistakeLabel(mistake.Tag?.Label ?? "unclassified");
+                string cpl = Localizer.Format(
+                    LocalizedStrings.SavedAnalysesCpl,
+                    lead.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? Localizer.Text(LocalizedStrings.CommonNotAvailable));
+                builder.AppendLine(CultureInfo.InvariantCulture, $"- {moveLabel}{separator}{FormatQuality(mistake.Quality)}{separator}{label}{separator}{cpl}");
             }
         }
 

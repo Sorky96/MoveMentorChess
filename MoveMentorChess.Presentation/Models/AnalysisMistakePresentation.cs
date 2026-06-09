@@ -78,9 +78,9 @@ public static class AnalysisMistakePresentation
     {
         return phase switch
         {
-            GamePhase.Opening => Localizer.Text(LocalizedStrings.FormatPhaseOpening).ToLowerInvariant(),
-            GamePhase.Middlegame => Localizer.Text(LocalizedStrings.FormatPhaseMiddlegame).ToLowerInvariant(),
-            GamePhase.Endgame => Localizer.Text(LocalizedStrings.FormatPhaseEndgame).ToLowerInvariant(),
+            GamePhase.Opening => Localizer.Text(LocalizedStrings.FormatPhaseOpening),
+            GamePhase.Middlegame => Localizer.Text(LocalizedStrings.FormatPhaseMiddlegame),
+            GamePhase.Endgame => Localizer.Text(LocalizedStrings.FormatPhaseEndgame),
             _ => phase.ToString()
         };
     }
@@ -96,6 +96,7 @@ public static class AnalysisMistakePresentation
             "endgame_technique" => Localizer.Text(LocalizedStrings.AdvicePatternEndgameTechnique),
             "material_loss" => Localizer.Text(LocalizedStrings.AdvicePatternMaterialLoss),
             "piece_activity" => Localizer.Text(LocalizedStrings.AdvicePatternPieceActivity),
+            "unclassified" => Localizer.Text(LocalizedStrings.CommonUnclassified),
             _ => CultureInfo.InvariantCulture.TextInfo.ToTitleCase(label.Replace('_', ' ').ToLowerInvariant())
         };
     }
@@ -121,20 +122,22 @@ public static class AnalysisMistakePresentation
     {
         if (lead.PlayedMateIn is < 0)
         {
-            return "forced mate allowed";
+            return Localizer.Text(LocalizedStrings.AnalysisImpactForcedMateAllowed);
         }
 
         if (lead.BestMateIn is > 0 && lead.PlayedMateIn is null)
         {
-            return "winning tactic missed";
+            return Localizer.Text(LocalizedStrings.AnalysisImpactWinningTacticMissed);
         }
 
         if (lead.BestMateIn is > 0 && lead.PlayedMateIn is > 0)
         {
-            return "mate route changed";
+            return Localizer.Text(LocalizedStrings.AnalysisImpactMateRouteChanged);
         }
 
-        return $"evaluation loss {lead.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"} cp";
+        return Localizer.Format(
+            LocalizedStrings.AnalysisImpactEvaluationLoss,
+            lead.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? Localizer.Text(LocalizedStrings.CommonNotAvailable));
     }
 
     public static (string Text, string Reason, string Brush) BuildPriorityInfo(

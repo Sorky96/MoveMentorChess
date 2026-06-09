@@ -15,7 +15,7 @@
       <Grid RowDefinitions="Auto,Auto,*">
         <Grid ColumnDefinitions="*,Auto">
           <TextBlock FontSize="24" FontWeight="Bold" Text="{loc:Localize PgnImportHeading}" />
-          <Button Grid.Column="1" Click="CancelButton_Click" Content="{loc:Localize SettingsClose}" />
+          <Button Grid.Column="1" Click="CancelButton_Click" Content="{loc:Localize SettingsCancel}" />
         </Grid>
         <TextBlock Grid.Row="1"
                    Margin="0,12,0,12"

@@ -63,8 +63,24 @@ public static class ApplicationSettingsStore
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
+                TryDeleteTempFile(environment, tempPath);
                 throw new ApplicationSettingsSaveException(path, ex);
             }
+        }
+    }
+
+    private static void TryDeleteTempFile(IRuntimeSettingsEnvironment environment, string tempPath)
+    {
+        try
+        {
+            if (environment.FileExists(tempPath))
+            {
+                environment.DeleteFile(tempPath);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Best-effort cleanup must not hide the original save failure.
         }
     }
 

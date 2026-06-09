@@ -102,6 +102,8 @@ public sealed class RuntimeSettingsStoreTests
 
         Assert.Equal(ApplicationSettingsStore.GetSettingsPath(environment), exception.Path);
         Assert.Same(environment.ReplaceException, exception.InnerException);
+        Assert.Single(environment.DeletedFiles);
+        Assert.EndsWith(".tmp", environment.DeletedFiles[0], StringComparison.Ordinal);
     }
 
     private sealed class FakeRuntimeSettingsEnvironment(
@@ -117,6 +119,8 @@ public sealed class RuntimeSettingsStoreTests
         public HashSet<string> CreatedDirectories { get; } = new(StringComparer.OrdinalIgnoreCase);
 
         public List<(string SourcePath, string DestinationPath)> ReplacedFiles { get; } = [];
+
+        public List<string> DeletedFiles { get; } = [];
 
         public IOException? ReplaceException { get; init; }
 
@@ -144,6 +148,12 @@ public sealed class RuntimeSettingsStoreTests
             ReplacedFiles.Add((sourcePath, destinationPath));
             files[destinationPath] = files[sourcePath];
             files.Remove(sourcePath);
+        }
+
+        public void DeleteFile(string path)
+        {
+            DeletedFiles.Add(path);
+            files.Remove(path);
         }
     }
 }
