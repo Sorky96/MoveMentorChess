@@ -31,6 +31,8 @@ public static class LocalizedStrings
     public const string SettingsStockfishDescription = nameof(SettingsStockfishDescription);
     public const string SettingsSelectStockfishExecutable = nameof(SettingsSelectStockfishExecutable);
     public const string SettingsSelectLlamaServerExecutable = nameof(SettingsSelectLlamaServerExecutable);
+    public const string SettingsSaveFailedTitle = nameof(SettingsSaveFailedTitle);
+    public const string SettingsSaveFailedMessage = nameof(SettingsSaveFailedMessage);
     public const string ExplanationBeginner = nameof(ExplanationBeginner);
     public const string ExplanationIntermediate = nameof(ExplanationIntermediate);
     public const string ExplanationAdvanced = nameof(ExplanationAdvanced);
@@ -70,6 +72,7 @@ public static class LocalizedStrings
     public const string MainDialogLater = nameof(MainDialogLater);
     public const string MainDialogPgnAnalysisFinished = nameof(MainDialogPgnAnalysisFinished);
     public const string MainDialogOk = nameof(MainDialogOk);
+    public const string MainPgnFiles = nameof(MainPgnFiles);
     public const string MainBulkAnalyzedPlayer = nameof(MainBulkAnalyzedPlayer);
     public const string MainBulkDetectedPlayerNone = nameof(MainBulkDetectedPlayerNone);
     public const string MainBulkNewAnalyses = nameof(MainBulkNewAnalyses);
@@ -91,6 +94,8 @@ public static class LocalizedStrings
     public const string MainEvaluationBlack = nameof(MainEvaluationBlack);
     public const string MainImportedMovesNone = nameof(MainImportedMovesNone);
     public const string MainImportedMovesSummary = nameof(MainImportedMovesSummary);
+    public const string MainAnalysisPlaceholder = nameof(MainAnalysisPlaceholder);
+    public const string MainRunAnalysisPlaceholder = nameof(MainRunAnalysisPlaceholder);
     public const string MainResultUnknown = nameof(MainResultUnknown);
     public const string MainSelectedPieceNone = nameof(MainSelectedPieceNone);
     public const string MainSelectedPieceHeader = nameof(MainSelectedPieceHeader);
@@ -255,4 +260,18 @@ public static class LocalizedStrings
     public const string SavedAnalysesCpl = nameof(SavedAnalysesCpl);
     public const string SavedAnalysesOpenInstructions = nameof(SavedAnalysesOpenInstructions);
     public const string SavedAnalysesLoadInstructions = nameof(SavedAnalysesLoadInstructions);
+    public const string OpeningTrainerActiveHistoryKey = nameof(OpeningTrainerActiveHistoryKey);
+    public const string OpeningTrainerChooseOpeningPreview = nameof(OpeningTrainerChooseOpeningPreview);
+    public const string OpeningTrainerCommonRepliesPlaceholder = nameof(OpeningTrainerCommonRepliesPlaceholder);
+    public const string OpeningTrainerNoPracticeHistory = nameof(OpeningTrainerNoPracticeHistory);
+    public const string OpeningTrainerPickOpeningCoverage = nameof(OpeningTrainerPickOpeningCoverage);
+    public const string OpeningTrainerPracticeIdle = nameof(OpeningTrainerPracticeIdle);
+    public const string OpeningTrainerHintsPlaceholder = nameof(OpeningTrainerHintsPlaceholder);
+    public const string OpeningTrainerNoHintUsed = nameof(OpeningTrainerNoHintUsed);
+    public const string OpeningTrainerWhyPlaceholder = nameof(OpeningTrainerWhyPlaceholder);
+    public const string OpeningTrainerNoOpeningsMatch = nameof(OpeningTrainerNoOpeningsMatch);
+    public const string OpeningTrainerOpponentRepliesUnavailable = nameof(OpeningTrainerOpponentRepliesUnavailable);
+    public const string OpeningTrainerTryAnotherFilterOrSide = nameof(OpeningTrainerTryAnotherFilterOrSide);
+    public const string OpeningTrainerCouldNotLoadOverview = nameof(OpeningTrainerCouldNotLoadOverview);
+    public const string OpeningTrainerOpeningNeedsMoreTheory = nameof(OpeningTrainerOpeningNeedsMoreTheory);
 }

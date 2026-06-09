@@ -30,6 +30,8 @@
   <data name="SettingsStockfishDescription" xml:space="preserve"><value>Stockfish użyje {0} wątków, {1} MB hash, a analiza PGN uruchomi się z głębokością {2}, MultiPV {3}, {4} ms na pozycję.</value></data>
   <data name="SettingsSelectStockfishExecutable" xml:space="preserve"><value>Wybierz stockfish.exe</value></data>
   <data name="SettingsSelectLlamaServerExecutable" xml:space="preserve"><value>Wybierz llama-server.exe</value></data>
+  <data name="SettingsSaveFailedTitle" xml:space="preserve"><value>Nie udało się zapisać ustawień</value></data>
+  <data name="SettingsSaveFailedMessage" xml:space="preserve"><value>MoveMentor nie mógł zapisać ustawień aplikacji. Sprawdź uprawnienia plików albo miejsce na dysku i spróbuj ponownie.</value></data>
   <data name="ExplanationBeginner" xml:space="preserve"><value>Początkujący</value></data>
   <data name="ExplanationIntermediate" xml:space="preserve"><value>Średni</value></data>
   <data name="ExplanationAdvanced" xml:space="preserve"><value>Zaawansowany</value></data>
@@ -68,6 +70,7 @@
   <data name="MainDialogLater" xml:space="preserve"><value>Później</value></data>
   <data name="MainDialogPgnAnalysisFinished" xml:space="preserve"><value>Analiza PGN zakończona</value></data>
   <data name="MainDialogOk" xml:space="preserve"><value>OK</value></data>
+  <data name="MainPgnFiles" xml:space="preserve"><value>Pliki PGN</value></data>
   <data name="MainBulkAnalyzedPlayer" xml:space="preserve"><value>Analizowany gracz: {0}</value></data>
   <data name="MainBulkDetectedPlayerNone" xml:space="preserve"><value>Wykryty gracz: brak</value></data>
   <data name="MainBulkNewAnalyses" xml:space="preserve"><value>Nowe analizy: {0}</value></data>
@@ -218,6 +221,8 @@
   <data name="MainEvaluationBlack" xml:space="preserve"><value>Ocena: czarny +{0}</value></data>
   <data name="MainImportedMovesNone" xml:space="preserve"><value>Zaimportowane ruchy: brak</value></data>
   <data name="MainImportedMovesSummary" xml:space="preserve"><value>Zaimportowane ruchy: zastosowano {0}/{1} | {2}{3}{4}{5}</value></data>
+  <data name="MainAnalysisPlaceholder" xml:space="preserve"><value>Wczytaj PGN i uruchom analizę, aby obejrzeć błędy.</value></data>
+  <data name="MainRunAnalysisPlaceholder" xml:space="preserve"><value>Uruchom analizę, aby obejrzeć błędy.</value></data>
   <data name="MainResultUnknown" xml:space="preserve"><value>Wynik: ?</value></data>
   <data name="MainSelectedPieceNone" xml:space="preserve"><value>Wybrana figura: brak</value></data>
   <data name="MainSelectedPieceHeader" xml:space="preserve"><value>Wybrana figura: {0} z {1} | legalne ruchy: {2}</value></data>
@@ -334,6 +339,12 @@
   <data name="OpeningTrainerPracticeIdle" xml:space="preserve"><value>Trening jest bezczynny.</value></data>
   <data name="OpeningTrainerHintsPlaceholder" xml:space="preserve"><value>Podpowiedzi pojawią się tutaj, gdy o nie poprosisz.</value></data>
   <data name="OpeningTrainerNoHintUsed" xml:space="preserve"><value>Nie użyto podpowiedzi</value></data>
+  <data name="OpeningTrainerWhyPlaceholder" xml:space="preserve"><value>Wybierz ruch, aby zobaczyć, dlaczego ma znaczenie.</value></data>
+  <data name="OpeningTrainerNoOpeningsMatch" xml:space="preserve"><value>Żaden debiut nie pasuje do bieżącego filtra.</value></data>
+  <data name="OpeningTrainerOpponentRepliesUnavailable" xml:space="preserve"><value>Odpowiedzi przeciwnika są niedostępne.</value></data>
+  <data name="OpeningTrainerTryAnotherFilterOrSide" xml:space="preserve"><value>Spróbuj innego filtra albo strony repertuaru.</value></data>
+  <data name="OpeningTrainerCouldNotLoadOverview" xml:space="preserve"><value>Nie udało się wczytać przeglądu debiutu.</value></data>
+  <data name="OpeningTrainerOpeningNeedsMoreTheory" xml:space="preserve"><value>Wybrany debiut nie ma jeszcze wystarczających lokalnych danych teorii.</value></data>
   <data name="PgnImportTitle" xml:space="preserve"><value>Import PGN</value></data>
   <data name="PgnImportHeading" xml:space="preserve"><value>Importuj PGN</value></data>
   <data name="PgnImportIntro" xml:space="preserve"><value>Wklej pełny plik PGN. Po imporcie partia od razu pojawi się na szachownicy i zostanie zapisana lokalnie.</value></data>

@@ -137,6 +137,8 @@
   <data name="SettingsStockfishDescription" xml:space="preserve"><value>Stockfish verwendet {0} Thread(s), {1} MB Hash, und die PGN-Massenanalyse läuft mit Tiefe {2}, MultiPV {3}, {4} ms pro Stellung.</value></data>
   <data name="SettingsSelectStockfishExecutable" xml:space="preserve"><value>stockfish.exe auswählen</value></data>
   <data name="SettingsSelectLlamaServerExecutable" xml:space="preserve"><value>llama-server.exe auswählen</value></data>
+  <data name="SettingsSaveFailedTitle" xml:space="preserve"><value>Einstellungen konnten nicht gespeichert werden</value></data>
+  <data name="SettingsSaveFailedMessage" xml:space="preserve"><value>MoveMentor konnte die Anwendungseinstellungen nicht speichern. Prüfe Dateiberechtigungen oder Speicherplatz und versuche es erneut.</value></data>
   <data name="NarrationRegularTrainer" xml:space="preserve"><value>Normaler Trainer</value></data>
   <data name="NarrationLevyRozman" xml:space="preserve"><value>Levy Rozman</value></data>
   <data name="NarrationHikaruNakamura" xml:space="preserve"><value>Hikaru Nakamura</value></data>
@@ -156,6 +158,7 @@
   <data name="MainDialogLater" xml:space="preserve"><value>Später</value></data>
   <data name="MainDialogPgnAnalysisFinished" xml:space="preserve"><value>PGN-Analyse abgeschlossen</value></data>
   <data name="MainDialogOk" xml:space="preserve"><value>OK</value></data>
+  <data name="MainPgnFiles" xml:space="preserve"><value>PGN-Dateien</value></data>
   <data name="MainBulkAnalyzedPlayer" xml:space="preserve"><value>Analysierter Spieler: {0}</value></data>
   <data name="MainBulkDetectedPlayerNone" xml:space="preserve"><value>Erkannter Spieler: keiner</value></data>
   <data name="MainBulkNewAnalyses" xml:space="preserve"><value>Neue Analysen: {0}</value></data>
@@ -218,6 +221,8 @@
   <data name="MainEvaluationBlack" xml:space="preserve"><value>Bewertung: Schwarz +{0}</value></data>
   <data name="MainImportedMovesNone" xml:space="preserve"><value>Importierte Züge: keine</value></data>
   <data name="MainImportedMovesSummary" xml:space="preserve"><value>Importierte Züge: {0}/{1} angewendet | {2}{3}{4}{5}</value></data>
+  <data name="MainAnalysisPlaceholder" xml:space="preserve"><value>Lade eine PGN und starte die Analyse, um Fehler zu prüfen.</value></data>
+  <data name="MainRunAnalysisPlaceholder" xml:space="preserve"><value>Starte die Analyse, um Fehler zu prüfen.</value></data>
   <data name="MainResultUnknown" xml:space="preserve"><value>Ergebnis: ?</value></data>
   <data name="MainSelectedPieceNone" xml:space="preserve"><value>Ausgewählte Figur: keine</value></data>
   <data name="MainSelectedPieceHeader" xml:space="preserve"><value>Ausgewählte Figur: {0} von {1} | legale Züge: {2}</value></data>
@@ -235,7 +240,7 @@
   <data name="QualityBook" xml:space="preserve"><value>Buch</value></data>
   <data name="QualityBrilliant" xml:space="preserve"><value>Brillant</value></data>
   <data name="QualityGreat" xml:space="preserve"><value>Großartig</value></data>
-  <data name="QualityBest" xml:space="preserve"><value>Best</value></data>
+  <data name="QualityBest" xml:space="preserve"><value>Beste</value></data>
   <data name="QualityExcellent" xml:space="preserve"><value>Ausgezeichnet</value></data>
   <data name="SavedAnalysesTitle" xml:space="preserve"><value>Gespeicherte Analysen</value></data>
   <data name="SavedAnalysesFilterPlaceholder" xml:space="preserve"><value>Nach Spieler, Eröffnung, Ergebnis oder Labels filtern...</value></data>
@@ -334,6 +339,12 @@
   <data name="OpeningTrainerPracticeIdle" xml:space="preserve"><value>Training ist inaktiv.</value></data>
   <data name="OpeningTrainerHintsPlaceholder" xml:space="preserve"><value>Hinweise erscheinen hier, wenn du danach fragst.</value></data>
   <data name="OpeningTrainerNoHintUsed" xml:space="preserve"><value>Kein Hinweis genutzt</value></data>
+  <data name="OpeningTrainerWhyPlaceholder" xml:space="preserve"><value>Wähle einen Zug, um zu sehen, warum er wichtig ist.</value></data>
+  <data name="OpeningTrainerNoOpeningsMatch" xml:space="preserve"><value>Keine Eröffnung passt zum aktuellen Filter.</value></data>
+  <data name="OpeningTrainerOpponentRepliesUnavailable" xml:space="preserve"><value>Gegnerische Antworten sind nicht verfügbar.</value></data>
+  <data name="OpeningTrainerTryAnotherFilterOrSide" xml:space="preserve"><value>Versuche einen anderen Filter oder eine andere Repertoireseite.</value></data>
+  <data name="OpeningTrainerCouldNotLoadOverview" xml:space="preserve"><value>Die Eröffnungsübersicht konnte nicht geladen werden.</value></data>
+  <data name="OpeningTrainerOpeningNeedsMoreTheory" xml:space="preserve"><value>Die gewählte Eröffnung hat noch nicht genug lokale Theoriedaten.</value></data>
   <data name="PgnImportTitle" xml:space="preserve"><value>PGN-Import</value></data>
   <data name="PgnImportHeading" xml:space="preserve"><value>PGN importieren</value></data>
   <data name="PgnImportIntro" xml:space="preserve"><value>Füge die vollständige PGN-Datei ein. Nach dem Import erscheint die Partie sofort auf dem Brett und wird lokal gespeichert.</value></data>

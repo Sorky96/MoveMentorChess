@@ -123,7 +123,7 @@ public partial class MainWindow : Window
             AllowMultiple = false,
             FileTypeFilter =
             [
-                new FilePickerFileType("PGN files")
+                new FilePickerFileType(Localizer.Text(LocalizedStrings.MainPgnFiles))
                 {
                     Patterns = ["*.pgn"],
                     MimeTypes = ["application/x-chess-pgn", "text/plain"]

@@ -74,6 +74,36 @@ public sealed class RuntimeSettingsStoreTests
         Assert.Equal(LanguageCatalog.English.CultureName, ApplicationSettingsStore.Load(environment).CultureName);
     }
 
+    [Fact]
+    public void ApplicationSettingsStore_ReplacesSettingsFileFromTemporaryFile()
+    {
+        FakeRuntimeSettingsEnvironment environment = new(@"C:\local-app-data", @"C:\app-base");
+
+        ApplicationSettingsStore.Save(new ApplicationSettings("pl"), environment);
+
+        string expectedPath = ApplicationSettingsStore.GetSettingsPath(environment);
+        Assert.Single(environment.ReplacedFiles);
+        Assert.Equal(expectedPath, environment.ReplacedFiles[0].DestinationPath);
+        Assert.EndsWith(".tmp", environment.ReplacedFiles[0].SourcePath, StringComparison.Ordinal);
+        Assert.False(environment.FileExists(environment.ReplacedFiles[0].SourcePath));
+        Assert.Equal("pl", ApplicationSettingsStore.Load(environment).CultureName);
+    }
+
+    [Fact]
+    public void ApplicationSettingsStore_WrapsSaveIoFailures()
+    {
+        FakeRuntimeSettingsEnvironment environment = new(@"C:\local-app-data", @"C:\app-base")
+        {
+            ReplaceException = new IOException("disk full")
+        };
+
+        ApplicationSettingsSaveException exception = Assert.Throws<ApplicationSettingsSaveException>(
+            () => ApplicationSettingsStore.Save(new ApplicationSettings("de"), environment));
+
+        Assert.Equal(ApplicationSettingsStore.GetSettingsPath(environment), exception.Path);
+        Assert.Same(environment.ReplaceException, exception.InnerException);
+    }
+
     private sealed class FakeRuntimeSettingsEnvironment(
         string localApplicationDataDirectory,
         string baseDirectory) : IRuntimeSettingsEnvironment
@@ -85,6 +115,10 @@ public sealed class RuntimeSettingsStoreTests
         public string BaseDirectory { get; } = baseDirectory;
 
         public HashSet<string> CreatedDirectories { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        public List<(string SourcePath, string DestinationPath)> ReplacedFiles { get; } = [];
+
+        public IOException? ReplaceException { get; init; }
 
         public bool FileExists(string path) => files.ContainsKey(path);
 
@@ -98,6 +132,18 @@ public sealed class RuntimeSettingsStoreTests
         public void WriteAllText(string path, string contents)
         {
             files[path] = contents;
+        }
+
+        public void ReplaceFile(string sourcePath, string destinationPath)
+        {
+            if (ReplaceException is not null)
+            {
+                throw ReplaceException;
+            }
+
+            ReplacedFiles.Add((sourcePath, destinationPath));
+            files[destinationPath] = files[sourcePath];
+            files.Remove(sourcePath);
         }
     }
 }

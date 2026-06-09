@@ -35,7 +35,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private string importedGameSummary = Localizer.Text(LocalizedStrings.MainImportedMovesNone);
     private string suggestionText = Localizer.Text(LocalizedStrings.MainEngineSuggestionsUnavailable);
     private string evaluationText = Localizer.Text(LocalizedStrings.MainEvaluationUnavailable);
-    private string analysisDetails = "Load a PGN and run analysis to inspect mistakes.";
+    private string analysisDetails = Localizer.Text(LocalizedStrings.MainAnalysisPlaceholder);
     private string pieceMoveOptionsHeader = Localizer.Text(LocalizedStrings.MainSelectedPieceNone);
     private ImportedMoveItemViewModel? selectedImportedMove;
     private PieceMoveOptionViewModel? selectedPieceMoveOption;
@@ -944,8 +944,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         if (cachedAnalysisResult is null)
         {
             AnalysisDetails = importedGame is null
-                ? "Load a PGN and run analysis to inspect mistakes."
-                : "Run analysis to inspect mistakes.";
+                ? Localizer.Text(LocalizedStrings.MainAnalysisPlaceholder)
+                : Localizer.Text(LocalizedStrings.MainRunAnalysisPlaceholder);
             return;
         }
 
@@ -1265,8 +1265,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 EvaluationText = Math.Abs(pawns) < 0.15
                     ? Localizer.Text(LocalizedStrings.MainEvaluationEven)
                     : pawns > 0
-                        ? Localizer.Format(LocalizedStrings.MainEvaluationWhite, pawns.ToString("+0.0;-0.0;0.0", CultureInfo.InvariantCulture))
-                        : Localizer.Format(LocalizedStrings.MainEvaluationBlack, Math.Abs(pawns).ToString("0.0", CultureInfo.InvariantCulture));
+                        ? Localizer.Format(LocalizedStrings.MainEvaluationWhite, pawns.ToString("+0.0;-0.0;0.0", Localizer.CurrentCulture))
+                        : Localizer.Format(LocalizedStrings.MainEvaluationBlack, Math.Abs(pawns).ToString("0.0", Localizer.CurrentCulture));
             }
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)

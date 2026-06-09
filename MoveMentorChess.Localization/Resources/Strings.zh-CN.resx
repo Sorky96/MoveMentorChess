@@ -132,6 +132,8 @@
   <data name="SettingsStockfishDescription" xml:space="preserve"><value>Stockfish 将使用 {0} 个线程、{1} MB hash，批量 PGN 分析将以深度 {2}、MultiPV {3}、每个局面 {4} ms 运行。</value></data>
   <data name="SettingsSelectStockfishExecutable" xml:space="preserve"><value>选择 stockfish.exe</value></data>
   <data name="SettingsSelectLlamaServerExecutable" xml:space="preserve"><value>选择 llama-server.exe</value></data>
+  <data name="SettingsSaveFailedTitle" xml:space="preserve"><value>无法保存设置</value></data>
+  <data name="SettingsSaveFailedMessage" xml:space="preserve"><value>MoveMentor 无法保存应用设置。请检查文件权限或磁盘空间，然后重试。</value></data>
   <data name="NarrationRegularTrainer" xml:space="preserve"><value>普通教练</value></data>
   <data name="NarrationLevyRozman" xml:space="preserve"><value>Levy Rozman</value></data>
   <data name="NarrationHikaruNakamura" xml:space="preserve"><value>Hikaru Nakamura</value></data>
@@ -151,6 +153,7 @@
   <data name="MainDialogLater" xml:space="preserve"><value>稍后</value></data>
   <data name="MainDialogPgnAnalysisFinished" xml:space="preserve"><value>PGN 分析完成</value></data>
   <data name="MainDialogOk" xml:space="preserve"><value>确定</value></data>
+  <data name="MainPgnFiles" xml:space="preserve"><value>PGN 文件</value></data>
   <data name="MainBulkAnalyzedPlayer" xml:space="preserve"><value>分析棋手：{0}</value></data>
   <data name="MainBulkDetectedPlayerNone" xml:space="preserve"><value>检测到的棋手：无</value></data>
   <data name="MainBulkNewAnalyses" xml:space="preserve"><value>新分析：{0}</value></data>
@@ -218,6 +221,8 @@
   <data name="MainEvaluationBlack" xml:space="preserve"><value>评估：黑方 +{0}</value></data>
   <data name="MainImportedMovesNone" xml:space="preserve"><value>导入走法：无</value></data>
   <data name="MainImportedMovesSummary" xml:space="preserve"><value>导入走法：已应用 {0}/{1} | {2}{3}{4}{5}</value></data>
+  <data name="MainAnalysisPlaceholder" xml:space="preserve"><value>加载 PGN 并运行分析以查看错误。</value></data>
+  <data name="MainRunAnalysisPlaceholder" xml:space="preserve"><value>运行分析以查看错误。</value></data>
   <data name="MainResultUnknown" xml:space="preserve"><value>结果：?</value></data>
   <data name="MainSelectedPieceNone" xml:space="preserve"><value>已选棋子：无</value></data>
   <data name="MainSelectedPieceHeader" xml:space="preserve"><value>已选棋子：{0}，来自 {1} | 合法走法：{2}</value></data>
@@ -334,6 +339,12 @@
   <data name="OpeningTrainerPracticeIdle" xml:space="preserve"><value>练习处于空闲状态。</value></data>
   <data name="OpeningTrainerHintsPlaceholder" xml:space="preserve"><value>当你请求提示时，提示会显示在这里。</value></data>
   <data name="OpeningTrainerNoHintUsed" xml:space="preserve"><value>未使用提示</value></data>
+  <data name="OpeningTrainerWhyPlaceholder" xml:space="preserve"><value>选择一步棋，查看它为什么重要。</value></data>
+  <data name="OpeningTrainerNoOpeningsMatch" xml:space="preserve"><value>没有开局符合当前筛选条件。</value></data>
+  <data name="OpeningTrainerOpponentRepliesUnavailable" xml:space="preserve"><value>对手应法不可用。</value></data>
+  <data name="OpeningTrainerTryAnotherFilterOrSide" xml:space="preserve"><value>请尝试其他筛选条件或另一侧开局库。</value></data>
+  <data name="OpeningTrainerCouldNotLoadOverview" xml:space="preserve"><value>无法加载开局概览。</value></data>
+  <data name="OpeningTrainerOpeningNeedsMoreTheory" xml:space="preserve"><value>所选开局还没有足够的本地理论数据。</value></data>
   <data name="PgnImportTitle" xml:space="preserve"><value>PGN 导入</value></data>
   <data name="PgnImportHeading" xml:space="preserve"><value>导入 PGN</value></data>
   <data name="PgnImportIntro" xml:space="preserve"><value>粘贴完整 PGN 文件。导入后，对局会立即显示在棋盘上并保存到本地。</value></data>

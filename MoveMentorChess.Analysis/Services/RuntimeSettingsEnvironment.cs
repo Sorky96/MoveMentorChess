@@ -13,6 +13,8 @@ public interface IRuntimeSettingsEnvironment
     void CreateDirectory(string path);
 
     void WriteAllText(string path, string contents);
+
+    void ReplaceFile(string sourcePath, string destinationPath);
 }
 
 public sealed class SystemRuntimeSettingsEnvironment : IRuntimeSettingsEnvironment
@@ -34,4 +36,15 @@ public sealed class SystemRuntimeSettingsEnvironment : IRuntimeSettingsEnvironme
     public void CreateDirectory(string path) => Directory.CreateDirectory(path);
 
     public void WriteAllText(string path, string contents) => File.WriteAllText(path, contents);
+
+    public void ReplaceFile(string sourcePath, string destinationPath)
+    {
+        if (File.Exists(destinationPath))
+        {
+            File.Replace(sourcePath, destinationPath, null);
+            return;
+        }
+
+        File.Move(sourcePath, destinationPath);
+    }
 }

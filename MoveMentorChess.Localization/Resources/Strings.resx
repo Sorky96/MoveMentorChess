@@ -33,6 +33,8 @@
   <data name="SettingsStockfishDescription" xml:space="preserve"><value>Stockfish will use {0} thread(s), {1} MB hash, and bulk PGN analysis will run at depth {2}, MultiPV {3}, {4} ms per position.</value></data>
   <data name="SettingsSelectStockfishExecutable" xml:space="preserve"><value>Select stockfish.exe</value></data>
   <data name="SettingsSelectLlamaServerExecutable" xml:space="preserve"><value>Select llama-server.exe</value></data>
+  <data name="SettingsSaveFailedTitle" xml:space="preserve"><value>Could not save settings</value></data>
+  <data name="SettingsSaveFailedMessage" xml:space="preserve"><value>MoveMentor could not save application settings. Check file permissions or disk space and try again.</value></data>
   <data name="ExplanationBeginner" xml:space="preserve"><value>Beginner</value></data>
   <data name="ExplanationIntermediate" xml:space="preserve"><value>Intermediate</value></data>
   <data name="ExplanationAdvanced" xml:space="preserve"><value>Advanced</value></data>
@@ -71,6 +73,7 @@
   <data name="MainDialogLater" xml:space="preserve"><value>Later</value></data>
   <data name="MainDialogPgnAnalysisFinished" xml:space="preserve"><value>PGN analysis finished</value></data>
   <data name="MainDialogOk" xml:space="preserve"><value>OK</value></data>
+  <data name="MainPgnFiles" xml:space="preserve"><value>PGN files</value></data>
   <data name="MainBulkAnalyzedPlayer" xml:space="preserve"><value>Analyzed player: {0}</value></data>
   <data name="MainBulkDetectedPlayerNone" xml:space="preserve"><value>Detected player: none</value></data>
   <data name="MainBulkNewAnalyses" xml:space="preserve"><value>New analyses: {0}</value></data>
@@ -221,6 +224,8 @@
   <data name="MainEvaluationBlack" xml:space="preserve"><value>Evaluation: Black +{0}</value></data>
   <data name="MainImportedMovesNone" xml:space="preserve"><value>Imported moves: none</value></data>
   <data name="MainImportedMovesSummary" xml:space="preserve"><value>Imported moves: {0}/{1} applied | {2}{3}{4}{5}</value></data>
+  <data name="MainAnalysisPlaceholder" xml:space="preserve"><value>Load a PGN and run analysis to inspect mistakes.</value></data>
+  <data name="MainRunAnalysisPlaceholder" xml:space="preserve"><value>Run analysis to inspect mistakes.</value></data>
   <data name="MainResultUnknown" xml:space="preserve"><value>Result: ?</value></data>
   <data name="MainSelectedPieceNone" xml:space="preserve"><value>Selected piece: none</value></data>
   <data name="MainSelectedPieceHeader" xml:space="preserve"><value>Selected piece: {0} from {1} | legal moves: {2}</value></data>
@@ -317,7 +322,7 @@
   <data name="OpeningTrainerSessionRecap" xml:space="preserve"><value>Session Recap</value></data>
   <data name="OpeningTrainerAdvancedDetails" xml:space="preserve"><value>Advanced Details</value></data>
   <data name="OpeningTrainerDiagnosticReviewPositions" xml:space="preserve"><value>Diagnostic review positions</value></data>
-  <data name="OpeningTrainerPositionId" xml:space="preserve"><value>PositionId</value></data>
+  <data name="OpeningTrainerPositionId" xml:space="preserve"><value>Position ID</value></data>
   <data name="OpeningTrainerAttempt" xml:space="preserve"><value>Attempt</value></data>
   <data name="OpeningTrainerReason" xml:space="preserve"><value>Reason</value></data>
   <data name="OpeningTrainerMoveLog" xml:space="preserve"><value>Move Log</value></data>
@@ -337,6 +342,12 @@
   <data name="OpeningTrainerPracticeIdle" xml:space="preserve"><value>Practice is idle.</value></data>
   <data name="OpeningTrainerHintsPlaceholder" xml:space="preserve"><value>Hints will appear here when you ask for one.</value></data>
   <data name="OpeningTrainerNoHintUsed" xml:space="preserve"><value>No hint used</value></data>
+  <data name="OpeningTrainerWhyPlaceholder" xml:space="preserve"><value>Select a move to see why it matters.</value></data>
+  <data name="OpeningTrainerNoOpeningsMatch" xml:space="preserve"><value>No openings matched the current filter.</value></data>
+  <data name="OpeningTrainerOpponentRepliesUnavailable" xml:space="preserve"><value>Opponent replies are unavailable.</value></data>
+  <data name="OpeningTrainerTryAnotherFilterOrSide" xml:space="preserve"><value>Try another filter or repertoire side.</value></data>
+  <data name="OpeningTrainerCouldNotLoadOverview" xml:space="preserve"><value>Could not load opening overview.</value></data>
+  <data name="OpeningTrainerOpeningNeedsMoreTheory" xml:space="preserve"><value>The selected opening does not have enough local theory data yet.</value></data>
   <data name="PgnImportTitle" xml:space="preserve"><value>PGN Import</value></data>
   <data name="PgnImportHeading" xml:space="preserve"><value>Import PGN</value></data>
   <data name="PgnImportIntro" xml:space="preserve"><value>Paste the full PGN file. Once imported, the game will immediately appear on the board and be saved locally.</value></data>

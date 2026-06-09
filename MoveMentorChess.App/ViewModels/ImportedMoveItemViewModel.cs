@@ -1,5 +1,5 @@
 using System.Globalization;
-using MoveMentorChess.Localization;
+using MoveMentorChess.Presentation.Models;
 
 namespace MoveMentorChess.App.ViewModels;
 
@@ -111,21 +111,7 @@ public sealed class ImportedMoveItemViewModel : ViewModelBase
     }
 
     private static string FormatQuality(MoveQualityBucket quality)
-    {
-        return quality switch
-        {
-            MoveQualityBucket.Book => Localizer.Text(LocalizedStrings.QualityBook),
-            MoveQualityBucket.Brilliant => Localizer.Text(LocalizedStrings.QualityBrilliant),
-            MoveQualityBucket.Great => Localizer.Text(LocalizedStrings.QualityGreat),
-            MoveQualityBucket.Best => Localizer.Text(LocalizedStrings.QualityBest),
-            MoveQualityBucket.Excellent => Localizer.Text(LocalizedStrings.QualityExcellent),
-            MoveQualityBucket.Good => Localizer.Text(LocalizedStrings.AdviceQualityGood),
-            MoveQualityBucket.Inaccuracy => Localizer.Text(LocalizedStrings.AdviceQualityInaccuracy),
-            MoveQualityBucket.Mistake => Localizer.Text(LocalizedStrings.AdviceQualityMistake),
-            MoveQualityBucket.Blunder => Localizer.Text(LocalizedStrings.AdviceQualityBlunder),
-            _ => quality.ToString()
-        };
-    }
+        => AnalysisMistakePresentation.FormatQualityBucket(quality);
 
     private static string GetQualityBrush(MoveQualityBucket quality)
     {

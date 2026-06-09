@@ -53,9 +53,18 @@ public static class ApplicationSettingsStore
         {
             string path = GetSettingsPath(environment);
             string directory = Path.GetDirectoryName(path) ?? environment.BaseDirectory;
-            environment.CreateDirectory(directory);
-            string json = JsonSerializer.Serialize(Normalize(settings), JsonOptions);
-            environment.WriteAllText(path, json);
+            string tempPath = Path.Join(directory, $"{Path.GetFileName(path)}.{Guid.NewGuid():N}.tmp");
+            try
+            {
+                environment.CreateDirectory(directory);
+                string json = JsonSerializer.Serialize(Normalize(settings), JsonOptions);
+                environment.WriteAllText(tempPath, json);
+                environment.ReplaceFile(tempPath, path);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                throw new ApplicationSettingsSaveException(path, ex);
+            }
         }
     }
 
@@ -82,4 +91,15 @@ public static class ApplicationSettingsStore
         settings ??= ApplicationSettings.Default;
         return new ApplicationSettings(LanguageCatalog.Resolve(settings.CultureName).CultureName);
     }
+}
+
+public sealed class ApplicationSettingsSaveException : IOException
+{
+    public ApplicationSettingsSaveException(string path, Exception innerException)
+        : base($"Could not save application settings to '{path}'.", innerException)
+    {
+        Path = path;
+    }
+
+    public string Path { get; }
 }

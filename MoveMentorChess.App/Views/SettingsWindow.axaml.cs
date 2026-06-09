@@ -1,5 +1,7 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Platform.Storage;
 using MoveMentorChess.Analysis;
 using MoveMentorChess.Localization;
@@ -87,9 +89,18 @@ public partial class SettingsWindow : Window
             ? language.CultureName
             : LanguageCatalog.English.CultureName);
 
-    private void SaveButton_Click(object? sender, RoutedEventArgs e)
+    private async void SaveButton_Click(object? sender, RoutedEventArgs e)
     {
-        ApplicationSettingsStore.Save(SelectedApplicationSettings);
+        try
+        {
+            ApplicationSettingsStore.Save(SelectedApplicationSettings);
+        }
+        catch (ApplicationSettingsSaveException)
+        {
+            await ShowSaveFailedDialogAsync();
+            return;
+        }
+
         Localizer.UseApplicationCulture(SelectedApplicationSettings.CultureName);
         LlamaGpuSettingsStore.Save(SelectedSettings);
         StockfishSettingsStore.Save(SelectedStockfishSettings);
@@ -100,6 +111,41 @@ public partial class SettingsWindow : Window
     private void CancelButton_Click(object? sender, RoutedEventArgs e)
     {
         Close(false);
+    }
+
+    private async Task ShowSaveFailedDialogAsync()
+    {
+        Window dialog = new()
+        {
+            Title = Localizer.Text(LocalizedStrings.SettingsSaveFailedTitle),
+            Width = 460,
+            Height = 210,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false
+        };
+        Button okButton = new()
+        {
+            Content = Localizer.Text(LocalizedStrings.MainDialogOk),
+            MinWidth = 96,
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+        okButton.Click += (_, _) => dialog.Close();
+        dialog.Content = new StackPanel
+        {
+            Margin = new Thickness(18),
+            Spacing = 16,
+            Children =
+            {
+                new TextBlock
+                {
+                    Text = Localizer.Text(LocalizedStrings.SettingsSaveFailedMessage),
+                    TextWrapping = Avalonia.Media.TextWrapping.Wrap
+                },
+                okButton
+            }
+        };
+
+        await dialog.ShowDialog(this);
     }
 
     private async void BrowseStockfishButton_Click(object? sender, RoutedEventArgs e)
