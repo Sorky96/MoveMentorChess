@@ -237,11 +237,15 @@
   <data name="CommonWhite" xml:space="preserve"><value>Białe</value></data>
   <data name="CommonBlack" xml:space="preserve"><value>Czarne</value></data>
   <data name="CommonUnknown" xml:space="preserve"><value>?</value></data>
-  <data name="QualityBook" xml:space="preserve"><value>Teoria</value></data>
-  <data name="QualityBrilliant" xml:space="preserve"><value>Błyskotliwy</value></data>
+  <data name="QualityBook" xml:space="preserve"><value>Książkowy</value></data>
+  <data name="QualityBrilliant" xml:space="preserve"><value>Genialny</value></data>
   <data name="QualityGreat" xml:space="preserve"><value>Świetny</value></data>
   <data name="QualityBest" xml:space="preserve"><value>Najlepszy</value></data>
   <data name="QualityExcellent" xml:space="preserve"><value>Doskonały</value></data>
+  <data name="QualityGood" xml:space="preserve"><value>Dobry</value></data>
+  <data name="QualityInaccuracy" xml:space="preserve"><value>Niedokładność</value></data>
+  <data name="QualityMistake" xml:space="preserve"><value>Błąd</value></data>
+  <data name="QualityBlunder" xml:space="preserve"><value>Podstawka</value></data>
   <data name="SavedAnalysesTitle" xml:space="preserve"><value>Zapisane analizy</value></data>
   <data name="SavedAnalysesFilterPlaceholder" xml:space="preserve"><value>Filtruj po graczu, debiucie, wyniku lub etykietach...</value></data>
   <data name="SavedAnalysesLoadGame" xml:space="preserve"><value>Wczytaj partię</value></data>

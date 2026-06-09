@@ -242,6 +242,10 @@
   <data name="QualityGreat" xml:space="preserve"><value>好棋</value></data>
   <data name="QualityBest" xml:space="preserve"><value>最佳</value></data>
   <data name="QualityExcellent" xml:space="preserve"><value>优秀</value></data>
+  <data name="QualityGood" xml:space="preserve"><value>好</value></data>
+  <data name="QualityInaccuracy" xml:space="preserve"><value>不精确</value></data>
+  <data name="QualityMistake" xml:space="preserve"><value>错误</value></data>
+  <data name="QualityBlunder" xml:space="preserve"><value>大错</value></data>
   <data name="SavedAnalysesTitle" xml:space="preserve"><value>已保存分析</value></data>
   <data name="SavedAnalysesFilterPlaceholder" xml:space="preserve"><value>按棋手、开局、结果或标签筛选...</value></data>
   <data name="SavedAnalysesLoadGame" xml:space="preserve"><value>加载对局</value></data>

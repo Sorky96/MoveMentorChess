@@ -115,6 +115,10 @@ public static class LocalizedStrings
     public const string QualityGreat = nameof(QualityGreat);
     public const string QualityBest = nameof(QualityBest);
     public const string QualityExcellent = nameof(QualityExcellent);
+    public const string QualityGood = nameof(QualityGood);
+    public const string QualityInaccuracy = nameof(QualityInaccuracy);
+    public const string QualityMistake = nameof(QualityMistake);
+    public const string QualityBlunder = nameof(QualityBlunder);
 
     public const string AdviceLanguageInstruction = nameof(AdviceLanguageInstruction);
     public const string AdviceDetailedPartsInstruction = nameof(AdviceDetailedPartsInstruction);

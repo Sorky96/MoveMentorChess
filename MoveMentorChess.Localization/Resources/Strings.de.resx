@@ -242,6 +242,10 @@
   <data name="QualityGreat" xml:space="preserve"><value>Großartig</value></data>
   <data name="QualityBest" xml:space="preserve"><value>Beste</value></data>
   <data name="QualityExcellent" xml:space="preserve"><value>Ausgezeichnet</value></data>
+  <data name="QualityGood" xml:space="preserve"><value>Gut</value></data>
+  <data name="QualityInaccuracy" xml:space="preserve"><value>Ungenauigkeit</value></data>
+  <data name="QualityMistake" xml:space="preserve"><value>Fehler</value></data>
+  <data name="QualityBlunder" xml:space="preserve"><value>Patzer</value></data>
   <data name="SavedAnalysesTitle" xml:space="preserve"><value>Gespeicherte Analysen</value></data>
   <data name="SavedAnalysesFilterPlaceholder" xml:space="preserve"><value>Nach Spieler, Eröffnung, Ergebnis oder Labels filtern...</value></data>
   <data name="SavedAnalysesLoadGame" xml:space="preserve"><value>Partie laden</value></data>

@@ -16,7 +16,7 @@ public sealed class SelectedMistakeViewItem
         LabelText = AnalysisMistakePresentation.FormatMistakeLabel(RawLabel);
         LabelBrush = AnalysisMistakePresentation.GetMistakeLabelBrush(RawLabel);
         LabelForeground = AnalysisMistakePresentation.GetMistakeLabelForeground(RawLabel);
-        MetaText = $"{Mistake.Quality} | {AnalysisMistakePresentation.BuildImpactText(LeadMove)} | {AnalysisMistakePresentation.FormatPhase(LeadMove.Replay.Phase)}";
+        MetaText = $"{AnalysisMistakePresentation.FormatQualityBucket(Mistake.Quality)} | {AnalysisMistakePresentation.BuildImpactText(LeadMove)} | {AnalysisMistakePresentation.FormatPhase(LeadMove.Replay.Phase)}";
         (PriorityText, PriorityReason, PriorityBrush) = AnalysisMistakePresentation.BuildPriorityInfo(Mistake, LeadMove, RawLabel, analysisResult);
         ReviewStatusText = isReviewed ? "Reviewed" : string.Empty;
         ReviewStatusBrush = isReviewed ? "#9ED7A6" : "#657386";
@@ -49,7 +49,7 @@ public sealed class SelectedMistakeViewItem
     public string ReviewStatusBrush { get; }
 
     public override string ToString()
-        => $"{MoveRange} | {Mistake.Quality} | {LabelText} | {AnalysisMistakePresentation.BuildImpactText(LeadMove)}";
+        => $"{MoveRange} | {AnalysisMistakePresentation.FormatQualityBucket(Mistake.Quality)} | {LabelText} | {AnalysisMistakePresentation.BuildImpactText(LeadMove)}";
 }
 
 public static class AnalysisMistakePresentation
@@ -109,10 +109,10 @@ public static class AnalysisMistakePresentation
             MoveQualityBucket.Great => Localizer.Text(LocalizedStrings.QualityGreat),
             MoveQualityBucket.Best => Localizer.Text(LocalizedStrings.QualityBest),
             MoveQualityBucket.Excellent => Localizer.Text(LocalizedStrings.QualityExcellent),
-            MoveQualityBucket.Good => Localizer.Text(LocalizedStrings.AdviceQualityGood),
-            MoveQualityBucket.Inaccuracy => Localizer.Text(LocalizedStrings.AdviceQualityInaccuracy),
-            MoveQualityBucket.Mistake => Localizer.Text(LocalizedStrings.AdviceQualityMistake),
-            MoveQualityBucket.Blunder => Localizer.Text(LocalizedStrings.AdviceQualityBlunder),
+            MoveQualityBucket.Good => Localizer.Text(LocalizedStrings.QualityGood),
+            MoveQualityBucket.Inaccuracy => Localizer.Text(LocalizedStrings.QualityInaccuracy),
+            MoveQualityBucket.Mistake => Localizer.Text(LocalizedStrings.QualityMistake),
+            MoveQualityBucket.Blunder => Localizer.Text(LocalizedStrings.QualityBlunder),
             _ => quality.ToString()
         };
     }
