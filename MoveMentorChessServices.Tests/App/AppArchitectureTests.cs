@@ -12,11 +12,11 @@ public sealed partial class AppArchitectureTests
         string root = FindRepositoryRoot();
         (string Path, int MaxLines)[] cleanupBudgets =
         [
-            (Path.Join(root, "MoveMentorChess.App", "ViewModels", "OpeningTrainerWindowViewModel.cs"), 2498),
+            (Path.Join(root, "MoveMentorChess.App", "ViewModels", "OpeningTrainerWindowViewModel.cs"), 2441),
             (Path.Join(root, "MoveMentorChess.App", "Views", "AnalysisWindow.axaml.cs"), 540),
             (Path.Join(root, "MoveMentorChess.App", "Views", "ProfilesWindow.axaml.cs"), 790),
             (Path.Join(root, "MoveMentorChess.Training", "OpeningTrainerService.cs"), 470),
-            (Path.Join(root, "MoveMentorChess.Profiles", "PlayerProfileService.cs"), 190)
+            (Path.Join(root, "MoveMentorChess.Profiles", "PlayerProfileService.cs"), 171)
         ];
 
         string[] oversizedFiles = cleanupBudgets
@@ -360,11 +360,6 @@ public sealed partial class AppArchitectureTests
         PublicTopLevelTypeAllowListEntry[] entries =
         [
             new(
-                Path.Join("MoveMentorChess.Analysis", "Services", "AdviceQualityEvaluator.cs"),
-                ["AdviceQualityEvaluator", "AdviceQualityEvaluationResult"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split the evaluation result from the evaluator."),
-            new(
                 Path.Join("MoveMentorChess.Analysis", "Services", "ApplicationSettingsStore.cs"),
                 ["ApplicationSettingsStore", "ApplicationSettingsSaveException"],
                 "Architecture cleanup",
@@ -380,16 +375,6 @@ public sealed partial class AppArchitectureTests
                 "Architecture cleanup",
                 "Sprint 6 - Settings And Runtime Composition: move runtime settings environment types into separate files."),
             new(
-                Path.Join("MoveMentorChess.App", "Controls", "ChessBoardView.cs"),
-                ["ChessBoardView", "BoardSquarePressedEventArgs"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split board event args from the Avalonia control."),
-            new(
-                Path.Join("MoveMentorChess.App", "ViewModels", "MainWindowViewModel.cs"),
-                ["MainWindowViewModel", "PgnFileImportResult", "BulkPgnAnalysisResult"],
-                "Architecture cleanup",
-                "Sprint 5 - Main Window Import And Replay Extraction: move import result records out with the import workflow."),
-            new(
                 Path.Join("MoveMentorChess.App", "ViewModels", "OpeningCoverageWindowViewModel.cs"),
                 ["OpeningCoverageWindowViewModel", "OpeningCoverageLineItemViewModel"],
                 "Architecture cleanup",
@@ -399,16 +384,6 @@ public sealed partial class AppArchitectureTests
                 ["OpeningStudyFeedbackAnimator", "OpeningStudyFeedbackFrame"],
                 "Architecture cleanup",
                 "Sprint 4 - Opening Trainer ViewModel Slice: split animation frame data from the animator."),
-            new(
-                Path.Join("MoveMentorChess.App", "ViewModels", "OpeningTrainerWindowViewModel.cs"),
-                ["OpeningTrainerWindowViewModel", "OpeningTrainingProfileChoice", "OpeningTrainingIntensityChoice", "TrainingNextActionCardViewModel"],
-                "Architecture cleanup",
-                "Sprint 4 - Opening Trainer ViewModel Slice: move choice/card records with the extracted selection ViewModel."),
-            new(
-                Path.Join("MoveMentorChess.App", "ViewModels", "RelayCommand.cs"),
-                ["RelayCommand", "RelayCommand"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split generic and non-generic relay commands."),
             new(
                 Path.Join("MoveMentorChess.App", "Views", "SavedAnalysesWindow.axaml.cs"),
                 ["SavedAnalysesWindow", "SavedAnalysisAction"],
@@ -420,102 +395,10 @@ public sealed partial class AppArchitectureTests
                 "Architecture cleanup",
                 "Sprint 6 - Settings And Runtime Composition: split the clock port and production implementation."),
             new(
-                Path.Join("MoveMentorChess.Domain", "Models", "ChessGame.cs"),
-                ["ChessGame", "AppliedMoveInfo", "LegalMoveInfo"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split public chess result records from the rules engine."),
-            new(
-                Path.Join("MoveMentorChess.Domain", "Models", "IAnalysisStore.cs"),
-                [
-                    "IImportedGameStore",
-                    "IAnalysisResultStore",
-                    "IStoredMoveAnalysisStore",
-                    "IAdviceFeedbackStore",
-                    "IAnalysisWindowStateStore",
-                    "IAnalysisStore",
-                    "IOpeningTreeStore",
-                    "IOpeningTheoryStore",
-                    "IOpeningLineContextStore",
-                    "IOpeningTrainingHistoryStore",
-                    "IOpeningTrainingTelemetryStore"
-                ],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split store ports before Sprint 3 narrows store injection."),
-            new(
-                Path.Join("MoveMentorChess.Domain", "Models", "OpeningTrainingAnswerOption.cs"),
-                ["OpeningTrainingAnswerOption", "OpeningTrainingAnswerKind"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split opening training answer enum from the option record."),
-            new(
-                Path.Join("MoveMentorChess.Domain", "Models", "OpeningTrainingScheduledAction.cs"),
-                ["OpeningTrainingScheduledAction", "OpeningTrainingScheduledActionStatus"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split scheduled action status from the scheduled action record."),
-            new(
-                Path.Join("MoveMentorChess.Domain", "Models", "OpeningTrainingTelemetryEvent.cs"),
-                ["OpeningTrainingTelemetryEvent", "OpeningTrainingTelemetryEvents"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split telemetry constants from the telemetry event record."),
-            new(
-                Path.Join("MoveMentorChess.Domain", "Models", "OpeningUnderstandingCard.cs"),
-                ["OpeningUnderstandingCard", "OpeningUnderstandingCardKind"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split opening understanding card enum from the record."),
-            new(
                 Path.Join("MoveMentorChess.Domain", "Models", "PgnGameParser.cs"),
                 ["PgnGameParser", "PgnBatchParseResult", "PgnBatchParseError"],
                 "Architecture cleanup",
                 "Sprint 5 - Main Window Import And Replay Extraction: split PGN parse result records from the parser."),
-            new(
-                Path.Join("MoveMentorChess.Domain", "Models", "PlayerMistakeProfile.cs"),
-                ["PlayerMistakeProfile", "PlayerMistakePatternEntry"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split player mistake pattern entries from the profile record."),
-            new(
-                Path.Join("MoveMentorChess.Domain", "Models", "PlayerOpeningPlan.cs"),
-                ["PlayerOpeningPlan", "PlayerOpeningPlanItem", "TrainingProgressSnapshot"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split player opening plan DTOs into separate files."),
-            new(
-                Path.Join("MoveMentorChess.Domain", "Models", "SpecialTrainingModeDefinition.cs"),
-                ["SpecialTrainingModeDefinition", "SpecialTrainingModeKind"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split special training mode enum from its definition record."),
-            new(
-                Path.Join("MoveMentorChess.Domain", "Models", "TrainingCoachHint.cs"),
-                ["TrainingCoachHint", "TrainingCoachHintLevel", "TrainingMistakeCategory"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split training coach hint enums from the hint record."),
-            new(
-                Path.Join("MoveMentorChess.Domain", "Models", "TrainingNextAction.cs"),
-                ["TrainingNextAction", "TrainingNextActionKind"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split training next action enum from the record."),
-            new(
-                Path.Join("MoveMentorChess.Domain", "Models", "TrainingPriorityItem.cs"),
-                ["TrainingPriorityItem", "TrainingPriorityAction", "TrainingPriorityReasonCode"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split training priority enums from the item record."),
-            new(
-                Path.Join("MoveMentorChess.Domain", "Models", "TrainingRecommendationCard.cs"),
-                ["TrainingRecommendationCard", "TrainingRecommendationDifficulty", "TrainingRecommendationReasonCode", "TrainingRecommendationType"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split training recommendation enums from the card record."),
-            new(
-                Path.Join("MoveMentorChess.Domain", "Models", "TrainingResultLearningPlan.cs"),
-                ["TrainingResultLearningPlan", "TrainingResultReviewItem"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split training review items from the learning plan record."),
-            new(
-                Path.Join("MoveMentorChess.Engine", "StockfishEngine.cs"),
-                ["StockfishEngine", "StockfishEngineOptions", "EvaluationSummary"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split engine options and evaluation summary from the engine wrapper."),
-            new(
-                Path.Join("MoveMentorChess.Opening", "OpeningTreePruner.cs"),
-                ["OpeningTreePruner", "OpeningTreePruningOptions"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split pruning options from the pruner."),
             new(
                 Path.Join("MoveMentorChess.Persistence", "OpeningSeedBootstrapper.cs"),
                 ["OpeningSeedBootstrapper", "IOpeningSeedRuntimeEnvironment", "SystemOpeningSeedRuntimeEnvironment", "OpeningSeedBootstrapResult"],
@@ -537,11 +420,6 @@ public sealed partial class AppArchitectureTests
                 "Architecture cleanup",
                 "Sprint 8 - Presentation And Training Pipeline Split: split selected details model from its presenter."),
             new(
-                Path.Join("MoveMentorChess.Presentation", "Models", "AnalysisSelectionState.cs"),
-                ["AnalysisReviewFilter", "AnalysisFilterOption", "AnalysisFilterResult", "AnalysisSelectionState"],
-                "Architecture cleanup",
-                "Sprint 8 - Presentation And Training Pipeline Split: split selection filters/results from mutable selection state."),
-            new(
                 Path.Join("MoveMentorChess.Presentation", "Models", "AnalysisSnapshotPresentation.cs"),
                 ["AnalysisSnapshotMode", "AnalysisSnapshotArrow", "AnalysisSnapshotPresentation"],
                 "Architecture cleanup",
@@ -556,16 +434,6 @@ public sealed partial class AppArchitectureTests
                 ["ProfileTrendChartKind", "ProfileTrendChartPoint", "ProfileTrendChartSeries"],
                 "Architecture cleanup",
                 "Sprint 8 - Presentation And Training Pipeline Split: split profile trend chart DTOs into separate files."),
-            new(
-                Path.Join("MoveMentorChess.Profiles", "PlayerProfileService.cs"),
-                ["PlayerProfileService", "ProfileDataAvailability"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split profile data availability from the profile service facade."),
-            new(
-                Path.Join("MoveMentorChess.Profiles", "PlayerStrengthEstimator.cs"),
-                ["IPlayerStrengthEstimator", "PlayerStrengthEstimateInput", "HeuristicPlayerStrengthEstimator", "ProfileMlPlayerStrengthEstimator"],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split estimator port, input, and implementations."),
             new(
                 Path.Join("MoveMentorChess.Tracking", "Services", "MoveListOcrRecognizer.cs"),
                 ["IMoveListRecognizer", "MoveListOcrRecognizer"],

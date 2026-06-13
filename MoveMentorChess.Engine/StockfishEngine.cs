@@ -369,12 +369,3 @@ public sealed class StockfishEngine : IEngineAnalyzer, IDisposable
         engineProcess.Dispose();
     }
 }
-
-public sealed record StockfishEngineOptions(int Threads, int HashMb)
-{
-    public static StockfishEngineOptions Default { get; } = new(
-        Threads: Math.Max(1, Environment.ProcessorCount - 1),
-        HashMb: 256);
-}
-
-public sealed record EvaluationSummary(int? Centipawns, int? MateIn);

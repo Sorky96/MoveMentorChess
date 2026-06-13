@@ -333,14 +333,3 @@ public sealed class ChessBoardView : Control
         return true;
     }
 }
-
-public sealed class BoardSquarePressedEventArgs : RoutedEventArgs
-{
-    public BoardSquarePressedEventArgs(RoutedEvent routedEvent, string square)
-        : base(routedEvent)
-    {
-        Square = square;
-    }
-
-    public string Square { get; }
-}

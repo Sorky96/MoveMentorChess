@@ -1,24 +1,5 @@
 namespace MoveMentorChess.Presentation.Models;
 
-public enum AnalysisReviewFilter
-{
-    All,
-    NotReviewed,
-    Reviewed
-}
-
-public sealed record AnalysisFilterOption(
-    string Label,
-    MoveQualityBucket? QualityFilter,
-    AnalysisReviewFilter ReviewFilter = AnalysisReviewFilter.All)
-{
-    public override string ToString() => Label;
-}
-
-public sealed record AnalysisFilterResult(
-    IReadOnlyList<SelectedMistakeViewItem> Items,
-    string SummaryText);
-
 public sealed class AnalysisSelectionState
 {
     private readonly HashSet<int> reviewedPlies = [];

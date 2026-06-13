@@ -197,9 +197,3 @@ public static class AdviceQualityEvaluator
         return Path.Combine(runtimeEnvironment.BaseDirectory, DefaultReportFileName);
     }
 }
-
-public sealed record AdviceQualityEvaluationResult(
-    int Passed,
-    int Failed,
-    int Total,
-    string ReportMarkdown);

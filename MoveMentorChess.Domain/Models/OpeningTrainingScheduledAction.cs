@@ -14,11 +14,3 @@ public sealed record OpeningTrainingScheduledAction(
     DateTime? CompletedUtc = null,
     int Priority = 0,
     string? SourceActionId = null);
-
-public enum OpeningTrainingScheduledActionStatus
-{
-    Pending,
-    Completed,
-    Dismissed,
-    Superseded
-}

@@ -169,8 +169,3 @@ public sealed class PlayerProfileService
         return reportBuilder.Build(snapshots, openingReport, trainingHistory);
     }
 }
-
-public sealed record ProfileDataAvailability(
-    int ImportedGames,
-    int AnalyzedProfiles,
-    int OpeningTreePositions);

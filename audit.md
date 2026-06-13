@@ -334,6 +334,16 @@ Acceptance criteria:
 - Existing tests pass with `dotnet test MoveMentorChess.sln --no-restore -m:1 --verbosity minimal`.
 - The architecture allow-list shrinks after the split.
 
+Implementation status 2026-06-13:
+
+- Split all public top-level type exceptions marked for Sprint 2 in the architecture guardrail into one file per type.
+- The split includes store ports, chess move result records, Stockfish option/summary records, training/opening/profile DTOs and enums, analysis filter models, command variants, profile strength estimator types, main-window import result records, opening trainer choice/card records, pruner options, advice quality result data, and board square event args.
+- Kept moved types in their existing namespaces with unchanged public accessibility and constructor shapes.
+- Removed the now-stale Sprint 2 allow-list entries from `AppArchitectureTests`.
+- Ratcheted the `OpeningTrainerWindowViewModel.cs` cleanup budget from 2,498 lines to 2,441 lines and `PlayerProfileService.cs` from 190 lines to 171 lines after moving their public records.
+- Validation passed with `dotnet test MoveMentorChessServices.Tests\MoveMentorChessServices.Tests.csproj --no-restore --filter AppArchitectureTests --verbosity minimal` (16 passed).
+- Validation passed with `dotnet test MoveMentorChess.sln --no-restore -m:1 --verbosity minimal` (482 passed).
+
 ### Sprint 3 - Store Port Decomposition
 
 Goal: reduce the gravity of `IAnalysisStore` and keep SQLite as an adapter detail.

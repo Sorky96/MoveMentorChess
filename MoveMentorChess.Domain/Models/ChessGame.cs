@@ -964,32 +964,3 @@ public sealed partial class ChessGame
 
     private readonly record struct Point(int X, int Y);
 }
-
-public sealed record AppliedMoveInfo(
-    string San,
-    string NormalizedSan,
-    string Uci,
-    string FenBefore,
-    string FenAfter,
-    string PlacementFenBefore,
-    string PlacementFenAfter,
-    string MovingPiece,
-    string? PromotionPiece,
-    string FromSquare,
-    string ToSquare,
-    bool IsCapture,
-    bool IsEnPassant,
-    bool IsCastle,
-    bool WhiteMoved,
-    int MoveNumber);
-
-public sealed record LegalMoveInfo(
-    string Uci,
-    string San,
-    string FromSquare,
-    string ToSquare,
-    string MovingPiece,
-    string? PromotionPiece,
-    bool IsCapture,
-    bool IsEnPassant,
-    bool IsCastle);
