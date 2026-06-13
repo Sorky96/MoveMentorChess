@@ -305,6 +305,14 @@ Acceptance criteria:
 - The test suite passes with `dotnet test MoveMentorChessServices.Tests\MoveMentorChessServices.Tests.csproj --no-restore --filter AppArchitectureTests --verbosity minimal`.
 - No production behavior changes are included in this sprint.
 
+Implementation status 2026-06-13:
+
+- Added `AppArchitectureTests.ProductionCSharpFilesExposeOnlyOnePublicTopLevelTypeUnlessAllowListed`.
+- The guard scans production `MoveMentorChess.*` C# files, ignores generated files plus `bin`/`obj`, and reports any non-allow-listed file with multiple public top-level types.
+- The allow-list freezes the current legacy file/type pairs, requires an owner and follow-up sprint note for every entry, and fails when an entry becomes stale or gains/removes public top-level types.
+- Ratcheted the existing large-file budgets in `P1LargeClassCleanupBoundariesDoNotRegress` to current or near-current values.
+- Validation passed with `dotnet test MoveMentorChessServices.Tests\MoveMentorChessServices.Tests.csproj --no-restore --filter AppArchitectureTests --verbosity minimal` (16 passed).
+
 ### Sprint 2 - Public Type File Hygiene
 
 Goal: split the highest-risk files that contain multiple public top-level types.
