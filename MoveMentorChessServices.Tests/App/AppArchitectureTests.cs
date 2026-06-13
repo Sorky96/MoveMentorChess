@@ -58,7 +58,9 @@ public sealed partial class AppArchitectureTests
 
         string[] changedAllowListEntries = violations
             .Where(file => allowList.TryGetValue(file.Key, out PublicTopLevelTypeAllowListEntry? entry)
-                && !file.Value.SequenceEqual(entry.PublicTypes, StringComparer.Ordinal))
+                && !file.Value
+                    .OrderBy(type => type, StringComparer.Ordinal)
+                    .SequenceEqual(entry.PublicTypes.OrderBy(type => type, StringComparer.Ordinal), StringComparer.Ordinal))
             .Select(file =>
             {
                 PublicTopLevelTypeAllowListEntry entry = allowList[file.Key];
@@ -696,6 +698,11 @@ public sealed partial class AppArchitectureTests
                 ReplaceWithSpaces(characters, index, end);
                 index = end - 1;
             }
+            else if (TryFindRawStringLiteralEnd(characters, index, out int rawStringEnd))
+            {
+                ReplaceWithSpaces(characters, index, rawStringEnd);
+                index = rawStringEnd - 1;
+            }
             else if (characters[index] == '@' && index + 1 < characters.Length && characters[index + 1] == '"')
             {
                 int end = index + 2;
@@ -768,6 +775,62 @@ public sealed partial class AppArchitectureTests
         }
 
         return new string(characters);
+    }
+
+    private static bool TryFindRawStringLiteralEnd(char[] characters, int start, out int end)
+    {
+        end = -1;
+
+        int quoteStart = start;
+        while (quoteStart < characters.Length && characters[quoteStart] == '$')
+        {
+            quoteStart++;
+        }
+
+        if (quoteStart >= characters.Length
+            || characters[quoteStart] != '"'
+            || (quoteStart == start && characters[start] != '"'))
+        {
+            return false;
+        }
+
+        int quoteCount = CountQuoteRun(characters, quoteStart);
+        if (quoteCount < 3)
+        {
+            return false;
+        }
+
+        int searchIndex = quoteStart + quoteCount;
+        while (searchIndex < characters.Length)
+        {
+            if (characters[searchIndex] != '"')
+            {
+                searchIndex++;
+                continue;
+            }
+
+            int closingQuoteCount = CountQuoteRun(characters, searchIndex);
+            if (closingQuoteCount >= quoteCount)
+            {
+                end = searchIndex + quoteCount;
+                return true;
+            }
+
+            searchIndex += closingQuoteCount;
+        }
+
+        return false;
+    }
+
+    private static int CountQuoteRun(char[] characters, int start)
+    {
+        int count = 0;
+        while (start + count < characters.Length && characters[start + count] == '"')
+        {
+            count++;
+        }
+
+        return count;
     }
 
     private static void ReplaceWithSpaces(char[] characters, int start, int end)

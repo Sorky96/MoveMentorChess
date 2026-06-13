@@ -312,6 +312,7 @@ Implementation status 2026-06-13:
 - The allow-list freezes the current legacy file/type pairs, requires an owner and follow-up sprint note for every entry, and fails when an entry becomes stale or gains/removes public top-level types.
 - Ratcheted the existing large-file budgets in `P1LargeClassCleanupBoundariesDoNotRegress` to current or near-current values.
 - Validation passed with `dotnet test MoveMentorChessServices.Tests\MoveMentorChessServices.Tests.csproj --no-restore --filter AppArchitectureTests --verbosity minimal` (16 passed).
+- Validation also passed with `dotnet test MoveMentorChess.sln --no-restore -m:1 --verbosity minimal` (482 passed).
 
 ### Sprint 2 - Public Type File Hygiene
 
