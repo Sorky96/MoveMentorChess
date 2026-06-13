@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Avalonia.Media;
+using MoveMentorChess.Localization;
 using static MoveMentorChess.App.ViewModels.OpeningTrainerPresentationText;
 using MoveMentorChess.Persistence;
 using MoveMentorChess.Training;
@@ -49,14 +50,14 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     private RepertoireSide selectedSide = RepertoireSide.Both;
     private OpeningTrainingStrictness selectedStrictness = OpeningTrainingStrictness.BookFlexible;
     private string previewFen = new ChessGame().GetFen();
-    private string summaryText = "Choose an opening to preview the plan.";
-    private string opponentSummary = "Common replies will appear here.";
-    private string coverageText = "No practice history yet.";
-    private string coverageExplanation = "Pick an opening to see what is ready and what needs another pass.";
-    private string currentPrompt = "Practice is idle.";
-    private string currentWhy = string.Empty;
-    private string currentHintText = "Hints will appear here when you ask for one.";
-    private string currentHintLevel = "No hint used";
+    private string summaryText = Localizer.Text(LocalizedStrings.OpeningTrainerChooseOpeningPreview);
+    private string opponentSummary = Localizer.Text(LocalizedStrings.OpeningTrainerCommonRepliesPlaceholder);
+    private string coverageText = Localizer.Text(LocalizedStrings.OpeningTrainerNoPracticeHistory);
+    private string coverageExplanation = Localizer.Text(LocalizedStrings.OpeningTrainerPickOpeningCoverage);
+    private string currentPrompt = Localizer.Text(LocalizedStrings.OpeningTrainerPracticeIdle);
+    private string currentWhy = Localizer.Text(LocalizedStrings.OpeningTrainerWhyPlaceholder);
+    private string currentHintText = Localizer.Text(LocalizedStrings.OpeningTrainerHintsPlaceholder);
+    private string currentHintLevel = Localizer.Text(LocalizedStrings.OpeningTrainerNoHintUsed);
     private string moveInput = string.Empty;
     private string resultText = string.Empty;
     private string studyFeedbackText = string.Empty;
@@ -147,16 +148,16 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     public IReadOnlyList<OpeningTrainingProfileChoice> AvailableProfileChoices { get; } =
     [
-        new("white", "Play White", "Build today's training from your White repertoire.", RepertoireSide.White, "opening-coach:white"),
-        new("black", "Play Black", "Build today's training from your Black repertoire.", RepertoireSide.Black, "opening-coach:black"),
-        new("both", "Both Sides", "Use the full repertoire when choosing today's training.", RepertoireSide.Both, "opening-coach:both")
+        new("white", Localizer.Text(LocalizedStrings.OpeningTrainerProfileWhiteName), Localizer.Text(LocalizedStrings.OpeningTrainerProfileWhiteDescription), RepertoireSide.White, "opening-coach:white"),
+        new("black", Localizer.Text(LocalizedStrings.OpeningTrainerProfileBlackName), Localizer.Text(LocalizedStrings.OpeningTrainerProfileBlackDescription), RepertoireSide.Black, "opening-coach:black"),
+        new("both", Localizer.Text(LocalizedStrings.OpeningTrainerProfileBothName), Localizer.Text(LocalizedStrings.OpeningTrainerProfileBothDescription), RepertoireSide.Both, "opening-coach:both")
     ];
 
     public IReadOnlyList<OpeningTrainingIntensityChoice> AvailableIntensityChoices { get; } =
     [
-        new("safe", "Safe Review", "Only due known positions.", OpeningTrainingStrictness.StrictRepertoire),
-        new("balanced", "Balanced", "Due positions plus weak branches.", OpeningTrainingStrictness.BookFlexible),
-        new("challenge", "Challenge", "Adds less familiar opponent replies.", OpeningTrainingStrictness.Exploration)
+        new("safe", Localizer.Text(LocalizedStrings.OpeningTrainerIntensitySafeName), Localizer.Text(LocalizedStrings.OpeningTrainerIntensitySafeDescription), OpeningTrainingStrictness.StrictRepertoire),
+        new("balanced", Localizer.Text(LocalizedStrings.OpeningTrainerIntensityBalancedName), Localizer.Text(LocalizedStrings.OpeningTrainerIntensityBalancedDescription), OpeningTrainingStrictness.BookFlexible),
+        new("challenge", Localizer.Text(LocalizedStrings.OpeningTrainerIntensityChallengeName), Localizer.Text(LocalizedStrings.OpeningTrainerIntensityChallengeDescription), OpeningTrainingStrictness.Exploration)
     ];
 
     public IReadOnlyList<RepertoireSide> AvailableSides { get; } = Enum.GetValues<RepertoireSide>();
@@ -218,6 +219,8 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         ? AdvancedPlayerKey.Trim()
         : SelectedProfileChoice?.PlayerKey ?? "opening-coach:both";
 
+    public string ActiveHistoryKeyText => Localizer.Format(LocalizedStrings.OpeningTrainerActiveHistoryKey, PlayerKey);
+
     public string AdvancedPlayerKey
     {
         get => advancedPlayerKey;
@@ -226,6 +229,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             if (SetProperty(ref advancedPlayerKey, value))
             {
                 OnPropertyChanged(nameof(PlayerKey));
+                OnPropertyChanged(nameof(ActiveHistoryKeyText));
                 RefreshTodayRecommendation();
                 LoadOverview();
             }
@@ -240,6 +244,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             if (SetProperty(ref selectedProfileChoice, value))
             {
                 OnPropertyChanged(nameof(PlayerKey));
+                OnPropertyChanged(nameof(ActiveHistoryKeyText));
                 OnPropertyChanged(nameof(SelectedProfileSummary));
                 if (value is not null && selectedSide != value.Side)
                 {
@@ -253,7 +258,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     }
 
     public string SelectedProfileSummary => SelectedProfileChoice is null
-        ? "Choose how today's training should pick from your repertoire."
+        ? Localizer.Text(LocalizedStrings.OpeningTrainerSelectedProfilePlaceholder)
         : SelectedProfileChoice.Description;
 
     public RepertoireSide SelectedSide
@@ -302,48 +307,57 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     public bool HasTodayRecommendation => TodayRecommendation is not null;
 
-    public string TodayRecommendationOpening => TodayRecommendation?.OpeningLine.DisplayName ?? "No recommendation available";
+    public string TodayRecommendationOpening => TodayRecommendation?.OpeningLine.DisplayName ?? Localizer.Text(LocalizedStrings.OpeningTrainerNoRecommendation);
 
     public string TodayRecommendationMeta => TodayRecommendation is null
-        ? "Import opening theory to enable recommendations."
-        : $"{TodayRecommendation.OpeningLine.RepertoireSide} | {TodayRecommendation.Difficulty} | about {TodayRecommendation.EstimatedDurationMinutes} min";
+        ? Localizer.Text(LocalizedStrings.OpeningTrainerImportTheoryForRecommendations)
+        : Localizer.Format(
+            LocalizedStrings.OpeningTrainerRecommendationMeta,
+            FormatRepertoireSide(TodayRecommendation.OpeningLine.RepertoireSide),
+            TodayRecommendation.Difficulty,
+            TodayRecommendation.EstimatedDurationMinutes);
 
-    public string TodayRecommendationReason => TodayRecommendation?.Reason ?? "The trainer needs at least one available opening line.";
+    public string TodayRecommendationReason => TodayRecommendation?.Reason ?? Localizer.Text(LocalizedStrings.OpeningTrainerNeedsOpeningLine);
 
-    public string TodayRecommendationAction => TodayRecommendation?.RecommendedAction ?? "Start practice";
+    public string TodayRecommendationAction => TodayRecommendation?.RecommendedAction ?? Localizer.Text(LocalizedStrings.OpeningTrainerStartPractice);
 
-    public string TodayLessonOpening => TodayRecommendation?.OpeningLine.DisplayName ?? "Choose an opening first";
+    public string TodayLessonOpening => TodayRecommendation?.OpeningLine.DisplayName ?? Localizer.Text(LocalizedStrings.OpeningTrainerChooseOpeningFirst);
 
     public string TodayLessonSideText => TodayRecommendation is null
-        ? "No active theory"
+        ? Localizer.Text(LocalizedStrings.OpeningTrainerNoActiveTheory)
         : TodayRecommendation.OpeningLine.RepertoireSide switch
         {
-            RepertoireSide.White => "White repertoire",
-            RepertoireSide.Black => "Black repertoire",
-            _ => "Both sides"
+            RepertoireSide.White => Localizer.Text(LocalizedStrings.OpeningTrainerWhiteRepertoire),
+            RepertoireSide.Black => Localizer.Text(LocalizedStrings.OpeningTrainerBlackRepertoire),
+            _ => Localizer.Text(LocalizedStrings.OpeningTrainerBothSides)
         };
 
     public string TodayLessonDurationText => TodayRecommendation is null
-        ? "Duration appears after import"
-        : $"About {TodayRecommendation.EstimatedDurationMinutes} min";
+        ? Localizer.Text(LocalizedStrings.OpeningTrainerDurationAfterImport)
+        : Localizer.Format(LocalizedStrings.OpeningTrainerAboutMinutes, TodayRecommendation.EstimatedDurationMinutes);
 
     public string TodayLessonMoveCountText => TodayRecommendation is null
-        ? "No positions to train"
+        ? Localizer.Text(LocalizedStrings.OpeningTrainerNoPositionsToTrain)
         : TodayRecommendation.OpeningLine.BookBranchCount > 0
-            ? $"{TodayRecommendation.OpeningLine.BookBranchCount} positions / branches"
-            : $"{Math.Max(1, TodayRecommendation.OpeningLine.BookGameCount)} theory games";
+            ? Localizer.Format(LocalizedStrings.OpeningTrainerPositionsBranches, TodayRecommendation.OpeningLine.BookBranchCount)
+            : Localizer.Format(LocalizedStrings.OpeningTrainerTheoryGames, Math.Max(1, TodayRecommendation.OpeningLine.BookGameCount));
 
-    public string TodayLessonReason => TodayRecommendation?.Reason ?? "Import or choose an opening to start today's training.";
+    public string TodayLessonReason => TodayRecommendation?.Reason ?? Localizer.Text(LocalizedStrings.OpeningTrainerImportOrChooseOpening);
 
     public string TodayDecisionSummary => TodayRecommendation is null
-        ? "Recommended today: import or choose an opening before starting."
-        : $"Today: {GetRecommendedPositionCount()} review positions from a {GetReviewMoveCount()}-move line, approx. {GetEstimatedDurationText()}, {FormatRepertoireSide(TodayRecommendation.OpeningLine.RepertoireSide)} repertoire.";
+        ? Localizer.Text(LocalizedStrings.OpeningTrainerRecommendedTodayUnavailable)
+        : Localizer.Format(
+            LocalizedStrings.OpeningTrainerTodayDecisionSummary,
+            GetRecommendedPositionCount(),
+            GetReviewMoveCount(),
+            GetEstimatedDurationText(),
+            FormatRepertoireSide(TodayRecommendation.OpeningLine.RepertoireSide));
 
     public string TodayStartSequenceText => SelectedIntensityChoice?.Id switch
     {
-        "safe" => "Starts with due known positions. Weak-branch repairs stay optional.",
-        "challenge" => "Starts with due positions, then adds less familiar opponent replies.",
-        _ => "Starts with due positions, then repairs weak branches."
+        "safe" => Localizer.Text(LocalizedStrings.OpeningTrainerStartSequenceSafe),
+        "challenge" => Localizer.Text(LocalizedStrings.OpeningTrainerStartSequenceChallenge),
+        _ => Localizer.Text(LocalizedStrings.OpeningTrainerStartSequenceBalanced)
     };
 
     public string TodayLessonReasonDetail
@@ -352,35 +366,37 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         {
             if (TodayRecommendation is null)
             {
-                return "Once theory is available, the trainer will explain why this line is the next safest use of your time.";
+                return Localizer.Text(LocalizedStrings.OpeningTrainerTheoryReasonPlaceholder);
             }
 
             int weakBranches = overview?.Coverage.WeakBranches ?? TodayRecommendation.OpeningLine.BookBranchCount;
             string reason = TodayRecommendation.Reason.Trim();
             if (TodayRecommendation.ReasonCode == TrainingRecommendationReasonCode.RevisitDue && TodayRecommendation.Priority >= 10_000)
             {
-                reason = "This review is due because some scheduled items passed their review window.";
+                reason = Localizer.Text(LocalizedStrings.OpeningTrainerReviewDueScheduled);
             }
 
             string modeContext = SelectedIntensityChoice?.Id switch
             {
-                "safe" => "Safe Review keeps weak-branch repair optional.",
-                "challenge" => "Challenge mode adds less familiar opponent replies after the main line.",
-                _ => "Balanced mode adds weak-branch repair after the main line."
+                "safe" => Localizer.Text(LocalizedStrings.OpeningTrainerModeContextSafe),
+                "challenge" => Localizer.Text(LocalizedStrings.OpeningTrainerModeContextChallenge),
+                _ => Localizer.Text(LocalizedStrings.OpeningTrainerModeContextBalanced)
             };
             string goal = weakBranches > 0
-                ? $"Goal: confirm the main setup and repair {weakBranches} weak branch{PluralSuffix(weakBranches)}."
-                : "Goal: confirm the main setup and keep recall stable.";
+                ? Localizer.Format(LocalizedStrings.OpeningTrainerGoalRepairWeakBranches, weakBranches)
+                : Localizer.Text(LocalizedStrings.OpeningTrainerGoalStableRecall);
 
             return $"{reason} {modeContext}{Environment.NewLine}{goal}";
         }
     }
 
     public string TodayTrainingReasonLabel => HasTodayLesson
-        ? "Recommended because..."
-        : "Ready when you are";
+        ? Localizer.Text(LocalizedStrings.OpeningTrainerRecommendedBecause)
+        : Localizer.Text(LocalizedStrings.OpeningTrainerReadyWhenYouAre);
 
-    public string TodayLessonButtonText => HasTodayLesson ? "Start guided training" : "Import openings first";
+    public string TodayLessonButtonText => HasTodayLesson
+        ? Localizer.Text(LocalizedStrings.OpeningTrainerStartGuidedTraining)
+        : Localizer.Text(LocalizedStrings.OpeningTrainerImportOpeningsFirst);
 
     public bool HasTodayLesson => TodayRecommendation is not null;
 
@@ -402,7 +418,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     }
 
     public string SelectedIntensitySummary => SelectedIntensityChoice?.Description
-        ?? "Choose how cautious today's practice should feel.";
+        ?? Localizer.Text(LocalizedStrings.OpeningTrainerSelectedIntensityPlaceholder);
 
     public bool IsAdvancedOptionsExpanded
     {
@@ -427,15 +443,18 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         private set => SetProperty(ref playerOpeningPlan, value);
     }
 
-    public string PlayerOpeningPlanTitle => "Your training rhythm";
+    public string PlayerOpeningPlanTitle => Localizer.Text(LocalizedStrings.OpeningTrainerTrainingRhythmTitle);
 
-    public string PlayerOpeningPlanSummary => PlayerOpeningPlan?.Summary ?? "Your training rhythm will appear after loading local theory.";
+    public string PlayerOpeningPlanSummary => PlayerOpeningPlan?.Summary ?? Localizer.Text(LocalizedStrings.OpeningTrainerTrainingRhythmPlaceholder);
 
     public string PlayerOpeningProgressText => PlayerOpeningPlan is null
-        ? "No practice history yet."
+        ? Localizer.Text(LocalizedStrings.OpeningTrainerNoPracticeHistory)
         : PlayerOpeningPlan.Progress.SessionCount == 0
-            ? "Start a session to build repertoire progress."
-            : $"{PlayerOpeningPlan.Progress.AttemptCount} moves practiced, {PlayerOpeningPlan.Progress.AccuracyPercent:0.#}% accepted.";
+            ? Localizer.Text(LocalizedStrings.OpeningTrainerStartSessionForProgress)
+            : Localizer.Format(
+                LocalizedStrings.OpeningTrainerProgressMovesAccepted,
+                PlayerOpeningPlan.Progress.AttemptCount,
+                PlayerOpeningPlan.Progress.AccuracyPercent);
 
     public string PlayerOpeningProgressInterpretation => PlayerOpeningPlan is null
         ? "Progress history will turn into a short coaching note after your first completed session."
@@ -863,30 +882,34 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         bool needsPractice = currentSessionAttempts.Any(attempt =>
             string.Equals(attempt.PositionId, positionId, StringComparison.Ordinal)
             && attempt.Score == OpeningTrainingScore.Wrong);
-        string tryText = attempts == 1 ? "1 try" : $"{attempts} tries";
-        string practiceText = needsPractice ? "to revisit" : "on track";
-        return $"{status} - {tryText} - {practiceText}";
+        string tryText = attempts == 1
+            ? Localizer.Text(LocalizedStrings.OpeningTrainerOneTry)
+            : Localizer.Format(LocalizedStrings.OpeningTrainerManyTries, attempts);
+        string practiceText = needsPractice
+            ? Localizer.Text(LocalizedStrings.OpeningTrainerToRevisit)
+            : Localizer.Text(LocalizedStrings.OpeningTrainerOnTrack);
+        return Localizer.Format(LocalizedStrings.OpeningTrainerStatusWithPractice, status, tryText, practiceText);
     }
 
     public string StageTitle => currentPageIndex switch
     {
-        SelectionPageIndex => "Choose Today's Training",
-        OverviewPageIndex => "Understand The Idea",
-        StudyPageIndex => "Practice From Memory",
-        ResultsPageIndex => "Review And Continue",
-        _ => "Opening Trainer"
+        SelectionPageIndex => Localizer.Text(LocalizedStrings.OpeningTrainerStageSelectionTitle),
+        OverviewPageIndex => Localizer.Text(LocalizedStrings.OpeningTrainerStageOverviewTitle),
+        StudyPageIndex => Localizer.Text(LocalizedStrings.OpeningTrainerStageStudyTitle),
+        ResultsPageIndex => Localizer.Text(LocalizedStrings.OpeningTrainerStageResultsTitle),
+        _ => Localizer.Text(LocalizedStrings.OpeningTrainerTitle)
     };
 
     public string StageDescription => currentPageIndex switch
     {
-        SelectionPageIndex => "Start with the recommendation for today, then use Advanced Options only when you want a specific line.",
-        OverviewPageIndex => "See the idea, common replies, and the focus before you practice from memory.",
-        StudyPageIndex => "Recall the move first, then use hints only when you need a nudge.",
-        ResultsPageIndex => "See what is stable, what needs review, and the next best action.",
+        SelectionPageIndex => Localizer.Text(LocalizedStrings.OpeningTrainerStageSelectionDescription),
+        OverviewPageIndex => Localizer.Text(LocalizedStrings.OpeningTrainerStageOverviewDescription),
+        StudyPageIndex => Localizer.Text(LocalizedStrings.OpeningTrainerStageStudyDescription),
+        ResultsPageIndex => Localizer.Text(LocalizedStrings.OpeningTrainerStageResultsDescription),
         _ => string.Empty
     };
 
-    public string StageProgressLabel => $"Stage {currentPageIndex + 1} of {TotalPages} - {StageTitle}";
+    public string StageProgressLabel => Localizer.Format(LocalizedStrings.OpeningTrainerStageProgress, currentPageIndex + 1, TotalPages, StageTitle);
 
     public double StageProgressPercent => (currentPageIndex + 1d) / TotalPages * 100d;
 
@@ -900,11 +923,11 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     public bool HasSelectedOpening => SelectedOpening is not null;
 
-    public string SelectedOpeningName => SelectedOpening?.DisplayName ?? "No opening selected";
+    public string SelectedOpeningName => SelectedOpening?.DisplayName ?? Localizer.Text(LocalizedStrings.OpeningTrainerNoOpeningSelected);
 
     public string SelectedOpeningSideText => SelectedOpening is null
-        ? "Choose an item from the list"
-        : $"{SelectedOpening.RepertoireSide} repertoire";
+        ? Localizer.Text(LocalizedStrings.OpeningTrainerChooseItemFromList)
+        : Localizer.Format(LocalizedStrings.OpeningTrainerSideRepertoire, FormatRepertoireSide(SelectedOpening.RepertoireSide));
 
     public string OpeningContextStartsFrom => overview is null || overview.MainLine.Count == 0
         ? "Starts from: choose an opening to see the first moves."
@@ -938,7 +961,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         {
             if (overview is null)
             {
-                return "Choose an opening to see what is ready and what needs another pass.";
+                return Localizer.Text(LocalizedStrings.OpeningTrainerPickOpeningCoverage);
             }
 
             int needsReview = overview.Coverage.WeakBranches;
@@ -1045,10 +1068,10 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             ReplaceItems(UnderstandingCards, []);
             SelectedPriority = null;
             ReplaceItems(WeakPositionItems, []);
-            SummaryText = "No openings matched the current filter.";
-            OpponentSummary = "Opponent replies are unavailable.";
-            CoverageText = "No practice history yet.";
-            CoverageExplanation = "Try another filter or repertoire side.";
+            SummaryText = Localizer.Text(LocalizedStrings.OpeningTrainerNoOpeningsMatch);
+            OpponentSummary = Localizer.Text(LocalizedStrings.OpeningTrainerOpponentRepliesUnavailable);
+            CoverageText = Localizer.Text(LocalizedStrings.OpeningTrainerNoPracticeHistory);
+            CoverageExplanation = Localizer.Text(LocalizedStrings.OpeningTrainerTryAnotherFilterOrSide);
             OnPropertyChanged(nameof(MainLineText));
             OnPropertyChanged(nameof(RememberThisText));
             OnPropertyChanged(nameof(WeakPositionsPlaceholder));
@@ -1201,10 +1224,10 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             ReplaceItems(UnderstandingCards, []);
             SelectedPriority = null;
             ReplaceItems(WeakPositionItems, []);
-            SummaryText = "Could not load opening overview.";
-            OpponentSummary = "Opponent replies are unavailable.";
-            CoverageText = "No practice history yet.";
-            CoverageExplanation = "The selected opening does not have enough local theory data yet.";
+            SummaryText = Localizer.Text(LocalizedStrings.OpeningTrainerCouldNotLoadOverview);
+            OpponentSummary = Localizer.Text(LocalizedStrings.OpeningTrainerOpponentRepliesUnavailable);
+            CoverageText = Localizer.Text(LocalizedStrings.OpeningTrainerNoPracticeHistory);
+            CoverageExplanation = Localizer.Text(LocalizedStrings.OpeningTrainerOpeningNeedsMoreTheory);
             RaiseSelectionCoachingTextChanged();
             OnPropertyChanged(nameof(WeakPositionsPlaceholder));
             OnPropertyChanged(nameof(ShowWeakPositionsPlaceholder));
@@ -2007,8 +2030,8 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     private void ResetCurrentHint()
     {
-        CurrentHintLevel = "No hint used";
-        CurrentHintText = "Hints will appear here when you ask for one.";
+        CurrentHintLevel = Localizer.Text(LocalizedStrings.OpeningTrainerNoHintUsed);
+        CurrentHintText = Localizer.Text(LocalizedStrings.OpeningTrainerHintsPlaceholder);
     }
 
     private void RaisePriorityStateChanged()
@@ -2128,9 +2151,9 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     private static string FormatRepertoireSide(RepertoireSide side)
         => side switch
         {
-            RepertoireSide.White => "White",
-            RepertoireSide.Black => "Black",
-            _ => "Both sides"
+            RepertoireSide.White => Localizer.Text(LocalizedStrings.CommonWhite),
+            RepertoireSide.Black => Localizer.Text(LocalizedStrings.CommonBlack),
+            _ => Localizer.Text(LocalizedStrings.OpeningTrainerBothSides)
         };
 
     private static IReadOnlyList<BoardArrowViewModel> BuildArrows(OpeningTrainingPosition position)
@@ -2288,8 +2311,8 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             if (position is null || session is null)
             {
                 vm.PreviewFen = string.Empty;
-                vm.CurrentPrompt = "Practice is idle.";
-                vm.CurrentWhy = string.Empty;
+                vm.CurrentPrompt = Localizer.Text(LocalizedStrings.OpeningTrainerPracticeIdle);
+                vm.CurrentWhy = Localizer.Text(LocalizedStrings.OpeningTrainerWhyPlaceholder);
                 vm.PreviewArrows = [];
                 ReplaceItems(vm.AnswerOptionItems, []);
                 vm.SelectedAnswerOption = null;

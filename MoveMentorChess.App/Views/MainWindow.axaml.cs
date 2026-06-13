@@ -8,6 +8,7 @@ using Avalonia.Platform.Storage;
 using MoveMentorChess.App.Composition;
 using MoveMentorChess.App.Controls;
 using MoveMentorChess.App.ViewModels;
+using MoveMentorChess.Localization;
 using MoveMentorChess.Persistence;
 
 namespace MoveMentorChess.App.Views;
@@ -46,6 +47,7 @@ public partial class MainWindow : Window
         this.profilesWindowFactory = profilesWindowFactory ?? throw new ArgumentNullException(nameof(profilesWindowFactory));
         this.dialogDataService = dialogDataService ?? throw new ArgumentNullException(nameof(dialogDataService));
         InitializeComponent();
+        ApplyLocalizedText();
         Opened += (_, _) =>
         {
             if (DataContext is MainWindowViewModel viewModel)
@@ -117,11 +119,11 @@ public partial class MainWindow : Window
 
         IReadOnlyList<IStorageFile> files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Load PGN file",
+            Title = Localizer.Text(LocalizedStrings.MainDialogLoadPgnFile),
             AllowMultiple = false,
             FileTypeFilter =
             [
-                new FilePickerFileType("PGN files")
+                new FilePickerFileType(Localizer.Text(LocalizedStrings.MainPgnFiles))
                 {
                     Patterns = ["*.pgn"],
                     MimeTypes = ["application/x-chess-pgn", "text/plain"]
@@ -151,42 +153,46 @@ public partial class MainWindow : Window
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
-            await ShowInfoDialogAsync("Load PGN file", $"Could not read PGN file.\n{ex.Message}");
+            await ShowInfoDialogAsync(
+                Localizer.Text(LocalizedStrings.MainDialogLoadPgnFile),
+                $"{Localizer.Text(LocalizedStrings.MainDialogCouldNotReadPgnFile)}\n{ex.Message}");
             return;
         }
 
         PgnFileImportResult importResult = viewModel.ImportPgnGames(parseResult);
         if (importResult.ImportedGames == 0)
         {
-            await ShowInfoDialogAsync("Load PGN file", "No replayable games were found in the selected PGN file.");
+            await ShowInfoDialogAsync(
+                Localizer.Text(LocalizedStrings.MainDialogLoadPgnFile),
+                Localizer.Text(LocalizedStrings.MainDialogNoReplayableGames));
             return;
         }
 
         if (!viewModel.HasAnalysisEngine())
         {
             await ShowInfoDialogAsync(
-                "Load PGN file",
-                $"Loaded {importResult.ImportedGames} games. The analysis engine is unavailable, so bulk analysis cannot start now.");
+                Localizer.Text(LocalizedStrings.MainDialogLoadPgnFile),
+                Localizer.Format(LocalizedStrings.MainDialogLoadedGamesEngineUnavailable, importResult.ImportedGames));
             return;
         }
 
         string skippedText = importResult.SkippedGames > 0
-            ? $" Skipped {importResult.SkippedGames} games that could not be parsed or replayed."
+            ? $" {Localizer.Format(LocalizedStrings.MainDialogSkippedGames, importResult.SkippedGames)}"
             : string.Empty;
         string? primaryPlayer = MainWindowViewModel.DetectPrimaryPlayer(importResult.Games);
         string analysisTargetText = string.IsNullOrWhiteSpace(primaryPlayer)
-            ? "No recurring player could be detected, so analysis will use the currently selected side."
-            : $"Detected player: {primaryPlayer}. Only that player's moves will be analyzed, as White or Black depending on each game.";
+            ? Localizer.Text(LocalizedStrings.MainDialogNoRecurringPlayer)
+            : Localizer.Format(LocalizedStrings.MainDialogDetectedPlayer, primaryPlayer);
         bool analyze = await ShowConfirmationDialogAsync(
-            "Analyze imported games?",
-            $"Loaded {importResult.ImportedGames} games from the PGN file.{skippedText}\n\n{analysisTargetText}\n\nAnalyze now? This can take a long time.",
-            "Analyze",
-            "Later");
+            Localizer.Text(LocalizedStrings.MainDialogAnalyzeImportedGamesTitle),
+            $"{Localizer.Format(LocalizedStrings.MainDialogLoadedGames, importResult.ImportedGames)}{skippedText}\n\n{analysisTargetText}\n\n{Localizer.Text(LocalizedStrings.MainDialogAnalyzeNow)}",
+            Localizer.Text(LocalizedStrings.MainDialogAnalyze),
+            Localizer.Text(LocalizedStrings.MainDialogLater));
 
         if (analyze)
         {
             BulkPgnAnalysisResult analysisResult = await viewModel.AnalyzeImportedGamesAsync(importResult.Games);
-            await ShowInfoDialogAsync("PGN analysis finished", BuildBulkAnalysisSummary(analysisResult));
+            await ShowInfoDialogAsync(Localizer.Text(LocalizedStrings.MainDialogPgnAnalysisFinished), BuildBulkAnalysisSummary(analysisResult));
         }
     }
 
@@ -268,6 +274,7 @@ public partial class MainWindow : Window
         bool? saved = await dialog.ShowDialog<bool?>(this);
         if (saved == true && DataContext is MainWindowViewModel viewModel)
         {
+            ApplyLocalizedText();
             viewModel.ReloadEngineSettings();
         }
     }
@@ -310,6 +317,27 @@ public partial class MainWindow : Window
         Close();
     }
 
+    private void ApplyLocalizedText()
+    {
+        RotateBoardButton.Content = Localizer.Text(LocalizedStrings.MainRotateBoard);
+        UndoButton.Content = Localizer.Text(LocalizedStrings.MainUndo);
+        ConfigureEngineButton.Content = Localizer.Text(LocalizedStrings.MainConfigureEngine);
+        HeroPastePgnButton.Content = Localizer.Text(LocalizedStrings.MainPastePgn);
+        HeroAnalyzeGameButton.Content = Localizer.Text(LocalizedStrings.MainAnalyzeGame);
+        PastePgnButton.Content = Localizer.Text(LocalizedStrings.MainPastePgn);
+        LoadPgnFileButton.Content = Localizer.Text(LocalizedStrings.MainLoadPgnFile);
+        ApplyNextButton.Content = Localizer.Text(LocalizedStrings.MainApplyNext);
+        ApplySelectedButton.Content = Localizer.Text(LocalizedStrings.MainApplySelected);
+        AnalyzeImportedButton.Content = Localizer.Text(LocalizedStrings.MainAnalyzeImported);
+        PlayerCoachButton.Content = Localizer.Text(LocalizedStrings.MainPlayerCoach);
+        SavedAnalysesButton.Content = Localizer.Text(LocalizedStrings.MainSavedAnalyses);
+        LoadSavedButton.Content = Localizer.Text(LocalizedStrings.MainLoadSaved);
+        OpeningTrainerButton.Content = Localizer.Text(LocalizedStrings.MainOpeningTrainer);
+        SettingsButton.Content = Localizer.Text(LocalizedStrings.MainSettings);
+        OpeningCoverageButton.Content = Localizer.Text(LocalizedStrings.MainOpeningCoverage);
+        CloseAppButton.Content = Localizer.Text(LocalizedStrings.MainCloseApp);
+    }
+
     private async Task<LegalMoveInfo?> ShowPromotionDialogAsync(IReadOnlyList<LegalMoveInfo> moves)
     {
         PromotionWindow dialog = new(moves);
@@ -319,7 +347,7 @@ public partial class MainWindow : Window
 
     private async Task ShowInfoDialogAsync(string title, string message)
     {
-        await ShowConfirmationDialogAsync(title, message, "OK", null);
+        await ShowConfirmationDialogAsync(title, message, Localizer.Text(LocalizedStrings.MainDialogOk), null);
     }
 
     private async Task<bool> ShowConfirmationDialogAsync(string title, string message, string acceptText, string? cancelText)
@@ -405,16 +433,16 @@ public partial class MainWindow : Window
     private static string BuildBulkAnalysisSummary(BulkPgnAnalysisResult result)
     {
         string player = string.IsNullOrWhiteSpace(result.PrimaryPlayer)
-            ? "Detected player: none"
-            : $"Analyzed player: {result.PrimaryPlayer}";
+            ? Localizer.Text(LocalizedStrings.MainBulkDetectedPlayerNone)
+            : Localizer.Format(LocalizedStrings.MainBulkAnalyzedPlayer, result.PrimaryPlayer);
         string summary =
-            $"{player}\n\nNew analyses: {result.AnalyzedGames}\nLoaded from cache: {result.CachedGames}\nSkipped: {result.SkippedGames}\nFailed: {result.FailedGames}";
+            $"{player}\n\n{Localizer.Format(LocalizedStrings.MainBulkNewAnalyses, result.AnalyzedGames)}\n{Localizer.Format(LocalizedStrings.MainBulkLoadedFromCache, result.CachedGames)}\n{Localizer.Format(LocalizedStrings.MainBulkSkipped, result.SkippedGames)}\n{Localizer.Format(LocalizedStrings.MainBulkFailed, result.FailedGames)}";
 
         if (result.FailureMessages.Count == 0)
         {
             return summary;
         }
 
-        return summary + "\n\nFirst failures:\n" + string.Join("\n", result.FailureMessages);
+        return summary + $"\n\n{Localizer.Text(LocalizedStrings.MainBulkFirstFailures)}\n" + string.Join("\n", result.FailureMessages);
     }
 }

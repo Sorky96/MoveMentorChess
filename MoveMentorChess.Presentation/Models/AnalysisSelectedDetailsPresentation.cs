@@ -32,7 +32,7 @@ public static class AnalysisSelectedDetailsPresenter
             effectiveLabel,
             AnalysisMistakePresentation.BuildMoveRange(mistake),
             AnalysisDetailsTextFormatter.FormatMoveFromFen(lead.Replay.FenBefore, lead.BeforeAnalysis.BestMoveUci),
-            $"{mistake.Quality} - {AnalysisMistakePresentation.FormatMistakeLabel(effectiveLabel)}",
+            $"{AnalysisMistakePresentation.FormatQualityBucket(mistake.Quality)} - {AnalysisMistakePresentation.FormatMistakeLabel(effectiveLabel)}",
             $"Evaluation loss: {lead.CentipawnLoss?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "n/a"} cp",
             AnalysisCoachingTextFormatter.BuildEvalSwingText(lead),
             AnalysisCoachingTextFormatter.BuildEvalInterpretation(lead),

@@ -1,4 +1,5 @@
 using System.Globalization;
+using MoveMentorChess.Presentation.Models;
 
 namespace MoveMentorChess.App.ViewModels;
 
@@ -75,7 +76,7 @@ public sealed class ImportedMoveItemViewModel : ViewModelBase
     public void ApplyAnalysis(MoveAnalysisResult analysis)
     {
         HasAnalysisLabel = true;
-        QualityLabel = analysis.Quality.ToString();
+        QualityLabel = FormatQuality(analysis.Quality);
         QualityLabelBrush = GetQualityBrush(analysis.Quality);
         QualityLabelForeground = GetQualityForeground(analysis.Quality);
         EvalDeltaText = FormatEvalDelta(analysis.EvalBeforeCp, analysis.EvalAfterCp, analysis.BestMateIn, analysis.PlayedMateIn);
@@ -108,6 +109,9 @@ public sealed class ImportedMoveItemViewModel : ViewModelBase
         string after = afterMate?.ToString(CultureInfo.InvariantCulture) ?? "?";
         return $"{before}->{after}";
     }
+
+    private static string FormatQuality(MoveQualityBucket quality)
+        => AnalysisMistakePresentation.FormatQualityBucket(quality);
 
     private static string GetQualityBrush(MoveQualityBucket quality)
     {

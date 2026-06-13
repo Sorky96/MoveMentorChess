@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="using:MoveMentorChess.App.Localization"
         x:Class="MoveMentorChess.App.Views.SavedAnalysesWindow"
         Width="1220"
         Height="760"
@@ -7,7 +8,7 @@
         MinHeight="640"
         WindowState="FullScreen"
         WindowDecorations="None"
-        Title="Saved Analyses"
+        Title="{loc:Localize SavedAnalysesTitle}"
         Background="{DynamicResource ChromeBrush}">
   <Grid Margin="18" RowDefinitions="Auto,*">
     <Border Padding="16" CornerRadius="18" Background="{DynamicResource PanelBrush}">
@@ -17,36 +18,36 @@
                    FontSize="24"
                    FontWeight="Bold"
                    Foreground="White"
-                   Text="Saved Analyses" />
+                   Text="{loc:Localize SavedAnalysesTitle}" />
         <TextBox x:Name="FilterTextBox"
                  Grid.Column="1"
                  Background="{DynamicResource ChromeBrush}"
                  Foreground="#EAF2F7"
                  BorderBrush="{DynamicResource PanelAccentBrush}"
-                 PlaceholderText="Filter by player, opening, result or labels..."
+                 PlaceholderText="{loc:Localize SavedAnalysesFilterPlaceholder}"
                  TextChanged="FilterTextBox_OnTextChanged" />
         <Button x:Name="LoadGameButton"
                 Grid.Column="2"
                 Margin="12,0,0,0"
                 IsEnabled="False"
                 Click="LoadGameButton_Click"
-                Content="Load Game" />
+                Content="{loc:Localize SavedAnalysesLoadGame}" />
         <Button x:Name="OpenAnalysisButton"
                 Grid.Column="3"
                 Margin="12,0,0,0"
                 IsEnabled="False"
                 Click="OpenAnalysisButton_Click"
-                Content="Open Analysis" />
+                Content="{loc:Localize SavedAnalysesOpenAnalysis}" />
         <Button x:Name="DeleteSelectedButton"
                 Grid.Column="4"
                 Margin="12,0,0,0"
                 IsEnabled="False"
                 Click="DeleteSelectedButton_Click"
-                Content="Delete Selected" />
+                Content="{loc:Localize SavedAnalysesDeleteSelected}" />
         <Button Grid.Column="5"
                 Margin="12,0,0,0"
                 Click="CloseButton_Click"
-                Content="Close" />
+                Content="{loc:Localize SettingsClose}" />
       </Grid>
     </Border>
 
@@ -54,11 +55,11 @@
       <Border Padding="12" CornerRadius="18" Background="{DynamicResource PanelBrush}">
         <Grid RowDefinitions="Auto,*">
           <Grid Margin="8,0,8,8" ColumnDefinitions="2.1*,70,92,*,72">
-            <TextBlock Foreground="#9EB5C5" FontSize="12" FontWeight="SemiBold" Text="Players" />
-            <TextBlock Grid.Column="1" Foreground="#9EB5C5" FontSize="12" FontWeight="SemiBold" Text="Side" />
-            <TextBlock Grid.Column="2" Foreground="#9EB5C5" FontSize="12" FontWeight="SemiBold" Text="Date" />
-            <TextBlock Grid.Column="3" Foreground="#9EB5C5" FontSize="12" FontWeight="SemiBold" Text="Opening" />
-            <TextBlock Grid.Column="4" HorizontalAlignment="Right" Foreground="#9EB5C5" FontSize="12" FontWeight="SemiBold" Text="Marks" />
+            <TextBlock Foreground="#9EB5C5" FontSize="12" FontWeight="SemiBold" Text="{loc:Localize SavedAnalysesPlayers}" />
+            <TextBlock Grid.Column="1" Foreground="#9EB5C5" FontSize="12" FontWeight="SemiBold" Text="{loc:Localize SavedAnalysesSideHeader}" />
+            <TextBlock Grid.Column="2" Foreground="#9EB5C5" FontSize="12" FontWeight="SemiBold" Text="{loc:Localize SavedAnalysesDateHeader}" />
+            <TextBlock Grid.Column="3" Foreground="#9EB5C5" FontSize="12" FontWeight="SemiBold" Text="{loc:Localize SavedAnalysesOpeningHeader}" />
+            <TextBlock Grid.Column="4" HorizontalAlignment="Right" Foreground="#9EB5C5" FontSize="12" FontWeight="SemiBold" Text="{loc:Localize SavedAnalysesMarks}" />
           </Grid>
         <ListBox x:Name="AnalysesListBox"
                  Grid.Row="1"

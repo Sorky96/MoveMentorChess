@@ -19,7 +19,7 @@ public static class AnalysisDetailsTextFormatter
         StringBuilder builder = new();
         string effectiveLabel = feedback?.CorrectedLabel ?? mistake.Tag?.Label ?? "unclassified";
         builder.AppendLine("Move facts:");
-        builder.AppendLine(CultureInfo.InvariantCulture, $"Quality: {mistake.Quality}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Quality: {AnalysisMistakePresentation.FormatQualityBucket(mistake.Quality)}");
         builder.AppendLine(CultureInfo.InvariantCulture, $"Label: {AnalysisMistakePresentation.FormatMistakeLabel(effectiveLabel)}");
         if (feedback is not null)
         {

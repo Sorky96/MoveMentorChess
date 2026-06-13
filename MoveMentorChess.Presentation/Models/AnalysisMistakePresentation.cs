@@ -1,6 +1,7 @@
 using System.Globalization;
 using MoveMentorChess.Analysis;
 using MoveMentorChess.Engine;
+using MoveMentorChess.Localization;
 
 namespace MoveMentorChess.Presentation.Models;
 
@@ -15,7 +16,7 @@ public sealed class SelectedMistakeViewItem
         LabelText = AnalysisMistakePresentation.FormatMistakeLabel(RawLabel);
         LabelBrush = AnalysisMistakePresentation.GetMistakeLabelBrush(RawLabel);
         LabelForeground = AnalysisMistakePresentation.GetMistakeLabelForeground(RawLabel);
-        MetaText = $"{Mistake.Quality} | {AnalysisMistakePresentation.BuildImpactText(LeadMove)} | {AnalysisMistakePresentation.FormatPhase(LeadMove.Replay.Phase)}";
+        MetaText = $"{AnalysisMistakePresentation.FormatQualityBucket(Mistake.Quality)} | {AnalysisMistakePresentation.BuildImpactText(LeadMove)} | {AnalysisMistakePresentation.FormatPhase(LeadMove.Replay.Phase)}";
         (PriorityText, PriorityReason, PriorityBrush) = AnalysisMistakePresentation.BuildPriorityInfo(Mistake, LeadMove, RawLabel, analysisResult);
         ReviewStatusText = isReviewed ? "Reviewed" : string.Empty;
         ReviewStatusBrush = isReviewed ? "#9ED7A6" : "#657386";
@@ -48,7 +49,7 @@ public sealed class SelectedMistakeViewItem
     public string ReviewStatusBrush { get; }
 
     public override string ToString()
-        => $"{MoveRange} | {Mistake.Quality} | {LabelText} | {AnalysisMistakePresentation.BuildImpactText(LeadMove)}";
+        => $"{MoveRange} | {AnalysisMistakePresentation.FormatQualityBucket(Mistake.Quality)} | {LabelText} | {AnalysisMistakePresentation.BuildImpactText(LeadMove)}";
 }
 
 public static class AnalysisMistakePresentation
@@ -77,9 +78,9 @@ public static class AnalysisMistakePresentation
     {
         return phase switch
         {
-            GamePhase.Opening => "opening",
-            GamePhase.Middlegame => "middlegame",
-            GamePhase.Endgame => "endgame",
+            GamePhase.Opening => Localizer.Text(LocalizedStrings.FormatPhaseOpening),
+            GamePhase.Middlegame => Localizer.Text(LocalizedStrings.FormatPhaseMiddlegame),
+            GamePhase.Endgame => Localizer.Text(LocalizedStrings.FormatPhaseEndgame),
             _ => phase.ToString()
         };
     }
@@ -88,14 +89,32 @@ public static class AnalysisMistakePresentation
     {
         return label switch
         {
-            "hanging_piece" => "Loose piece",
-            "missed_tactic" => "Missed tactics",
-            "opening_principles" => "Opening discipline",
-            "king_safety" => "King safety",
-            "endgame_technique" => "Endgame technique",
-            "material_loss" => "Material loss",
-            "piece_activity" => "Passive pieces",
+            "hanging_piece" => Localizer.Text(LocalizedStrings.AdvicePatternHangingPiece),
+            "missed_tactic" => Localizer.Text(LocalizedStrings.AdvicePatternMissedTactic),
+            "opening_principles" => Localizer.Text(LocalizedStrings.AdvicePatternOpeningPrinciples),
+            "king_safety" => Localizer.Text(LocalizedStrings.AdvicePatternKingSafety),
+            "endgame_technique" => Localizer.Text(LocalizedStrings.AdvicePatternEndgameTechnique),
+            "material_loss" => Localizer.Text(LocalizedStrings.AdvicePatternMaterialLoss),
+            "piece_activity" => Localizer.Text(LocalizedStrings.AdvicePatternPieceActivity),
+            "unclassified" => Localizer.Text(LocalizedStrings.CommonUnclassified),
             _ => CultureInfo.InvariantCulture.TextInfo.ToTitleCase(label.Replace('_', ' ').ToLowerInvariant())
+        };
+    }
+
+    public static string FormatQualityBucket(MoveQualityBucket quality)
+    {
+        return quality switch
+        {
+            MoveQualityBucket.Book => Localizer.Text(LocalizedStrings.QualityBook),
+            MoveQualityBucket.Brilliant => Localizer.Text(LocalizedStrings.QualityBrilliant),
+            MoveQualityBucket.Great => Localizer.Text(LocalizedStrings.QualityGreat),
+            MoveQualityBucket.Best => Localizer.Text(LocalizedStrings.QualityBest),
+            MoveQualityBucket.Excellent => Localizer.Text(LocalizedStrings.QualityExcellent),
+            MoveQualityBucket.Good => Localizer.Text(LocalizedStrings.QualityGood),
+            MoveQualityBucket.Inaccuracy => Localizer.Text(LocalizedStrings.QualityInaccuracy),
+            MoveQualityBucket.Mistake => Localizer.Text(LocalizedStrings.QualityMistake),
+            MoveQualityBucket.Blunder => Localizer.Text(LocalizedStrings.QualityBlunder),
+            _ => quality.ToString()
         };
     }
 
@@ -103,20 +122,22 @@ public static class AnalysisMistakePresentation
     {
         if (lead.PlayedMateIn is < 0)
         {
-            return "forced mate allowed";
+            return Localizer.Text(LocalizedStrings.AnalysisImpactForcedMateAllowed);
         }
 
         if (lead.BestMateIn is > 0 && lead.PlayedMateIn is null)
         {
-            return "winning tactic missed";
+            return Localizer.Text(LocalizedStrings.AnalysisImpactWinningTacticMissed);
         }
 
         if (lead.BestMateIn is > 0 && lead.PlayedMateIn is > 0)
         {
-            return "mate route changed";
+            return Localizer.Text(LocalizedStrings.AnalysisImpactMateRouteChanged);
         }
 
-        return $"evaluation loss {lead.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"} cp";
+        return Localizer.Format(
+            LocalizedStrings.AnalysisImpactEvaluationLoss,
+            lead.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? Localizer.Text(LocalizedStrings.CommonNotAvailable));
     }
 
     public static (string Text, string Reason, string Brush) BuildPriorityInfo(

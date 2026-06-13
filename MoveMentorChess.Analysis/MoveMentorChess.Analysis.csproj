@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MoveMentorChess.Engine\MoveMentorChess.Engine.csproj" />
+    <ProjectReference Include="..\MoveMentorChess.Localization\MoveMentorChess.Localization.csproj" />
     <ProjectReference Include="..\MoveMentorChess.Opening\MoveMentorChess.Opening.csproj" />
   </ItemGroup>
 

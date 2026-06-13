@@ -1,3 +1,5 @@
+using MoveMentorChess.Localization;
+
 namespace MoveMentorChess.Analysis;
 
 public sealed class LocalHeuristicAdviceGenerator : IAdviceGenerator
@@ -24,9 +26,9 @@ public sealed class LocalHeuristicAdviceGenerator : IAdviceGenerator
 
         string phaseHint = replay.Phase switch
         {
-            GamePhase.Opening => "Treat this as an opening pattern to review in your first 10 moves.",
-            GamePhase.Middlegame => "This is a middlegame decision, so compare plans and forcing replies before committing.",
-            GamePhase.Endgame => "Because this happened in the endgame, activity and technique matter more than cosmetic moves.",
+            GamePhase.Opening => Localizer.Text(LocalizedStrings.HeuristicHintOpening),
+            GamePhase.Middlegame => Localizer.Text(LocalizedStrings.HeuristicHintMiddlegame),
+            GamePhase.Endgame => Localizer.Text(LocalizedStrings.HeuristicHintEndgame),
             _ => string.Empty
         };
 

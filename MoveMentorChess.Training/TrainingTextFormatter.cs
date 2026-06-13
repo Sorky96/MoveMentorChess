@@ -1,4 +1,5 @@
 using System.Globalization;
+using MoveMentorChess.Localization;
 
 namespace MoveMentorChess.Training;
 
@@ -8,13 +9,13 @@ internal static class TrainingTextFormatter
     {
         return label switch
         {
-            "hanging_piece" => "Loose pieces",
-            "missed_tactic" => "Missed tactics",
-            "opening_principles" => "Opening discipline",
-            "king_safety" => "King safety",
-            "endgame_technique" => "Endgame technique",
-            "material_loss" => "Material losses",
-            "piece_activity" => "Passive pieces",
+            "hanging_piece" => Localizer.Text(LocalizedStrings.AdvicePatternHangingPiece),
+            "missed_tactic" => Localizer.Text(LocalizedStrings.AdvicePatternMissedTactic),
+            "opening_principles" => Localizer.Text(LocalizedStrings.AdvicePatternOpeningPrinciples),
+            "king_safety" => Localizer.Text(LocalizedStrings.AdvicePatternKingSafety),
+            "endgame_technique" => Localizer.Text(LocalizedStrings.AdvicePatternEndgameTechnique),
+            "material_loss" => Localizer.Text(LocalizedStrings.AdvicePatternMaterialLoss),
+            "piece_activity" => Localizer.Text(LocalizedStrings.AdvicePatternPieceActivity),
             _ => CultureInfo.InvariantCulture.TextInfo.ToTitleCase((label ?? string.Empty).Replace('_', ' ').ToLowerInvariant())
         };
     }
@@ -23,7 +24,7 @@ internal static class TrainingTextFormatter
     {
         string description = OpeningCatalog.Describe(eco);
         return string.IsNullOrWhiteSpace(description)
-            ? "Mixed openings"
+            ? Localizer.Text(LocalizedStrings.FormatMixedOpenings)
             : description;
     }
 
@@ -31,10 +32,10 @@ internal static class TrainingTextFormatter
     {
         return direction switch
         {
-            ProfileProgressDirection.Improving => "Improving lately",
-            ProfileProgressDirection.Stable => "Mostly stable",
-            ProfileProgressDirection.Regressing => "Results slipped recently",
-            _ => "Need more games"
+            ProfileProgressDirection.Improving => Localizer.Text(LocalizedStrings.TrendImproving),
+            ProfileProgressDirection.Stable => Localizer.Text(LocalizedStrings.TrendStable),
+            ProfileProgressDirection.Regressing => Localizer.Text(LocalizedStrings.TrendRegressing),
+            _ => Localizer.Text(LocalizedStrings.TrendNeedMoreGames)
         };
     }
 
@@ -42,9 +43,9 @@ internal static class TrainingTextFormatter
     {
         return phase switch
         {
-            GamePhase.Opening => "Opening",
-            GamePhase.Middlegame => "Middlegame",
-            GamePhase.Endgame => "Endgame",
+            GamePhase.Opening => Localizer.Text(LocalizedStrings.FormatPhaseOpening),
+            GamePhase.Middlegame => Localizer.Text(LocalizedStrings.FormatPhaseMiddlegame),
+            GamePhase.Endgame => Localizer.Text(LocalizedStrings.FormatPhaseEndgame),
             _ => phase.ToString()
         };
     }
@@ -53,11 +54,11 @@ internal static class TrainingTextFormatter
     {
         return kind switch
         {
-            TrainingBlockKind.Tactics => "Tactics",
-            TrainingBlockKind.OpeningReview => "Opening review",
-            TrainingBlockKind.EndgameDrill => "Endgame drill",
-            TrainingBlockKind.GameReview => "Game review",
-            TrainingBlockKind.SlowPlayFocus => "Slow play focus",
+            TrainingBlockKind.Tactics => Localizer.Text(LocalizedStrings.TrainingBlockTactics),
+            TrainingBlockKind.OpeningReview => Localizer.Text(LocalizedStrings.TrainingBlockOpeningReview),
+            TrainingBlockKind.EndgameDrill => Localizer.Text(LocalizedStrings.TrainingBlockEndgameDrill),
+            TrainingBlockKind.GameReview => Localizer.Text(LocalizedStrings.TrainingBlockGameReview),
+            TrainingBlockKind.SlowPlayFocus => Localizer.Text(LocalizedStrings.TrainingBlockSlowPlayFocus),
             _ => kind.ToString()
         };
     }
@@ -66,9 +67,9 @@ internal static class TrainingTextFormatter
     {
         return purpose switch
         {
-            TrainingBlockPurpose.Repair => "Repair",
-            TrainingBlockPurpose.Maintain => "Maintain",
-            TrainingBlockPurpose.Checklist => "Checklist",
+            TrainingBlockPurpose.Repair => Localizer.Text(LocalizedStrings.TrainingPurposeRepair),
+            TrainingBlockPurpose.Maintain => Localizer.Text(LocalizedStrings.TrainingPurposeMaintain),
+            TrainingBlockPurpose.Checklist => Localizer.Text(LocalizedStrings.TrainingPurposeChecklist),
             _ => purpose.ToString()
         };
     }

@@ -1,4 +1,5 @@
 using MoveMentorChess.Analysis;
+using MoveMentorChess.Localization;
 using Xunit;
 
 namespace MoveMentorChessServices.Tests.Analysis;
@@ -14,7 +15,7 @@ public sealed class RuntimeSettingsStoreTests
         StockfishSettingsStore.Save(settings, environment);
         StockfishSettings loaded = StockfishSettingsStore.Load(environment);
 
-        string expectedPath = Path.Combine(@"C:\local-app-data", "MoveMentorChessServices", "settings", "stockfish-settings.json");
+        string expectedPath = Path.Join(@"C:\local-app-data", "MoveMentorChessServices", "settings", "stockfish-settings.json");
         Assert.Equal(expectedPath, StockfishSettingsStore.GetSettingsPath(environment));
         Assert.Contains(Path.GetDirectoryName(expectedPath)!, environment.CreatedDirectories);
         Assert.Equal(StockfishSettings.Default.Threads, loaded.Threads);
@@ -38,7 +39,7 @@ public sealed class RuntimeSettingsStoreTests
         LlamaGpuSettingsStore.Save(settings, environment);
         LlamaGpuSettings loaded = LlamaGpuSettingsStore.Load(environment);
 
-        string expectedPath = Path.Combine(@"C:\app-base", "MoveMentorChessServices", "settings", "llama-gpu-settings.json");
+        string expectedPath = Path.Join(@"C:\app-base", "MoveMentorChessServices", "settings", "llama-gpu-settings.json");
         Assert.Equal(expectedPath, LlamaGpuSettingsStore.GetSettingsPath(environment));
         Assert.True(loaded.UseFullGpuPower);
         Assert.Equal(ExplanationLevel.Advanced, loaded.DefaultExplanationLevel);
@@ -57,6 +58,54 @@ public sealed class RuntimeSettingsStoreTests
         Assert.Equal(LlamaGpuSettings.Default, LlamaGpuSettingsStore.Load(environment));
     }
 
+    [Fact]
+    public void ApplicationSettingsStore_UsesSystemLanguageDefaultAndNormalizesUnsupportedValues()
+    {
+        FakeRuntimeSettingsEnvironment environment = new(@"C:\local-app-data", @"C:\app-base");
+
+        ApplicationSettingsStore.Save(new ApplicationSettings("de-DE"), environment);
+        ApplicationSettings loaded = ApplicationSettingsStore.Load(environment);
+
+        string expectedPath = Path.Join(@"C:\local-app-data", "MoveMentorChessServices", "settings", "application-settings.json");
+        Assert.Equal(expectedPath, ApplicationSettingsStore.GetSettingsPath(environment));
+        Assert.Equal("de", loaded.CultureName);
+
+        ApplicationSettingsStore.Save(new ApplicationSettings("xx-INVALID"), environment);
+        Assert.Equal(LanguageCatalog.English.CultureName, ApplicationSettingsStore.Load(environment).CultureName);
+    }
+
+    [Fact]
+    public void ApplicationSettingsStore_ReplacesSettingsFileFromTemporaryFile()
+    {
+        FakeRuntimeSettingsEnvironment environment = new(@"C:\local-app-data", @"C:\app-base");
+
+        ApplicationSettingsStore.Save(new ApplicationSettings("pl"), environment);
+
+        string expectedPath = ApplicationSettingsStore.GetSettingsPath(environment);
+        Assert.Single(environment.ReplacedFiles);
+        Assert.Equal(expectedPath, environment.ReplacedFiles[0].DestinationPath);
+        Assert.EndsWith(".tmp", environment.ReplacedFiles[0].SourcePath, StringComparison.Ordinal);
+        Assert.False(environment.FileExists(environment.ReplacedFiles[0].SourcePath));
+        Assert.Equal("pl", ApplicationSettingsStore.Load(environment).CultureName);
+    }
+
+    [Fact]
+    public void ApplicationSettingsStore_WrapsSaveIoFailures()
+    {
+        FakeRuntimeSettingsEnvironment environment = new(@"C:\local-app-data", @"C:\app-base")
+        {
+            ReplaceException = new IOException("disk full")
+        };
+
+        ApplicationSettingsSaveException exception = Assert.Throws<ApplicationSettingsSaveException>(
+            () => ApplicationSettingsStore.Save(new ApplicationSettings("de"), environment));
+
+        Assert.Equal(ApplicationSettingsStore.GetSettingsPath(environment), exception.Path);
+        Assert.Same(environment.ReplaceException, exception.InnerException);
+        Assert.Single(environment.DeletedFiles);
+        Assert.EndsWith(".tmp", environment.DeletedFiles[0], StringComparison.Ordinal);
+    }
+
     private sealed class FakeRuntimeSettingsEnvironment(
         string localApplicationDataDirectory,
         string baseDirectory) : IRuntimeSettingsEnvironment
@@ -68,6 +117,12 @@ public sealed class RuntimeSettingsStoreTests
         public string BaseDirectory { get; } = baseDirectory;
 
         public HashSet<string> CreatedDirectories { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        public List<(string SourcePath, string DestinationPath)> ReplacedFiles { get; } = [];
+
+        public List<string> DeletedFiles { get; } = [];
+
+        public IOException? ReplaceException { get; init; }
 
         public bool FileExists(string path) => files.ContainsKey(path);
 
@@ -81,6 +136,24 @@ public sealed class RuntimeSettingsStoreTests
         public void WriteAllText(string path, string contents)
         {
             files[path] = contents;
+        }
+
+        public void ReplaceFile(string sourcePath, string destinationPath)
+        {
+            if (ReplaceException is not null)
+            {
+                throw ReplaceException;
+            }
+
+            ReplacedFiles.Add((sourcePath, destinationPath));
+            files[destinationPath] = files[sourcePath];
+            files.Remove(sourcePath);
+        }
+
+        public void DeleteFile(string path)
+        {
+            DeletedFiles.Add(path);
+            files.Remove(path);
         }
     }
 }

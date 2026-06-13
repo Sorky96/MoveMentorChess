@@ -5,6 +5,7 @@
         xmlns:vm="using:MoveMentorChess.App.ViewModels"
         xmlns:controls="using:MoveMentorChess.App.Controls"
         xmlns:domain="using:MoveMentorChess.Domain"
+        xmlns:loc="using:MoveMentorChess.App.Localization"
         x:Class="MoveMentorChess.App.Views.OpeningTrainerWindow"
         x:DataType="vm:OpeningTrainerWindowViewModel"
         Width="1380"
@@ -14,21 +15,21 @@
         WindowState="FullScreen"
         WindowDecorations="None"
         Background="{DynamicResource ChromeBrush}"
-        Title="Opening Trainer"
+        Title="{loc:Localize OpeningTrainerTitle}"
         mc:Ignorable="d">
   <Grid Margin="12" RowDefinitions="Auto,12,*">
     <Border Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="16">
       <StackPanel Spacing="10">
         <Grid ColumnDefinitions="*,Auto,Auto">
           <StackPanel Spacing="4">
-            <TextBlock Foreground="White" FontSize="24" FontWeight="Bold" Text="Opening Trainer" />
+            <TextBlock Foreground="White" FontSize="24" FontWeight="Bold" Text="{loc:Localize OpeningTrainerTitle}" />
             <TextBlock Foreground="#D7E2EA" FontSize="16" Text="{Binding StageTitle}" />
             <TextBlock Foreground="#9EB5C5" Text="{Binding StageDescription}" TextWrapping="Wrap" />
           </StackPanel>
 
           <Border Grid.Column="1" Background="{DynamicResource ChromeBrush}" CornerRadius="14" Padding="14,10" MinWidth="210">
             <StackPanel Spacing="6">
-              <TextBlock Foreground="#D7E2EA" HorizontalAlignment="Center" Text="Training Progress" />
+              <TextBlock Foreground="#D7E2EA" HorizontalAlignment="Center" Text="{loc:Localize OpeningTrainerTrainingProgress}" />
               <ProgressBar Minimum="0" Maximum="100" Value="{Binding StageProgressPercent}" Height="10" />
               <TextBlock Foreground="White" HorizontalAlignment="Center" Text="{Binding StageProgressLabel}" TextWrapping="Wrap" />
             </StackPanel>
@@ -38,7 +39,7 @@
                   VerticalAlignment="Top"
                   MinWidth="96"
                   Click="CloseButton_Click"
-                  Content="Close" />
+                  Content="{loc:Localize SettingsClose}" />
         </Grid>
       </StackPanel>
     </Border>
@@ -49,14 +50,14 @@
         <Border Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="22">
           <Grid MaxWidth="1120" HorizontalAlignment="Center" RowDefinitions="Auto,16,Auto">
             <Grid ColumnDefinitions="*,300" RowDefinitions="Auto,Auto,Auto">
-              <TextBlock Foreground="#9ED7A6" FontSize="15" FontWeight="SemiBold" Text="Today's recommendation" />
+              <TextBlock Foreground="#9ED7A6" FontSize="15" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerTodaysRecommendation}" />
               <TextBlock Grid.Row="1" Foreground="White" FontSize="32" FontWeight="Bold" Text="{Binding TodayLessonOpening}" TextWrapping="Wrap" />
               <TextBlock Grid.Row="2" Margin="0,10,28,0" Foreground="#D7E2EA" FontSize="16" Text="{Binding TodayDecisionSummary}" TextWrapping="Wrap" />
 
               <Border Grid.Column="1" Grid.RowSpan="3" Background="{DynamicResource ChromeBrush}" CornerRadius="12" Padding="14">
                 <StackPanel Spacing="10">
                   <Border HorizontalAlignment="Left" Background="#284F38" CornerRadius="8" Padding="9,4">
-                    <TextBlock Foreground="#9ED7A6" FontSize="12" FontWeight="SemiBold" Text="Recommended" />
+                    <TextBlock Foreground="#9ED7A6" FontSize="12" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerRecommended}" />
                   </Border>
                   <Button MinHeight="52"
                           HorizontalAlignment="Stretch"
@@ -72,7 +73,7 @@
                   <Button HorizontalAlignment="Stretch"
                           HorizontalContentAlignment="Center"
                           Command="{Binding StartRecommendedPracticeNowCommand}"
-                          Content="Skip briefing and practice now" />
+                          Content="{loc:Localize OpeningTrainerSkipBriefing}" />
                 </StackPanel>
               </Border>
             </Grid>
@@ -80,7 +81,7 @@
             <Grid Grid.Row="2" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
               <Border Margin="0,0,8,0" Background="{DynamicResource ChromeBrush}" CornerRadius="12" Padding="14">
                 <StackPanel Spacing="6">
-                  <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="Why this matters" />
+                  <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerWhyThisMatters}" />
                   <TextBlock Foreground="White" FontSize="15" FontWeight="SemiBold" Text="{Binding TodayTrainingReasonLabel}" TextWrapping="Wrap" />
                   <TextBlock Foreground="#D7E2EA" FontSize="15" Text="{Binding TodayLessonReasonDetail}" TextWrapping="Wrap" />
                 </StackPanel>
@@ -88,7 +89,7 @@
 
               <Border Grid.Column="1" Margin="8,0,0,0" Background="{DynamicResource ChromeBrush}" CornerRadius="12" Padding="14">
                 <StackPanel Spacing="6">
-                  <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="What you will practice" />
+                  <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerWhatYouWillPractice}" />
                   <TextBlock Foreground="White" FontSize="15" FontWeight="SemiBold" Text="{Binding PracticeFocusText}" TextWrapping="Wrap" />
                   <TextBlock Foreground="#D7E2EA" FontSize="15" Text="{Binding OpeningContextStartsFrom}" TextWrapping="Wrap" />
                 </StackPanel>
@@ -97,7 +98,7 @@
               <Border Grid.Row="1" Grid.ColumnSpan="2" Margin="0,16,0,0" Background="{DynamicResource ChromeBrush}" CornerRadius="12" Padding="12">
                 <Grid ColumnDefinitions="220,*,260" RowDefinitions="Auto">
                   <StackPanel Spacing="2">
-                    <TextBlock Foreground="White" FontWeight="SemiBold" Text="Training intensity" />
+                    <TextBlock Foreground="White" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerTrainingIntensity}" />
                     <TextBlock Foreground="#9EB5C5" FontSize="12" Text="{Binding SelectedIntensitySummary}" TextWrapping="Wrap" />
                   </StackPanel>
                   <ComboBox Grid.Column="1"
@@ -145,12 +146,12 @@
 
             <Border Background="{DynamicResource ChromeBrush}" CornerRadius="16" Padding="14">
                 <StackPanel Spacing="10">
-                <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="Due now" TextWrapping="Wrap" />
+                <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerDueNow}" TextWrapping="Wrap" />
                 <TextBlock Foreground="#D7E2EA" Text="{Binding PlayerOpeningPlanSummary}" TextWrapping="Wrap" />
                 <TextBlock Foreground="#9EB5C5" Text="{Binding PlayerOpeningProgressInterpretation}" TextWrapping="Wrap" />
                 <Grid ColumnDefinitions="*,*,*">
                   <StackPanel Spacing="6" Margin="0,0,6,0">
-                    <TextBlock Foreground="White" FontWeight="SemiBold" Text="Today's recommendation" />
+                    <TextBlock Foreground="White" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerTodaysRecommendation}" />
                     <ItemsControl ItemsSource="{Binding TodayPlanItems}">
                       <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="domain:PlayerOpeningPlanItem">
@@ -164,7 +165,7 @@
                   </StackPanel>
 
                   <StackPanel Grid.Column="1" Spacing="6" Margin="6,0">
-                    <TextBlock Foreground="White" FontWeight="SemiBold" Text="This week's practice" />
+                    <TextBlock Foreground="White" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerThisWeeksPractice}" />
                     <ItemsControl ItemsSource="{Binding WeeklyPlanItems}">
                       <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="domain:PlayerOpeningPlanItem">
@@ -178,7 +179,7 @@
                   </StackPanel>
 
                   <StackPanel Grid.Column="2" Spacing="6" Margin="6,0,0,0">
-                    <TextBlock Foreground="White" FontWeight="SemiBold" Text="Later / optional repairs" />
+                    <TextBlock Foreground="White" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerLaterOptionalRepairs}" />
                     <ItemsControl ItemsSource="{Binding LongTermGapItems}">
                       <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="domain:PlayerOpeningPlanItem">
@@ -197,7 +198,7 @@
             <Grid ColumnDefinitions="*,*,*">
               <Border Margin="0,0,6,6" Background="{DynamicResource ChromeBrush}" CornerRadius="16" Padding="14">
                 <StackPanel Spacing="6">
-                  <TextBlock Foreground="#9EB5C5" Text="Your current coverage" />
+                  <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerCurrentCoverage}" />
                   <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="{Binding CoverageHumanText}" TextWrapping="Wrap" />
                   <TextBlock Foreground="#D7E2EA" Text="{Binding CoverageMetricText}" TextWrapping="Wrap" />
                 </StackPanel>
@@ -205,7 +206,7 @@
 
               <Border Grid.Column="1" Margin="6,0,6,6" Background="{DynamicResource ChromeBrush}" CornerRadius="16" Padding="14">
                 <StackPanel Spacing="8">
-                  <TextBlock Foreground="#9EB5C5" Text="Opening map" />
+                  <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerOpeningMap}" />
                   <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="{Binding OpeningContextStartsFrom}" TextWrapping="Wrap" />
                   <TextBlock Foreground="#D7E2EA" Text="{Binding OpeningContextPlan}" TextWrapping="Wrap" />
                 </StackPanel>
@@ -213,27 +214,27 @@
 
               <Border Grid.Column="2" Margin="6,0,0,6" Background="{DynamicResource ChromeBrush}" CornerRadius="16" Padding="14">
                 <StackPanel Spacing="6">
-                  <TextBlock Foreground="#9EB5C5" Text="Opponent replies" />
-                  <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="Most common replies" />
+                  <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerOpponentReplies}" />
+                  <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerMostCommonReplies}" />
                   <TextBlock Foreground="#D7E2EA" Text="{Binding OpponentSummary}" TextWrapping="Wrap" />
                 </StackPanel>
               </Border>
             </Grid>
 
-            <Expander Header="Advanced Options" IsExpanded="{Binding IsAdvancedOptionsExpanded}">
+            <Expander Header="{loc:Localize OpeningTrainerAdvancedOptions}" IsExpanded="{Binding IsAdvancedOptionsExpanded}">
               <Grid ColumnDefinitions="300,12,*,12,300" Margin="0,8,0,0" MinHeight="260" MaxHeight="320">
                 <Border Background="{DynamicResource ChromeBrush}" BorderBrush="{DynamicResource PanelAccentBrush}" BorderThickness="1" CornerRadius="14" Padding="12">
                   <StackPanel Spacing="8">
-                    <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="Opening Catalog" />
-                    <TextBlock Foreground="#9EB5C5" Text="Choose a specific line when you want to train outside today's lesson." TextWrapping="Wrap" />
-                    <TextBox PlaceholderText="Filter openings or ECO" Text="{Binding FilterText}" />
-                    <TextBox PlaceholderText="Override history key (optional)" Text="{Binding AdvancedPlayerKey}" />
-                    <TextBlock Foreground="#9EB5C5" Text="{Binding PlayerKey, StringFormat='Active history key: {0}'}" TextWrapping="Wrap" />
+                    <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerOpeningCatalog}" />
+                    <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerOpeningCatalogHelp}" TextWrapping="Wrap" />
+                    <TextBox PlaceholderText="{loc:Localize OpeningTrainerFilterOpenings}" Text="{Binding FilterText}" />
+                    <TextBox PlaceholderText="{loc:Localize OpeningTrainerOverrideHistoryKey}" Text="{Binding AdvancedPlayerKey}" />
+                    <TextBlock Foreground="#9EB5C5" Text="{Binding ActiveHistoryKeyText}" TextWrapping="Wrap" />
                     <ComboBox ItemsSource="{Binding AvailableSides}" SelectedItem="{Binding SelectedSide}" />
                     <ComboBox ItemsSource="{Binding AvailableStrictnessOptions}" SelectedItem="{Binding SelectedStrictness}" />
                     <Grid ColumnDefinitions="*,*">
-                      <Button Margin="0,0,5,0" Command="{Binding RefreshCommand}" Content="Refresh" />
-                      <Button Grid.Column="1" Margin="5,0,0,0" Command="{Binding GoToOverviewCommand}" Content="See Plan" />
+                      <Button Margin="0,0,5,0" Command="{Binding RefreshCommand}" Content="{loc:Localize OpeningTrainerRefresh}" />
+                      <Button Grid.Column="1" Margin="5,0,0,0" Command="{Binding GoToOverviewCommand}" Content="{loc:Localize OpeningTrainerSeePlan}" />
                     </Grid>
                   </StackPanel>
                 </Border>
@@ -253,7 +254,7 @@
 
                 <Border Grid.Column="4" Background="{DynamicResource ChromeBrush}" BorderBrush="{DynamicResource PanelAccentBrush}" BorderThickness="1" CornerRadius="14" Padding="12">
                   <Grid RowDefinitions="Auto,Auto,*,Auto">
-                    <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="Special Modes" />
+                    <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerSpecialModes}" />
                     <ComboBox Grid.Row="1" Margin="0,10,0,0" ItemsSource="{Binding SpecialTrainingModes}" SelectedItem="{Binding SelectedSpecialMode}">
                       <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="domain:SpecialTrainingModeDefinition">
@@ -278,7 +279,7 @@
       <Grid IsVisible="{Binding IsOverviewPageVisible}" ColumnDefinitions="430,12,*">
         <Border Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="14">
           <StackPanel Spacing="10">
-            <TextBlock Foreground="White" FontSize="20" FontWeight="SemiBold" Text="Understand The Idea" />
+            <TextBlock Foreground="White" FontSize="20" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerUnderstandIdea}" />
             <controls:ChessBoardView Width="396"
                                      Height="396"
                                      Fen="{Binding PreviewFen}"
@@ -298,11 +299,11 @@
                       Background="#2F7D4E"
                       Foreground="White"
                       Command="{Binding StartGuidedStudyCommand}"
-                      Content="Start Practice From Memory" />
+                      Content="{loc:Localize OpeningTrainerStartPracticeFromMemory}" />
               <Button HorizontalAlignment="Left"
                       Background="Transparent"
                       Command="{Binding GoToSelectionCommand}"
-                      Content="Back" />
+                      Content="{loc:Localize OpeningTrainerBack}" />
             </StackPanel>
           </StackPanel>
         </Border>
@@ -311,7 +312,7 @@
           <Grid ColumnDefinitions="*,*" Margin="0,0,0,12">
             <Border Margin="0,0,6,0" Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="14">
               <StackPanel Spacing="6">
-                <TextBlock Foreground="#9EB5C5" Text="Your saved progress" />
+                <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerSavedProgress}" />
                 <TextBlock Foreground="White" FontSize="20" FontWeight="SemiBold" Text="{Binding CoverageText}" TextWrapping="Wrap" />
                 <TextBlock Foreground="#D7E2EA" Text="{Binding CoverageExplanation}" TextWrapping="Wrap" />
               </StackPanel>
@@ -319,8 +320,8 @@
 
             <Border Grid.Column="1" Margin="6,0,0,0" Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="14">
               <StackPanel Spacing="6">
-                <TextBlock Foreground="#9EB5C5" Text="Why This Line Works" />
-                <TextBlock Foreground="White" FontSize="20" FontWeight="SemiBold" Text="Remember this" />
+                <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerWhyLineWorks}" />
+                <TextBlock Foreground="White" FontSize="20" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerRememberThis}" />
                 <TextBlock Foreground="#D7E2EA" Text="{Binding RememberThisText}" TextWrapping="Wrap" />
               </StackPanel>
             </Border>
@@ -328,7 +329,7 @@
 
           <Border Grid.Row="1" Margin="0,0,0,12" Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="14">
             <StackPanel Spacing="10">
-              <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="Plan Before Moves" />
+              <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerPlanBeforeMoves}" />
               <ItemsControl ItemsSource="{Binding UnderstandingCards}">
                 <ItemsControl.ItemsPanel>
                   <ItemsPanelTemplate>
@@ -352,11 +353,11 @@
           <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0,0,0,12">
             <Border Margin="0,0,6,0" Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="12">
               <StackPanel Spacing="8">
-                <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="Line To Remember" />
+                <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerLineToRemember}" />
                 <Border Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="12">
                   <StackPanel Spacing="8">
                     <TextBlock Foreground="#F5FAFD" FontWeight="SemiBold" Text="{Binding MainLineText}" TextWrapping="Wrap" />
-                    <TextBlock Foreground="#9EB5C5" Text="Move notes appear only as short tags while you review the line." TextWrapping="Wrap" />
+                    <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerMoveNotesHelp}" TextWrapping="Wrap" />
                   </StackPanel>
                 </Border>
               </StackPanel>
@@ -364,7 +365,7 @@
 
             <Border Grid.Column="1" Margin="6,0,0,0" Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="12">
               <StackPanel Spacing="8">
-                <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="Opponent Replies" />
+                <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerOpponentReplies}" />
                 <ListBox ItemsSource="{Binding BranchItems}" Background="{DynamicResource ChromeBrush}" BorderThickness="0" />
               </StackPanel>
             </Border>
@@ -372,7 +373,7 @@
 
           <Border Grid.Row="3" Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="12">
             <Grid RowDefinitions="Auto,Auto,*,Auto">
-              <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="Today's Focus" />
+              <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerTodaysFocus}" />
               <TextBlock Grid.Row="1" Foreground="#9EB5C5" Text="{Binding PriorityItemsPlaceholder}" TextWrapping="Wrap" />
               <ListBox Grid.Row="2"
                        ItemsSource="{Binding PriorityItems}"
@@ -400,7 +401,7 @@
         <Border Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="14">
           <Grid RowDefinitions="Auto,Auto,Auto,*">
             <Grid ColumnDefinitions="*,220">
-              <TextBlock Foreground="White" FontSize="20" FontWeight="SemiBold" Text="Practice From Memory" />
+              <TextBlock Foreground="White" FontSize="20" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerPracticeFromMemory}" />
               <ProgressBar Grid.Column="1"
                            Minimum="0"
                            Maximum="100"
@@ -450,7 +451,7 @@
           <Border Margin="0,0,0,12" Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="14">
             <StackPanel Spacing="10">
               <StackPanel Spacing="2">
-                <TextBlock Foreground="White" FontSize="20" FontWeight="SemiBold" Text="Your move" TextWrapping="Wrap" />
+                <TextBlock Foreground="White" FontSize="20" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerYourMove}" TextWrapping="Wrap" />
                 <TextBlock Foreground="#D7E2EA" Text="{Binding StudySideToMoveText}" TextWrapping="Wrap" />
               </StackPanel>
               <TextBlock Foreground="#D7E2EA" Text="{Binding StudyBoardHint}" TextWrapping="Wrap" />
@@ -458,19 +459,19 @@
                 <Border Margin="0,0,5,0" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="10">
                   <StackPanel Spacing="2">
                     <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="{Binding SessionCorrectCountText}" />
-                    <TextBlock Foreground="#9EB5C5" FontSize="12" Text="clear moves" />
+                    <TextBlock Foreground="#9EB5C5" FontSize="12" Text="{loc:Localize OpeningTrainerClearMoves}" />
                   </StackPanel>
                 </Border>
                 <Border Grid.Column="1" Margin="5,0" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="10">
                   <StackPanel Spacing="2">
                     <TextBlock Foreground="#D7E2EA" FontWeight="SemiBold" Text="{Binding SessionAcceptedAlternativesText}" />
-                    <TextBlock Foreground="#9EB5C5" FontSize="12" Text="still useful" />
+                    <TextBlock Foreground="#9EB5C5" FontSize="12" Text="{loc:Localize OpeningTrainerStillUseful}" />
                   </StackPanel>
                 </Border>
                 <Border Grid.Column="2" Margin="5,0,0,0" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="10">
                   <StackPanel Spacing="2">
                     <TextBlock Foreground="#F5D97B" FontWeight="SemiBold" Text="{Binding SessionNeedsReviewText}" />
-                    <TextBlock Foreground="#9EB5C5" FontSize="12" Text="repeat targets" />
+                    <TextBlock Foreground="#9EB5C5" FontSize="12" Text="{loc:Localize OpeningTrainerRepeatTargets}" />
                   </StackPanel>
                 </Border>
               </Grid>
@@ -489,14 +490,14 @@
                       </DataTemplate>
                     </ListBox.ItemTemplate>
                   </ListBox>
-                  <Button Command="{Binding EvaluateMoveCommand}" Content="Submit Answer" />
+                  <Button Command="{Binding EvaluateMoveCommand}" Content="{loc:Localize OpeningTrainerSubmitAnswer}" />
                 </StackPanel>
               </Border>
               <Border Background="{DynamicResource ChromeBrush}" CornerRadius="14" Padding="12">
                 <StackPanel Spacing="6">
                   <Grid ColumnDefinitions="*,Auto,Auto">
                     <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="{Binding CurrentHintLevel}" TextWrapping="Wrap" />
-                    <Button Grid.Column="1" MinWidth="86" FontWeight="SemiBold" Command="{Binding ShowHintCommand}" Content="Hint" />
+                    <Button Grid.Column="1" MinWidth="86" FontWeight="SemiBold" Command="{Binding ShowHintCommand}" Content="{loc:Localize OpeningTrainerHint}" />
                     <Button Grid.Column="2" Margin="6,0,0,0" Command="{Binding DontKnowCommand}" Content="{Binding DontKnowButtonText}" />
                   </Grid>
                   <TextBlock Foreground="#D7E2EA" Text="{Binding CurrentHintText}" TextWrapping="Wrap" />
@@ -508,7 +509,7 @@
           <Border Grid.Row="1" IsVisible="{Binding IsStudyReferenceHidden}" Margin="0,0,0,12" Background="{DynamicResource PanelBrush}" CornerRadius="12" Padding="12">
             <Grid ColumnDefinitions="*,Auto">
               <StackPanel Spacing="4">
-                <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="Try From Memory First" />
+                <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerTryFromMemoryFirst}" />
                 <TextBlock Foreground="#9EB5C5" Text="{Binding StudyReferencePromptText}" TextWrapping="Wrap" />
               </StackPanel>
               <Button Grid.Column="1" Margin="12,0,0,0" Command="{Binding RevealStudyReferenceCommand}" Content="{Binding StudyReferenceButtonText}" />
@@ -518,14 +519,14 @@
           <Grid Grid.Row="1" IsVisible="{Binding IsStudyReferenceVisible}" ColumnDefinitions="*,*" Margin="0,0,0,12">
             <Border Margin="0,0,6,0" Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="12">
               <StackPanel Spacing="8">
-                <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="Line Reference" />
+                <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerLineReference}" />
                 <ListBox ItemsSource="{Binding MainLineItems}" Background="{DynamicResource ChromeBrush}" BorderThickness="0" />
               </StackPanel>
             </Border>
 
             <Border Grid.Column="1" Margin="6,0,0,0" Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="12">
               <StackPanel Spacing="8">
-                <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="Opponent Replies" />
+                <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerOpponentReplies}" />
                 <ListBox ItemsSource="{Binding BranchItems}" Background="{DynamicResource ChromeBrush}" BorderThickness="0" />
               </StackPanel>
             </Border>
@@ -533,7 +534,7 @@
 
           <Border Grid.Row="2" Margin="0,0,0,12" Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="14">
             <StackPanel Spacing="10">
-              <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="What This Position Trains" />
+              <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerWhatThisPositionTrains}" />
               <Border Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="12">
                 <StackPanel Spacing="6">
                   <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="{Binding CurrentPositionGoalText}" TextWrapping="Wrap" />
@@ -542,7 +543,7 @@
               </Border>
               <Border Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="12">
                 <StackPanel Spacing="6">
-                  <TextBlock Foreground="#9EB5C5" Text="Attempt history" />
+                  <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerAttemptHistory}" />
                   <TextBlock Foreground="#D7E2EA" Text="{Binding CurrentAttemptHistoryText}" TextWrapping="Wrap" />
                 </StackPanel>
               </Border>
@@ -551,8 +552,8 @@
           </Border>
 
           <Grid Grid.Row="3" ColumnDefinitions="*,*">
-            <Button Margin="0,0,6,0" Command="{Binding PreviousStepCommand}" Content="Previous Position" />
-            <Button Grid.Column="1" Margin="6,0,0,0" Command="{Binding RestartStudyCommand}" Content="Restart Study" />
+            <Button Margin="0,0,6,0" Command="{Binding PreviousStepCommand}" Content="{loc:Localize OpeningTrainerPreviousPosition}" />
+            <Button Grid.Column="1" Margin="6,0,0,0" Command="{Binding RestartStudyCommand}" Content="{loc:Localize OpeningTrainerRestartStudy}" />
           </Grid>
         </Grid>
       </Grid>
@@ -560,7 +561,7 @@
       <Grid IsVisible="{Binding IsResultsPageVisible}" ColumnDefinitions="*,*">
         <Border Margin="0,0,6,0" Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="16">
           <StackPanel Spacing="12">
-            <TextBlock Foreground="White" FontSize="22" FontWeight="SemiBold" Text="Review And Continue" />
+            <TextBlock Foreground="White" FontSize="22" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerReviewAndContinue}" />
             <Border Background="#14222D" CornerRadius="12" Padding="14">
               <StackPanel Spacing="8">
                 <Grid ColumnDefinitions="*,Auto">
@@ -576,45 +577,45 @@
             <Grid ColumnDefinitions="*,*,*,*,*">
               <Border Margin="0,0,5,0" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="12">
                 <StackPanel Spacing="6">
-                  <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="Completed" />
+                  <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerCompleted}" />
                   <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="{Binding ResultsCompletedMetricText}" TextWrapping="Wrap" />
                 </StackPanel>
               </Border>
               <Border Grid.Column="1" Margin="5,0" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="12">
                 <StackPanel Spacing="6">
-                  <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="Clear" />
+                  <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerClear}" />
                   <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="{Binding ResultsClearMetricText}" TextWrapping="Wrap" />
                 </StackPanel>
               </Border>
               <Border Grid.Column="2" Margin="5,0" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="12">
                 <StackPanel Spacing="6">
-                  <TextBlock Foreground="#D7E2EA" FontWeight="SemiBold" Text="Useful alternatives" />
+                  <TextBlock Foreground="#D7E2EA" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerUsefulAlternatives}" />
                   <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="{Binding ResultsAlternativesMetricText}" TextWrapping="Wrap" />
                 </StackPanel>
               </Border>
               <Border Grid.Column="3" Margin="5,0" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="12">
                 <StackPanel Spacing="6">
-                  <TextBlock Foreground="#9EB5C5" FontWeight="SemiBold" Text="Hints used" />
+                  <TextBlock Foreground="#9EB5C5" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerHintsUsed}" />
                   <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="{Binding ResultsHintsMetricText}" TextWrapping="Wrap" />
                 </StackPanel>
               </Border>
               <Border Grid.Column="4" Margin="5,0,0,0" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="12">
                 <StackPanel Spacing="6">
-                  <TextBlock Foreground="#F5D97B" FontWeight="SemiBold" Text="To revisit" />
+                  <TextBlock Foreground="#F5D97B" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerToRevisit}" />
                   <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="{Binding ResultsRevisitMetricText}" TextWrapping="Wrap" />
                 </StackPanel>
               </Border>
             </Grid>
             <Border Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="12">
               <StackPanel Spacing="8">
-                <TextBlock Foreground="#9EB5C5" Text="Main repair point" />
+                <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerMainRepairPoint}" />
                 <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="{Binding ResultsBiggestWeaknessText}" TextWrapping="Wrap" />
                 <TextBlock Foreground="#D7E2EA" Text="{Binding LearningPlanReasonText}" TextWrapping="Wrap" />
               </StackPanel>
             </Border>
             <Border Background="{DynamicResource ChromeBrush}" CornerRadius="14" Padding="12">
               <StackPanel Spacing="8">
-                <TextBlock Foreground="#9EB5C5" Text="Review Focus" />
+                <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerReviewFocus}" />
                 <TextBlock Foreground="#D7E2EA" Text="{Binding LearningPlanReviewPlaceholder}" TextWrapping="Wrap" />
                 <ItemsControl ItemsSource="{Binding LearningPlanReviewItems}">
                   <ItemsControl.ItemTemplate>
@@ -622,29 +623,29 @@
                       <Grid Margin="0,4" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
                         <TextBlock Foreground="#F5FAFD" FontWeight="SemiBold" Text="{Binding MoveText}" TextWrapping="Wrap" />
                         <TextBlock Grid.Column="1" Margin="8,0,0,0" Foreground="#F5D97B" Text="{Binding PriorityText}" />
-                        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Foreground="#D7E2EA" Text="{Binding AttemptedMoveText, StringFormat='Attempted: {0}'}" TextWrapping="Wrap" />
-                        <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Foreground="#D7E2EA" Text="{Binding PreparedMoveText, StringFormat='Prepared move: {0}'}" TextWrapping="Wrap" />
-                        <TextBlock Grid.Row="3" Grid.ColumnSpan="2" Foreground="#9EB5C5" Text="{Binding ReasonText, StringFormat='Reason: {0}'}" TextWrapping="Wrap" />
+                        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Foreground="#D7E2EA" Text="{Binding AttemptedMoveText}" TextWrapping="Wrap" />
+                        <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Foreground="#D7E2EA" Text="{Binding PreparedMoveText}" TextWrapping="Wrap" />
+                        <TextBlock Grid.Row="3" Grid.ColumnSpan="2" Foreground="#9EB5C5" Text="{Binding ReasonText}" TextWrapping="Wrap" />
                       </Grid>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
               </StackPanel>
             </Border>
-            <Button HorizontalAlignment="Left" MinWidth="120" Command="{Binding GoToOverviewCommand}" Content="Back to overview" />
+            <Button HorizontalAlignment="Left" MinWidth="120" Command="{Binding GoToOverviewCommand}" Content="{loc:Localize OpeningTrainerBackToOverview}" />
           </StackPanel>
         </Border>
 
         <Border Grid.Column="1" Margin="6,0,0,0" Background="{DynamicResource PanelBrush}" CornerRadius="20" Padding="16">
           <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto">
-            <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="Choose Your Next Training Plan" />
+            <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerChooseNextPlan}" />
             <TextBlock Grid.Row="1" Foreground="#9EB5C5" Text="{Binding NextActionsPlaceholder}" TextWrapping="Wrap" />
             <Border Grid.Row="2" IsVisible="{Binding HasPrimaryNextAction}" Margin="0,10,0,12" Background="{DynamicResource ChromeBrush}" CornerRadius="12" Padding="14">
               <StackPanel Spacing="8">
-                <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="Recommended next" />
+                <TextBlock Foreground="#9ED7A6" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerRecommendedNext}" />
                 <Grid ColumnDefinitions="*,Auto">
                   <TextBlock Foreground="White" FontSize="18" FontWeight="SemiBold" Text="{Binding PrimaryNextAction.Title}" TextWrapping="Wrap" />
-                  <TextBlock Grid.Column="1" Foreground="#9ED7A6" FontWeight="SemiBold" Text="recommended" />
+                  <TextBlock Grid.Column="1" Foreground="#9ED7A6" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerRecommended}" />
                 </Grid>
                 <TextBlock Foreground="#D7E2EA" Text="{Binding PrimaryNextAction.Reason}" TextWrapping="Wrap" />
                 <Button MinHeight="48"
@@ -656,7 +657,7 @@
               </StackPanel>
             </Border>
             <StackPanel Grid.Row="3" IsVisible="{Binding HasSecondaryNextActions}" Spacing="8" Margin="0,0,0,12">
-              <TextBlock Foreground="#9EB5C5" Text="Other useful choices" />
+              <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerOtherUsefulChoices}" />
               <ListBox ItemsSource="{Binding SecondaryNextActionCards}"
                        SelectedItem="{Binding SelectedSecondaryNextAction}"
                        Background="Transparent"
@@ -678,60 +679,60 @@
                       Content="{Binding SelectedSecondaryNextAction.ButtonText}" />
             </StackPanel>
             <StackPanel Grid.Row="4" Spacing="8" Margin="0,0,0,8">
-              <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="Session Recap" />
+              <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerSessionRecap}" />
               <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto">
                 <Border Margin="0,0,4,4" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="10">
                   <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Foreground="#9EB5C5" Text="Completed" />
+                    <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerCompleted}" />
                     <TextBlock Grid.Column="1" Foreground="White" FontWeight="SemiBold" Text="{Binding ResultsCompletedMetricText}" />
                   </Grid>
                 </Border>
                 <Border Grid.Column="1" Margin="4,0,0,4" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="10">
                   <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Foreground="#9EB5C5" Text="Clear" />
+                    <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerClear}" />
                     <TextBlock Grid.Column="1" Foreground="White" FontWeight="SemiBold" Text="{Binding ResultsClearMetricText}" />
                   </Grid>
                 </Border>
                 <Border Grid.Row="1" Margin="0,4,4,4" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="10">
                   <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Foreground="#9EB5C5" Text="Useful alternatives" />
+                    <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerUsefulAlternatives}" />
                     <TextBlock Grid.Column="1" Foreground="White" FontWeight="SemiBold" Text="{Binding ResultsAlternativesMetricText}" />
                   </Grid>
                 </Border>
                 <Border Grid.Row="1" Grid.Column="1" Margin="4,4,0,4" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="10">
                   <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Foreground="#9EB5C5" Text="Hints used" />
+                    <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerHintsUsed}" />
                     <TextBlock Grid.Column="1" Foreground="White" FontWeight="SemiBold" Text="{Binding ResultsHintsMetricText}" />
                   </Grid>
                 </Border>
                 <Border Grid.Row="2" Grid.ColumnSpan="2" Margin="0,4,0,0" Background="{DynamicResource ChromeBrush}" CornerRadius="10" Padding="10">
                   <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Foreground="#F5D97B" Text="To revisit" />
+                    <TextBlock Foreground="#F5D97B" Text="{loc:Localize OpeningTrainerToRevisit}" />
                     <TextBlock Grid.Column="1" Foreground="White" FontWeight="SemiBold" Text="{Binding ResultsRevisitMetricText}" />
                   </Grid>
                 </Border>
               </Grid>
               <TextBlock Foreground="#9EB5C5" Text="{Binding ResultRecommendation}" TextWrapping="Wrap" />
             </StackPanel>
-            <Expander Grid.Row="5" Header="Advanced Details" IsVisible="{Binding HasAdvancedResultDetails}">
+            <Expander Grid.Row="5" Header="{loc:Localize OpeningTrainerAdvancedDetails}" IsVisible="{Binding HasAdvancedResultDetails}">
               <StackPanel Spacing="10" Margin="0,8,0,0">
-                <TextBlock Foreground="#9EB5C5" Text="Diagnostic review positions" />
+                <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerDiagnosticReviewPositions}" />
                 <ItemsControl ItemsSource="{Binding LearningPlanReviewItems}">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="domain:TrainingResultReviewItem">
                       <Grid Margin="0,4" ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto">
-                        <TextBlock Foreground="#9EB5C5" Text="PositionId" />
+                        <TextBlock Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerPositionId}" />
                         <TextBlock Grid.Column="1" Foreground="#D7E2EA" Text="{Binding PositionId}" TextWrapping="Wrap" />
-                        <TextBlock Grid.Row="1" Foreground="#9EB5C5" Text="Attempt" />
+                        <TextBlock Grid.Row="1" Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerAttempt}" />
                         <TextBlock Grid.Row="1" Grid.Column="1" Foreground="#D7E2EA" Text="{Binding AttemptedMoveText}" TextWrapping="Wrap" />
-                        <TextBlock Grid.Row="2" Foreground="#9EB5C5" Text="Reason" />
+                        <TextBlock Grid.Row="2" Foreground="#9EB5C5" Text="{loc:Localize OpeningTrainerReason}" />
                         <TextBlock Grid.Row="2" Grid.Column="1" Foreground="#D7E2EA" Text="{Binding ReasonText}" TextWrapping="Wrap" />
                       </Grid>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
                 <TextBlock Foreground="#9EB5C5" Text="{Binding TranspositionSummaryText}" TextWrapping="Wrap" />
-                <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="Move Log" />
+                <TextBlock Foreground="White" FontSize="16" FontWeight="SemiBold" Text="{loc:Localize OpeningTrainerMoveLog}" />
                 <ListBox ItemsSource="{Binding ResultItems}" Background="{DynamicResource ChromeBrush}" BorderThickness="0" />
               </StackPanel>
             </Expander>

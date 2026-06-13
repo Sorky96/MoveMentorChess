@@ -1,3 +1,5 @@
+using MoveMentorChess.Localization;
+
 namespace MoveMentorChess.Analysis;
 
 public sealed class TemplateAdviceGenerator : IAdviceGenerator
@@ -21,22 +23,22 @@ public sealed class TemplateAdviceGenerator : IAdviceGenerator
         ArgumentNullException.ThrowIfNull(replay);
 
         string label = tag?.Label ?? "general";
-        string qualityText = quality.ToString().ToLowerInvariant();
+        string qualityText = FormatQuality(quality);
         string lossText = centipawnLoss is int cp
-            ? $"and lost about {cp} centipawns"
-            : "and changed the evaluation sharply";
+            ? Localizer.Format(LocalizedStrings.AdviceLostCentipawns, cp)
+            : Localizer.Text(LocalizedStrings.AdviceChangedEvaluation);
         string bestMoveText = context?.PromptContext?.BestMoveSan ?? FormatMoveFromFen(replay.FenBefore, bestMoveUci);
         string openingName = context?.PromptContext?.OpeningName ?? string.Empty;
 
         string patternHint = label switch
         {
-            "material_loss" => "Before committing, compare the material balance after the forcing reply.",
-            "hanging_piece" => "After every move, check whether your moved piece is defended at least as many times as it is attacked.",
-            "king_safety" => "When your king is castled, treat pawn moves in front of it as a concession that needs concrete justification.",
-            "opening_principles" => "In the opening, prefer development, king safety and central control before side pawn moves or early queen adventures.",
-            "piece_activity" => "In quieter middlegames, favor squares that increase your piece activity instead of moves that leave a piece sidelined or passive.",
-            "endgame_technique" => "In endgames, calculate the simplest technical line and avoid moves that hand activity back to the opponent.",
-            _ => "Pause on tactical turns and look for forcing replies before choosing a natural-looking move."
+            "material_loss" => Localizer.Text(LocalizedStrings.AdviceHintMaterialLoss),
+            "hanging_piece" => Localizer.Text(LocalizedStrings.AdviceHintHangingPiece),
+            "king_safety" => Localizer.Text(LocalizedStrings.AdviceHintKingSafety),
+            "opening_principles" => Localizer.Text(LocalizedStrings.AdviceHintOpeningPrinciples),
+            "piece_activity" => Localizer.Text(LocalizedStrings.AdviceHintPieceActivity),
+            "endgame_technique" => Localizer.Text(LocalizedStrings.AdviceHintEndgameTechnique),
+            _ => Localizer.Text(LocalizedStrings.AdviceHintGeneral)
         };
 
         string shortText = Shorten(BuildShortText(replay, qualityText, lossText, label, bestMoveText, level), settings.MaxShortTextLength);
@@ -91,14 +93,14 @@ public sealed class TemplateAdviceGenerator : IAdviceGenerator
         return level switch
         {
             ExplanationLevel.Beginner => string.IsNullOrWhiteSpace(bestMoveText)
-                ? $"Simple view: {replay.San} was a {qualityText} {lossText}. The main theme was {DisplayLabel(label)}."
-                : $"Simple view: {replay.San} was a {qualityText} {lossText}. A stronger option was {bestMoveText}.",
+                ? $"{Localizer.Format(LocalizedStrings.AdviceWasQualityLoss, Localizer.Text(LocalizedStrings.AdviceSimpleView), replay.San, qualityText, lossText)} {Localizer.Format(LocalizedStrings.AdvicePattern, DisplayLabel(label))}"
+                : $"{Localizer.Format(LocalizedStrings.AdviceWasQualityLoss, Localizer.Text(LocalizedStrings.AdviceSimpleView), replay.San, qualityText, lossText)} {Localizer.Format(LocalizedStrings.AdviceStrongerOption, bestMoveText)}",
             ExplanationLevel.Advanced => string.IsNullOrWhiteSpace(bestMoveText)
-                ? $"Engine view: {replay.San} was a {qualityText} in the {DisplayLabel(label)} pattern {lossText}."
-                : $"Engine view: {replay.San} was a {qualityText} in the {DisplayLabel(label)} pattern {lossText}. A stronger option was {bestMoveText}.",
+                ? $"{Localizer.Format(LocalizedStrings.AdviceWasQualityLoss, Localizer.Text(LocalizedStrings.AdviceEngineView), replay.San, qualityText, lossText)} {Localizer.Format(LocalizedStrings.AdvicePattern, DisplayLabel(label))}"
+                : $"{Localizer.Format(LocalizedStrings.AdviceWasQualityLoss, Localizer.Text(LocalizedStrings.AdviceEngineView), replay.San, qualityText, lossText)} {Localizer.Format(LocalizedStrings.AdviceStrongerOption, bestMoveText)}",
             _ => string.IsNullOrWhiteSpace(bestMoveText)
-                ? $"Practical view: {replay.San} was a {qualityText} {lossText}. It fits the {DisplayLabel(label)} pattern."
-                : $"Practical view: {replay.San} was a {qualityText} {lossText}. A stronger option was {bestMoveText}."
+                ? $"{Localizer.Format(LocalizedStrings.AdviceWasQualityLoss, Localizer.Text(LocalizedStrings.AdvicePracticalView), replay.San, qualityText, lossText)} {Localizer.Format(LocalizedStrings.AdvicePattern, DisplayLabel(label))}"
+                : $"{Localizer.Format(LocalizedStrings.AdviceWasQualityLoss, Localizer.Text(LocalizedStrings.AdvicePracticalView), replay.San, qualityText, lossText)} {Localizer.Format(LocalizedStrings.AdviceStrongerOption, bestMoveText)}"
         };
     }
 
@@ -137,55 +139,55 @@ public sealed class TemplateAdviceGenerator : IAdviceGenerator
     {
         return level switch
         {
-            ExplanationLevel.Beginner => $"Next time, use one simple habit: {baseHint}",
+            ExplanationLevel.Beginner => Localizer.Format(LocalizedStrings.AdviceTrainingBeginner, baseHint),
             ExplanationLevel.Advanced => label switch
             {
-                "material_loss" => "Train this by checking forcing continuations until the resulting material balance is completely clear.",
-                "hanging_piece" => "Train board scanning with attacker-defender counts before and after every candidate move.",
-                "missed_tactic" => "Train this with short tactical calculation drills that force you to enumerate checks, captures and threats first.",
-                "king_safety" => "Review positions where a single pawn move changed diagonal or file access toward the king.",
-                "opening_principles" => "Review your first 10 moves and justify each one in terms of development, king safety and central influence.",
-                "piece_activity" => "Compare candidate moves by mobility gain, square quality and coordination rather than by surface-level safety alone.",
-                "endgame_technique" => "Drill conversion and defensive endgames with emphasis on king activity and zugzwang awareness.",
+                "material_loss" => Localizer.Text(LocalizedStrings.AdviceTrainingAdvancedMaterialLoss),
+                "hanging_piece" => Localizer.Text(LocalizedStrings.AdviceTrainingAdvancedHangingPiece),
+                "missed_tactic" => Localizer.Text(LocalizedStrings.AdviceTrainingAdvancedMissedTactic),
+                "king_safety" => Localizer.Text(LocalizedStrings.AdviceTrainingAdvancedKingSafety),
+                "opening_principles" => Localizer.Text(LocalizedStrings.AdviceTrainingAdvancedOpeningPrinciples),
+                "piece_activity" => Localizer.Text(LocalizedStrings.AdviceTrainingAdvancedPieceActivity),
+                "endgame_technique" => Localizer.Text(LocalizedStrings.AdviceTrainingAdvancedEndgameTechnique),
                 _ => baseHint
             },
-            _ => $"Watch next time for this trigger: {baseHint}"
+            _ => Localizer.Format(LocalizedStrings.AdviceTrainingIntermediate, baseHint)
         };
     }
 
     private static string BuildProblemSentence(ReplayPly replay, string qualityText, int? centipawnLoss)
     {
         return centipawnLoss is int cp
-            ? $"The move {replay.San} was a {qualityText} because it worsened the position by roughly {cp} centipawns."
-            : $"The move {replay.San} was a {qualityText} because the position became significantly less healthy afterwards.";
+            ? Localizer.Format(LocalizedStrings.AdviceProblemIntermediateCentipawns, replay.San, qualityText, cp)
+            : Localizer.Format(LocalizedStrings.AdviceProblemIntermediateEvaluation, replay.San, qualityText);
     }
 
     private static string BuildProblemSentenceBeginner(ReplayPly replay, string qualityText, int? centipawnLoss)
     {
         return centipawnLoss is int cp
-            ? $"{replay.San} was a {qualityText} because it gave away roughly {cp} centipawns of value."
-            : $"{replay.San} was a {qualityText} because it made your position much harder to handle.";
+            ? Localizer.Format(LocalizedStrings.AdviceProblemBeginnerCentipawns, replay.San, qualityText, cp)
+            : Localizer.Format(LocalizedStrings.AdviceProblemBeginnerEvaluation, replay.San, qualityText);
     }
 
     private static string BuildProblemSentenceAdvanced(ReplayPly replay, string qualityText, int? centipawnLoss)
     {
         return centipawnLoss is int cp
-            ? $"{replay.San} qualifies as a {qualityText} because the engine swing is about {cp} centipawns and the position loses practical stability."
-            : $"{replay.San} qualifies as a {qualityText} because the evaluation shifts sharply even without a clean centipawn comparison.";
+            ? Localizer.Format(LocalizedStrings.AdviceProblemAdvancedCentipawns, replay.San, qualityText, cp)
+            : Localizer.Format(LocalizedStrings.AdviceProblemAdvancedEvaluation, replay.San, qualityText);
     }
 
     private static string BuildWhySentence(string label)
     {
         return label switch
         {
-            "material_loss" => "The main issue was concrete material damage or a line that allowed the opponent to win material cleanly.",
-            "hanging_piece" => "The move left a piece insufficiently defended, so the opponent could challenge it immediately.",
-            "missed_tactic" => "The move missed a forcing tactical resource, either for you or for your opponent in reply.",
-            "king_safety" => "The move loosened king safety and gave the opponent easier attacking targets or entry lines.",
-            "opening_principles" => "The move ignored core opening priorities such as development, king safety or central control.",
-            "piece_activity" => "The move made one of your pieces less active and reduced your ability to fight for key squares.",
-            "endgame_technique" => "The move missed a cleaner technical plan and gave away useful activity in the endgame.",
-            _ => "The move created a practical problem that the opponent could exploit with more active play."
+            "material_loss" => Localizer.Text(LocalizedStrings.AdviceWhyMaterialLoss),
+            "hanging_piece" => Localizer.Text(LocalizedStrings.AdviceWhyHangingPiece),
+            "missed_tactic" => Localizer.Text(LocalizedStrings.AdviceWhyMissedTactic),
+            "king_safety" => Localizer.Text(LocalizedStrings.AdviceWhyKingSafety),
+            "opening_principles" => Localizer.Text(LocalizedStrings.AdviceWhyOpeningPrinciples),
+            "piece_activity" => Localizer.Text(LocalizedStrings.AdviceWhyPieceActivity),
+            "endgame_technique" => Localizer.Text(LocalizedStrings.AdviceWhyEndgameTechnique),
+            _ => Localizer.Text(LocalizedStrings.AdviceWhyGeneral)
         };
     }
 
@@ -193,14 +195,14 @@ public sealed class TemplateAdviceGenerator : IAdviceGenerator
     {
         return label switch
         {
-            "material_loss" => "The biggest problem is that you let the opponent win material.",
-            "hanging_piece" => "The moved piece did not have enough protection after the move.",
-            "missed_tactic" => "There was a forcing tactical idea in the position that was missed.",
-            "king_safety" => "The move made your king easier to attack.",
-            "opening_principles" => "The move spent time on something less important than development or king safety.",
-            "piece_activity" => "The move placed your piece on a less useful square.",
-            "endgame_technique" => "The move missed a simpler endgame plan.",
-            _ => "The move allowed the opponent to improve too easily."
+            "material_loss" => Localizer.Text(LocalizedStrings.AdviceWhyBeginnerMaterialLoss),
+            "hanging_piece" => Localizer.Text(LocalizedStrings.AdviceWhyBeginnerHangingPiece),
+            "missed_tactic" => Localizer.Text(LocalizedStrings.AdviceWhyBeginnerMissedTactic),
+            "king_safety" => Localizer.Text(LocalizedStrings.AdviceWhyBeginnerKingSafety),
+            "opening_principles" => Localizer.Text(LocalizedStrings.AdviceWhyBeginnerOpeningPrinciples),
+            "piece_activity" => Localizer.Text(LocalizedStrings.AdviceWhyBeginnerPieceActivity),
+            "endgame_technique" => Localizer.Text(LocalizedStrings.AdviceWhyBeginnerEndgameTechnique),
+            _ => Localizer.Text(LocalizedStrings.AdviceWhyBeginnerGeneral)
         };
     }
 
@@ -208,14 +210,14 @@ public sealed class TemplateAdviceGenerator : IAdviceGenerator
     {
         return label switch
         {
-            "material_loss" => "The critical defect is a concrete forcing line in which your position fails the material balance test.",
-            "hanging_piece" => "The move leaves the relocated piece tactically underprotected relative to the available attacking resources.",
-            "missed_tactic" => "The position contains a forcing tactical resource that should dominate candidate-move selection.",
-            "king_safety" => "The move concedes king shelter, opening tactical access on files, diagonals or weakened colour complexes.",
-            "opening_principles" => "The move loses opening efficiency by neglecting development tempo, central influence or timely king safety.",
-            "piece_activity" => "The move lowers activity and coordination, so your piece contributes less to critical squares and plans.",
-            "endgame_technique" => "The move yields technical control, often by underestimating king activity or the simplest conversion route.",
-            _ => "The move creates an exploitable positional or tactical concession that improves the opponent's options."
+            "material_loss" => Localizer.Text(LocalizedStrings.AdviceWhyAdvancedMaterialLoss),
+            "hanging_piece" => Localizer.Text(LocalizedStrings.AdviceWhyAdvancedHangingPiece),
+            "missed_tactic" => Localizer.Text(LocalizedStrings.AdviceWhyAdvancedMissedTactic),
+            "king_safety" => Localizer.Text(LocalizedStrings.AdviceWhyAdvancedKingSafety),
+            "opening_principles" => Localizer.Text(LocalizedStrings.AdviceWhyAdvancedOpeningPrinciples),
+            "piece_activity" => Localizer.Text(LocalizedStrings.AdviceWhyAdvancedPieceActivity),
+            "endgame_technique" => Localizer.Text(LocalizedStrings.AdviceWhyAdvancedEndgameTechnique),
+            _ => Localizer.Text(LocalizedStrings.AdviceWhyAdvancedGeneral)
         };
     }
 
@@ -223,14 +225,14 @@ public sealed class TemplateAdviceGenerator : IAdviceGenerator
     {
         return label switch
         {
-            "material_loss" => "Before you release the move, scan the forcing captures and ask what material remains after the sequence ends.",
-            "hanging_piece" => "A good trigger is to count attackers and defenders on the destination square before moving on.",
-            "missed_tactic" => "In sharp positions, pause for checks, captures and threats before trusting the first natural move.",
-            "king_safety" => "Whenever your king shelter changes, double-check opened files, weakened diagonals and loose dark or light squares.",
-            "opening_principles" => "In the opening, ask whether the move develops a piece, improves king safety or meaningfully fights for the center.",
-            "piece_activity" => "When no tactic is forcing the game, compare whether your move improves or reduces the mobility of the moved piece.",
-            "endgame_technique" => "In endgames, prefer the move that improves king activity or fixes the opponent's weaknesses with the least counterplay.",
-            _ => "Use the next similar position as a cue to slow down and verify the opponent's strongest forcing reply."
+            "material_loss" => Localizer.Text(LocalizedStrings.AdviceWatchMaterialLoss),
+            "hanging_piece" => Localizer.Text(LocalizedStrings.AdviceWatchHangingPiece),
+            "missed_tactic" => Localizer.Text(LocalizedStrings.AdviceWatchMissedTactic),
+            "king_safety" => Localizer.Text(LocalizedStrings.AdviceWatchKingSafety),
+            "opening_principles" => Localizer.Text(LocalizedStrings.AdviceWatchOpeningPrinciples),
+            "piece_activity" => Localizer.Text(LocalizedStrings.AdviceWatchPieceActivity),
+            "endgame_technique" => Localizer.Text(LocalizedStrings.AdviceWatchEndgameTechnique),
+            _ => Localizer.Text(LocalizedStrings.AdviceWatchGeneral)
         };
     }
 
@@ -238,14 +240,14 @@ public sealed class TemplateAdviceGenerator : IAdviceGenerator
     {
         return label switch
         {
-            "material_loss" => "A simple habit is to ask: after the obvious exchanges, who is up material?",
-            "hanging_piece" => "Before moving on, count how many times the destination square is attacked and defended.",
-            "missed_tactic" => "Look for checks, captures and threats before trusting a natural move.",
-            "king_safety" => "Any move near your king should make you ask what attacking lines just opened.",
-            "opening_principles" => "In the opening, first try to develop pieces and get your king safe.",
-            "piece_activity" => "Ask whether the piece will be more active or less active after the move.",
-            "endgame_technique" => "In the endgame, look for the move that activates your king or improves your simplest plan.",
-            _ => "Use similar moments to slow down and check the opponent's best reply."
+            "material_loss" => Localizer.Text(LocalizedStrings.AdviceWatchBeginnerMaterialLoss),
+            "hanging_piece" => Localizer.Text(LocalizedStrings.AdviceWatchBeginnerHangingPiece),
+            "missed_tactic" => Localizer.Text(LocalizedStrings.AdviceWatchBeginnerMissedTactic),
+            "king_safety" => Localizer.Text(LocalizedStrings.AdviceWatchBeginnerKingSafety),
+            "opening_principles" => Localizer.Text(LocalizedStrings.AdviceWatchBeginnerOpeningPrinciples),
+            "piece_activity" => Localizer.Text(LocalizedStrings.AdviceWatchBeginnerPieceActivity),
+            "endgame_technique" => Localizer.Text(LocalizedStrings.AdviceWatchBeginnerEndgameTechnique),
+            _ => Localizer.Text(LocalizedStrings.AdviceWatchBeginnerGeneral)
         };
     }
 
@@ -253,22 +255,22 @@ public sealed class TemplateAdviceGenerator : IAdviceGenerator
     {
         return label switch
         {
-            "material_loss" => "Treat the position as a forcing-tree problem and verify whether the terminal material count still works for you.",
-            "hanging_piece" => "Use attacker-defender accounting plus tactical motifs like overload or zwischenzug before accepting the destination square.",
-            "missed_tactic" => "Candidate selection should begin with forcing resources, not with the most natural-looking improving move.",
-            "king_safety" => "Re-evaluate access routes to the king immediately after any shelter concession, especially files, diagonals and dark/light square complexes.",
-            "opening_principles" => "Measure opening moves by tempo efficiency, development quality and whether they support a coherent central setup.",
-            "piece_activity" => "Compare candidate moves through activity metrics: mobility, square quality, coordination and restriction of counterplay.",
-            "endgame_technique" => "In technical endgames, prioritize king activity and the line with the lowest counterplay, even if several moves keep the edge.",
-            _ => "Use the position as a cue to run a stricter candidate-move and forcing-line verification pass."
+            "material_loss" => Localizer.Text(LocalizedStrings.AdviceWatchAdvancedMaterialLoss),
+            "hanging_piece" => Localizer.Text(LocalizedStrings.AdviceWatchAdvancedHangingPiece),
+            "missed_tactic" => Localizer.Text(LocalizedStrings.AdviceWatchAdvancedMissedTactic),
+            "king_safety" => Localizer.Text(LocalizedStrings.AdviceWatchAdvancedKingSafety),
+            "opening_principles" => Localizer.Text(LocalizedStrings.AdviceWatchAdvancedOpeningPrinciples),
+            "piece_activity" => Localizer.Text(LocalizedStrings.AdviceWatchAdvancedPieceActivity),
+            "endgame_technique" => Localizer.Text(LocalizedStrings.AdviceWatchAdvancedEndgameTechnique),
+            _ => Localizer.Text(LocalizedStrings.AdviceWatchAdvancedGeneral)
         };
     }
 
     private static string BuildBetterSentence(string bestMoveText, string openingName, string label, ExplanationLevel level)
     {
         string main = string.IsNullOrWhiteSpace(bestMoveText)
-            ? "A calmer alternative kept the position healthier."
-            : $"A stronger option was {bestMoveText}.";
+            ? Localizer.Text(LocalizedStrings.AdviceBetterCalmer)
+            : Localizer.Format(LocalizedStrings.AdviceBetterStronger, bestMoveText);
 
         if (string.IsNullOrWhiteSpace(openingName))
         {
@@ -277,9 +279,9 @@ public sealed class TemplateAdviceGenerator : IAdviceGenerator
 
         return level switch
         {
-            ExplanationLevel.Beginner when label == "opening_principles" => $"{main} In {openingName}, development and king safety mattered more here.",
-            ExplanationLevel.Advanced when label == "opening_principles" => $"{main} In {openingName}, the better line respected development tempo and opening efficiency.",
-            ExplanationLevel.Intermediate when label == "opening_principles" => $"{main} In {openingName}, development was the more important priority in this moment.",
+            ExplanationLevel.Beginner when label == "opening_principles" => $"{main} {Localizer.Format(LocalizedStrings.AdviceBetterOpeningBeginner, openingName)}",
+            ExplanationLevel.Advanced when label == "opening_principles" => $"{main} {Localizer.Format(LocalizedStrings.AdviceBetterOpeningAdvanced, openingName)}",
+            ExplanationLevel.Intermediate when label == "opening_principles" => $"{main} {Localizer.Format(LocalizedStrings.AdviceBetterOpeningIntermediate, openingName)}",
             _ => main
         };
     }
@@ -287,10 +289,10 @@ public sealed class TemplateAdviceGenerator : IAdviceGenerator
     private static string ComposeDetailedStructure(string what, string why, string better, string watch)
     {
         return string.Join(" ",
-            PrefixSection("What", what),
-            PrefixSection("Why", why),
-            PrefixSection("Better", better),
-            PrefixSection("Watch next time", watch));
+            PrefixSection(Localizer.Text(LocalizedStrings.AdviceWhat), what),
+            PrefixSection(Localizer.Text(LocalizedStrings.AdviceWhy), why),
+            PrefixSection(Localizer.Text(LocalizedStrings.AdviceBetter), better),
+            PrefixSection(Localizer.Text(LocalizedStrings.AdviceWatchNextTime), watch));
     }
 
     private static string PrefixSection(string heading, string text)
@@ -307,7 +309,29 @@ public sealed class TemplateAdviceGenerator : IAdviceGenerator
 
     private static string DisplayLabel(string label)
     {
-        return label.Replace('_', ' ');
+        return label switch
+        {
+            "material_loss" => Localizer.Text(LocalizedStrings.AdvicePatternMaterialLoss),
+            "hanging_piece" => Localizer.Text(LocalizedStrings.AdvicePatternHangingPiece),
+            "missed_tactic" => Localizer.Text(LocalizedStrings.AdvicePatternMissedTactic),
+            "opening_principles" => Localizer.Text(LocalizedStrings.AdvicePatternOpeningPrinciples),
+            "king_safety" => Localizer.Text(LocalizedStrings.AdvicePatternKingSafety),
+            "piece_activity" => Localizer.Text(LocalizedStrings.AdvicePatternPieceActivity),
+            "endgame_technique" => Localizer.Text(LocalizedStrings.AdvicePatternEndgameTechnique),
+            "general" => Localizer.Text(LocalizedStrings.AdvicePatternGeneral),
+            _ => label.Replace('_', ' ')
+        };
+    }
+
+    private static string FormatQuality(MoveQualityBucket quality)
+    {
+        return quality switch
+        {
+            MoveQualityBucket.Blunder => Localizer.Text(LocalizedStrings.AdviceQualityBlunder),
+            MoveQualityBucket.Mistake => Localizer.Text(LocalizedStrings.AdviceQualityMistake),
+            MoveQualityBucket.Inaccuracy => Localizer.Text(LocalizedStrings.AdviceQualityInaccuracy),
+            _ => Localizer.Text(LocalizedStrings.AdviceQualityGood)
+        };
     }
 
     private static string FormatMoveFromFen(string fenBefore, string? uciMove)

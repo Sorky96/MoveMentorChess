@@ -117,7 +117,7 @@ internal sealed class AnalysisTimelineRenderer(
         marker.Margin = new Avalonia.Thickness(isSelected ? 0 : 1, 0);
         marker.Cursor = new Cursor(StandardCursorType.Hand);
         string reviewed = isReviewed ? " Reviewed." : string.Empty;
-        ToolTip.SetTip(marker, $"{item.MoveRange}: {item.Mistake.Quality}, {item.LabelText}, {AnalysisMistakePresentation.BuildImpactText(item.LeadMove)}.{reviewed}");
+        ToolTip.SetTip(marker, $"{item.MoveRange}: {AnalysisMistakePresentation.FormatQualityBucket(item.Mistake.Quality)}, {item.LabelText}, {AnalysisMistakePresentation.BuildImpactText(item.LeadMove)}.{reviewed}");
     }
 
     private void RenderSelectedText(SelectedMistakeViewItem? selectedItem, IReadOnlySet<int> reviewedPlies)

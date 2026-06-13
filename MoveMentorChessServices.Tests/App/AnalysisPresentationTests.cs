@@ -59,7 +59,7 @@ public sealed class AnalysisPresentationTests
 
         Assert.Equal(costly, item.LeadMove);
         Assert.Equal("4... Qh4+", item.MoveRange);
-        Assert.Equal("Loose piece", item.LabelText);
+        Assert.Equal("Loose pieces", item.LabelText);
         Assert.Equal("Costliest", item.PriorityText);
         Assert.Equal("Reviewed", item.ReviewStatusText);
         Assert.Contains("evaluation loss 260 cp", item.MetaText);
@@ -149,7 +149,7 @@ public sealed class AnalysisPresentationTests
         Assert.Equal("2... Nc6", details.MoveText);
         Assert.Equal("Mistake - Opening discipline", details.QualityText);
         Assert.Equal("Evaluation loss: 90 cp", details.LossText);
-        Assert.Contains("Phase: opening", details.ContextText);
+        Assert.Contains("Phase: Opening", details.ContextText);
         Assert.Contains("Motif: Opening discipline", details.ContextText);
         Assert.Equal("Develop first. Then calculate tactics.", details.AdviceText);
         Assert.Contains("cleaner developing move", details.WhyText);

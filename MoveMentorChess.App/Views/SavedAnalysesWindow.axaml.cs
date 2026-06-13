@@ -4,7 +4,9 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using MoveMentorChess.App.ViewModels;
+using MoveMentorChess.Localization;
 using MoveMentorChess.Persistence;
+using MoveMentorChess.Presentation.Models;
 
 namespace MoveMentorChess.App.Views;
 
@@ -98,9 +100,12 @@ public partial class SavedAnalysesWindow : Window
         AnalysesListBox.ItemsSource = filtered
             .Select(result => new SavedAnalysisListItem(
                 result,
-                $"{result.Game.WhitePlayer ?? "White"} vs {result.Game.BlackPlayer ?? "Black"}",
-                result.AnalyzedSide == PlayerSide.White ? "White" : "Black",
-                string.IsNullOrWhiteSpace(result.Game.DateText) ? "?" : result.Game.DateText!,
+                Localizer.Format(
+                    LocalizedStrings.CommonPlayersVersus,
+                    string.IsNullOrWhiteSpace(result.Game.WhitePlayer) ? Localizer.Text(LocalizedStrings.CommonWhite) : result.Game.WhitePlayer,
+                    string.IsNullOrWhiteSpace(result.Game.BlackPlayer) ? Localizer.Text(LocalizedStrings.CommonBlack) : result.Game.BlackPlayer),
+                result.AnalyzedSide == PlayerSide.White ? Localizer.Text(LocalizedStrings.CommonWhite) : Localizer.Text(LocalizedStrings.CommonBlack),
+                string.IsNullOrWhiteSpace(result.Game.DateText) ? Localizer.Text(LocalizedStrings.CommonUnknown) : result.Game.DateText!,
                 OpeningCatalog.GetName(result.Game.Eco),
                 result.HighlightedMistakes.Count.ToString(CultureInfo.InvariantCulture)))
             .ToList();
@@ -111,7 +116,7 @@ public partial class SavedAnalysesWindow : Window
         }
         else
         {
-            DetailsTextBlock.Text = "No saved analyses match the current filter.";
+            DetailsTextBlock.Text = Localizer.Text(LocalizedStrings.SavedAnalysesNoMatches);
         }
     }
 
@@ -119,7 +124,7 @@ public partial class SavedAnalysesWindow : Window
     {
         if (AnalysesListBox.SelectedItem is not SavedAnalysisListItem item)
         {
-            DetailsTextBlock.Text = "Select a saved analysis to inspect the cached result.";
+            DetailsTextBlock.Text = Localizer.Text(LocalizedStrings.SavedAnalysesSelectPrompt);
             LoadGameButton.IsEnabled = false;
             OpenAnalysisButton.IsEnabled = false;
             DeleteSelectedButton.IsEnabled = false;
@@ -145,19 +150,25 @@ public partial class SavedAnalysesWindow : Window
             .ToList();
 
         StringBuilder builder = new();
-        builder.AppendLine(CultureInfo.InvariantCulture, $"{result.Game.WhitePlayer ?? "White"} vs {result.Game.BlackPlayer ?? "Black"}");
-        builder.AppendLine(CultureInfo.InvariantCulture, $"Side: {result.AnalyzedSide}");
-        builder.AppendLine(CultureInfo.InvariantCulture, $"Date: {result.Game.DateText ?? "?"}");
-        builder.AppendLine(CultureInfo.InvariantCulture, $"Result: {result.Game.Result ?? "?"}");
-        builder.AppendLine(CultureInfo.InvariantCulture, $"Opening: {OpeningCatalog.GetName(result.Game.Eco)}");
-        builder.AppendLine(CultureInfo.InvariantCulture, $"Move labels: {BuildQualityBreakdown(result.MoveAnalyses)}");
-        builder.AppendLine(CultureInfo.InvariantCulture, $"Highlights: {result.HighlightedMistakes.Count} total");
-        builder.AppendLine(CultureInfo.InvariantCulture, $"Breakdown: {blunders} blunders, {mistakes} mistakes, {inaccuracies} inaccuracies");
+        string whitePlayer = string.IsNullOrWhiteSpace(result.Game.WhitePlayer)
+            ? Localizer.Text(LocalizedStrings.CommonWhite)
+            : result.Game.WhitePlayer;
+        string blackPlayer = string.IsNullOrWhiteSpace(result.Game.BlackPlayer)
+            ? Localizer.Text(LocalizedStrings.CommonBlack)
+            : result.Game.BlackPlayer;
+        builder.AppendLine(Localizer.Format(LocalizedStrings.CommonPlayersVersus, whitePlayer, blackPlayer));
+        builder.AppendLine(Localizer.Format(LocalizedStrings.SavedAnalysesSide, FormatSide(result.AnalyzedSide)));
+        builder.AppendLine(Localizer.Format(LocalizedStrings.SavedAnalysesDate, result.Game.DateText ?? Localizer.Text(LocalizedStrings.CommonUnknown)));
+        builder.AppendLine(Localizer.Format(LocalizedStrings.SavedAnalysesResult, result.Game.Result ?? Localizer.Text(LocalizedStrings.CommonUnknown)));
+        builder.AppendLine(Localizer.Format(LocalizedStrings.SavedAnalysesOpening, OpeningCatalog.GetName(result.Game.Eco)));
+        builder.AppendLine(Localizer.Format(LocalizedStrings.SavedAnalysesMoveLabels, BuildQualityBreakdown(result.MoveAnalyses)));
+        builder.AppendLine(Localizer.Format(LocalizedStrings.SavedAnalysesHighlights, result.HighlightedMistakes.Count));
+        builder.AppendLine(Localizer.Format(LocalizedStrings.SavedAnalysesBreakdown, blunders, mistakes, inaccuracies));
 
         if (topLabels.Count > 0)
         {
             builder.AppendLine();
-            builder.AppendLine("Top labels:");
+            builder.AppendLine(Localizer.Text(LocalizedStrings.SavedAnalysesTopLabels));
             foreach (string label in topLabels)
             {
                 builder.AppendLine(CultureInfo.InvariantCulture, $"- {label}");
@@ -167,7 +178,7 @@ public partial class SavedAnalysesWindow : Window
         if (result.HighlightedMistakes.Count > 0)
         {
             builder.AppendLine();
-            builder.AppendLine("Top highlighted mistakes:");
+            builder.AppendLine(Localizer.Text(LocalizedStrings.SavedAnalysesTopHighlightedMistakes));
             foreach (SelectedMistake mistake in result.HighlightedMistakes.Take(5))
             {
                 MoveAnalysisResult? lead = mistake.Moves
@@ -181,14 +192,19 @@ public partial class SavedAnalysesWindow : Window
                 }
 
                 string moveLabel = $"{lead.Replay.MoveNumber}{(lead.Replay.Side == PlayerSide.White ? "." : "...")} {lead.Replay.San}";
-                builder.AppendLine(CultureInfo.InvariantCulture, $"- {moveLabel} | {mistake.Quality} | {FormatMistakeLabel(mistake.Tag?.Label ?? "unclassified")} | CPL {lead.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a"}");
+                string separator = Localizer.Text(LocalizedStrings.CommonFieldSeparator);
+                string label = FormatMistakeLabel(mistake.Tag?.Label ?? "unclassified");
+                string cpl = Localizer.Format(
+                    LocalizedStrings.SavedAnalysesCpl,
+                    lead.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? Localizer.Text(LocalizedStrings.CommonNotAvailable));
+                builder.AppendLine(CultureInfo.InvariantCulture, $"- {moveLabel}{separator}{FormatQuality(mistake.Quality)}{separator}{label}{separator}{cpl}");
             }
         }
 
         builder.AppendLine();
         builder.AppendLine(canOpenAnalysis
-            ? "Use 'Open Analysis' to reopen the full analyzer on cached data, or 'Load Game' to bring the PGN back to the main board."
-            : "Use 'Load Game' to bring the PGN back to the main board. Open Analysis is unavailable because the analysis engine is not loaded.");
+            ? Localizer.Text(LocalizedStrings.SavedAnalysesOpenInstructions)
+            : Localizer.Text(LocalizedStrings.SavedAnalysesLoadInstructions));
         DetailsTextBlock.Text = builder.ToString().TrimEnd();
     }
 
@@ -230,19 +246,7 @@ public partial class SavedAnalysesWindow : Window
     }
 
     private static string FormatMistakeLabel(string label)
-    {
-        return label switch
-        {
-            "hanging_piece" => "Loose pieces",
-            "missed_tactic" => "Missed tactics",
-            "opening_principles" => "Opening discipline",
-            "king_safety" => "King safety",
-            "endgame_technique" => "Endgame technique",
-            "material_loss" => "Material losses",
-            "piece_activity" => "Passive pieces",
-            _ => System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase(label.Replace('_', ' ').ToLowerInvariant())
-        };
-    }
+        => AnalysisMistakePresentation.FormatMistakeLabel(label);
 
     private static string BuildQualityBreakdown(IReadOnlyList<MoveAnalysisResult> moveAnalyses)
     {
@@ -258,8 +262,14 @@ public partial class SavedAnalysesWindow : Window
                 MoveQualityBucket.Mistake,
                 MoveQualityBucket.Blunder
             }
-            .Select(quality => $"{quality} {moveAnalyses.Count(move => move.Quality == quality)}"));
+            .Select(quality => $"{FormatQuality(quality)} {moveAnalyses.Count(move => move.Quality == quality)}"));
     }
+
+    private static string FormatSide(PlayerSide side)
+        => side == PlayerSide.White ? Localizer.Text(LocalizedStrings.CommonWhite) : Localizer.Text(LocalizedStrings.CommonBlack);
+
+    private static string FormatQuality(MoveQualityBucket quality)
+        => AnalysisMistakePresentation.FormatQualityBucket(quality);
 
     private sealed record SavedAnalysisListItem(
         GameAnalysisResult Result,

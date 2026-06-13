@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader><resheader name="version"><value>2.0</value></resheader><resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader><resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="SettingsTitle" xml:space="preserve"><value>设置</value></data>
+  <data name="SettingsClose" xml:space="preserve"><value>关闭</value></data>
+  <data name="SettingsIntro" xml:space="preserve"><value>选择 MoveMentor 在此电脑上使用语言、本地模型和 Stockfish 的方式。</value></data>
+  <data name="SettingsLanguage" xml:space="preserve"><value>语言</value></data>
+  <data name="SettingsModel" xml:space="preserve"><value>模型</value></data>
+  <data name="SettingsUseFullGpu" xml:space="preserve"><value>本地模型使用全部 GPU 性能</value></data>
+  <data name="SettingsBrowse" xml:space="preserve"><value>浏览</value></data>
+  <data name="SettingsExplanationLevel" xml:space="preserve"><value>讲解级别</value></data>
+  <data name="SettingsNarrationStyle" xml:space="preserve"><value>叙述风格</value></data>
+  <data name="SettingsStockfish" xml:space="preserve"><value>Stockfish</value></data>
+  <data name="SettingsCancel" xml:space="preserve"><value>取消</value></data>
+  <data name="SettingsSave" xml:space="preserve"><value>保存</value></data>
+  <data name="ExplanationBeginner" xml:space="preserve"><value>初学者</value></data>
+  <data name="ExplanationIntermediate" xml:space="preserve"><value>中级</value></data>
+  <data name="ExplanationAdvanced" xml:space="preserve"><value>高级</value></data>
+  <data name="MainRotateBoard" xml:space="preserve"><value>旋转棋盘</value></data>
+  <data name="MainUndo" xml:space="preserve"><value>撤销</value></data>
+  <data name="MainConfigureEngine" xml:space="preserve"><value>配置引擎</value></data>
+  <data name="MainPastePgn" xml:space="preserve"><value>粘贴 PGN</value></data>
+  <data name="MainAnalyzeGame" xml:space="preserve"><value>分析对局</value></data>
+  <data name="MainLoadPgnFile" xml:space="preserve"><value>加载 PGN 文件</value></data>
+  <data name="MainApplyNext" xml:space="preserve"><value>应用下一步</value></data>
+  <data name="MainApplySelected" xml:space="preserve"><value>应用所选</value></data>
+  <data name="MainAnalyzeImported" xml:space="preserve"><value>分析导入</value></data>
+  <data name="MainPlayerCoach" xml:space="preserve"><value>棋手教练</value></data>
+  <data name="MainSavedAnalyses" xml:space="preserve"><value>已保存分析</value></data>
+  <data name="MainLoadSaved" xml:space="preserve"><value>加载保存</value></data>
+  <data name="MainOpeningTrainer" xml:space="preserve"><value>开局训练</value></data>
+  <data name="MainSettings" xml:space="preserve"><value>设置</value></data>
+  <data name="MainOpeningCoverage" xml:space="preserve"><value>开局覆盖</value></data>
+  <data name="MainCloseApp" xml:space="preserve"><value>关闭应用</value></data>
+  <data name="AdviceLanguageInstruction" xml:space="preserve"><value>请用简体中文编写 short_text、detailed_text 和 training_hint。JSON 键名和国际象棋记号保持不变。</value></data>
+  <data name="AdviceDetailedPartsInstruction" xml:space="preserve"><value>detailed_text 必须按此顺序包含四个短部分：{0}:、{1}:、{2}:、{3}:。</value></data>
+  <data name="AdviceWhat" xml:space="preserve"><value>问题</value></data>
+  <data name="AdviceWhy" xml:space="preserve"><value>原因</value></data>
+  <data name="AdviceBetter" xml:space="preserve"><value>更好</value></data>
+  <data name="AdviceWatchNextTime" xml:space="preserve"><value>下次注意</value></data>
+  <data name="AdvicePracticalView" xml:space="preserve"><value>实战角度</value></data>
+  <data name="AdviceWasQualityLoss" xml:space="preserve"><value>{0}：{1} 是一步{2}，{3}。</value></data>
+  <data name="AdviceStrongerOption" xml:space="preserve"><value>更强的选择是 {0}。</value></data>
+  <data name="AdvicePattern" xml:space="preserve"><value>它符合 {0} 模式。</value></data>
+  <data name="AdviceHintMaterialLoss" xml:space="preserve"><value>落子前，先比较对方强制回应后的子力平衡。</value></data>
+  <data name="AdviceHintHangingPiece" xml:space="preserve"><value>每步棋后检查移动的棋子是否至少被防守到和被攻击一样多。</value></data>
+  <data name="AdviceHintKingSafety" xml:space="preserve"><value>王已易位时，王前兵的移动都要当作需要具体理由的让步。</value></data>
+  <data name="AdviceHintOpeningPrinciples" xml:space="preserve"><value>开局优先出子、王安全和控制中心，再考虑边兵或过早出后。</value></data>
+  <data name="AdviceHintPieceActivity" xml:space="preserve"><value>在较安静的中局，优先选择提高棋子活跃度的格子，避免让棋子边缘化或被动。</value></data>
+  <data name="AdviceHintEndgameTechnique" xml:space="preserve"><value>残局中计算最简单的技术路线，避免把活跃度还给对手。</value></data>
+  <data name="AdviceHintGeneral" xml:space="preserve"><value>在战术转折点先停下来找强制回应，再选择看起来自然的走法。</value></data>
+  <data name="AdviceProblemIntermediateCentipawns" xml:space="preserve"><value>{0} 是一步 {1}，因为它让局面大约恶化了 {2} 厘兵。</value></data>
+  <data name="AdviceProblemIntermediateEvaluation" xml:space="preserve"><value>{0} 是一步 {1}，因为之后局面明显不健康。</value></data>
+  <data name="AdviceProblemBeginnerCentipawns" xml:space="preserve"><value>{0} 是 {1}，因为大约送出了 {2} 厘兵的价值。</value></data>
+  <data name="AdviceProblemBeginnerEvaluation" xml:space="preserve"><value>{0} 是 {1}，因为它让你的局面更难处理。</value></data>
+  <data name="AdviceProblemAdvancedCentipawns" xml:space="preserve"><value>{0} 可判为 {1}，因为引擎摆动约 {2} 厘兵，局面失去实战稳定性。</value></data>
+  <data name="AdviceProblemAdvancedEvaluation" xml:space="preserve"><value>{0} 可判为 {1}，因为即使没有清晰的厘兵比较，评估也明显跳变。</value></data>
+  <data name="AdviceWhyMaterialLoss" xml:space="preserve"><value>主要问题是具体的子力损失，或允许对手干净赢子的路线。</value></data>
+  <data name="AdviceWhyHangingPiece" xml:space="preserve"><value>这步让棋子防守不足，所以对手可以马上挑战它。</value></data>
+  <data name="AdviceWhyMissedTactic" xml:space="preserve"><value>这步错过了强制性的战术资源，可能是你的机会，也可能是对手的回应。</value></data>
+  <data name="AdviceWhyKingSafety" xml:space="preserve"><value>这步削弱了王的安全，给对手更容易的攻击目标或进入路线。</value></data>
+  <data name="AdviceWhyOpeningPrinciples" xml:space="preserve"><value>这步忽略了开局核心优先级，如出子、王安全或中心控制。</value></data>
+  <data name="AdviceWhyPieceActivity" xml:space="preserve"><value>这步降低了一枚棋子的活跃度，也削弱了争夺关键格的能力。</value></data>
+  <data name="AdviceWhyEndgameTechnique" xml:space="preserve"><value>这步错过了更清晰的技术计划，并在残局中交出了有用的活跃度。</value></data>
+  <data name="AdviceWhyGeneral" xml:space="preserve"><value>这步制造了一个实战问题，对手可以用更主动的方式利用。</value></data>
+  <data name="AdviceWhyBeginnerMaterialLoss" xml:space="preserve"><value>最大的问题是你让对手赢子。</value></data>
+  <data name="AdviceWhyBeginnerHangingPiece" xml:space="preserve"><value>移动后的棋子保护不够。</value></data>
+  <data name="AdviceWhyBeginnerMissedTactic" xml:space="preserve"><value>局面里有一个被错过的强制战术想法。</value></data>
+  <data name="AdviceWhyBeginnerKingSafety" xml:space="preserve"><value>这步让你的王更容易被攻击。</value></data>
+  <data name="AdviceWhyBeginnerOpeningPrinciples" xml:space="preserve"><value>这步把时间花在了比出子或王安全更不重要的事情上。</value></data>
+  <data name="AdviceWhyBeginnerPieceActivity" xml:space="preserve"><value>这步把棋子放到了不太有用的格子。</value></data>
+  <data name="AdviceWhyBeginnerEndgameTechnique" xml:space="preserve"><value>这步错过了更简单的残局计划。</value></data>
+  <data name="AdviceWhyBeginnerGeneral" xml:space="preserve"><value>这步让对手太容易改善局面。</value></data>
+  <data name="AdviceWhyAdvancedMaterialLoss" xml:space="preserve"><value>关键缺陷是一条具体的强制路线，最终子力平衡对你不利。</value></data>
+  <data name="AdviceWhyAdvancedHangingPiece" xml:space="preserve"><value>这步让移位后的棋子相对于可用攻击资源来说战术上防守不足。</value></data>
+  <data name="AdviceWhyAdvancedMissedTactic" xml:space="preserve"><value>局面包含强制战术资源，本应主导候选着选择。</value></data>
+  <data name="AdviceWhyAdvancedKingSafety" xml:space="preserve"><value>这步让出王的庇护，打开了通过线、斜线或弱色格的战术通道。</value></data>
+  <data name="AdviceWhyAdvancedOpeningPrinciples" xml:space="preserve"><value>这步忽视发展节奏、中心影响或及时的王安全，从而损失开局效率。</value></data>
+  <data name="AdviceWhyAdvancedPieceActivity" xml:space="preserve"><value>这步降低活跃度和协调性，使棋子对关键格和计划贡献更少。</value></data>
+  <data name="AdviceWhyAdvancedEndgameTechnique" xml:space="preserve"><value>这步交出技术控制，常见原因是低估王的活跃度或最简单的转化路线。</value></data>
+  <data name="AdviceWhyAdvancedGeneral" xml:space="preserve"><value>这步形成可被利用的位置或战术让步，改善了对手选择。</value></data>
+  <data name="AdviceWatchMaterialLoss" xml:space="preserve"><value>落子前扫描强制吃子，并问自己序列结束后还剩什么子力。</value></data>
+  <data name="AdviceWatchHangingPiece" xml:space="preserve"><value>一个好触发点是先数目标格的攻击者和防守者。</value></data>
+  <data name="AdviceWatchMissedTactic" xml:space="preserve"><value>在尖锐局面中，先停下来看将军、吃子和威胁，再相信第一个自然走法。</value></data>
+  <data name="AdviceWatchKingSafety" xml:space="preserve"><value>只要王的庇护改变，就复查开放线、削弱的斜线以及松动的深浅色格。</value></data>
+  <data name="AdviceWatchOpeningPrinciples" xml:space="preserve"><value>开局时问这步是否出子、提高王安全，或真正争夺中心。</value></data>
+  <data name="AdviceWatchPieceActivity" xml:space="preserve"><value>没有强制战术时，比较这步是提高还是降低移动棋子的机动性。</value></data>
+  <data name="AdviceWatchEndgameTechnique" xml:space="preserve"><value>残局中优先选择提高王活跃度，或以最少反击固定对手弱点的走法。</value></data>
+  <data name="AdviceWatchGeneral" xml:space="preserve"><value>把下一次类似局面当作放慢速度、检查对手最强强制回应的信号。</value></data>
+  <data name="AdviceWatchBeginnerMaterialLoss" xml:space="preserve"><value>简单习惯：明显交换之后，谁多子？</value></data>
+  <data name="AdviceWatchBeginnerHangingPiece" xml:space="preserve"><value>继续前，数一数目标格被攻击和被防守的次数。</value></data>
+  <data name="AdviceWatchBeginnerMissedTactic" xml:space="preserve"><value>先找将军、吃子和威胁，再相信自然走法。</value></data>
+  <data name="AdviceWatchBeginnerKingSafety" xml:space="preserve"><value>任何靠近你王的走法，都要问刚刚打开了哪些攻击线。</value></data>
+  <data name="AdviceWatchBeginnerOpeningPrinciples" xml:space="preserve"><value>开局先出子，并让王安全。</value></data>
+  <data name="AdviceWatchBeginnerPieceActivity" xml:space="preserve"><value>问自己这枚棋子走后会更活跃还是更被动。</value></data>
+  <data name="AdviceWatchBeginnerEndgameTechnique" xml:space="preserve"><value>残局中寻找能激活王或改善最简单计划的走法。</value></data>
+  <data name="AdviceWatchBeginnerGeneral" xml:space="preserve"><value>类似时刻放慢速度，检查对手最佳回应。</value></data>
+  <data name="AdviceWatchAdvancedMaterialLoss" xml:space="preserve"><value>把局面当作强制树问题，确认终点子力计算仍然对你成立。</value></data>
+  <data name="AdviceWatchAdvancedHangingPiece" xml:space="preserve"><value>接受目标格前，用攻击者-防守者计算，并检查过载或中间着等战术主题。</value></data>
+  <data name="AdviceWatchAdvancedMissedTactic" xml:space="preserve"><value>候选着选择应从强制资源开始，而不是从最自然的改善着开始。</value></data>
+  <data name="AdviceWatchAdvancedKingSafety" xml:space="preserve"><value>任何王翼庇护让步后，立即重新评估通向王的路线，尤其是线、斜线和色格群。</value></data>
+  <data name="AdviceWatchAdvancedOpeningPrinciples" xml:space="preserve"><value>用节奏效率、出子质量以及是否支持连贯中心结构来衡量开局走法。</value></data>
+  <data name="AdviceWatchAdvancedPieceActivity" xml:space="preserve"><value>通过活跃度指标比较候选着：机动性、格子质量、协调性和限制反击。</value></data>
+  <data name="AdviceWatchAdvancedEndgameTechnique" xml:space="preserve"><value>技术残局中优先王的活跃度和反击最少的路线，即使多步棋都能保住优势。</value></data>
+  <data name="AdviceWatchAdvancedGeneral" xml:space="preserve"><value>把该局面当作更严格检查候选着和强制路线的信号。</value></data>
+  <data name="AdviceBetterCalmer" xml:space="preserve"><value>更冷静的选择能保持更健康的局面。</value></data>
+  <data name="AdviceBetterStronger" xml:space="preserve"><value>更强的选择是 {0}。</value></data>
+  <data name="AdviceBetterOpeningBeginner" xml:space="preserve"><value>在 {0} 中，出子和王安全在这里更重要。</value></data>
+  <data name="AdviceBetterOpeningIntermediate" xml:space="preserve"><value>在 {0} 中，此刻发展是更重要的优先事项。</value></data>
+  <data name="AdviceBetterOpeningAdvanced" xml:space="preserve"><value>在 {0} 中，更好的路线尊重发展节奏和开局效率。</value></data>
+  <data name="AdviceLostCentipawns" xml:space="preserve"><value>大约损失 {0} 厘兵</value></data>
+  <data name="AdviceQualityMistake" xml:space="preserve"><value>错误</value></data>
+  <data name="AdviceQualityInaccuracy" xml:space="preserve"><value>不精确</value></data>
+  <data name="AdvicePatternHangingPiece" xml:space="preserve"><value>悬子</value></data>
+  <data name="FormatPhaseOpening" xml:space="preserve"><value>开局</value></data>
+  <data name="FormatPhaseMiddlegame" xml:space="preserve"><value>中局</value></data>
+  <data name="FormatPhaseEndgame" xml:space="preserve"><value>残局</value></data>
+  <data name="SettingsSetupChecklistTitle" xml:space="preserve"><value>设置清单</value></data>
+  <data name="SettingsSetupChecklistBody" xml:space="preserve"><value>1. 选择语言。2. 选择或自动检测 Stockfish。3. 导入 PGN。4. 运行分析。5. 跟随训练建议。</value></data>
+  <data name="SettingsLlamaPath" xml:space="preserve"><value>llama-server.exe 路径（可选）</value></data>
+  <data name="SettingsLlamaPlaceholder" xml:space="preserve"><value>自动检测 llama-server.exe</value></data>
+  <data name="SettingsStockfishPath" xml:space="preserve"><value>stockfish.exe 路径</value></data>
+  <data name="SettingsStockfishPlaceholder" xml:space="preserve"><value>自动检测 stockfish.exe</value></data>
+  <data name="SettingsEngineThreads" xml:space="preserve"><value>引擎线程</value></data>
+  <data name="SettingsHashMemory" xml:space="preserve"><value>Hash 内存 (MB)</value></data>
+  <data name="SettingsBulkDepth" xml:space="preserve"><value>批量分析深度</value></data>
+  <data name="SettingsBulkMultiPv" xml:space="preserve"><value>批量分析 MultiPV</value></data>
+  <data name="SettingsBulkMoveTime" xml:space="preserve"><value>批量分析每步时间 (ms)</value></data>
+  <data name="SettingsFooter" xml:space="preserve"><value>检测到 Stockfish 或选择自定义路径后保存。</value></data>
+  <data name="SettingsFullGpuDescription" xml:space="preserve"><value>完整 GPU 模式已启用。llama.cpp 将请求 '-ngl {0}'，尽可能把模型层放到 GPU 上。</value></data>
+  <data name="SettingsBalancedGpuDescription" xml:space="preserve"><value>均衡模式已启用。llama.cpp 将请求 '-ngl {0}'，这对较小显卡更安全，也是默认设置。</value></data>
+  <data name="SettingsStockfishDescription" xml:space="preserve"><value>Stockfish 将使用 {0} 个线程、{1} MB hash，批量 PGN 分析将以深度 {2}、MultiPV {3}、每个局面 {4} ms 运行。</value></data>
+  <data name="SettingsSelectStockfishExecutable" xml:space="preserve"><value>选择 stockfish.exe</value></data>
+  <data name="SettingsSelectLlamaServerExecutable" xml:space="preserve"><value>选择 llama-server.exe</value></data>
+  <data name="SettingsSaveFailedTitle" xml:space="preserve"><value>无法保存设置</value></data>
+  <data name="SettingsSaveFailedMessage" xml:space="preserve"><value>MoveMentor 无法保存应用设置。请检查文件权限或磁盘空间，然后重试。</value></data>
+  <data name="NarrationRegularTrainer" xml:space="preserve"><value>普通教练</value></data>
+  <data name="NarrationLevyRozman" xml:space="preserve"><value>Levy Rozman</value></data>
+  <data name="NarrationHikaruNakamura" xml:space="preserve"><value>Hikaru Nakamura</value></data>
+  <data name="NarrationBotezLive" xml:space="preserve"><value>BotezLive</value></data>
+  <data name="NarrationWittyAlien" xml:space="preserve"><value>幽默外星人</value></data>
+  <data name="MainDialogLoadPgnFile" xml:space="preserve"><value>加载 PGN 文件</value></data>
+  <data name="MainDialogCouldNotReadPgnFile" xml:space="preserve"><value>无法读取 PGN 文件。</value></data>
+  <data name="MainDialogNoReplayableGames" xml:space="preserve"><value>所选 PGN 文件中没有可复盘的对局。</value></data>
+  <data name="MainDialogLoadedGamesEngineUnavailable" xml:space="preserve"><value>已加载 {0} 盘棋。分析引擎不可用，因此现在无法开始批量分析。</value></data>
+  <data name="MainDialogAnalyzeImportedGamesTitle" xml:space="preserve"><value>分析导入的对局？</value></data>
+  <data name="MainDialogLoadedGames" xml:space="preserve"><value>已从 PGN 文件加载 {0} 盘棋。</value></data>
+  <data name="MainDialogSkippedGames" xml:space="preserve"><value>跳过了 {0} 盘无法解析或复盘的棋局。</value></data>
+  <data name="MainDialogNoRecurringPlayer" xml:space="preserve"><value>未检测到重复出现的棋手，因此分析将使用当前选择的阵营。</value></data>
+  <data name="MainDialogDetectedPlayer" xml:space="preserve"><value>检测到棋手：{0}。只会分析该棋手的走法，根据每盘棋分别作为白方或黑方。</value></data>
+  <data name="MainDialogAnalyzeNow" xml:space="preserve"><value>现在分析吗？这可能需要较长时间。</value></data>
+  <data name="MainDialogAnalyze" xml:space="preserve"><value>分析</value></data>
+  <data name="MainDialogLater" xml:space="preserve"><value>稍后</value></data>
+  <data name="MainDialogPgnAnalysisFinished" xml:space="preserve"><value>PGN 分析完成</value></data>
+  <data name="MainDialogOk" xml:space="preserve"><value>确定</value></data>
+  <data name="MainPgnFiles" xml:space="preserve"><value>PGN 文件</value></data>
+  <data name="MainBulkAnalyzedPlayer" xml:space="preserve"><value>分析棋手：{0}</value></data>
+  <data name="MainBulkDetectedPlayerNone" xml:space="preserve"><value>检测到的棋手：无</value></data>
+  <data name="MainBulkNewAnalyses" xml:space="preserve"><value>新分析：{0}</value></data>
+  <data name="MainBulkLoadedFromCache" xml:space="preserve"><value>从缓存加载：{0}</value></data>
+  <data name="MainBulkSkipped" xml:space="preserve"><value>已跳过：{0}</value></data>
+  <data name="MainBulkFailed" xml:space="preserve"><value>失败：{0}</value></data>
+  <data name="MainBulkFirstFailures" xml:space="preserve"><value>前几个失败：</value></data>
+  <data name="AdviceExampleShortText" xml:space="preserve"><value>在这里写一个简短的错误总结。</value></data>
+  <data name="AdviceExampleDetailedText" xml:space="preserve"><value>问题：简要说明哪里出了问题。原因：解释核心的战术或局面原因。更好：指出更好的走法以及它为什么有帮助。下次注意：给出一个应更早发现的模式。</value></data>
+  <data name="AdviceExampleTrainingHint" xml:space="preserve"><value>给棋手一条简短、可执行、容易记住的规则。</value></data>
+  <data name="AdviceSimpleView" xml:space="preserve"><value>简单看法</value></data>
+  <data name="AdviceEngineView" xml:space="preserve"><value>引擎视角</value></data>
+  <data name="AdviceTrainingBeginner" xml:space="preserve"><value>下次使用一个简单习惯：{0}</value></data>
+  <data name="AdviceTrainingIntermediate" xml:space="preserve"><value>下次注意这个触发点：{0}</value></data>
+  <data name="AdviceTrainingAdvancedMaterialLoss" xml:space="preserve"><value>训练时检查强制变化，直到最终物质得失完全清楚。</value></data>
+  <data name="AdviceTrainingAdvancedHangingPiece" xml:space="preserve"><value>训练棋盘扫描：每个候选着法前后都数清攻击者和防守者。</value></data>
+  <data name="AdviceTrainingAdvancedMissedTactic" xml:space="preserve"><value>用短战术题训练，强迫自己先列出将军、吃子和威胁。</value></data>
+  <data name="AdviceTrainingAdvancedKingSafety" xml:space="preserve"><value>复盘那些一个兵的移动改变了通向王的斜线或直线的局面。</value></data>
+  <data name="AdviceTrainingAdvancedOpeningPrinciples" xml:space="preserve"><value>复盘前 10 步，并用出子、王的安全和中心影响力解释每一步。</value></data>
+  <data name="AdviceTrainingAdvancedPieceActivity" xml:space="preserve"><value>比较候选着法时看机动性、格子质量和协调性，而不只看表面安全。</value></data>
+  <data name="AdviceTrainingAdvancedEndgameTechnique" xml:space="preserve"><value>训练技术性和防守性残局，重点关注王的活跃度和等着意识。</value></data>
+  <data name="AdviceChangedEvaluation" xml:space="preserve"><value>并明显改变了局面评估</value></data>
+  <data name="AdviceQualityBlunder" xml:space="preserve"><value>大错</value></data>
+  <data name="AdviceQualityGood" xml:space="preserve"><value>走法</value></data>
+  <data name="AdvicePatternMaterialLoss" xml:space="preserve"><value>丢失子力</value></data>
+  <data name="AdvicePatternMissedTactic" xml:space="preserve"><value>错过战术</value></data>
+  <data name="AdvicePatternOpeningPrinciples" xml:space="preserve"><value>开局纪律</value></data>
+  <data name="AdvicePatternKingSafety" xml:space="preserve"><value>王的安全</value></data>
+  <data name="AdvicePatternPieceActivity" xml:space="preserve"><value>子力被动</value></data>
+  <data name="AdvicePatternEndgameTechnique" xml:space="preserve"><value>残局技术</value></data>
+  <data name="AdvicePatternGeneral" xml:space="preserve"><value>一般问题</value></data>
+  <data name="HeuristicHintOpening" xml:space="preserve"><value>开局：在前 10 步中复盘这个模式。</value></data>
+  <data name="HeuristicHintMiddlegame" xml:space="preserve"><value>中局：落子前比较计划和强制回应。</value></data>
+  <data name="HeuristicHintEndgame" xml:space="preserve"><value>残局：活跃度和技术比表面好看的走法更重要。</value></data>
+  <data name="FormatMixedOpenings" xml:space="preserve"><value>混合开局</value></data>
+  <data name="TrendImproving" xml:space="preserve"><value>最近在进步</value></data>
+  <data name="TrendStable" xml:space="preserve"><value>基本稳定</value></data>
+  <data name="TrendRegressing" xml:space="preserve"><value>最近成绩下滑</value></data>
+  <data name="TrendNeedMoreGames" xml:space="preserve"><value>需要更多对局</value></data>
+  <data name="TrainingBlockTactics" xml:space="preserve"><value>战术</value></data>
+  <data name="TrainingBlockOpeningReview" xml:space="preserve"><value>开局复盘</value></data>
+  <data name="TrainingBlockEndgameDrill" xml:space="preserve"><value>残局训练</value></data>
+  <data name="TrainingBlockGameReview" xml:space="preserve"><value>对局复盘</value></data>
+  <data name="TrainingBlockSlowPlayFocus" xml:space="preserve"><value>慢棋专注</value></data>
+  <data name="TrainingPurposeRepair" xml:space="preserve"><value>修复</value></data>
+  <data name="TrainingPurposeMaintain" xml:space="preserve"><value>保持</value></data>
+  <data name="TrainingPurposeChecklist" xml:space="preserve"><value>检查清单</value></data>
+  <data name="CountOneTime" xml:space="preserve"><value>1 次</value></data>
+  <data name="CountFewTimes" xml:space="preserve"><value>{0} 次</value></data>
+  <data name="CountManyTimes" xml:space="preserve"><value>{0} 次</value></data>
+  <data name="CountOneMistake" xml:space="preserve"><value>1 个错误</value></data>
+  <data name="CountFewMistakes" xml:space="preserve"><value>{0} 个错误</value></data>
+  <data name="CountManyMistakes" xml:space="preserve"><value>{0} 个错误</value></data>
+  <data name="MainReady" xml:space="preserve"><value>MoveMentor Chess 已就绪。</value></data>
+  <data name="MainReadyEngineLoaded" xml:space="preserve"><value>MoveMentor Chess 已就绪。外部国际象棋引擎已从 {0} 加载。</value></data>
+  <data name="MainReadyEngineUnavailable" xml:space="preserve"><value>MoveMentor Chess 已就绪，但分析引擎不可用。{0}</value></data>
+  <data name="MainEngineSuggestionsUnavailable" xml:space="preserve"><value>引擎建议：不可用</value></data>
+  <data name="MainTopMovesNone" xml:space="preserve"><value>最佳走法：无</value></data>
+  <data name="MainTopMoves" xml:space="preserve"><value>最佳走法：{0}</value></data>
+  <data name="MainEvaluationUnavailable" xml:space="preserve"><value>评估：不可用</value></data>
+  <data name="MainEvaluationEven" xml:space="preserve"><value>评估：均势</value></data>
+  <data name="MainEvaluationWhiteMates" xml:space="preserve"><value>评估：白方 {0} 步将杀</value></data>
+  <data name="MainEvaluationBlackMates" xml:space="preserve"><value>评估：黑方 {0} 步将杀</value></data>
+  <data name="MainEvaluationWhite" xml:space="preserve"><value>评估：白方 {0}</value></data>
+  <data name="MainEvaluationBlack" xml:space="preserve"><value>评估：黑方 +{0}</value></data>
+  <data name="MainImportedMovesNone" xml:space="preserve"><value>导入走法：无</value></data>
+  <data name="MainImportedMovesSummary" xml:space="preserve"><value>导入走法：已应用 {0}/{1} | {2}{3}{4}{5}</value></data>
+  <data name="MainAnalysisPlaceholder" xml:space="preserve"><value>加载 PGN 并运行分析以查看错误。</value></data>
+  <data name="MainRunAnalysisPlaceholder" xml:space="preserve"><value>运行分析以查看错误。</value></data>
+  <data name="MainNoMistakesMatchSelectedFilter" xml:space="preserve"><value>没有错误符合所选筛选条件。</value></data>
+  <data name="MainResultUnknown" xml:space="preserve"><value>结果：?</value></data>
+  <data name="MainSelectedPieceNone" xml:space="preserve"><value>已选棋子：无</value></data>
+  <data name="MainSelectedPieceHeader" xml:space="preserve"><value>已选棋子：{0}，来自 {1} | 合法走法：{2}</value></data>
+  <data name="MainNoLegalMovesForPiece" xml:space="preserve"><value>该棋子没有合法走法。</value></data>
+  <data name="MainSelectPieceInspectMoves" xml:space="preserve"><value>选择一个棋子以查看所有合法走法。</value></data>
+  <data name="MainPrimarySetupStockfish" xml:space="preserve"><value>配置 Stockfish 以启用分析</value></data>
+  <data name="MainPrimarySetupStockfishDescription" xml:space="preserve"><value>MoveMentor 仍可显示棋盘，但引擎复盘和训练建议需要 Stockfish 可执行文件。</value></data>
+  <data name="MainPrimaryRunAnalysis" xml:space="preserve"><value>运行分析并找到今天的训练重点</value></data>
+  <data name="MainPrimaryRunAnalysisDescription" xml:space="preserve"><value>对局已加载。分析它以标出代价最高的走法，并转化为练习。</value></data>
+  <data name="MainPrimaryLoadPgn" xml:space="preserve"><value>加载 PGN 开始第一次复盘</value></data>
+  <data name="MainPrimaryLoadPgnDescription" xml:space="preserve"><value>粘贴一盘棋或加载 PGN 文件。MoveMentor 会回放、分析失误，并建议下一步练习内容。</value></data>
+  <data name="MainPrimaryPlayerAsSide" xml:space="preserve"><value>{0} 执 {1}</value></data>
+  <data name="MainAnalyzingPgnFileStatus" xml:space="preserve"><value>正在分析 PGN 文件 {0}/{1}：{2}（{3}）...</value></data>
+  <data name="MainAnalysisFailureSummary" xml:space="preserve"><value>{0}{1}，{2}：{3}</value></data>
+  <data name="CommonWhite" xml:space="preserve"><value>白方</value></data>
+  <data name="CommonBlack" xml:space="preserve"><value>黑方</value></data>
+  <data name="CommonUnknown" xml:space="preserve"><value>?</value></data>
+  <data name="CommonPlayersVersus" xml:space="preserve"><value>{0} 对 {1}</value></data>
+  <data name="CommonNotAvailable" xml:space="preserve"><value>不可用</value></data>
+  <data name="CommonUnclassified" xml:space="preserve"><value>未分类</value></data>
+  <data name="CommonFieldSeparator" xml:space="preserve"><value> | </value></data>
+  <data name="QualityBook" xml:space="preserve"><value>定式</value></data>
+  <data name="QualityBrilliant" xml:space="preserve"><value>妙手</value></data>
+  <data name="QualityGreat" xml:space="preserve"><value>好棋</value></data>
+  <data name="QualityBest" xml:space="preserve"><value>最佳</value></data>
+  <data name="QualityExcellent" xml:space="preserve"><value>优秀</value></data>
+  <data name="QualityGood" xml:space="preserve"><value>好</value></data>
+  <data name="QualityInaccuracy" xml:space="preserve"><value>不精确</value></data>
+  <data name="QualityMistake" xml:space="preserve"><value>错误</value></data>
+  <data name="QualityBlunder" xml:space="preserve"><value>大错</value></data>
+  <data name="AnalysisImpactForcedMateAllowed" xml:space="preserve"><value>允许强制将杀</value></data>
+  <data name="AnalysisImpactWinningTacticMissed" xml:space="preserve"><value>错过制胜战术</value></data>
+  <data name="AnalysisImpactMateRouteChanged" xml:space="preserve"><value>将杀路线改变</value></data>
+  <data name="AnalysisImpactEvaluationLoss" xml:space="preserve"><value>评估损失 {0} cp</value></data>
+  <data name="SavedAnalysesTitle" xml:space="preserve"><value>已保存分析</value></data>
+  <data name="SavedAnalysesFilterPlaceholder" xml:space="preserve"><value>按棋手、开局、结果或标签筛选...</value></data>
+  <data name="SavedAnalysesLoadGame" xml:space="preserve"><value>加载对局</value></data>
+  <data name="SavedAnalysesOpenAnalysis" xml:space="preserve"><value>打开分析</value></data>
+  <data name="SavedAnalysesDeleteSelected" xml:space="preserve"><value>删除所选</value></data>
+  <data name="SavedAnalysesPlayers" xml:space="preserve"><value>棋手</value></data>
+  <data name="SavedAnalysesSideHeader" xml:space="preserve"><value>执方</value></data>
+  <data name="SavedAnalysesDateHeader" xml:space="preserve"><value>日期</value></data>
+  <data name="SavedAnalysesOpeningHeader" xml:space="preserve"><value>开局</value></data>
+  <data name="SavedAnalysesMarks" xml:space="preserve"><value>标记</value></data>
+  <data name="SavedAnalysesNoMatches" xml:space="preserve"><value>没有已保存分析符合当前筛选条件。</value></data>
+  <data name="SavedAnalysesSelectPrompt" xml:space="preserve"><value>选择一个已保存分析以查看缓存结果。</value></data>
+  <data name="SavedAnalysesSide" xml:space="preserve"><value>执方：{0}</value></data>
+  <data name="SavedAnalysesDate" xml:space="preserve"><value>日期：{0}</value></data>
+  <data name="SavedAnalysesResult" xml:space="preserve"><value>结果：{0}</value></data>
+  <data name="SavedAnalysesOpening" xml:space="preserve"><value>开局：{0}</value></data>
+  <data name="SavedAnalysesMoveLabels" xml:space="preserve"><value>走法标签：{0}</value></data>
+  <data name="SavedAnalysesHighlights" xml:space="preserve"><value>重点：共 {0} 个</value></data>
+  <data name="SavedAnalysesBreakdown" xml:space="preserve"><value>分类：{0} 个大错，{1} 个失误，{2} 个不精确</value></data>
+  <data name="SavedAnalysesTopLabels" xml:space="preserve"><value>主要标签：</value></data>
+  <data name="SavedAnalysesTopHighlightedMistakes" xml:space="preserve"><value>主要重点失误：</value></data>
+  <data name="SavedAnalysesCpl" xml:space="preserve"><value>CPL {0}</value></data>
+  <data name="SavedAnalysesOpenInstructions" xml:space="preserve"><value>使用“打开分析”以缓存数据重新打开完整分析器，或使用“加载对局”将 PGN 带回主棋盘。</value></data>
+  <data name="SavedAnalysesLoadInstructions" xml:space="preserve"><value>使用“加载对局”将 PGN 带回主棋盘。由于分析引擎未加载，无法打开分析。</value></data>
+  <data name="OpeningTrainerTitle" xml:space="preserve"><value>开局训练器</value></data>
+  <data name="OpeningTrainerTrainingProgress" xml:space="preserve"><value>训练进度</value></data>
+  <data name="OpeningTrainerTodaysRecommendation" xml:space="preserve"><value>今日推荐</value></data>
+  <data name="OpeningTrainerRecommended" xml:space="preserve"><value>推荐</value></data>
+  <data name="OpeningTrainerSkipBriefing" xml:space="preserve"><value>跳过说明并立即练习</value></data>
+  <data name="OpeningTrainerWhyThisMatters" xml:space="preserve"><value>为什么重要</value></data>
+  <data name="OpeningTrainerWhatYouWillPractice" xml:space="preserve"><value>你将练习什么</value></data>
+  <data name="OpeningTrainerTrainingIntensity" xml:space="preserve"><value>训练强度</value></data>
+  <data name="OpeningTrainerDueNow" xml:space="preserve"><value>现在到期</value></data>
+  <data name="OpeningTrainerThisWeeksPractice" xml:space="preserve"><value>本周练习</value></data>
+  <data name="OpeningTrainerLaterOptionalRepairs" xml:space="preserve"><value>稍后 / 可选修复</value></data>
+  <data name="OpeningTrainerCurrentCoverage" xml:space="preserve"><value>当前覆盖度</value></data>
+  <data name="OpeningTrainerOpeningMap" xml:space="preserve"><value>开局地图</value></data>
+  <data name="OpeningTrainerOpponentReplies" xml:space="preserve"><value>对手应法</value></data>
+  <data name="OpeningTrainerMostCommonReplies" xml:space="preserve"><value>最常见应法</value></data>
+  <data name="OpeningTrainerAdvancedOptions" xml:space="preserve"><value>高级选项</value></data>
+  <data name="OpeningTrainerOpeningCatalog" xml:space="preserve"><value>开局目录</value></data>
+  <data name="OpeningTrainerOpeningCatalogHelp" xml:space="preserve"><value>当你想训练今日课程之外的内容时，选择具体线路。</value></data>
+  <data name="OpeningTrainerFilterOpenings" xml:space="preserve"><value>筛选开局或 ECO</value></data>
+  <data name="OpeningTrainerOverrideHistoryKey" xml:space="preserve"><value>覆盖历史键（可选）</value></data>
+  <data name="OpeningTrainerActiveHistoryKey" xml:space="preserve"><value>当前历史键：{0}</value></data>
+  <data name="OpeningTrainerRefresh" xml:space="preserve"><value>刷新</value></data>
+  <data name="OpeningTrainerSeePlan" xml:space="preserve"><value>查看计划</value></data>
+  <data name="OpeningTrainerSpecialModes" xml:space="preserve"><value>特殊模式</value></data>
+  <data name="OpeningTrainerUnderstandIdea" xml:space="preserve"><value>理解思路</value></data>
+  <data name="OpeningTrainerStartPracticeFromMemory" xml:space="preserve"><value>从记忆开始练习</value></data>
+  <data name="OpeningTrainerBack" xml:space="preserve"><value>返回</value></data>
+  <data name="OpeningTrainerClearMoves" xml:space="preserve"><value>清晰走法</value></data>
+  <data name="OpeningTrainerStillUseful" xml:space="preserve"><value>仍然有用</value></data>
+  <data name="OpeningTrainerRepeatTargets" xml:space="preserve"><value>复习目标</value></data>
+  <data name="OpeningTrainerSubmitAnswer" xml:space="preserve"><value>提交答案</value></data>
+  <data name="OpeningTrainerHint" xml:space="preserve"><value>提示</value></data>
+  <data name="OpeningTrainerTryFromMemoryFirst" xml:space="preserve"><value>先凭记忆尝试</value></data>
+  <data name="OpeningTrainerLineReference" xml:space="preserve"><value>线路参考</value></data>
+  <data name="OpeningTrainerWhatThisPositionTrains" xml:space="preserve"><value>此局面训练什么</value></data>
+  <data name="OpeningTrainerAttemptHistory" xml:space="preserve"><value>尝试历史</value></data>
+  <data name="OpeningTrainerPreviousPosition" xml:space="preserve"><value>上一局面</value></data>
+  <data name="OpeningTrainerRestartStudy" xml:space="preserve"><value>重新开始学习</value></data>
+  <data name="OpeningTrainerReviewAndContinue" xml:space="preserve"><value>复盘并继续</value></data>
+  <data name="OpeningTrainerCompleted" xml:space="preserve"><value>已完成</value></data>
+  <data name="OpeningTrainerClear" xml:space="preserve"><value>清晰</value></data>
+  <data name="OpeningTrainerUsefulAlternatives" xml:space="preserve"><value>有用替代</value></data>
+  <data name="OpeningTrainerHintsUsed" xml:space="preserve"><value>已用提示</value></data>
+  <data name="OpeningTrainerToRevisit" xml:space="preserve"><value>需回顾</value></data>
+  <data name="OpeningTrainerMainRepairPoint" xml:space="preserve"><value>主要修复点</value></data>
+  <data name="OpeningTrainerReviewFocus" xml:space="preserve"><value>复盘重点</value></data>
+  <data name="OpeningTrainerBackToOverview" xml:space="preserve"><value>返回概览</value></data>
+  <data name="OpeningTrainerChooseNextPlan" xml:space="preserve"><value>选择下一个训练计划</value></data>
+  <data name="OpeningTrainerRecommendedNext" xml:space="preserve"><value>推荐下一步</value></data>
+  <data name="OpeningTrainerOtherUsefulChoices" xml:space="preserve"><value>其他有用选择</value></data>
+  <data name="OpeningTrainerSessionRecap" xml:space="preserve"><value>本次总结</value></data>
+  <data name="OpeningTrainerAdvancedDetails" xml:space="preserve"><value>高级详情</value></data>
+  <data name="OpeningTrainerDiagnosticReviewPositions" xml:space="preserve"><value>诊断复盘局面</value></data>
+  <data name="OpeningTrainerPositionId" xml:space="preserve"><value>局面 ID</value></data>
+  <data name="OpeningTrainerAttempt" xml:space="preserve"><value>尝试</value></data>
+  <data name="OpeningTrainerReason" xml:space="preserve"><value>原因</value></data>
+  <data name="OpeningTrainerMoveLog" xml:space="preserve"><value>走法日志</value></data>
+  <data name="OpeningTrainerSavedProgress" xml:space="preserve"><value>已保存进度</value></data>
+  <data name="OpeningTrainerWhyLineWorks" xml:space="preserve"><value>为什么这条线有效</value></data>
+  <data name="OpeningTrainerRememberThis" xml:space="preserve"><value>记住这一点</value></data>
+  <data name="OpeningTrainerPlanBeforeMoves" xml:space="preserve"><value>走子前先计划</value></data>
+  <data name="OpeningTrainerLineToRemember" xml:space="preserve"><value>要记住的线路</value></data>
+  <data name="OpeningTrainerMoveNotesHelp" xml:space="preserve"><value>复盘线路时，走法备注只会以短标签显示。</value></data>
+  <data name="OpeningTrainerTodaysFocus" xml:space="preserve"><value>今日重点</value></data>
+  <data name="OpeningTrainerPracticeFromMemory" xml:space="preserve"><value>记忆练习</value></data>
+  <data name="OpeningTrainerYourMove" xml:space="preserve"><value>你的走法</value></data>
+  <data name="OpeningTrainerChooseOpeningPreview" xml:space="preserve"><value>选择一个开局以预览计划。</value></data>
+  <data name="OpeningTrainerCommonRepliesPlaceholder" xml:space="preserve"><value>常见应法会显示在这里。</value></data>
+  <data name="OpeningTrainerNoPracticeHistory" xml:space="preserve"><value>暂无练习历史。</value></data>
+  <data name="OpeningTrainerPickOpeningCoverage" xml:space="preserve"><value>选择一个开局，查看哪些已准备好，哪些需要再练一次。</value></data>
+  <data name="OpeningTrainerPracticeIdle" xml:space="preserve"><value>练习处于空闲状态。</value></data>
+  <data name="OpeningTrainerHintsPlaceholder" xml:space="preserve"><value>当你请求提示时，提示会显示在这里。</value></data>
+  <data name="OpeningTrainerNoHintUsed" xml:space="preserve"><value>未使用提示</value></data>
+  <data name="OpeningTrainerWhyPlaceholder" xml:space="preserve"><value>选择一步棋，查看它为什么重要。</value></data>
+  <data name="OpeningTrainerNoOpeningsMatch" xml:space="preserve"><value>没有开局符合当前筛选条件。</value></data>
+  <data name="OpeningTrainerOpponentRepliesUnavailable" xml:space="preserve"><value>对手应法不可用。</value></data>
+  <data name="OpeningTrainerTryAnotherFilterOrSide" xml:space="preserve"><value>请尝试其他筛选条件或另一侧开局库。</value></data>
+  <data name="OpeningTrainerCouldNotLoadOverview" xml:space="preserve"><value>无法加载开局概览。</value></data>
+  <data name="OpeningTrainerOpeningNeedsMoreTheory" xml:space="preserve"><value>所选开局还没有足够的本地理论数据。</value></data>
+  <data name="PgnImportTitle" xml:space="preserve"><value>PGN 导入</value></data>
+  <data name="PgnImportHeading" xml:space="preserve"><value>导入 PGN</value></data>
+  <data name="PgnImportIntro" xml:space="preserve"><value>粘贴完整 PGN 文件。导入后，对局会立即显示在棋盘上并保存到本地。</value></data>
+  <data name="PgnImportImport" xml:space="preserve"><value>导入</value></data>
+  <data name="SavedGamesTitle" xml:space="preserve"><value>已保存对局</value></data>
+  <data name="SavedGamesFilterPlaceholder" xml:space="preserve"><value>筛选棋手/日期...</value></data>
+  <data name="SavedGamesLoadSelected" xml:space="preserve"><value>加载所选</value></data>
+  <data name="SavedGamesPlayer" xml:space="preserve"><value>棋手</value></data>
+  <data name="SavedGamesLoadHint" xml:space="preserve"><value>双击或使用“加载所选”</value></data>
+  <data name="SavedGamesFilterPlayer" xml:space="preserve"><value>筛选棋手</value></data>
+  <data name="SavedGamesFilterDate" xml:space="preserve"><value>筛选日期</value></data>
+  <data name="PromotionTitle" xml:space="preserve"><value>选择升变</value></data>
+  <data name="PromotionChoosePiece" xml:space="preserve"><value>选择升变棋子</value></data>
+  <data name="PromotionIntro" xml:space="preserve"><value>所选走法到达底线。请选择要升变成的棋子。</value></data>
+  <data name="OpeningCoverageTitle" xml:space="preserve"><value>开局覆盖度</value></data>
+  <data name="OpeningCoverageFilterPlaceholder" xml:space="preserve"><value>筛选 ECO 或开局...</value></data>
+  <data name="OpeningCoverageLines" xml:space="preserve"><value>线路</value></data>
+  <data name="OpeningCoverageDueToday" xml:space="preserve"><value>今日到期</value></data>
+  <data name="OpeningCoverageWeakBranches" xml:space="preserve"><value>薄弱分支</value></data>
+  <data name="OpeningCoverageAverageCoverage" xml:space="preserve"><value>平均覆盖度</value></data>
+  <data name="OpeningCoverageMissingEco" xml:space="preserve"><value>缺少 ECO</value></data>
+  <data name="OpeningCoverageSelectedLine" xml:space="preserve"><value>所选线路</value></data>
+  <data name="OpeningCoverageCoverage" xml:space="preserve"><value>覆盖度</value></data>
+  <data name="OpeningCoverageRepertoireMap" xml:space="preserve"><value>开局库地图</value></data>
+  <data name="OpeningCoveragePracticeSelectedLine" xml:space="preserve"><value>练习所选线路</value></data>
+  <data name="ProfilesTitle" xml:space="preserve"><value>棋手教练</value></data>
+  <data name="ProfilesSearchPlaceholder" xml:space="preserve"><value>搜索已分析棋手...</value></data>
+  <data name="ProfilesHidePlayers" xml:space="preserve"><value>隐藏棋手</value></data>
+  <data name="ProfilesCoach" xml:space="preserve"><value>教练</value></data>
+  <data name="ProfilesEvidence" xml:space="preserve"><value>证据</value></data>
+  <data name="ProfilesBackToBoard" xml:space="preserve"><value>返回棋盘</value></data>
+  <data name="ProfilesAnalyzedPlayers" xml:space="preserve"><value>已分析棋手</value></data>
+  <data name="OpeningTrainerProfileWhiteName" xml:space="preserve"><value>执白</value></data>
+  <data name="OpeningTrainerProfileWhiteDescription" xml:space="preserve"><value>从你的白方开局库构建今天的训练。</value></data>
+  <data name="OpeningTrainerProfileBlackName" xml:space="preserve"><value>执黑</value></data>
+  <data name="OpeningTrainerProfileBlackDescription" xml:space="preserve"><value>从你的黑方开局库构建今天的训练。</value></data>
+  <data name="OpeningTrainerProfileBothName" xml:space="preserve"><value>双方</value></data>
+  <data name="OpeningTrainerProfileBothDescription" xml:space="preserve"><value>选择今天训练时使用完整开局库。</value></data>
+  <data name="OpeningTrainerIntensitySafeName" xml:space="preserve"><value>安全复习</value></data>
+  <data name="OpeningTrainerIntensitySafeDescription" xml:space="preserve"><value>只复习到期的已知局面。</value></data>
+  <data name="OpeningTrainerIntensityBalancedName" xml:space="preserve"><value>均衡</value></data>
+  <data name="OpeningTrainerIntensityBalancedDescription" xml:space="preserve"><value>到期局面加薄弱分支。</value></data>
+  <data name="OpeningTrainerIntensityChallengeName" xml:space="preserve"><value>挑战</value></data>
+  <data name="OpeningTrainerIntensityChallengeDescription" xml:space="preserve"><value>加入较不熟悉的对手应法。</value></data>
+  <data name="OpeningTrainerSelectedProfilePlaceholder" xml:space="preserve"><value>选择今天的训练如何从你的开局库取材。</value></data>
+  <data name="OpeningTrainerNoRecommendation" xml:space="preserve"><value>没有可用推荐</value></data>
+  <data name="OpeningTrainerImportTheoryForRecommendations" xml:space="preserve"><value>导入开局理论以启用推荐。</value></data>
+  <data name="OpeningTrainerRecommendationMeta" xml:space="preserve"><value>{0} | {1} | 约 {2} 分钟</value></data>
+  <data name="OpeningTrainerNeedsOpeningLine" xml:space="preserve"><value>训练器至少需要一条可用的开局线路。</value></data>
+  <data name="OpeningTrainerStartPractice" xml:space="preserve"><value>开始练习</value></data>
+  <data name="OpeningTrainerChooseOpeningFirst" xml:space="preserve"><value>请先选择开局</value></data>
+  <data name="OpeningTrainerNoActiveTheory" xml:space="preserve"><value>没有活动理论</value></data>
+  <data name="OpeningTrainerWhiteRepertoire" xml:space="preserve"><value>白方开局库</value></data>
+  <data name="OpeningTrainerBlackRepertoire" xml:space="preserve"><value>黑方开局库</value></data>
+  <data name="OpeningTrainerBothSides" xml:space="preserve"><value>双方</value></data>
+  <data name="OpeningTrainerDurationAfterImport" xml:space="preserve"><value>导入后显示时长</value></data>
+  <data name="OpeningTrainerAboutMinutes" xml:space="preserve"><value>约 {0} 分钟</value></data>
+  <data name="OpeningTrainerNoPositionsToTrain" xml:space="preserve"><value>没有可训练局面</value></data>
+  <data name="OpeningTrainerPositionsBranches" xml:space="preserve"><value>{0} 个局面 / 分支</value></data>
+  <data name="OpeningTrainerTheoryGames" xml:space="preserve"><value>{0} 盘理论棋局</value></data>
+  <data name="OpeningTrainerImportOrChooseOpening" xml:space="preserve"><value>导入或选择一个开局来开始今天的训练。</value></data>
+  <data name="OpeningTrainerRecommendedTodayUnavailable" xml:space="preserve"><value>今日推荐：开始前请导入或选择一个开局。</value></data>
+  <data name="OpeningTrainerTodayDecisionSummary" xml:space="preserve"><value>今天：从 {1} 步线路中复习 {0} 个局面，约 {2}，{3}开局库。</value></data>
+  <data name="OpeningTrainerStartSequenceSafe" xml:space="preserve"><value>从到期的已知局面开始。薄弱分支修复保持可选。</value></data>
+  <data name="OpeningTrainerStartSequenceChallenge" xml:space="preserve"><value>从到期局面开始，然后加入较不熟悉的对手应法。</value></data>
+  <data name="OpeningTrainerStartSequenceBalanced" xml:space="preserve"><value>从到期局面开始，然后修复薄弱分支。</value></data>
+  <data name="OpeningTrainerTheoryReasonPlaceholder" xml:space="preserve"><value>理论可用后，训练器会解释为什么这条线路是当前最稳妥的时间投入。</value></data>
+  <data name="OpeningTrainerReviewDueScheduled" xml:space="preserve"><value>这次复习已到期，因为一些计划项目超过了复习窗口。</value></data>
+  <data name="OpeningTrainerModeContextSafe" xml:space="preserve"><value>安全复习会把薄弱分支修复保持为可选。</value></data>
+  <data name="OpeningTrainerModeContextChallenge" xml:space="preserve"><value>挑战模式会在主线后加入较不熟悉的对手应法。</value></data>
+  <data name="OpeningTrainerModeContextBalanced" xml:space="preserve"><value>均衡模式会在主线后修复薄弱分支。</value></data>
+  <data name="OpeningTrainerGoalRepairWeakBranches" xml:space="preserve"><value>目标：确认主要布局并修复 {0} 个薄弱分支。</value></data>
+  <data name="OpeningTrainerGoalStableRecall" xml:space="preserve"><value>目标：确认主要布局并保持稳定记忆。</value></data>
+  <data name="OpeningTrainerRecommendedBecause" xml:space="preserve"><value>推荐原因...</value></data>
+  <data name="OpeningTrainerReadyWhenYouAre" xml:space="preserve"><value>准备好即可开始</value></data>
+  <data name="OpeningTrainerStartGuidedTraining" xml:space="preserve"><value>开始引导训练</value></data>
+  <data name="OpeningTrainerImportOpeningsFirst" xml:space="preserve"><value>请先导入开局</value></data>
+  <data name="OpeningTrainerSelectedIntensityPlaceholder" xml:space="preserve"><value>选择今天训练的谨慎程度。</value></data>
+  <data name="OpeningTrainerTrainingRhythmTitle" xml:space="preserve"><value>你的训练节奏</value></data>
+  <data name="OpeningTrainerTrainingRhythmPlaceholder" xml:space="preserve"><value>加载本地理论后会显示你的训练节奏。</value></data>
+  <data name="OpeningTrainerStartSessionForProgress" xml:space="preserve"><value>开始一次训练以建立开局库进度。</value></data>
+  <data name="OpeningTrainerProgressMovesAccepted" xml:space="preserve"><value>已练习 {0} 步，接受率 {1:0.#}%。</value></data>
+  <data name="OpeningTrainerOneTry" xml:space="preserve"><value>1 次尝试</value></data>
+  <data name="OpeningTrainerManyTries" xml:space="preserve"><value>{0} 次尝试</value></data>
+  <data name="OpeningTrainerOnTrack" xml:space="preserve"><value>进展正常</value></data>
+  <data name="OpeningTrainerStatusWithPractice" xml:space="preserve"><value>{0} - {1} - {2}</value></data>
+  <data name="OpeningTrainerStageSelectionTitle" xml:space="preserve"><value>选择今天的训练</value></data>
+  <data name="OpeningTrainerStageOverviewTitle" xml:space="preserve"><value>理解思路</value></data>
+  <data name="OpeningTrainerStageStudyTitle" xml:space="preserve"><value>凭记忆练习</value></data>
+  <data name="OpeningTrainerStageResultsTitle" xml:space="preserve"><value>复盘并继续</value></data>
+  <data name="OpeningTrainerStageSelectionDescription" xml:space="preserve"><value>从今天的推荐开始；只有想练特定线路时再使用高级选项。</value></data>
+  <data name="OpeningTrainerStageOverviewDescription" xml:space="preserve"><value>在凭记忆练习前，先查看思路、常见应法和重点。</value></data>
+  <data name="OpeningTrainerStageStudyDescription" xml:space="preserve"><value>先回忆走法，只有需要提醒时再使用提示。</value></data>
+  <data name="OpeningTrainerStageResultsDescription" xml:space="preserve"><value>查看哪些稳定、哪些需要复习，以及下一步最佳行动。</value></data>
+  <data name="OpeningTrainerStageProgress" xml:space="preserve"><value>阶段 {0}/{1} - {2}</value></data>
+  <data name="OpeningTrainerNoOpeningSelected" xml:space="preserve"><value>未选择开局</value></data>
+  <data name="OpeningTrainerChooseItemFromList" xml:space="preserve"><value>从列表中选择一项</value></data>
+  <data name="OpeningTrainerSideRepertoire" xml:space="preserve"><value>{0}开局库</value></data>
+</root>

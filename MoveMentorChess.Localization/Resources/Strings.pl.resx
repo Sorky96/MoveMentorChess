@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader><resheader name="version"><value>2.0</value></resheader><resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader><resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="SettingsTitle" xml:space="preserve"><value>Ustawienia</value></data>
+  <data name="SettingsClose" xml:space="preserve"><value>Zamknij</value></data>
+  <data name="SettingsIntro" xml:space="preserve"><value>Wybierz, jak MoveMentor używa języka, lokalnego modelu i Stockfisha na tym komputerze.</value></data>
+  <data name="SettingsSetupChecklistTitle" xml:space="preserve"><value>Lista konfiguracji</value></data>
+  <data name="SettingsSetupChecklistBody" xml:space="preserve"><value>1. Wybierz język. 2. Wybierz lub wykryj Stockfisha. 3. Zaimportuj PGN. 4. Uruchom analizę. 5. Wykonaj rekomendację treningową.</value></data>
+  <data name="SettingsLanguage" xml:space="preserve"><value>Język</value></data>
+  <data name="SettingsModel" xml:space="preserve"><value>Model</value></data>
+  <data name="SettingsUseFullGpu" xml:space="preserve"><value>Użyj pełnej mocy GPU dla lokalnego modelu</value></data>
+  <data name="SettingsLlamaPath" xml:space="preserve"><value>Ścieżka llama-server.exe (opcjonalnie)</value></data>
+  <data name="SettingsLlamaPlaceholder" xml:space="preserve"><value>Automatycznie wykryj llama-server.exe</value></data>
+  <data name="SettingsBrowse" xml:space="preserve"><value>Przeglądaj</value></data>
+  <data name="SettingsExplanationLevel" xml:space="preserve"><value>Poziom wyjaśnień</value></data>
+  <data name="SettingsNarrationStyle" xml:space="preserve"><value>Styl narracji</value></data>
+  <data name="SettingsStockfish" xml:space="preserve"><value>Stockfish</value></data>
+  <data name="SettingsStockfishPath" xml:space="preserve"><value>Ścieżka stockfish.exe</value></data>
+  <data name="SettingsStockfishPlaceholder" xml:space="preserve"><value>Automatycznie wykryj stockfish.exe</value></data>
+  <data name="SettingsEngineThreads" xml:space="preserve"><value>Wątki silnika</value></data>
+  <data name="SettingsHashMemory" xml:space="preserve"><value>Pamięć hash (MB)</value></data>
+  <data name="SettingsBulkDepth" xml:space="preserve"><value>Głębokość analizy PGN</value></data>
+  <data name="SettingsBulkMultiPv" xml:space="preserve"><value>MultiPV analizy PGN</value></data>
+  <data name="SettingsBulkMoveTime" xml:space="preserve"><value>Czas na ruch w analizie PGN (ms)</value></data>
+  <data name="SettingsFooter" xml:space="preserve"><value>Zapisz po wykryciu Stockfisha albo wybraniu własnej ścieżki.</value></data>
+  <data name="SettingsCancel" xml:space="preserve"><value>Anuluj</value></data>
+  <data name="SettingsSave" xml:space="preserve"><value>Zapisz</value></data>
+  <data name="SettingsFullGpuDescription" xml:space="preserve"><value>Tryb pełnego GPU jest włączony. llama.cpp użyje '-ngl {0}', czyli przeniesie możliwie wiele warstw modelu na GPU.</value></data>
+  <data name="SettingsBalancedGpuDescription" xml:space="preserve"><value>Tryb zbalansowany jest włączony. llama.cpp użyje '-ngl {0}', co jest bezpieczniejsze dla mniejszych kart i pozostaje domyślne.</value></data>
+  <data name="SettingsStockfishDescription" xml:space="preserve"><value>Stockfish użyje {0} wątków, {1} MB hash, a analiza PGN uruchomi się z głębokością {2}, MultiPV {3}, {4} ms na pozycję.</value></data>
+  <data name="SettingsSelectStockfishExecutable" xml:space="preserve"><value>Wybierz stockfish.exe</value></data>
+  <data name="SettingsSelectLlamaServerExecutable" xml:space="preserve"><value>Wybierz llama-server.exe</value></data>
+  <data name="SettingsSaveFailedTitle" xml:space="preserve"><value>Nie udało się zapisać ustawień</value></data>
+  <data name="SettingsSaveFailedMessage" xml:space="preserve"><value>MoveMentor nie mógł zapisać ustawień aplikacji. Sprawdź uprawnienia plików albo miejsce na dysku i spróbuj ponownie.</value></data>
+  <data name="ExplanationBeginner" xml:space="preserve"><value>Początkujący</value></data>
+  <data name="ExplanationIntermediate" xml:space="preserve"><value>Średni</value></data>
+  <data name="ExplanationAdvanced" xml:space="preserve"><value>Zaawansowany</value></data>
+  <data name="NarrationRegularTrainer" xml:space="preserve"><value>Zwykły trener</value></data>
+  <data name="NarrationLevyRozman" xml:space="preserve"><value>Levy Rozman</value></data>
+  <data name="NarrationHikaruNakamura" xml:space="preserve"><value>Hikaru Nakamura</value></data>
+  <data name="NarrationBotezLive" xml:space="preserve"><value>BotezLive</value></data>
+  <data name="NarrationWittyAlien" xml:space="preserve"><value>Dowcipny kosmita</value></data>
+  <data name="MainRotateBoard" xml:space="preserve"><value>OBRÓĆ SZACHOWNICĘ</value></data>
+  <data name="MainUndo" xml:space="preserve"><value>COFNIJ</value></data>
+  <data name="MainConfigureEngine" xml:space="preserve"><value>Skonfiguruj silnik</value></data>
+  <data name="MainPastePgn" xml:space="preserve"><value>WKLEJ PGN</value></data>
+  <data name="MainAnalyzeGame" xml:space="preserve"><value>Analizuj partię</value></data>
+  <data name="MainLoadPgnFile" xml:space="preserve"><value>WCZYTAJ PLIK PGN</value></data>
+  <data name="MainApplyNext" xml:space="preserve"><value>ZASTOSUJ NASTĘPNY</value></data>
+  <data name="MainApplySelected" xml:space="preserve"><value>ZASTOSUJ WYBRANY</value></data>
+  <data name="MainAnalyzeImported" xml:space="preserve"><value>ANALIZUJ IMPORT</value></data>
+  <data name="MainPlayerCoach" xml:space="preserve"><value>TRENER GRACZA</value></data>
+  <data name="MainSavedAnalyses" xml:space="preserve"><value>ZAPISANE ANALIZY</value></data>
+  <data name="MainLoadSaved" xml:space="preserve"><value>WCZYTAJ ZAPIS</value></data>
+  <data name="MainOpeningTrainer" xml:space="preserve"><value>TRENER DEBIUTÓW</value></data>
+  <data name="MainSettings" xml:space="preserve"><value>USTAWIENIA</value></data>
+  <data name="MainOpeningCoverage" xml:space="preserve"><value>POKRYCIE DEBIUTÓW</value></data>
+  <data name="MainCloseApp" xml:space="preserve"><value>ZAMKNIJ APLIKACJĘ</value></data>
+  <data name="MainDialogLoadPgnFile" xml:space="preserve"><value>Wczytaj plik PGN</value></data>
+  <data name="MainDialogCouldNotReadPgnFile" xml:space="preserve"><value>Nie udało się odczytać pliku PGN.</value></data>
+  <data name="MainDialogNoReplayableGames" xml:space="preserve"><value>W wybranym pliku PGN nie znaleziono partii możliwych do odtworzenia.</value></data>
+  <data name="MainDialogLoadedGamesEngineUnavailable" xml:space="preserve"><value>Wczytano {0} partii. Silnik analizy jest niedostępny, więc analiza zbiorcza nie może teraz wystartować.</value></data>
+  <data name="MainDialogAnalyzeImportedGamesTitle" xml:space="preserve"><value>Analizować zaimportowane partie?</value></data>
+  <data name="MainDialogLoadedGames" xml:space="preserve"><value>Wczytano {0} partii z pliku PGN.</value></data>
+  <data name="MainDialogSkippedGames" xml:space="preserve"><value>Pominięto {0} partii, których nie udało się sparsować lub odtworzyć.</value></data>
+  <data name="MainDialogNoRecurringPlayer" xml:space="preserve"><value>Nie wykryto powtarzającego się gracza, więc analiza użyje aktualnie wybranej strony.</value></data>
+  <data name="MainDialogDetectedPlayer" xml:space="preserve"><value>Wykryty gracz: {0}. Analizowane będą tylko jego ruchy, jako białych albo czarnych zależnie od partii.</value></data>
+  <data name="MainDialogAnalyzeNow" xml:space="preserve"><value>Analizować teraz? To może długo potrwać.</value></data>
+  <data name="MainDialogAnalyze" xml:space="preserve"><value>Analizuj</value></data>
+  <data name="MainDialogLater" xml:space="preserve"><value>Później</value></data>
+  <data name="MainDialogPgnAnalysisFinished" xml:space="preserve"><value>Analiza PGN zakończona</value></data>
+  <data name="MainDialogOk" xml:space="preserve"><value>OK</value></data>
+  <data name="MainPgnFiles" xml:space="preserve"><value>Pliki PGN</value></data>
+  <data name="MainBulkAnalyzedPlayer" xml:space="preserve"><value>Analizowany gracz: {0}</value></data>
+  <data name="MainBulkDetectedPlayerNone" xml:space="preserve"><value>Wykryty gracz: brak</value></data>
+  <data name="MainBulkNewAnalyses" xml:space="preserve"><value>Nowe analizy: {0}</value></data>
+  <data name="MainBulkLoadedFromCache" xml:space="preserve"><value>Wczytane z pamięci podręcznej: {0}</value></data>
+  <data name="MainBulkSkipped" xml:space="preserve"><value>Pominięte: {0}</value></data>
+  <data name="MainBulkFailed" xml:space="preserve"><value>Nieudane: {0}</value></data>
+  <data name="MainBulkFirstFailures" xml:space="preserve"><value>Pierwsze błędy:</value></data>
+  <data name="AdviceLanguageInstruction" xml:space="preserve"><value>Napisz short_text, detailed_text i training_hint po polsku. Zachowaj klucze JSON i notację szachową bez zmian.</value></data>
+  <data name="AdviceDetailedPartsInstruction" xml:space="preserve"><value>W detailed_text użyj dokładnie czterech krótkich części w tej kolejności: {0}:, {1}:, {2}:, {3}:.</value></data>
+  <data name="AdviceExampleShortText" xml:space="preserve"><value>Napisz krótkie podsumowanie błędu.</value></data>
+  <data name="AdviceExampleDetailedText" xml:space="preserve"><value>Co: Krótko powiedz, co poszło źle. Dlaczego: Wyjaśnij główny powód taktyczny lub pozycyjny. Lepiej: Podaj lepszy ruch i czemu pomagał. Następnym razem: Daj jeden wzorzec do wcześniejszego zauważenia.</value></data>
+  <data name="AdviceExampleTrainingHint" xml:space="preserve"><value>Podaj krótką, praktyczną zasadę do zapamiętania.</value></data>
+  <data name="AdviceWhat" xml:space="preserve"><value>Co</value></data>
+  <data name="AdviceWhy" xml:space="preserve"><value>Dlaczego</value></data>
+  <data name="AdviceBetter" xml:space="preserve"><value>Lepiej</value></data>
+  <data name="AdviceWatchNextTime" xml:space="preserve"><value>Następnym razem</value></data>
+  <data name="AdviceSimpleView" xml:space="preserve"><value>Prosto</value></data>
+  <data name="AdvicePracticalView" xml:space="preserve"><value>Praktycznie</value></data>
+  <data name="AdviceEngineView" xml:space="preserve"><value>Według silnika</value></data>
+  <data name="AdviceWasQualityLoss" xml:space="preserve"><value>{0}: {1} to był ruch typu {2}, {3}.</value></data>
+  <data name="AdviceStrongerOption" xml:space="preserve"><value>Silniejszą opcją było {0}.</value></data>
+  <data name="AdvicePattern" xml:space="preserve"><value>Pasuje do wzorca: {0}.</value></data>
+  <data name="AdviceTrainingBeginner" xml:space="preserve"><value>Następnym razem użyj prostego nawyku: {0}</value></data>
+  <data name="AdviceTrainingIntermediate" xml:space="preserve"><value>Następnym razem zwróć uwagę na ten sygnał: {0}</value></data>
+  <data name="AdviceTrainingAdvancedMaterialLoss" xml:space="preserve"><value>Ćwicz to, sprawdzając wymuszone kontynuacje aż do całkowicie jasnego bilansu materiału.</value></data>
+  <data name="AdviceTrainingAdvancedHangingPiece" xml:space="preserve"><value>Ćwicz skanowanie szachownicy przez liczenie atakujących i broniących przed oraz po każdym kandydacie.</value></data>
+  <data name="AdviceTrainingAdvancedMissedTactic" xml:space="preserve"><value>Ćwicz krótkie zadania taktyczne, które wymuszają najpierw listę szachów, bić i gróźb.</value></data>
+  <data name="AdviceTrainingAdvancedKingSafety" xml:space="preserve"><value>Przeglądaj pozycje, w których jeden ruch pionem zmienił dostęp do króla po przekątnej albo linii.</value></data>
+  <data name="AdviceTrainingAdvancedOpeningPrinciples" xml:space="preserve"><value>Przejrzyj pierwsze 10 ruchów i uzasadnij każdy rozwojem, bezpieczeństwem króla oraz wpływem na centrum.</value></data>
+  <data name="AdviceTrainingAdvancedPieceActivity" xml:space="preserve"><value>Porównuj kandydaty przez zysk mobilności, jakość pól i koordynację, nie tylko powierzchowne bezpieczeństwo.</value></data>
+  <data name="AdviceTrainingAdvancedEndgameTechnique" xml:space="preserve"><value>Ćwicz końcówki techniczne i obronne z naciskiem na aktywność króla oraz świadomość zugzwangu.</value></data>
+  <data name="AdviceHintMaterialLoss" xml:space="preserve"><value>Przed decyzją porównaj bilans materiału po wymuszonej odpowiedzi.</value></data>
+  <data name="AdviceHintHangingPiece" xml:space="preserve"><value>Po każdym ruchu sprawdź, czy przesunięta figura jest broniona co najmniej tyle razy, ile jest atakowana.</value></data>
+  <data name="AdviceHintKingSafety" xml:space="preserve"><value>Gdy król jest po roszadzie, traktuj ruchy pionami przed nim jako ustępstwo wymagające konkretnego uzasadnienia.</value></data>
+  <data name="AdviceHintOpeningPrinciples" xml:space="preserve"><value>W debiucie stawiaj rozwój, bezpieczeństwo króla i kontrolę centrum przed bocznymi pionami lub wczesnymi wycieczkami hetmana.</value></data>
+  <data name="AdviceHintPieceActivity" xml:space="preserve"><value>W spokojniejszej grze środkowej wybieraj pola zwiększające aktywność figur zamiast ruchów, które zostawiają figurę na uboczu.</value></data>
+  <data name="AdviceHintEndgameTechnique" xml:space="preserve"><value>W końcówkach licz najprostszy techniczny wariant i unikaj ruchów oddających aktywność przeciwnikowi.</value></data>
+  <data name="AdviceHintGeneral" xml:space="preserve"><value>W taktycznych momentach zatrzymaj się i znajdź wymuszone odpowiedzi przed wyborem naturalnie wyglądającego ruchu.</value></data>
+  <data name="AdviceProblemIntermediateCentipawns" xml:space="preserve"><value>Ruch {0} był ruchem typu {1}, bo pogorszył pozycję o około {2} centypionów.</value></data>
+  <data name="AdviceProblemIntermediateEvaluation" xml:space="preserve"><value>Ruch {0} był ruchem typu {1}, bo po nim pozycja stała się wyraźnie mniej zdrowa.</value></data>
+  <data name="AdviceProblemBeginnerCentipawns" xml:space="preserve"><value>{0} to {1}, bo oddało około {2} centypionów wartości.</value></data>
+  <data name="AdviceProblemBeginnerEvaluation" xml:space="preserve"><value>{0} to {1}, bo znacznie utrudniło prowadzenie pozycji.</value></data>
+  <data name="AdviceProblemAdvancedCentipawns" xml:space="preserve"><value>{0} kwalifikuje się jako {1}, bo skok oceny silnika wynosi około {2} centypionów, a pozycja traci praktyczną stabilność.</value></data>
+  <data name="AdviceProblemAdvancedEvaluation" xml:space="preserve"><value>{0} kwalifikuje się jako {1}, bo ocena zmienia się ostro nawet bez czystego porównania centypionów.</value></data>
+  <data name="AdviceWhyMaterialLoss" xml:space="preserve"><value>Głównym problemem była konkretna strata materiału albo linia pozwalająca przeciwnikowi czysto wygrać materiał.</value></data>
+  <data name="AdviceWhyHangingPiece" xml:space="preserve"><value>Ruch zostawił figurę niedostatecznie bronioną, więc przeciwnik mógł od razu ją zaatakować.</value></data>
+  <data name="AdviceWhyMissedTactic" xml:space="preserve"><value>Ruch przeoczył wymuszający zasób taktyczny, dla ciebie albo jako odpowiedź przeciwnika.</value></data>
+  <data name="AdviceWhyKingSafety" xml:space="preserve"><value>Ruch poluzował bezpieczeństwo króla i dał przeciwnikowi łatwiejsze cele ataku lub linie wejścia.</value></data>
+  <data name="AdviceWhyOpeningPrinciples" xml:space="preserve"><value>Ruch zignorował główne priorytety debiutu: rozwój, bezpieczeństwo króla albo kontrolę centrum.</value></data>
+  <data name="AdviceWhyPieceActivity" xml:space="preserve"><value>Ruch zmniejszył aktywność jednej z figur i osłabił walkę o ważne pola.</value></data>
+  <data name="AdviceWhyEndgameTechnique" xml:space="preserve"><value>Ruch przeoczył czystszy plan techniczny i oddał użyteczną aktywność w końcówce.</value></data>
+  <data name="AdviceWhyGeneral" xml:space="preserve"><value>Ruch stworzył praktyczny problem, który przeciwnik mógł wykorzystać aktywniejszą grą.</value></data>
+  <data name="AdviceWhyBeginnerMaterialLoss" xml:space="preserve"><value>Największy problem: pozwalasz przeciwnikowi wygrać materiał.</value></data>
+  <data name="AdviceWhyBeginnerHangingPiece" xml:space="preserve"><value>Przesunięta figura nie miała po ruchu wystarczającej ochrony.</value></data>
+  <data name="AdviceWhyBeginnerMissedTactic" xml:space="preserve"><value>W pozycji była wymuszająca idea taktyczna, która została przeoczona.</value></data>
+  <data name="AdviceWhyBeginnerKingSafety" xml:space="preserve"><value>Ruch ułatwił atak na twojego króla.</value></data>
+  <data name="AdviceWhyBeginnerOpeningPrinciples" xml:space="preserve"><value>Ruch zużył tempo na coś mniej ważnego niż rozwój lub bezpieczeństwo króla.</value></data>
+  <data name="AdviceWhyBeginnerPieceActivity" xml:space="preserve"><value>Ruch postawił figurę na mniej użytecznym polu.</value></data>
+  <data name="AdviceWhyBeginnerEndgameTechnique" xml:space="preserve"><value>Ruch przeoczył prostszy plan końcowy.</value></data>
+  <data name="AdviceWhyBeginnerGeneral" xml:space="preserve"><value>Ruch pozwolił przeciwnikowi zbyt łatwo poprawić pozycję.</value></data>
+  <data name="AdviceWhyAdvancedMaterialLoss" xml:space="preserve"><value>Krytyczna wada to konkretna wymuszona linia, w której pozycja przegrywa test bilansu materiału.</value></data>
+  <data name="AdviceWhyAdvancedHangingPiece" xml:space="preserve"><value>Ruch zostawia przesuniętą figurę taktycznie niedobronioną względem dostępnych zasobów ataku.</value></data>
+  <data name="AdviceWhyAdvancedMissedTactic" xml:space="preserve"><value>Pozycja zawiera wymuszający zasób taktyczny, który powinien zdominować wybór ruchów kandydackich.</value></data>
+  <data name="AdviceWhyAdvancedKingSafety" xml:space="preserve"><value>Ruch oddaje osłonę króla, otwierając dostęp taktyczny po liniach, diagonalach lub osłabionych kompleksach pól.</value></data>
+  <data name="AdviceWhyAdvancedOpeningPrinciples" xml:space="preserve"><value>Ruch traci efektywność debiutową przez zaniedbanie tempa rozwoju, wpływu na centrum lub terminowego bezpieczeństwa króla.</value></data>
+  <data name="AdviceWhyAdvancedPieceActivity" xml:space="preserve"><value>Ruch obniża aktywność i koordynację, więc figura mniej pomaga w walce o kluczowe pola i plany.</value></data>
+  <data name="AdviceWhyAdvancedEndgameTechnique" xml:space="preserve"><value>Ruch oddaje kontrolę techniczną, często przez niedocenienie aktywności króla lub najprostszej drogi realizacji.</value></data>
+  <data name="AdviceWhyAdvancedGeneral" xml:space="preserve"><value>Ruch tworzy możliwe do wykorzystania ustępstwo pozycyjne lub taktyczne, które poprawia opcje przeciwnika.</value></data>
+  <data name="AdviceWatchMaterialLoss" xml:space="preserve"><value>Przed wypuszczeniem ruchu przeskanuj wymuszone bicia i zapytaj, jaki materiał zostaje po końcu sekwencji.</value></data>
+  <data name="AdviceWatchHangingPiece" xml:space="preserve"><value>Dobry wyzwalacz to policzenie atakujących i broniących pole docelowe przed wykonaniem ruchu.</value></data>
+  <data name="AdviceWatchMissedTactic" xml:space="preserve"><value>W ostrych pozycjach zatrzymaj się na szachy, bicia i groźby, zanim zaufasz pierwszemu naturalnemu ruchowi.</value></data>
+  <data name="AdviceWatchKingSafety" xml:space="preserve"><value>Gdy zmienia się osłona króla, sprawdź otwarte linie, osłabione diagonale oraz luźne jasne lub ciemne pola.</value></data>
+  <data name="AdviceWatchOpeningPrinciples" xml:space="preserve"><value>W debiucie pytaj, czy ruch rozwija figurę, poprawia bezpieczeństwo króla albo realnie walczy o centrum.</value></data>
+  <data name="AdviceWatchPieceActivity" xml:space="preserve"><value>Gdy taktyka nie wymusza gry, porównaj, czy ruch zwiększa czy zmniejsza mobilność przesuwanej figury.</value></data>
+  <data name="AdviceWatchEndgameTechnique" xml:space="preserve"><value>W końcówkach wybieraj ruch poprawiający aktywność króla lub naprawiający słabości przeciwnika z najmniejszą kontrgrą.</value></data>
+  <data name="AdviceWatchGeneral" xml:space="preserve"><value>Użyj podobnej pozycji jako sygnału, żeby zwolnić i sprawdzić najsilniejszą wymuszoną odpowiedź przeciwnika.</value></data>
+  <data name="AdviceWatchBeginnerMaterialLoss" xml:space="preserve"><value>Prosty nawyk: po oczywistych wymianach kto ma więcej materiału?</value></data>
+  <data name="AdviceWatchBeginnerHangingPiece" xml:space="preserve"><value>Zanim pójdziesz dalej, policz ile razy pole docelowe jest atakowane i bronione.</value></data>
+  <data name="AdviceWatchBeginnerMissedTactic" xml:space="preserve"><value>Szukaj szachów, bić i gróźb, zanim zaufasz naturalnemu ruchowi.</value></data>
+  <data name="AdviceWatchBeginnerKingSafety" xml:space="preserve"><value>Każdy ruch blisko króla powinien wywołać pytanie, jakie linie ataku właśnie się otworzyły.</value></data>
+  <data name="AdviceWatchBeginnerOpeningPrinciples" xml:space="preserve"><value>W debiucie najpierw rozwijaj figury i zabezpiecz króla.</value></data>
+  <data name="AdviceWatchBeginnerPieceActivity" xml:space="preserve"><value>Zapytaj, czy figura po ruchu będzie bardziej aktywna czy mniej aktywna.</value></data>
+  <data name="AdviceWatchBeginnerEndgameTechnique" xml:space="preserve"><value>W końcówce szukaj ruchu aktywującego króla albo poprawiającego najprostszy plan.</value></data>
+  <data name="AdviceWatchBeginnerGeneral" xml:space="preserve"><value>W podobnych momentach zwolnij i sprawdź najlepszą odpowiedź przeciwnika.</value></data>
+  <data name="AdviceWatchAdvancedMaterialLoss" xml:space="preserve"><value>Traktuj pozycję jak problem drzewa wymuszeń i sprawdź, czy końcowy bilans materiału nadal działa na twoją korzyść.</value></data>
+  <data name="AdviceWatchAdvancedHangingPiece" xml:space="preserve"><value>Przed zaakceptowaniem pola docelowego użyj rachunku atakujący-broniący oraz motywów taktycznych jak przeciążenie lub zwischenzug.</value></data>
+  <data name="AdviceWatchAdvancedMissedTactic" xml:space="preserve"><value>Wybór kandydatów powinien zaczynać się od zasobów wymuszających, nie od najbardziej naturalnego ruchu poprawiającego.</value></data>
+  <data name="AdviceWatchAdvancedKingSafety" xml:space="preserve"><value>Natychmiast po ustępstwie w osłonie przelicz drogi dostępu do króla, szczególnie linie, diagonale i kompleksy jasnych lub ciemnych pól.</value></data>
+  <data name="AdviceWatchAdvancedOpeningPrinciples" xml:space="preserve"><value>Mierz ruchy debiutowe efektywnością tempa, jakością rozwoju i tym, czy wspierają spójne ustawienie centralne.</value></data>
+  <data name="AdviceWatchAdvancedPieceActivity" xml:space="preserve"><value>Porównuj ruchy przez metryki aktywności: mobilność, jakość pól, koordynację i ograniczanie kontrgry.</value></data>
+  <data name="AdviceWatchAdvancedEndgameTechnique" xml:space="preserve"><value>W technicznych końcówkach priorytetem jest aktywność króla i linia z najmniejszą kontrgrą, nawet jeśli kilka ruchów utrzymuje przewagę.</value></data>
+  <data name="AdviceWatchAdvancedGeneral" xml:space="preserve"><value>Użyj pozycji jako sygnału do surowszej kontroli ruchów kandydackich i linii wymuszonych.</value></data>
+  <data name="AdviceBetterCalmer" xml:space="preserve"><value>Spokojniejsza alternatywa utrzymywała zdrowszą pozycję.</value></data>
+  <data name="AdviceBetterStronger" xml:space="preserve"><value>Silniejszą opcją było {0}.</value></data>
+  <data name="AdviceBetterOpeningBeginner" xml:space="preserve"><value>W {0} rozwój i bezpieczeństwo króla były tutaj ważniejsze.</value></data>
+  <data name="AdviceBetterOpeningIntermediate" xml:space="preserve"><value>W {0} rozwój był w tym momencie ważniejszym priorytetem.</value></data>
+  <data name="AdviceBetterOpeningAdvanced" xml:space="preserve"><value>W {0} lepsza linia respektowała tempo rozwoju i efektywność debiutową.</value></data>
+  <data name="AdviceLostCentipawns" xml:space="preserve"><value>i stracił około {0} centypionów</value></data>
+  <data name="AdviceChangedEvaluation" xml:space="preserve"><value>i mocno zmienił ocenę pozycji</value></data>
+  <data name="AdviceQualityBlunder" xml:space="preserve"><value>podstawka</value></data>
+  <data name="AdviceQualityMistake" xml:space="preserve"><value>błąd</value></data>
+  <data name="AdviceQualityInaccuracy" xml:space="preserve"><value>niedokładność</value></data>
+  <data name="AdviceQualityGood" xml:space="preserve"><value>ruch</value></data>
+  <data name="AdvicePatternMaterialLoss" xml:space="preserve"><value>strata materiału</value></data>
+  <data name="AdvicePatternHangingPiece" xml:space="preserve"><value>wisząca figura</value></data>
+  <data name="AdvicePatternMissedTactic" xml:space="preserve"><value>przeoczona taktyka</value></data>
+  <data name="AdvicePatternOpeningPrinciples" xml:space="preserve"><value>zasady debiutu</value></data>
+  <data name="AdvicePatternKingSafety" xml:space="preserve"><value>bezpieczeństwo króla</value></data>
+  <data name="AdvicePatternPieceActivity" xml:space="preserve"><value>aktywność figur</value></data>
+  <data name="AdvicePatternEndgameTechnique" xml:space="preserve"><value>technika końcówek</value></data>
+  <data name="AdvicePatternGeneral" xml:space="preserve"><value>ogólny</value></data>
+  <data name="HeuristicHintOpening" xml:space="preserve"><value>Debiut: przejrzyj ten wzorzec w pierwszych 10 ruchach.</value></data>
+  <data name="HeuristicHintMiddlegame" xml:space="preserve"><value>Gra środkowa: porównaj plany i wymuszone odpowiedzi przed wykonaniem ruchu.</value></data>
+  <data name="HeuristicHintEndgame" xml:space="preserve"><value>Końcówka: aktywność i technika są ważniejsze niż kosmetyczne ruchy.</value></data>
+  <data name="FormatPhaseOpening" xml:space="preserve"><value>Debiut</value></data>
+  <data name="FormatPhaseMiddlegame" xml:space="preserve"><value>Gra środkowa</value></data>
+  <data name="FormatPhaseEndgame" xml:space="preserve"><value>Końcówka</value></data>
+  <data name="FormatMixedOpenings" xml:space="preserve"><value>Różne debiuty</value></data>
+  <data name="TrendImproving" xml:space="preserve"><value>Ostatnio lepiej</value></data>
+  <data name="TrendStable" xml:space="preserve"><value>Raczej stabilnie</value></data>
+  <data name="TrendRegressing" xml:space="preserve"><value>Wyniki ostatnio spadły</value></data>
+  <data name="TrendNeedMoreGames" xml:space="preserve"><value>Potrzeba więcej partii</value></data>
+  <data name="TrainingBlockTactics" xml:space="preserve"><value>Taktyka</value></data>
+  <data name="TrainingBlockOpeningReview" xml:space="preserve"><value>Powtórka debiutu</value></data>
+  <data name="TrainingBlockEndgameDrill" xml:space="preserve"><value>Ćwiczenie końcówek</value></data>
+  <data name="TrainingBlockGameReview" xml:space="preserve"><value>Analiza partii</value></data>
+  <data name="TrainingBlockSlowPlayFocus" xml:space="preserve"><value>Skupienie na wolniejszej grze</value></data>
+  <data name="TrainingPurposeRepair" xml:space="preserve"><value>Naprawa</value></data>
+  <data name="TrainingPurposeMaintain" xml:space="preserve"><value>Utrzymanie</value></data>
+  <data name="TrainingPurposeChecklist" xml:space="preserve"><value>Lista kontrolna</value></data>
+  <data name="CountOneTime" xml:space="preserve"><value>1 raz</value></data>
+  <data name="CountFewTimes" xml:space="preserve"><value>{0} razy</value></data>
+  <data name="CountManyTimes" xml:space="preserve"><value>{0} razy</value></data>
+  <data name="CountOneMistake" xml:space="preserve"><value>1 błąd</value></data>
+  <data name="CountFewMistakes" xml:space="preserve"><value>{0} błędy</value></data>
+  <data name="CountManyMistakes" xml:space="preserve"><value>{0} błędów</value></data>
+  <data name="MainReady" xml:space="preserve"><value>MoveMentor Chess jest gotowy.</value></data>
+  <data name="MainReadyEngineLoaded" xml:space="preserve"><value>MoveMentor Chess jest gotowy. Zewnętrzny silnik szachowy wczytany z {0}.</value></data>
+  <data name="MainReadyEngineUnavailable" xml:space="preserve"><value>MoveMentor Chess jest gotowy, ale silnik analizy jest niedostępny. {0}</value></data>
+  <data name="MainEngineSuggestionsUnavailable" xml:space="preserve"><value>Podpowiedzi silnika: niedostępne</value></data>
+  <data name="MainTopMovesNone" xml:space="preserve"><value>Najlepsze ruchy: brak</value></data>
+  <data name="MainTopMoves" xml:space="preserve"><value>Najlepsze ruchy: {0}</value></data>
+  <data name="MainEvaluationUnavailable" xml:space="preserve"><value>Ocena: niedostępna</value></data>
+  <data name="MainEvaluationEven" xml:space="preserve"><value>Ocena: równo</value></data>
+  <data name="MainEvaluationWhiteMates" xml:space="preserve"><value>Ocena: biały matuje za {0}</value></data>
+  <data name="MainEvaluationBlackMates" xml:space="preserve"><value>Ocena: czarny matuje za {0}</value></data>
+  <data name="MainEvaluationWhite" xml:space="preserve"><value>Ocena: biały {0}</value></data>
+  <data name="MainEvaluationBlack" xml:space="preserve"><value>Ocena: czarny +{0}</value></data>
+  <data name="MainImportedMovesNone" xml:space="preserve"><value>Zaimportowane ruchy: brak</value></data>
+  <data name="MainImportedMovesSummary" xml:space="preserve"><value>Zaimportowane ruchy: zastosowano {0}/{1} | {2}{3}{4}{5}</value></data>
+  <data name="MainAnalysisPlaceholder" xml:space="preserve"><value>Wczytaj PGN i uruchom analizę, aby obejrzeć błędy.</value></data>
+  <data name="MainRunAnalysisPlaceholder" xml:space="preserve"><value>Uruchom analizę, aby obejrzeć błędy.</value></data>
+  <data name="MainNoMistakesMatchSelectedFilter" xml:space="preserve"><value>Żaden błąd nie pasuje do wybranego filtra.</value></data>
+  <data name="MainResultUnknown" xml:space="preserve"><value>Wynik: ?</value></data>
+  <data name="MainSelectedPieceNone" xml:space="preserve"><value>Wybrana figura: brak</value></data>
+  <data name="MainSelectedPieceHeader" xml:space="preserve"><value>Wybrana figura: {0} z {1} | legalne ruchy: {2}</value></data>
+  <data name="MainNoLegalMovesForPiece" xml:space="preserve"><value>Ta figura nie ma legalnych ruchów.</value></data>
+  <data name="MainSelectPieceInspectMoves" xml:space="preserve"><value>Wybierz figurę, aby zobaczyć wszystkie legalne ruchy.</value></data>
+  <data name="MainPrimarySetupStockfish" xml:space="preserve"><value>Skonfiguruj Stockfish, aby odblokować analizę</value></data>
+  <data name="MainPrimarySetupStockfishDescription" xml:space="preserve"><value>MoveMentor nadal może pokazywać szachownicę, ale przegląd silnika i rekomendacje treningowe wymagają pliku Stockfish.</value></data>
+  <data name="MainPrimaryRunAnalysis" xml:space="preserve"><value>Uruchom analizę i znajdź dzisiejszy cel treningu</value></data>
+  <data name="MainPrimaryRunAnalysisDescription" xml:space="preserve"><value>Partia jest wczytana. Przeanalizuj ją, aby wyróżnić najbardziej kosztowne ruchy i zamienić je w ćwiczenia.</value></data>
+  <data name="MainPrimaryLoadPgn" xml:space="preserve"><value>Wczytaj PGN, aby zacząć pierwszy przegląd</value></data>
+  <data name="MainPrimaryLoadPgnDescription" xml:space="preserve"><value>Wklej partię albo wczytaj plik PGN. MoveMentor odtworzy ją, przeanalizuje błędy i zasugeruje trening.</value></data>
+  <data name="MainPrimaryPlayerAsSide" xml:space="preserve"><value>{0} jako {1}</value></data>
+  <data name="MainAnalyzingPgnFileStatus" xml:space="preserve"><value>Analiza pliku PGN {0}/{1}: {2} ({3})...</value></data>
+  <data name="MainAnalysisFailureSummary" xml:space="preserve"><value>{0}{1}, {2}: {3}</value></data>
+  <data name="CommonWhite" xml:space="preserve"><value>Białe</value></data>
+  <data name="CommonBlack" xml:space="preserve"><value>Czarne</value></data>
+  <data name="CommonUnknown" xml:space="preserve"><value>?</value></data>
+  <data name="CommonPlayersVersus" xml:space="preserve"><value>{0} kontra {1}</value></data>
+  <data name="CommonNotAvailable" xml:space="preserve"><value>b.d.</value></data>
+  <data name="CommonUnclassified" xml:space="preserve"><value>Niesklasyfikowane</value></data>
+  <data name="CommonFieldSeparator" xml:space="preserve"><value> | </value></data>
+  <data name="QualityBook" xml:space="preserve"><value>Książkowy</value></data>
+  <data name="QualityBrilliant" xml:space="preserve"><value>Genialny</value></data>
+  <data name="QualityGreat" xml:space="preserve"><value>Świetny</value></data>
+  <data name="QualityBest" xml:space="preserve"><value>Najlepszy</value></data>
+  <data name="QualityExcellent" xml:space="preserve"><value>Doskonały</value></data>
+  <data name="QualityGood" xml:space="preserve"><value>Dobry</value></data>
+  <data name="QualityInaccuracy" xml:space="preserve"><value>Niedokładność</value></data>
+  <data name="QualityMistake" xml:space="preserve"><value>Błąd</value></data>
+  <data name="QualityBlunder" xml:space="preserve"><value>Podstawka</value></data>
+  <data name="AnalysisImpactForcedMateAllowed" xml:space="preserve"><value>dopuszczony wymuszony mat</value></data>
+  <data name="AnalysisImpactWinningTacticMissed" xml:space="preserve"><value>przeoczona wygrywająca taktyka</value></data>
+  <data name="AnalysisImpactMateRouteChanged" xml:space="preserve"><value>zmieniona droga do mata</value></data>
+  <data name="AnalysisImpactEvaluationLoss" xml:space="preserve"><value>strata oceny {0} cp</value></data>
+  <data name="SavedAnalysesTitle" xml:space="preserve"><value>Zapisane analizy</value></data>
+  <data name="SavedAnalysesFilterPlaceholder" xml:space="preserve"><value>Filtruj po graczu, debiucie, wyniku lub etykietach...</value></data>
+  <data name="SavedAnalysesLoadGame" xml:space="preserve"><value>Wczytaj partię</value></data>
+  <data name="SavedAnalysesOpenAnalysis" xml:space="preserve"><value>Otwórz analizę</value></data>
+  <data name="SavedAnalysesDeleteSelected" xml:space="preserve"><value>Usuń zaznaczone</value></data>
+  <data name="SavedAnalysesPlayers" xml:space="preserve"><value>Gracze</value></data>
+  <data name="SavedAnalysesSideHeader" xml:space="preserve"><value>Strona</value></data>
+  <data name="SavedAnalysesDateHeader" xml:space="preserve"><value>Data</value></data>
+  <data name="SavedAnalysesOpeningHeader" xml:space="preserve"><value>Debiut</value></data>
+  <data name="SavedAnalysesMarks" xml:space="preserve"><value>Znaki</value></data>
+  <data name="SavedAnalysesNoMatches" xml:space="preserve"><value>Brak zapisanych analiz pasujących do bieżącego filtra.</value></data>
+  <data name="SavedAnalysesSelectPrompt" xml:space="preserve"><value>Wybierz zapisaną analizę, aby obejrzeć wynik z pamięci podręcznej.</value></data>
+  <data name="SavedAnalysesSide" xml:space="preserve"><value>Strona: {0}</value></data>
+  <data name="SavedAnalysesDate" xml:space="preserve"><value>Data: {0}</value></data>
+  <data name="SavedAnalysesResult" xml:space="preserve"><value>Wynik: {0}</value></data>
+  <data name="SavedAnalysesOpening" xml:space="preserve"><value>Debiut: {0}</value></data>
+  <data name="SavedAnalysesMoveLabels" xml:space="preserve"><value>Etykiety ruchów: {0}</value></data>
+  <data name="SavedAnalysesHighlights" xml:space="preserve"><value>Wyróżnienia: razem {0}</value></data>
+  <data name="SavedAnalysesBreakdown" xml:space="preserve"><value>Podział: {0} blundery, {1} błędy, {2} niedokładności</value></data>
+  <data name="SavedAnalysesTopLabels" xml:space="preserve"><value>Najczęstsze etykiety:</value></data>
+  <data name="SavedAnalysesTopHighlightedMistakes" xml:space="preserve"><value>Najważniejsze wyróżnione błędy:</value></data>
+  <data name="SavedAnalysesCpl" xml:space="preserve"><value>CPL {0}</value></data>
+  <data name="SavedAnalysesOpenInstructions" xml:space="preserve"><value>Użyj „Otwórz analizę”, aby wrócić do pełnego analizatora na danych z cache, albo „Wczytaj partię”, aby przenieść PGN na główną szachownicę.</value></data>
+  <data name="SavedAnalysesLoadInstructions" xml:space="preserve"><value>Użyj „Wczytaj partię”, aby przenieść PGN na główną szachownicę. Otwieranie analizy jest niedostępne, bo silnik analizy nie jest wczytany.</value></data>
+  <data name="OpeningTrainerTitle" xml:space="preserve"><value>Trener debiutów</value></data>
+  <data name="OpeningTrainerTrainingProgress" xml:space="preserve"><value>Postęp treningu</value></data>
+  <data name="OpeningTrainerTodaysRecommendation" xml:space="preserve"><value>Dzisiejsza rekomendacja</value></data>
+  <data name="OpeningTrainerRecommended" xml:space="preserve"><value>Rekomendowane</value></data>
+  <data name="OpeningTrainerSkipBriefing" xml:space="preserve"><value>Pomiń omówienie i ćwicz teraz</value></data>
+  <data name="OpeningTrainerWhyThisMatters" xml:space="preserve"><value>Dlaczego to ważne</value></data>
+  <data name="OpeningTrainerWhatYouWillPractice" xml:space="preserve"><value>Co będziesz ćwiczyć</value></data>
+  <data name="OpeningTrainerTrainingIntensity" xml:space="preserve"><value>Intensywność treningu</value></data>
+  <data name="OpeningTrainerDueNow" xml:space="preserve"><value>Do zrobienia teraz</value></data>
+  <data name="OpeningTrainerThisWeeksPractice" xml:space="preserve"><value>Trening w tym tygodniu</value></data>
+  <data name="OpeningTrainerLaterOptionalRepairs" xml:space="preserve"><value>Później / opcjonalne poprawki</value></data>
+  <data name="OpeningTrainerCurrentCoverage" xml:space="preserve"><value>Twoje obecne pokrycie</value></data>
+  <data name="OpeningTrainerOpeningMap" xml:space="preserve"><value>Mapa debiutu</value></data>
+  <data name="OpeningTrainerOpponentReplies" xml:space="preserve"><value>Odpowiedzi przeciwnika</value></data>
+  <data name="OpeningTrainerMostCommonReplies" xml:space="preserve"><value>Najczęstsze odpowiedzi</value></data>
+  <data name="OpeningTrainerAdvancedOptions" xml:space="preserve"><value>Opcje zaawansowane</value></data>
+  <data name="OpeningTrainerOpeningCatalog" xml:space="preserve"><value>Katalog debiutów</value></data>
+  <data name="OpeningTrainerOpeningCatalogHelp" xml:space="preserve"><value>Wybierz konkretną linię, gdy chcesz ćwiczyć poza dzisiejszą lekcją.</value></data>
+  <data name="OpeningTrainerFilterOpenings" xml:space="preserve"><value>Filtruj debiuty lub ECO</value></data>
+  <data name="OpeningTrainerOverrideHistoryKey" xml:space="preserve"><value>Nadpisz klucz historii (opcjonalnie)</value></data>
+  <data name="OpeningTrainerActiveHistoryKey" xml:space="preserve"><value>Aktywny klucz historii: {0}</value></data>
+  <data name="OpeningTrainerRefresh" xml:space="preserve"><value>Odśwież</value></data>
+  <data name="OpeningTrainerSeePlan" xml:space="preserve"><value>Zobacz plan</value></data>
+  <data name="OpeningTrainerSpecialModes" xml:space="preserve"><value>Tryby specjalne</value></data>
+  <data name="OpeningTrainerUnderstandIdea" xml:space="preserve"><value>Zrozum ideę</value></data>
+  <data name="OpeningTrainerStartPracticeFromMemory" xml:space="preserve"><value>Zacznij ćwiczyć z pamięci</value></data>
+  <data name="OpeningTrainerBack" xml:space="preserve"><value>Wstecz</value></data>
+  <data name="OpeningTrainerClearMoves" xml:space="preserve"><value>czyste ruchy</value></data>
+  <data name="OpeningTrainerStillUseful" xml:space="preserve"><value>wciąż użyteczne</value></data>
+  <data name="OpeningTrainerRepeatTargets" xml:space="preserve"><value>cele do powtórki</value></data>
+  <data name="OpeningTrainerSubmitAnswer" xml:space="preserve"><value>Prześlij odpowiedź</value></data>
+  <data name="OpeningTrainerHint" xml:space="preserve"><value>Podpowiedź</value></data>
+  <data name="OpeningTrainerTryFromMemoryFirst" xml:space="preserve"><value>Najpierw spróbuj z pamięci</value></data>
+  <data name="OpeningTrainerLineReference" xml:space="preserve"><value>Linia referencyjna</value></data>
+  <data name="OpeningTrainerWhatThisPositionTrains" xml:space="preserve"><value>Co trenuje ta pozycja</value></data>
+  <data name="OpeningTrainerAttemptHistory" xml:space="preserve"><value>Historia prób</value></data>
+  <data name="OpeningTrainerPreviousPosition" xml:space="preserve"><value>Poprzednia pozycja</value></data>
+  <data name="OpeningTrainerRestartStudy" xml:space="preserve"><value>Uruchom naukę od nowa</value></data>
+  <data name="OpeningTrainerReviewAndContinue" xml:space="preserve"><value>Przejrzyj i kontynuuj</value></data>
+  <data name="OpeningTrainerCompleted" xml:space="preserve"><value>Ukończone</value></data>
+  <data name="OpeningTrainerClear" xml:space="preserve"><value>Czyste</value></data>
+  <data name="OpeningTrainerUsefulAlternatives" xml:space="preserve"><value>Użyteczne alternatywy</value></data>
+  <data name="OpeningTrainerHintsUsed" xml:space="preserve"><value>Użyte podpowiedzi</value></data>
+  <data name="OpeningTrainerToRevisit" xml:space="preserve"><value>Do powtórki</value></data>
+  <data name="OpeningTrainerMainRepairPoint" xml:space="preserve"><value>Główny punkt naprawy</value></data>
+  <data name="OpeningTrainerReviewFocus" xml:space="preserve"><value>Cel przeglądu</value></data>
+  <data name="OpeningTrainerBackToOverview" xml:space="preserve"><value>Wróć do przeglądu</value></data>
+  <data name="OpeningTrainerChooseNextPlan" xml:space="preserve"><value>Wybierz następny plan treningu</value></data>
+  <data name="OpeningTrainerRecommendedNext" xml:space="preserve"><value>Rekomendowane następne</value></data>
+  <data name="OpeningTrainerOtherUsefulChoices" xml:space="preserve"><value>Inne użyteczne wybory</value></data>
+  <data name="OpeningTrainerSessionRecap" xml:space="preserve"><value>Podsumowanie sesji</value></data>
+  <data name="OpeningTrainerAdvancedDetails" xml:space="preserve"><value>Szczegóły zaawansowane</value></data>
+  <data name="OpeningTrainerDiagnosticReviewPositions" xml:space="preserve"><value>Pozycje diagnostyczne do przeglądu</value></data>
+  <data name="OpeningTrainerPositionId" xml:space="preserve"><value>ID pozycji</value></data>
+  <data name="OpeningTrainerAttempt" xml:space="preserve"><value>Próba</value></data>
+  <data name="OpeningTrainerReason" xml:space="preserve"><value>Powód</value></data>
+  <data name="OpeningTrainerMoveLog" xml:space="preserve"><value>Dziennik ruchów</value></data>
+  <data name="OpeningTrainerSavedProgress" xml:space="preserve"><value>Twój zapisany postęp</value></data>
+  <data name="OpeningTrainerWhyLineWorks" xml:space="preserve"><value>Dlaczego ta linia działa</value></data>
+  <data name="OpeningTrainerRememberThis" xml:space="preserve"><value>Zapamiętaj to</value></data>
+  <data name="OpeningTrainerPlanBeforeMoves" xml:space="preserve"><value>Plan przed ruchami</value></data>
+  <data name="OpeningTrainerLineToRemember" xml:space="preserve"><value>Linia do zapamiętania</value></data>
+  <data name="OpeningTrainerMoveNotesHelp" xml:space="preserve"><value>Notatki ruchów pojawiają się tylko jako krótkie tagi podczas przeglądu linii.</value></data>
+  <data name="OpeningTrainerTodaysFocus" xml:space="preserve"><value>Dzisiejszy cel</value></data>
+  <data name="OpeningTrainerPracticeFromMemory" xml:space="preserve"><value>Ćwiczenie z pamięci</value></data>
+  <data name="OpeningTrainerYourMove" xml:space="preserve"><value>Twój ruch</value></data>
+  <data name="OpeningTrainerChooseOpeningPreview" xml:space="preserve"><value>Wybierz debiut, aby podejrzeć plan.</value></data>
+  <data name="OpeningTrainerCommonRepliesPlaceholder" xml:space="preserve"><value>Tutaj pojawią się typowe odpowiedzi.</value></data>
+  <data name="OpeningTrainerNoPracticeHistory" xml:space="preserve"><value>Brak historii ćwiczeń.</value></data>
+  <data name="OpeningTrainerPickOpeningCoverage" xml:space="preserve"><value>Wybierz debiut, aby zobaczyć, co jest gotowe, a co wymaga kolejnego przejścia.</value></data>
+  <data name="OpeningTrainerPracticeIdle" xml:space="preserve"><value>Trening jest bezczynny.</value></data>
+  <data name="OpeningTrainerHintsPlaceholder" xml:space="preserve"><value>Podpowiedzi pojawią się tutaj, gdy o nie poprosisz.</value></data>
+  <data name="OpeningTrainerNoHintUsed" xml:space="preserve"><value>Nie użyto podpowiedzi</value></data>
+  <data name="OpeningTrainerWhyPlaceholder" xml:space="preserve"><value>Wybierz ruch, aby zobaczyć, dlaczego ma znaczenie.</value></data>
+  <data name="OpeningTrainerNoOpeningsMatch" xml:space="preserve"><value>Żaden debiut nie pasuje do bieżącego filtra.</value></data>
+  <data name="OpeningTrainerOpponentRepliesUnavailable" xml:space="preserve"><value>Odpowiedzi przeciwnika są niedostępne.</value></data>
+  <data name="OpeningTrainerTryAnotherFilterOrSide" xml:space="preserve"><value>Spróbuj innego filtra albo strony repertuaru.</value></data>
+  <data name="OpeningTrainerCouldNotLoadOverview" xml:space="preserve"><value>Nie udało się wczytać przeglądu debiutu.</value></data>
+  <data name="OpeningTrainerOpeningNeedsMoreTheory" xml:space="preserve"><value>Wybrany debiut nie ma jeszcze wystarczających lokalnych danych teorii.</value></data>
+  <data name="PgnImportTitle" xml:space="preserve"><value>Import PGN</value></data>
+  <data name="PgnImportHeading" xml:space="preserve"><value>Importuj PGN</value></data>
+  <data name="PgnImportIntro" xml:space="preserve"><value>Wklej pełny plik PGN. Po imporcie partia od razu pojawi się na szachownicy i zostanie zapisana lokalnie.</value></data>
+  <data name="PgnImportImport" xml:space="preserve"><value>Importuj</value></data>
+  <data name="SavedGamesTitle" xml:space="preserve"><value>Zapisane partie</value></data>
+  <data name="SavedGamesFilterPlaceholder" xml:space="preserve"><value>Filtruj graczy/datę...</value></data>
+  <data name="SavedGamesLoadSelected" xml:space="preserve"><value>Wczytaj zaznaczone</value></data>
+  <data name="SavedGamesPlayer" xml:space="preserve"><value>Gracz</value></data>
+  <data name="SavedGamesLoadHint" xml:space="preserve"><value>Kliknij dwukrotnie albo użyj Wczytaj zaznaczone</value></data>
+  <data name="SavedGamesFilterPlayer" xml:space="preserve"><value>Filtruj gracza</value></data>
+  <data name="SavedGamesFilterDate" xml:space="preserve"><value>Filtruj datę</value></data>
+  <data name="PromotionTitle" xml:space="preserve"><value>Wybierz promocję</value></data>
+  <data name="PromotionChoosePiece" xml:space="preserve"><value>Wybierz figurę promocji</value></data>
+  <data name="PromotionIntro" xml:space="preserve"><value>Wybrany ruch dochodzi do ostatniej linii. Wybierz figurę, na którą chcesz promować.</value></data>
+  <data name="OpeningCoverageTitle" xml:space="preserve"><value>Pokrycie debiutów</value></data>
+  <data name="OpeningCoverageFilterPlaceholder" xml:space="preserve"><value>Filtruj ECO lub debiut...</value></data>
+  <data name="OpeningCoverageLines" xml:space="preserve"><value>Linie</value></data>
+  <data name="OpeningCoverageDueToday" xml:space="preserve"><value>Na dziś</value></data>
+  <data name="OpeningCoverageWeakBranches" xml:space="preserve"><value>Słabe odgałęzienia</value></data>
+  <data name="OpeningCoverageAverageCoverage" xml:space="preserve"><value>Śr. pokrycie</value></data>
+  <data name="OpeningCoverageMissingEco" xml:space="preserve"><value>Brak ECO</value></data>
+  <data name="OpeningCoverageSelectedLine" xml:space="preserve"><value>Wybrana linia</value></data>
+  <data name="OpeningCoverageCoverage" xml:space="preserve"><value>Pokrycie</value></data>
+  <data name="OpeningCoverageRepertoireMap" xml:space="preserve"><value>Mapa repertuaru</value></data>
+  <data name="OpeningCoveragePracticeSelectedLine" xml:space="preserve"><value>Ćwicz wybraną linię</value></data>
+  <data name="ProfilesTitle" xml:space="preserve"><value>Trener gracza</value></data>
+  <data name="ProfilesSearchPlaceholder" xml:space="preserve"><value>Szukaj przeanalizowanych graczy...</value></data>
+  <data name="ProfilesHidePlayers" xml:space="preserve"><value>Ukryj graczy</value></data>
+  <data name="ProfilesCoach" xml:space="preserve"><value>Trener</value></data>
+  <data name="ProfilesEvidence" xml:space="preserve"><value>Dowody</value></data>
+  <data name="ProfilesBackToBoard" xml:space="preserve"><value>Wróć do szachownicy</value></data>
+  <data name="ProfilesAnalyzedPlayers" xml:space="preserve"><value>Przeanalizowani gracze</value></data>
+  <data name="OpeningTrainerProfileWhiteName" xml:space="preserve"><value>Graj białymi</value></data>
+  <data name="OpeningTrainerProfileWhiteDescription" xml:space="preserve"><value>Zbuduj dzisiejszy trening z repertuaru białych.</value></data>
+  <data name="OpeningTrainerProfileBlackName" xml:space="preserve"><value>Graj czarnymi</value></data>
+  <data name="OpeningTrainerProfileBlackDescription" xml:space="preserve"><value>Zbuduj dzisiejszy trening z repertuaru czarnych.</value></data>
+  <data name="OpeningTrainerProfileBothName" xml:space="preserve"><value>Obie strony</value></data>
+  <data name="OpeningTrainerProfileBothDescription" xml:space="preserve"><value>Użyj pełnego repertuaru przy wyborze dzisiejszego treningu.</value></data>
+  <data name="OpeningTrainerIntensitySafeName" xml:space="preserve"><value>Bezpieczna powtórka</value></data>
+  <data name="OpeningTrainerIntensitySafeDescription" xml:space="preserve"><value>Tylko znane pozycje z terminem powtórki.</value></data>
+  <data name="OpeningTrainerIntensityBalancedName" xml:space="preserve"><value>Zbalansowany</value></data>
+  <data name="OpeningTrainerIntensityBalancedDescription" xml:space="preserve"><value>Pozycje z terminem oraz słabe odgałęzienia.</value></data>
+  <data name="OpeningTrainerIntensityChallengeName" xml:space="preserve"><value>Wyzwanie</value></data>
+  <data name="OpeningTrainerIntensityChallengeDescription" xml:space="preserve"><value>Dodaje mniej znane odpowiedzi przeciwnika.</value></data>
+  <data name="OpeningTrainerSelectedProfilePlaceholder" xml:space="preserve"><value>Wybierz, jak dzisiejszy trening ma korzystać z repertuaru.</value></data>
+  <data name="OpeningTrainerNoRecommendation" xml:space="preserve"><value>Brak dostępnej rekomendacji</value></data>
+  <data name="OpeningTrainerImportTheoryForRecommendations" xml:space="preserve"><value>Zaimportuj teorię debiutową, aby włączyć rekomendacje.</value></data>
+  <data name="OpeningTrainerRecommendationMeta" xml:space="preserve"><value>{0} | {1} | około {2} min</value></data>
+  <data name="OpeningTrainerNeedsOpeningLine" xml:space="preserve"><value>Trener potrzebuje co najmniej jednej dostępnej linii debiutowej.</value></data>
+  <data name="OpeningTrainerStartPractice" xml:space="preserve"><value>Rozpocznij trening</value></data>
+  <data name="OpeningTrainerChooseOpeningFirst" xml:space="preserve"><value>Najpierw wybierz debiut</value></data>
+  <data name="OpeningTrainerNoActiveTheory" xml:space="preserve"><value>Brak aktywnej teorii</value></data>
+  <data name="OpeningTrainerWhiteRepertoire" xml:space="preserve"><value>Repertuar białych</value></data>
+  <data name="OpeningTrainerBlackRepertoire" xml:space="preserve"><value>Repertuar czarnych</value></data>
+  <data name="OpeningTrainerBothSides" xml:space="preserve"><value>Obie strony</value></data>
+  <data name="OpeningTrainerDurationAfterImport" xml:space="preserve"><value>Czas pojawi się po imporcie</value></data>
+  <data name="OpeningTrainerAboutMinutes" xml:space="preserve"><value>Około {0} min</value></data>
+  <data name="OpeningTrainerNoPositionsToTrain" xml:space="preserve"><value>Brak pozycji do treningu</value></data>
+  <data name="OpeningTrainerPositionsBranches" xml:space="preserve"><value>{0} pozycji / odgałęzień</value></data>
+  <data name="OpeningTrainerTheoryGames" xml:space="preserve"><value>{0} partii teoretycznych</value></data>
+  <data name="OpeningTrainerImportOrChooseOpening" xml:space="preserve"><value>Zaimportuj albo wybierz debiut, aby rozpocząć dzisiejszy trening.</value></data>
+  <data name="OpeningTrainerRecommendedTodayUnavailable" xml:space="preserve"><value>Rekomendacja na dziś: przed startem zaimportuj albo wybierz debiut.</value></data>
+  <data name="OpeningTrainerTodayDecisionSummary" xml:space="preserve"><value>Dziś: {0} pozycji powtórkowych z linii na {1} ruchów, około {2}, repertuar: {3}.</value></data>
+  <data name="OpeningTrainerStartSequenceSafe" xml:space="preserve"><value>Zaczyna od znanych pozycji z terminem. Naprawa słabych odgałęzień pozostaje opcjonalna.</value></data>
+  <data name="OpeningTrainerStartSequenceChallenge" xml:space="preserve"><value>Zaczyna od pozycji z terminem, potem dodaje mniej znane odpowiedzi przeciwnika.</value></data>
+  <data name="OpeningTrainerStartSequenceBalanced" xml:space="preserve"><value>Zaczyna od pozycji z terminem, potem naprawia słabe odgałęzienia.</value></data>
+  <data name="OpeningTrainerTheoryReasonPlaceholder" xml:space="preserve"><value>Gdy teoria będzie dostępna, trener wyjaśni, dlaczego ta linia jest teraz najbezpieczniejszym użyciem czasu.</value></data>
+  <data name="OpeningTrainerReviewDueScheduled" xml:space="preserve"><value>Ta powtórka jest potrzebna, bo część zaplanowanych pozycji przekroczyła okno powtórki.</value></data>
+  <data name="OpeningTrainerModeContextSafe" xml:space="preserve"><value>Bezpieczna powtórka zostawia naprawę słabych odgałęzień jako opcję.</value></data>
+  <data name="OpeningTrainerModeContextChallenge" xml:space="preserve"><value>Tryb wyzwania dodaje mniej znane odpowiedzi przeciwnika po głównej linii.</value></data>
+  <data name="OpeningTrainerModeContextBalanced" xml:space="preserve"><value>Tryb zbalansowany dodaje naprawę słabych odgałęzień po głównej linii.</value></data>
+  <data name="OpeningTrainerGoalRepairWeakBranches" xml:space="preserve"><value>Cel: potwierdź główne ustawienie i napraw słabe odgałęzienia: {0}.</value></data>
+  <data name="OpeningTrainerGoalStableRecall" xml:space="preserve"><value>Cel: potwierdź główne ustawienie i utrzymaj stabilne przypominanie.</value></data>
+  <data name="OpeningTrainerRecommendedBecause" xml:space="preserve"><value>Rekomendowane, ponieważ...</value></data>
+  <data name="OpeningTrainerReadyWhenYouAre" xml:space="preserve"><value>Gotowe, kiedy Ty jesteś gotów</value></data>
+  <data name="OpeningTrainerStartGuidedTraining" xml:space="preserve"><value>Rozpocznij trening prowadzony</value></data>
+  <data name="OpeningTrainerImportOpeningsFirst" xml:space="preserve"><value>Najpierw zaimportuj debiuty</value></data>
+  <data name="OpeningTrainerSelectedIntensityPlaceholder" xml:space="preserve"><value>Wybierz, jak ostrożny ma być dzisiejszy trening.</value></data>
+  <data name="OpeningTrainerTrainingRhythmTitle" xml:space="preserve"><value>Twój rytm treningu</value></data>
+  <data name="OpeningTrainerTrainingRhythmPlaceholder" xml:space="preserve"><value>Twój rytm treningu pojawi się po wczytaniu lokalnej teorii.</value></data>
+  <data name="OpeningTrainerStartSessionForProgress" xml:space="preserve"><value>Rozpocznij sesję, aby budować postęp repertuaru.</value></data>
+  <data name="OpeningTrainerProgressMovesAccepted" xml:space="preserve"><value>Przećwiczono {0} ruchów, zaakceptowano {1:0.#}%.</value></data>
+  <data name="OpeningTrainerOneTry" xml:space="preserve"><value>1 próba</value></data>
+  <data name="OpeningTrainerManyTries" xml:space="preserve"><value>{0} prób</value></data>
+  <data name="OpeningTrainerOnTrack" xml:space="preserve"><value>na dobrej ścieżce</value></data>
+  <data name="OpeningTrainerStatusWithPractice" xml:space="preserve"><value>{0} - {1} - {2}</value></data>
+  <data name="OpeningTrainerStageSelectionTitle" xml:space="preserve"><value>Wybierz dzisiejszy trening</value></data>
+  <data name="OpeningTrainerStageOverviewTitle" xml:space="preserve"><value>Zrozum ideę</value></data>
+  <data name="OpeningTrainerStageStudyTitle" xml:space="preserve"><value>Ćwicz z pamięci</value></data>
+  <data name="OpeningTrainerStageResultsTitle" xml:space="preserve"><value>Przejrzyj i kontynuuj</value></data>
+  <data name="OpeningTrainerStageSelectionDescription" xml:space="preserve"><value>Zacznij od rekomendacji na dziś, a opcji zaawansowanych używaj tylko wtedy, gdy chcesz konkretną linię.</value></data>
+  <data name="OpeningTrainerStageOverviewDescription" xml:space="preserve"><value>Zobacz ideę, typowe odpowiedzi i cel, zanim poćwiczysz z pamięci.</value></data>
+  <data name="OpeningTrainerStageStudyDescription" xml:space="preserve"><value>Najpierw przypomnij sobie ruch, a podpowiedzi używaj tylko wtedy, gdy jej potrzebujesz.</value></data>
+  <data name="OpeningTrainerStageResultsDescription" xml:space="preserve"><value>Zobacz, co jest stabilne, co wymaga powtórki i jaki jest najlepszy następny krok.</value></data>
+  <data name="OpeningTrainerStageProgress" xml:space="preserve"><value>Etap {0} z {1} - {2}</value></data>
+  <data name="OpeningTrainerNoOpeningSelected" xml:space="preserve"><value>Nie wybrano debiutu</value></data>
+  <data name="OpeningTrainerChooseItemFromList" xml:space="preserve"><value>Wybierz element z listy</value></data>
+  <data name="OpeningTrainerSideRepertoire" xml:space="preserve"><value>Repertuar: {0}</value></data>
+</root>

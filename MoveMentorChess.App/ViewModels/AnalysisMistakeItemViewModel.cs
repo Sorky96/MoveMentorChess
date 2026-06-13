@@ -35,7 +35,7 @@ public sealed class AnalysisMistakeItemViewModel
 
         string label = mistake.Tag?.Label ?? "unclassified";
         string cpl = LeadMove.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? "n/a";
-        DisplayText = $"{moveRange} | {mistake.Quality} | {label} | CPL {cpl}";
+        DisplayText = $"{moveRange} | {AnalysisMistakePresentation.FormatQualityBucket(mistake.Quality)} | {label} | CPL {cpl}";
         Details = BuildDetailsText(mistake, LeadMove);
     }
 
@@ -51,7 +51,7 @@ public sealed class AnalysisMistakeItemViewModel
     {
         StringBuilder builder = new();
         builder.AppendLine(CultureInfo.InvariantCulture, $"Moves: {string.Join(", ", mistake.Moves.Select(m => $"{m.Replay.MoveNumber}{(m.Replay.Side == PlayerSide.White ? "." : "...")} {m.Replay.San}"))}");
-        builder.AppendLine(CultureInfo.InvariantCulture, $"Quality: {mistake.Quality}");
+        builder.AppendLine(CultureInfo.InvariantCulture, $"Quality: {AnalysisMistakePresentation.FormatQualityBucket(mistake.Quality)}");
         builder.AppendLine(CultureInfo.InvariantCulture, $"Label: {mistake.Tag?.Label ?? "unclassified"}");
         builder.AppendLine(CultureInfo.InvariantCulture, $"Confidence: {(mistake.Tag?.Confidence ?? 0):0.00}");
         builder.AppendLine(CultureInfo.InvariantCulture, $"Played move: {lead.Replay.San} ({lead.Replay.Uci})");
