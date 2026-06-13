@@ -533,15 +533,30 @@ public sealed class OpeningTrainingPriorityServiceTests
                 ? moves.Take(limit).ToList()
                 : [];
 
+        public IReadOnlyList<OpeningLineCatalogItem> ListOpeningLines(string? filterText = null, RepertoireSide? repertoireSide = null, int limit = 100) => [];
+
+        public bool TryGetOpeningOverview(
+            OpeningLineKey lineKey,
+            RepertoireSide repertoireSide,
+            int maxDepth,
+            out OpeningTrainerOverview? overview)
+        {
+            overview = null;
+            return false;
+        }
+
         public void SaveImportedGame(ImportedGame game) => throw new NotSupportedException();
         public void SaveImportedGames(IReadOnlyList<ImportedGame> games) => throw new NotSupportedException();
         public bool TryLoadImportedGame(string gameFingerprint, out ImportedGame? game) => throw new NotSupportedException();
         public bool DeleteImportedGame(string gameFingerprint) => throw new NotSupportedException();
+        public void ClearImportedAnalysisData() => throw new NotSupportedException();
         public IReadOnlyList<SavedImportedGameSummary> ListImportedGames(string? filterText = null, int limit = 200) => [];
         public IReadOnlyList<GameAnalysisResult> ListResults(string? filterText = null, int limit = 500) => [];
         public bool TryLoadResult(GameAnalysisCacheKey key, out GameAnalysisResult? result) => throw new NotSupportedException();
         public void SaveResult(GameAnalysisCacheKey key, GameAnalysisResult result) => throw new NotSupportedException();
         public IReadOnlyList<StoredMoveAnalysis> ListMoveAnalyses(string? filterText = null, int limit = 5000) => [];
+        public IReadOnlyList<MoveAdviceFeedback> ListMoveAdviceFeedback(string? filterText = null, int limit = 5000) => [];
+        public void SaveMoveAdviceFeedback(MoveAdviceFeedback feedback) => throw new NotSupportedException();
         public bool TryLoadWindowState(string gameFingerprint, out AnalysisWindowState? state) => throw new NotSupportedException();
         public void SaveWindowState(string gameFingerprint, AnalysisWindowState state) => throw new NotSupportedException();
     }

@@ -6,6 +6,6 @@ public interface IImportedGameStore
     void SaveImportedGames(IReadOnlyList<ImportedGame> games);
     bool TryLoadImportedGame(string gameFingerprint, out ImportedGame? game);
     bool DeleteImportedGame(string gameFingerprint);
-    void ClearImportedAnalysisData() { }
+    void ClearImportedAnalysisData();
     IReadOnlyList<SavedImportedGameSummary> ListImportedGames(string? filterText = null, int limit = 200);
 }

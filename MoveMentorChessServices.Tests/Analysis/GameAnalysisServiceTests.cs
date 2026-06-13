@@ -2593,6 +2593,18 @@ confidence: 0.82
                 : moves;
             return filtered.Take(limit).ToList();
         }
+
+        public IReadOnlyList<OpeningLineCatalogItem> ListOpeningLines(string? filterText = null, RepertoireSide? repertoireSide = null, int limit = 100) => [];
+
+        public bool TryGetOpeningOverview(
+            OpeningLineKey lineKey,
+            RepertoireSide repertoireSide,
+            int maxDepth,
+            out OpeningTrainerOverview? overview)
+        {
+            overview = null;
+            return false;
+        }
     }
 
     private sealed class FakeLocalAdviceModel : ILocalAdviceModel

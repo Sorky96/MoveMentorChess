@@ -556,6 +556,7 @@ public sealed class OpeningImportServiceTests
         }
 
         public bool DeleteImportedGame(string gameFingerprint) => false;
+        public void ClearImportedAnalysisData() { }
         public IReadOnlyList<SavedImportedGameSummary> ListImportedGames(string? filterText = null, int limit = 200) => [];
     }
 

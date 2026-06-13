@@ -126,6 +126,19 @@ public sealed class SqliteAnalysisStore :
             SqliteOpeningTheoryStore.ListOpeningLines(database, filterText, repertoireSide, limit));
     }
 
+    public bool TryGetOpeningOverview(
+        OpeningLineKey lineKey,
+        RepertoireSide repertoireSide,
+        int maxDepth,
+        out OpeningTrainerOverview? overview)
+    {
+        OpeningTrainerOverview? loadedOverview = null;
+        bool found = WithDatabase(database =>
+            SqliteOpeningTheoryStore.TryGetOpeningOverview(database, lineKey, repertoireSide, maxDepth, out loadedOverview));
+        overview = loadedOverview;
+        return found;
+    }
+
     public IReadOnlyList<string> GetOpeningValidationMoves(OpeningPositionKey rootPositionKey)
     {
         return WithDatabase(database =>

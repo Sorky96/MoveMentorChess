@@ -822,6 +822,7 @@ public sealed class PlayerProfileServiceTests
         }
 
         public bool DeleteImportedGame(string gameFingerprint) => throw new NotSupportedException();
+        public void ClearImportedAnalysisData() => throw new NotSupportedException();
         public IReadOnlyList<SavedImportedGameSummary> ListImportedGames(string? filterText = null, int limit = 200) => [];
         public void SaveImportedGame(ImportedGame game) => throw new NotSupportedException();
         public void SaveImportedGames(IReadOnlyList<ImportedGame> games) => throw new NotSupportedException();
@@ -842,6 +843,16 @@ public sealed class PlayerProfileServiceTests
                 .Take(limit)
                 .ToList();
         }
+
+        public void SaveOpeningReviewItems(string playerKey, IReadOnlyList<OpeningReviewItem> items) { }
+
+        public IReadOnlyList<OpeningReviewItem> ListOpeningReviewItems(string? playerKey = null, int limit = 1000) => [];
+
+        public void SaveOpeningTrainingScheduledActions(string playerKey, IReadOnlyList<OpeningTrainingScheduledAction> actions) { }
+
+        public IReadOnlyList<OpeningTrainingScheduledAction> ListDueOpeningTrainingScheduledActions(string? playerKey, DateTime nowUtc, int limit = 50) => [];
+
+        public void MarkOpeningTrainingScheduledActionCompleted(string playerKey, string actionId, DateTime completedUtc) { }
     }
 
     private static List<StoredMoveAnalysis> BuildStoredMoves(IReadOnlyList<GameAnalysisResult> results)

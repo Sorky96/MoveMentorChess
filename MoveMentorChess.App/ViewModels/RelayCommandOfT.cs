@@ -15,9 +15,32 @@ public sealed class RelayCommand<T> : ICommand
 
     public event EventHandler? CanExecuteChanged;
 
-    public bool CanExecute(object? parameter) => canExecute?.Invoke((T?)parameter) ?? true;
+    public bool CanExecute(object? parameter)
+    {
+        if (parameter is T typedParameter)
+        {
+            return canExecute?.Invoke(typedParameter) ?? true;
+        }
 
-    public void Execute(object? parameter) => execute((T?)parameter);
+        if (parameter is null && default(T) is null)
+        {
+            return canExecute?.Invoke(default) ?? true;
+        }
+
+        return false;
+    }
+
+    public void Execute(object? parameter)
+    {
+        if (parameter is T typedParameter)
+        {
+            execute(typedParameter);
+        }
+        else if (parameter is null && default(T) is null)
+        {
+            execute(default);
+        }
+    }
 
     public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
 }
