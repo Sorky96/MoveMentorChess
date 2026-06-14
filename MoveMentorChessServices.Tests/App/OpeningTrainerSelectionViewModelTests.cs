@@ -72,6 +72,24 @@ public sealed class OpeningTrainerSelectionViewModelTests
         Assert.NotNull(viewModel.SelectedSpecialMode);
     }
 
+    [Fact]
+    public void RefreshTodayRecommendation_ReconcilesStaleSpecialModeSelection()
+    {
+        OpeningTrainerSelectionViewModel viewModel = new(CreateWorkspace());
+        viewModel.RefreshTodayRecommendation();
+        SpecialTrainingModeDefinition fallbackMode = viewModel.SpecialTrainingModes[0];
+        viewModel.SelectedSpecialMode = fallbackMode with
+        {
+            Kind = (SpecialTrainingModeKind)999,
+            Title = "Retired mode"
+        };
+
+        viewModel.RefreshTodayRecommendation();
+
+        Assert.Equal(fallbackMode, viewModel.SelectedSpecialMode);
+        Assert.Contains(viewModel.SelectedSpecialMode!, viewModel.SpecialTrainingModes);
+    }
+
     private static OpeningTrainerWorkspaceService CreateWorkspace(IReadOnlyList<OpeningLineCatalogItem>? lines = null)
     {
         SelectionStore store = new(lines ?? [CreateLine("C20", "King's Pawn Game", "Main Line", RepertoireSide.White, 18, 4)]);

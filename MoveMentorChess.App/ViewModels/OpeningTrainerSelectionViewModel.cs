@@ -247,7 +247,25 @@ public sealed class OpeningTrainerSelectionViewModel : ViewModelBase
         ReplaceItems(WeeklyPlanItems, PlayerOpeningPlan.ThisWeek);
         ReplaceItems(LongTermGapItems, PlayerOpeningPlan.LongTermGaps);
         ReplaceItems(SpecialTrainingModes, workspaceService.ListSpecialTrainingModes());
-        SelectedSpecialMode ??= SpecialTrainingModes.FirstOrDefault();
+        ReconcileSelectedSpecialMode();
+    }
+
+    private void ReconcileSelectedSpecialMode()
+    {
+        if (SpecialTrainingModes.Count == 0)
+        {
+            SelectedSpecialMode = null;
+            return;
+        }
+
+        if (SelectedSpecialMode is null)
+        {
+            SelectedSpecialMode = SpecialTrainingModes[0];
+            return;
+        }
+
+        SelectedSpecialMode = SpecialTrainingModes.FirstOrDefault(mode => mode.Kind == SelectedSpecialMode.Kind)
+            ?? SpecialTrainingModes[0];
     }
 
     public string BuildTodayDecisionSummary(OpeningTrainerOverview? overview, OpeningLineCatalogItem? selectedOpening)
