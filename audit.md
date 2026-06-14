@@ -382,6 +382,17 @@ Acceptance criteria:
 - `dotnet test MoveMentorChessServices.Tests\MoveMentorChessServices.Tests.csproj --no-restore --filter OpeningTrainer --verbosity minimal` passes, or the full solution test pass is run if the filter is insufficient.
 - No unrelated training algorithm changes are included.
 
+Implementation status 2026-06-14:
+
+- Added `OpeningTrainerSelectionViewModel` to own profile, side, intensity, player history key, today's recommendation, player opening plan, and special-mode selection state.
+- Kept `OpeningTrainerWindowViewModel` as a compatibility facade for existing `OpeningTrainerWindow` bindings while delegating selection/recommendation state to the extracted ViewModel.
+- Split `OpeningTrainingProfileChoice` and `OpeningTrainingIntensityChoice` into one public type per file.
+- Lowered the `OpeningTrainerWindowViewModel.cs` architecture budget from 2,498 lines to 2,275 lines and added a guard that keeps selection state extracted.
+- Added focused `OpeningTrainerSelectionViewModelTests` covering default selection state, profile/player-key synchronization, intensity/strictness synchronization, and side-filtered recommendation refresh.
+- Validation passed with `dotnet test MoveMentorChessServices.Tests\MoveMentorChessServices.Tests.csproj --no-restore --filter OpeningTrainer --verbosity minimal` (27 passed).
+- Validation passed with `dotnet test MoveMentorChessServices.Tests\MoveMentorChessServices.Tests.csproj --no-restore --filter AppArchitectureTests --verbosity minimal` (18 passed).
+- Validation passed with `dotnet test MoveMentorChess.sln --no-restore -m:1 --verbosity minimal` (488 passed).
+
 ### Sprint 5 - Main Window Import And Replay Extraction
 
 Goal: make the main ViewModel a thinner owner of bindable state and commands.
@@ -475,15 +486,15 @@ Acceptance criteria:
 - The PR description states why the project was kept or removed.
 - Full solution tests pass after the decision.
 
-## 7. Validation
+## 7. Initial Audit Validation
 
-Executed:
+Executed for the original static audit PR before the sprint implementation follow-ups:
 
 ```powershell
 dotnet test MoveMentorChess.sln --no-restore -m:1 --verbosity minimal
 ```
 
-Result: 481 passed, 0 failed, 0 skipped.
+Historical result: 481 passed, 0 failed, 0 skipped.
 
 ## 8. Reviewer Notes
 

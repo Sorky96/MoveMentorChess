@@ -22,6 +22,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     private readonly OpeningTrainerResultsViewModel resultsViewModel = new();
     private readonly HashSet<string> studyAvailableTargets = new(StringComparer.OrdinalIgnoreCase);
     private readonly OpeningTrainerSessionController sessionController;
+    private readonly OpeningTrainerSelectionViewModel selectionViewModel;
     // Compatibility shims – state still referenced by the rest of the ViewModel.
     // These are now delegated to sessionController.
     private IReadOnlyList<OpeningTrainingAttemptResult> currentSessionAttempts => sessionController.CurrentSessionAttempts;
@@ -34,21 +35,13 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     private int transposedAnswers => sessionController.TransposedAnswers;
     private int hintUseCount => sessionController.HintUseCount;
     private OpeningLineCatalogItem? selectedOpening;
-    private TrainingRecommendationCard? todayRecommendation;
     private TrainingPriorityItem? selectedPriority;
     private OpeningTrainingAnswerOption? selectedAnswerOption;
-    private OpeningTrainingIntensityChoice? selectedIntensityChoice;
-    private PlayerOpeningPlan? playerOpeningPlan;
-    private SpecialTrainingModeDefinition? selectedSpecialMode;
     private OpeningTrainerOverview? overview;
     private string? studySelectedSquare;
     private string? studyPreviewTargetSquare;
     private int currentPageIndex = SelectionPageIndex;
     private string filterText = string.Empty;
-    private string advancedPlayerKey = string.Empty;
-    private OpeningTrainingProfileChoice? selectedProfileChoice;
-    private RepertoireSide selectedSide = RepertoireSide.Both;
-    private OpeningTrainingStrictness selectedStrictness = OpeningTrainingStrictness.BookFlexible;
     private string previewFen = new ChessGame().GetFen();
     private string summaryText = Localizer.Text(LocalizedStrings.OpeningTrainerChooseOpeningPreview);
     private string opponentSummary = Localizer.Text(LocalizedStrings.OpeningTrainerCommonRepliesPlaceholder);
@@ -77,6 +70,8 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     public OpeningTrainerWindowViewModel(OpeningTrainerWorkspaceService workspaceService)
     {
         this.workspaceService = workspaceService ?? throw new ArgumentNullException(nameof(workspaceService));
+        selectionViewModel = new OpeningTrainerSelectionViewModel(workspaceService);
+        selectionViewModel.PropertyChanged += (_, args) => OnPropertyChanged(args.PropertyName);
         sessionController = new OpeningTrainerSessionController(workspaceService, new SessionCallbacks(this));
         RefreshCommand = new RelayCommand(RefreshOpenings);
         GoToOverviewCommand = new RelayCommand(OpenOverviewPage, () => SelectedOpening is not null && overview is not null);
@@ -102,10 +97,6 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             ExecuteSelectedSecondaryNextAction,
             () => SelectedSecondaryNextAction is not null);
 
-        selectedProfileChoice = AvailableProfileChoices.First(choice => choice.Id == "both");
-        selectedIntensityChoice = AvailableIntensityChoices.First(choice => choice.Id == "balanced");
-        selectedSide = selectedProfileChoice.Side;
-        selectedStrictness = selectedIntensityChoice.Strictness;
         RefreshOpenings();
         workspaceService.TrackTelemetry(
             OpeningTrainingTelemetryEvents.OpeningTrainerOpened,
@@ -138,31 +129,21 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     public ObservableCollection<OpeningUnderstandingCard> UnderstandingCards { get; } = [];
 
-    public ObservableCollection<PlayerOpeningPlanItem> TodayPlanItems { get; } = [];
+    public ObservableCollection<PlayerOpeningPlanItem> TodayPlanItems => selectionViewModel.TodayPlanItems;
 
-    public ObservableCollection<PlayerOpeningPlanItem> WeeklyPlanItems { get; } = [];
+    public ObservableCollection<PlayerOpeningPlanItem> WeeklyPlanItems => selectionViewModel.WeeklyPlanItems;
 
-    public ObservableCollection<PlayerOpeningPlanItem> LongTermGapItems { get; } = [];
+    public ObservableCollection<PlayerOpeningPlanItem> LongTermGapItems => selectionViewModel.LongTermGapItems;
 
-    public ObservableCollection<SpecialTrainingModeDefinition> SpecialTrainingModes { get; } = [];
+    public ObservableCollection<SpecialTrainingModeDefinition> SpecialTrainingModes => selectionViewModel.SpecialTrainingModes;
 
-    public IReadOnlyList<OpeningTrainingProfileChoice> AvailableProfileChoices { get; } =
-    [
-        new("white", Localizer.Text(LocalizedStrings.OpeningTrainerProfileWhiteName), Localizer.Text(LocalizedStrings.OpeningTrainerProfileWhiteDescription), RepertoireSide.White, "opening-coach:white"),
-        new("black", Localizer.Text(LocalizedStrings.OpeningTrainerProfileBlackName), Localizer.Text(LocalizedStrings.OpeningTrainerProfileBlackDescription), RepertoireSide.Black, "opening-coach:black"),
-        new("both", Localizer.Text(LocalizedStrings.OpeningTrainerProfileBothName), Localizer.Text(LocalizedStrings.OpeningTrainerProfileBothDescription), RepertoireSide.Both, "opening-coach:both")
-    ];
+    public IReadOnlyList<OpeningTrainingProfileChoice> AvailableProfileChoices => selectionViewModel.AvailableProfileChoices;
 
-    public IReadOnlyList<OpeningTrainingIntensityChoice> AvailableIntensityChoices { get; } =
-    [
-        new("safe", Localizer.Text(LocalizedStrings.OpeningTrainerIntensitySafeName), Localizer.Text(LocalizedStrings.OpeningTrainerIntensitySafeDescription), OpeningTrainingStrictness.StrictRepertoire),
-        new("balanced", Localizer.Text(LocalizedStrings.OpeningTrainerIntensityBalancedName), Localizer.Text(LocalizedStrings.OpeningTrainerIntensityBalancedDescription), OpeningTrainingStrictness.BookFlexible),
-        new("challenge", Localizer.Text(LocalizedStrings.OpeningTrainerIntensityChallengeName), Localizer.Text(LocalizedStrings.OpeningTrainerIntensityChallengeDescription), OpeningTrainingStrictness.Exploration)
-    ];
+    public IReadOnlyList<OpeningTrainingIntensityChoice> AvailableIntensityChoices => selectionViewModel.AvailableIntensityChoices;
 
-    public IReadOnlyList<RepertoireSide> AvailableSides { get; } = Enum.GetValues<RepertoireSide>();
+    public IReadOnlyList<RepertoireSide> AvailableSides => selectionViewModel.AvailableSides;
 
-    public IReadOnlyList<OpeningTrainingStrictness> AvailableStrictnessOptions { get; } = Enum.GetValues<OpeningTrainingStrictness>();
+    public IReadOnlyList<OpeningTrainingStrictness> AvailableStrictnessOptions => selectionViewModel.AvailableStrictnessOptions;
 
     public RelayCommand RefreshCommand { get; }
 
@@ -215,21 +196,19 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         set => SetProperty(ref filterText, value);
     }
 
-    public string PlayerKey => !string.IsNullOrWhiteSpace(AdvancedPlayerKey)
-        ? AdvancedPlayerKey.Trim()
-        : SelectedProfileChoice?.PlayerKey ?? "opening-coach:both";
+    public string PlayerKey => selectionViewModel.PlayerKey;
 
-    public string ActiveHistoryKeyText => Localizer.Format(LocalizedStrings.OpeningTrainerActiveHistoryKey, PlayerKey);
+    public string ActiveHistoryKeyText => selectionViewModel.ActiveHistoryKeyText;
 
     public string AdvancedPlayerKey
     {
-        get => advancedPlayerKey;
+        get => selectionViewModel.AdvancedPlayerKey;
         set
         {
-            if (SetProperty(ref advancedPlayerKey, value))
+            string before = selectionViewModel.AdvancedPlayerKey;
+            selectionViewModel.AdvancedPlayerKey = value;
+            if (!string.Equals(before, selectionViewModel.AdvancedPlayerKey, StringComparison.Ordinal))
             {
-                OnPropertyChanged(nameof(PlayerKey));
-                OnPropertyChanged(nameof(ActiveHistoryKeyText));
                 RefreshTodayRecommendation();
                 LoadOverview();
             }
@@ -238,35 +217,28 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     public OpeningTrainingProfileChoice? SelectedProfileChoice
     {
-        get => selectedProfileChoice;
+        get => selectionViewModel.SelectedProfileChoice;
         set
         {
-            if (SetProperty(ref selectedProfileChoice, value))
+            OpeningTrainingProfileChoice? before = selectionViewModel.SelectedProfileChoice;
+            selectionViewModel.SelectedProfileChoice = value;
+            if (!EqualityComparer<OpeningTrainingProfileChoice?>.Default.Equals(before, selectionViewModel.SelectedProfileChoice))
             {
-                OnPropertyChanged(nameof(PlayerKey));
-                OnPropertyChanged(nameof(ActiveHistoryKeyText));
-                OnPropertyChanged(nameof(SelectedProfileSummary));
-                if (value is not null && selectedSide != value.Side)
-                {
-                    selectedSide = value.Side;
-                    OnPropertyChanged(nameof(SelectedSide));
-                }
-
                 RefreshOpenings();
             }
         }
     }
 
-    public string SelectedProfileSummary => SelectedProfileChoice is null
-        ? Localizer.Text(LocalizedStrings.OpeningTrainerSelectedProfilePlaceholder)
-        : SelectedProfileChoice.Description;
+    public string SelectedProfileSummary => selectionViewModel.SelectedProfileSummary;
 
     public RepertoireSide SelectedSide
     {
-        get => selectedSide;
+        get => selectionViewModel.SelectedSide;
         set
         {
-            if (SetProperty(ref selectedSide, value))
+            RepertoireSide before = selectionViewModel.SelectedSide;
+            selectionViewModel.SelectedSide = value;
+            if (before != selectionViewModel.SelectedSide)
             {
                 RefreshOpenings();
             }
@@ -275,8 +247,8 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     public OpeningTrainingStrictness SelectedStrictness
     {
-        get => selectedStrictness;
-        set => SetProperty(ref selectedStrictness, value);
+        get => selectionViewModel.SelectedStrictness;
+        set => selectionViewModel.SelectedStrictness = value;
     }
 
     public OpeningLineCatalogItem? SelectedOpening
@@ -294,131 +266,57 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     }
 
     public TrainingRecommendationCard? TodayRecommendation
-    {
-        get => todayRecommendation;
-        private set
-        {
-            if (SetProperty(ref todayRecommendation, value))
-            {
-                RaiseTodayRecommendationStateChanged();
-            }
-        }
-    }
+        => selectionViewModel.TodayRecommendation;
 
-    public bool HasTodayRecommendation => TodayRecommendation is not null;
+    public bool HasTodayRecommendation => selectionViewModel.HasTodayRecommendation;
 
-    public string TodayRecommendationOpening => TodayRecommendation?.OpeningLine.DisplayName ?? Localizer.Text(LocalizedStrings.OpeningTrainerNoRecommendation);
+    public string TodayRecommendationOpening => selectionViewModel.TodayRecommendationOpening;
 
-    public string TodayRecommendationMeta => TodayRecommendation is null
-        ? Localizer.Text(LocalizedStrings.OpeningTrainerImportTheoryForRecommendations)
-        : Localizer.Format(
-            LocalizedStrings.OpeningTrainerRecommendationMeta,
-            FormatRepertoireSide(TodayRecommendation.OpeningLine.RepertoireSide),
-            TodayRecommendation.Difficulty,
-            TodayRecommendation.EstimatedDurationMinutes);
+    public string TodayRecommendationMeta => selectionViewModel.TodayRecommendationMeta;
 
-    public string TodayRecommendationReason => TodayRecommendation?.Reason ?? Localizer.Text(LocalizedStrings.OpeningTrainerNeedsOpeningLine);
+    public string TodayRecommendationReason => selectionViewModel.TodayRecommendationReason;
 
-    public string TodayRecommendationAction => TodayRecommendation?.RecommendedAction ?? Localizer.Text(LocalizedStrings.OpeningTrainerStartPractice);
+    public string TodayRecommendationAction => selectionViewModel.TodayRecommendationAction;
 
-    public string TodayLessonOpening => TodayRecommendation?.OpeningLine.DisplayName ?? Localizer.Text(LocalizedStrings.OpeningTrainerChooseOpeningFirst);
+    public string TodayLessonOpening => selectionViewModel.TodayLessonOpening;
 
-    public string TodayLessonSideText => TodayRecommendation is null
-        ? Localizer.Text(LocalizedStrings.OpeningTrainerNoActiveTheory)
-        : TodayRecommendation.OpeningLine.RepertoireSide switch
-        {
-            RepertoireSide.White => Localizer.Text(LocalizedStrings.OpeningTrainerWhiteRepertoire),
-            RepertoireSide.Black => Localizer.Text(LocalizedStrings.OpeningTrainerBlackRepertoire),
-            _ => Localizer.Text(LocalizedStrings.OpeningTrainerBothSides)
-        };
+    public string TodayLessonSideText => selectionViewModel.TodayLessonSideText;
 
-    public string TodayLessonDurationText => TodayRecommendation is null
-        ? Localizer.Text(LocalizedStrings.OpeningTrainerDurationAfterImport)
-        : Localizer.Format(LocalizedStrings.OpeningTrainerAboutMinutes, TodayRecommendation.EstimatedDurationMinutes);
+    public string TodayLessonDurationText => selectionViewModel.TodayLessonDurationText;
 
-    public string TodayLessonMoveCountText => TodayRecommendation is null
-        ? Localizer.Text(LocalizedStrings.OpeningTrainerNoPositionsToTrain)
-        : TodayRecommendation.OpeningLine.BookBranchCount > 0
-            ? Localizer.Format(LocalizedStrings.OpeningTrainerPositionsBranches, TodayRecommendation.OpeningLine.BookBranchCount)
-            : Localizer.Format(LocalizedStrings.OpeningTrainerTheoryGames, Math.Max(1, TodayRecommendation.OpeningLine.BookGameCount));
+    public string TodayLessonMoveCountText => selectionViewModel.TodayLessonMoveCountText;
 
-    public string TodayLessonReason => TodayRecommendation?.Reason ?? Localizer.Text(LocalizedStrings.OpeningTrainerImportOrChooseOpening);
+    public string TodayLessonReason => selectionViewModel.TodayLessonReason;
 
-    public string TodayDecisionSummary => TodayRecommendation is null
-        ? Localizer.Text(LocalizedStrings.OpeningTrainerRecommendedTodayUnavailable)
-        : Localizer.Format(
-            LocalizedStrings.OpeningTrainerTodayDecisionSummary,
-            GetRecommendedPositionCount(),
-            GetReviewMoveCount(),
-            GetEstimatedDurationText(),
-            FormatRepertoireSide(TodayRecommendation.OpeningLine.RepertoireSide));
+    public string TodayDecisionSummary => selectionViewModel.BuildTodayDecisionSummary(
+        overview,
+        SelectedOpening);
 
-    public string TodayStartSequenceText => SelectedIntensityChoice?.Id switch
-    {
-        "safe" => Localizer.Text(LocalizedStrings.OpeningTrainerStartSequenceSafe),
-        "challenge" => Localizer.Text(LocalizedStrings.OpeningTrainerStartSequenceChallenge),
-        _ => Localizer.Text(LocalizedStrings.OpeningTrainerStartSequenceBalanced)
-    };
+    public string TodayStartSequenceText => selectionViewModel.TodayStartSequenceText;
 
-    public string TodayLessonReasonDetail
-    {
-        get
-        {
-            if (TodayRecommendation is null)
-            {
-                return Localizer.Text(LocalizedStrings.OpeningTrainerTheoryReasonPlaceholder);
-            }
+    public string TodayLessonReasonDetail => selectionViewModel.BuildTodayLessonReasonDetail(overview);
 
-            int weakBranches = overview?.Coverage.WeakBranches ?? TodayRecommendation.OpeningLine.BookBranchCount;
-            string reason = TodayRecommendation.Reason.Trim();
-            if (TodayRecommendation.ReasonCode == TrainingRecommendationReasonCode.RevisitDue && TodayRecommendation.Priority >= 10_000)
-            {
-                reason = Localizer.Text(LocalizedStrings.OpeningTrainerReviewDueScheduled);
-            }
+    public string TodayTrainingReasonLabel => selectionViewModel.TodayTrainingReasonLabel;
 
-            string modeContext = SelectedIntensityChoice?.Id switch
-            {
-                "safe" => Localizer.Text(LocalizedStrings.OpeningTrainerModeContextSafe),
-                "challenge" => Localizer.Text(LocalizedStrings.OpeningTrainerModeContextChallenge),
-                _ => Localizer.Text(LocalizedStrings.OpeningTrainerModeContextBalanced)
-            };
-            string goal = weakBranches > 0
-                ? Localizer.Format(LocalizedStrings.OpeningTrainerGoalRepairWeakBranches, weakBranches)
-                : Localizer.Text(LocalizedStrings.OpeningTrainerGoalStableRecall);
+    public string TodayLessonButtonText => selectionViewModel.TodayLessonButtonText;
 
-            return $"{reason} {modeContext}{Environment.NewLine}{goal}";
-        }
-    }
-
-    public string TodayTrainingReasonLabel => HasTodayLesson
-        ? Localizer.Text(LocalizedStrings.OpeningTrainerRecommendedBecause)
-        : Localizer.Text(LocalizedStrings.OpeningTrainerReadyWhenYouAre);
-
-    public string TodayLessonButtonText => HasTodayLesson
-        ? Localizer.Text(LocalizedStrings.OpeningTrainerStartGuidedTraining)
-        : Localizer.Text(LocalizedStrings.OpeningTrainerImportOpeningsFirst);
-
-    public bool HasTodayLesson => TodayRecommendation is not null;
+    public bool HasTodayLesson => selectionViewModel.HasTodayLesson;
 
     public OpeningTrainingIntensityChoice? SelectedIntensityChoice
     {
-        get => selectedIntensityChoice;
+        get => selectionViewModel.SelectedIntensityChoice;
         set
         {
-            if (SetProperty(ref selectedIntensityChoice, value))
+            OpeningTrainingIntensityChoice? before = selectionViewModel.SelectedIntensityChoice;
+            selectionViewModel.SelectedIntensityChoice = value;
+            if (!EqualityComparer<OpeningTrainingIntensityChoice?>.Default.Equals(before, selectionViewModel.SelectedIntensityChoice))
             {
-                SelectedStrictness = value?.Strictness ?? OpeningTrainingStrictness.BookFlexible;
-                OnPropertyChanged(nameof(SelectedIntensitySummary));
-                OnPropertyChanged(nameof(TodayDecisionSummary));
-                OnPropertyChanged(nameof(TodayStartSequenceText));
-                OnPropertyChanged(nameof(TodayLessonReasonDetail));
-                OnPropertyChanged(nameof(PracticeFocusText));
+                RaiseSelectionCoachingTextChanged();
             }
         }
     }
 
-    public string SelectedIntensitySummary => SelectedIntensityChoice?.Description
-        ?? Localizer.Text(LocalizedStrings.OpeningTrainerSelectedIntensityPlaceholder);
+    public string SelectedIntensitySummary => selectionViewModel.SelectedIntensitySummary;
 
     public bool IsAdvancedOptionsExpanded
     {
@@ -438,49 +336,33 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     }
 
     public PlayerOpeningPlan? PlayerOpeningPlan
-    {
-        get => playerOpeningPlan;
-        private set => SetProperty(ref playerOpeningPlan, value);
-    }
+        => selectionViewModel.PlayerOpeningPlan;
 
-    public string PlayerOpeningPlanTitle => Localizer.Text(LocalizedStrings.OpeningTrainerTrainingRhythmTitle);
+    public string PlayerOpeningPlanTitle => selectionViewModel.PlayerOpeningPlanTitle;
 
-    public string PlayerOpeningPlanSummary => PlayerOpeningPlan?.Summary ?? Localizer.Text(LocalizedStrings.OpeningTrainerTrainingRhythmPlaceholder);
+    public string PlayerOpeningPlanSummary => selectionViewModel.PlayerOpeningPlanSummary;
 
-    public string PlayerOpeningProgressText => PlayerOpeningPlan is null
-        ? Localizer.Text(LocalizedStrings.OpeningTrainerNoPracticeHistory)
-        : PlayerOpeningPlan.Progress.SessionCount == 0
-            ? Localizer.Text(LocalizedStrings.OpeningTrainerStartSessionForProgress)
-            : Localizer.Format(
-                LocalizedStrings.OpeningTrainerProgressMovesAccepted,
-                PlayerOpeningPlan.Progress.AttemptCount,
-                PlayerOpeningPlan.Progress.AccuracyPercent);
+    public string PlayerOpeningProgressText => selectionViewModel.PlayerOpeningProgressText;
 
-    public string PlayerOpeningProgressInterpretation => PlayerOpeningPlan is null
-        ? "Progress history will turn into a short coaching note after your first completed session."
-        : PlayerOpeningPlan.Progress.SessionCount == 0
-            ? "You are starting fresh, so today's session focuses on building the first reliable recall path."
-            : PlayerOpeningPlan.Progress.AccuracyPercent >= 80
-                ? "Your accuracy is stable. Today's session focuses on retention, not new material."
-                : "Recent practice still has some friction. Today's session keeps the scope controlled and repairs weak spots first.";
+    public string PlayerOpeningProgressInterpretation => selectionViewModel.PlayerOpeningProgressInterpretation;
 
     public SpecialTrainingModeDefinition? SelectedSpecialMode
     {
-        get => selectedSpecialMode;
+        get => selectionViewModel.SelectedSpecialMode;
         set
         {
-            if (SetProperty(ref selectedSpecialMode, value))
+            SpecialTrainingModeDefinition? before = selectionViewModel.SelectedSpecialMode;
+            selectionViewModel.SelectedSpecialMode = value;
+            if (!EqualityComparer<SpecialTrainingModeDefinition?>.Default.Equals(before, selectionViewModel.SelectedSpecialMode))
             {
                 StartSpecialModeCommand.RaiseCanExecuteChanged();
-                OnPropertyChanged(nameof(SelectedSpecialModeDescription));
-                OnPropertyChanged(nameof(SelectedSpecialModeButtonText));
             }
         }
     }
 
-    public string SelectedSpecialModeDescription => SelectedSpecialMode?.Description ?? "Choose a special mode to start a focused preset.";
+    public string SelectedSpecialModeDescription => selectionViewModel.SelectedSpecialModeDescription;
 
-    public string SelectedSpecialModeButtonText => SelectedSpecialMode?.CommandLabel ?? "Start special mode";
+    public string SelectedSpecialModeButtonText => selectionViewModel.SelectedSpecialModeButtonText;
 
     public TrainingPriorityItem? SelectedPriority
     {
@@ -994,7 +876,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             "safe" => "Focus: main line review only. Weak branches are listed below as optional repairs.",
             "challenge" => $"Focus: main line from {FormatMainLine(overview.MainLine, 4)}, plus less familiar opponent replies.",
             _ => overview.Coverage.WeakBranches > 0
-                ? $"Focus: {overview.Coverage.WeakBranches} review position{PluralSuffix(overview.Coverage.WeakBranches)} from your {FormatMainLine(overview.MainLine, 4)} line. The full line contains {GetReviewMoveCount()} moves, but today's practice stays focused."
+                ? $"Focus: {overview.Coverage.WeakBranches} review position{PluralSuffix(overview.Coverage.WeakBranches)} from your {FormatMainLine(overview.MainLine, 4)} line. The full line contains {selectionViewModel.CountReviewMoves(overview, SelectedOpening)} moves, but today's practice stays focused."
                 : $"Focus: main line from {FormatMainLine(overview.MainLine, 4)}, plus the most useful opponent replies."
         };
 
@@ -1082,7 +964,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     private void RefreshTodayRecommendation()
     {
-        TodayRecommendation = workspaceService.GetRecommendationForToday(PlayerKey, SelectedSide, 120);
+        selectionViewModel.RefreshTodayRecommendation();
         if (TodayRecommendation is not null)
         {
             Dictionary<string, string> properties = BuildRecommendationTelemetryProperties(TodayRecommendation);
@@ -1100,36 +982,12 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
                 properties: properties);
         }
 
-        PlayerOpeningPlan = workspaceService.GetPlayerOpeningPlan(PlayerKey, SelectedSide, 120);
-        ReplaceItems(SpecialTrainingModes, workspaceService.ListSpecialTrainingModes());
-        SelectedSpecialMode ??= SpecialTrainingModes.FirstOrDefault();
-        ReplaceItems(TodayPlanItems, PlayerOpeningPlan.Today);
-        ReplaceItems(WeeklyPlanItems, PlayerOpeningPlan.ThisWeek);
-        ReplaceItems(LongTermGapItems, PlayerOpeningPlan.LongTermGaps);
-        OnPropertyChanged(nameof(HasTodayRecommendation));
-        OnPropertyChanged(nameof(TodayRecommendationOpening));
-        OnPropertyChanged(nameof(TodayRecommendationMeta));
-        OnPropertyChanged(nameof(TodayRecommendationReason));
-        OnPropertyChanged(nameof(TodayRecommendationAction));
-        OnPropertyChanged(nameof(TodayLessonOpening));
-        OnPropertyChanged(nameof(TodayLessonSideText));
-        OnPropertyChanged(nameof(TodayLessonDurationText));
-        OnPropertyChanged(nameof(TodayLessonMoveCountText));
-        OnPropertyChanged(nameof(TodayLessonReason));
-        OnPropertyChanged(nameof(TodayTrainingReasonLabel));
-        OnPropertyChanged(nameof(TodayLessonButtonText));
-        OnPropertyChanged(nameof(HasTodayLesson));
-        OnPropertyChanged(nameof(PlayerOpeningPlanTitle));
-        OnPropertyChanged(nameof(PlayerOpeningPlanSummary));
-        OnPropertyChanged(nameof(PlayerOpeningProgressText));
-        OnPropertyChanged(nameof(PlayerOpeningProgressInterpretation));
-            OnPropertyChanged(nameof(CoverageHumanText));
-            OnPropertyChanged(nameof(MainLineText));
-            OnPropertyChanged(nameof(RememberThisText));
+        RaiseTodayRecommendationStateChanged();
+        OnPropertyChanged(nameof(CoverageHumanText));
+        OnPropertyChanged(nameof(MainLineText));
+        OnPropertyChanged(nameof(RememberThisText));
         OnPropertyChanged(nameof(SelectedSpecialModeDescription));
         OnPropertyChanged(nameof(SelectedSpecialModeButtonText));
-        StartRecommendedStudyCommand.RaiseCanExecuteChanged();
-        StartRecommendedPracticeNowCommand.RaiseCanExecuteChanged();
         StartSpecialModeCommand.RaiseCanExecuteChanged();
     }
 
@@ -2076,78 +1934,6 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(TodayStartSequenceText));
     }
 
-    private int GetRecommendedPositionCount()
-    {
-        if (overview is not null && TodayRecommendation is not null && Equals(SelectedOpening, TodayRecommendation.OpeningLine))
-        {
-            return Math.Max(1, overview.Coverage.WeakBranches > 0 ? overview.Coverage.WeakBranches : overview.MainLine.Count);
-        }
-
-        return TodayRecommendation is null
-            ? 0
-            : Math.Max(1, TodayRecommendation.OpeningLine.BookBranchCount);
-    }
-
-    private int GetReviewMoveCount()
-    {
-        string? targetEco = TodayRecommendation?.OpeningLine.Eco ?? SelectedOpening?.Eco;
-        if (!string.IsNullOrWhiteSpace(targetEco))
-        {
-            PlayerOpeningPlanItem? matchingWeeklyItem = WeeklyPlanItems.FirstOrDefault(item =>
-                string.Equals(item.Eco, targetEco, StringComparison.OrdinalIgnoreCase));
-            int parsedCount = ExtractLeadingInt(matchingWeeklyItem?.Evidence);
-            if (parsedCount > 0)
-            {
-                return parsedCount;
-            }
-        }
-
-        if (overview is not null && overview.MainLine.Count > 0)
-        {
-            return overview.MainLine.Count;
-        }
-
-        return Math.Max(1, GetRecommendedPositionCount());
-    }
-
-    private static int ExtractLeadingInt(string? text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return 0;
-        }
-
-        int value = 0;
-        foreach (char character in text)
-        {
-            if (!char.IsDigit(character))
-            {
-                break;
-            }
-
-            value = value * 10 + character - '0';
-        }
-
-        return value;
-    }
-
-    private string GetEstimatedDurationText()
-    {
-        if (TodayRecommendation is null)
-        {
-            return "0 min";
-        }
-
-        if (SelectedIntensityChoice?.Id == "balanced" && (overview?.Coverage.WeakBranches ?? TodayRecommendation.OpeningLine.BookBranchCount) > 0)
-        {
-            int lowerBound = Math.Max(TodayRecommendation.EstimatedDurationMinutes, 8);
-            int upperBound = Math.Max(lowerBound + 2, 10);
-            return $"{lowerBound}-{upperBound} min";
-        }
-
-        return $"{TodayRecommendation.EstimatedDurationMinutes} min";
-    }
-
     private static string FormatRepertoireSide(RepertoireSide side)
         => side switch
         {
@@ -2439,19 +2225,6 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         }
     }
 }
-
-public sealed record OpeningTrainingProfileChoice(
-    string Id,
-    string Title,
-    string Description,
-    RepertoireSide Side,
-    string PlayerKey);
-
-public sealed record OpeningTrainingIntensityChoice(
-    string Id,
-    string Title,
-    string Description,
-    OpeningTrainingStrictness Strictness);
 
 public sealed record TrainingNextActionCardViewModel(
     TrainingNextAction Action,

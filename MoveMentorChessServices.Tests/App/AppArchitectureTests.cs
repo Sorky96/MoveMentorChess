@@ -12,7 +12,7 @@ public sealed partial class AppArchitectureTests
         string root = FindRepositoryRoot();
         (string Path, int MaxLines)[] cleanupBudgets =
         [
-            (Path.Join(root, "MoveMentorChess.App", "ViewModels", "OpeningTrainerWindowViewModel.cs"), 2498),
+            (Path.Join(root, "MoveMentorChess.App", "ViewModels", "OpeningTrainerWindowViewModel.cs"), 2275),
             (Path.Join(root, "MoveMentorChess.App", "Views", "AnalysisWindow.axaml.cs"), 540),
             (Path.Join(root, "MoveMentorChess.App", "Views", "ProfilesWindow.axaml.cs"), 790),
             (Path.Join(root, "MoveMentorChess.Training", "OpeningTrainerService.cs"), 470),
@@ -91,6 +91,24 @@ public sealed partial class AppArchitectureTests
         Assert.Contains("OpeningTrainerResultsViewModel", windowViewModel, StringComparison.Ordinal);
         Assert.DoesNotContain("private TrainingResultLearningPlan? learningPlan", windowViewModel, StringComparison.Ordinal);
         Assert.DoesNotContain("private TrainingSessionOutcomeSummary? outcomeSummary", windowViewModel, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void OpeningTrainerSelectionStateStaysExtractedFromWindowViewModel()
+    {
+        string root = FindRepositoryRoot();
+        string viewModelsRoot = Path.Join(root, "MoveMentorChess.App", "ViewModels");
+        string windowViewModel = File.ReadAllText(Path.Join(viewModelsRoot, "OpeningTrainerWindowViewModel.cs"));
+
+        Assert.True(
+            File.Exists(Path.Join(viewModelsRoot, "OpeningTrainerSelectionViewModel.cs")),
+            "Opening trainer selection and recommendation state should stay in its extracted ViewModel.");
+        Assert.Contains("OpeningTrainerSelectionViewModel", windowViewModel, StringComparison.Ordinal);
+        Assert.DoesNotContain("private TrainingRecommendationCard? todayRecommendation", windowViewModel, StringComparison.Ordinal);
+        Assert.DoesNotContain("private OpeningTrainingProfileChoice? selectedProfileChoice", windowViewModel, StringComparison.Ordinal);
+        Assert.DoesNotContain("private OpeningTrainingIntensityChoice? selectedIntensityChoice", windowViewModel, StringComparison.Ordinal);
+        Assert.DoesNotContain("private PlayerOpeningPlan? playerOpeningPlan", windowViewModel, StringComparison.Ordinal);
+        Assert.DoesNotContain("private SpecialTrainingModeDefinition? selectedSpecialMode", windowViewModel, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -426,9 +444,9 @@ public sealed partial class AppArchitectureTests
                 "Sprint 4 - Opening Trainer ViewModel Slice: split animation frame data from the animator."),
             new(
                 Path.Join("MoveMentorChess.App", "ViewModels", "OpeningTrainerWindowViewModel.cs"),
-                ["OpeningTrainerWindowViewModel", "OpeningTrainingProfileChoice", "OpeningTrainingIntensityChoice", "TrainingNextActionCardViewModel"],
+                ["OpeningTrainerWindowViewModel", "TrainingNextActionCardViewModel"],
                 "Architecture cleanup",
-                "Sprint 4 - Opening Trainer ViewModel Slice: move choice/card records with the extracted selection ViewModel."),
+                "Sprint 4 - Opening Trainer ViewModel Slice: move the remaining result card record out after the selection slice."),
             new(
                 Path.Join("MoveMentorChess.App", "ViewModels", "RelayCommand.cs"),
                 ["RelayCommand", "RelayCommand"],
