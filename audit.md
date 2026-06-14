@@ -419,8 +419,8 @@ Implementation status 2026-06-14:
 - Split `PgnFileImportResult`, `BulkPgnAnalysisResult`, `PgnBatchParseResult`, and `PgnBatchParseError` into one public type per file and removed the corresponding architecture allow-list entries.
 - Lowered the `MainWindowViewModel.cs` architecture budget to 1,540 lines and added `MainWindowImportReplayStateStaysExtractedFromWindowViewModel`.
 - Added `MainWindowImportReplayTests` covering successful PGN import, skipped unreplayable games, replay/parse failure, next and selected replay cursor behavior, board FEN projection, command enablement, and persistence-save fallback.
-- Validation passed with `dotnet test MoveMentorChessServices.Tests\MoveMentorChessServices.Tests.csproj --no-restore --filter "MainWindowImportReplayTests|AppArchitectureTests" --verbosity minimal` (25 passed).
-- Validation passed with `dotnet test MoveMentorChess.sln --no-restore -m:1 --verbosity minimal` (496 passed).
+- Validation passed with `dotnet test MoveMentorChessServices.Tests\MoveMentorChessServices.Tests.csproj --no-restore --filter "MainWindowImportReplayTests|AppArchitectureTests" --verbosity minimal` (26 passed).
+- Validation passed with `dotnet test MoveMentorChess.sln --no-restore -m:1 --verbosity minimal` (497 passed).
 
 ### Sprint 6 - Settings And Runtime Composition
 

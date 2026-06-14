@@ -768,13 +768,13 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private void LoadImportedGameCore(ImportedGame game)
     {
         importedGameReplay.Load(game);
-        cachedAnalysisResultsBySide.Clear();
-        cachedAnalysisResult = null;
         AfterImportedGameLoaded();
     }
 
     private void AfterImportedGameLoaded()
     {
+        cachedAnalysisResultsBySide.Clear();
+        cachedAnalysisResult = null;
         undoFenStack.Clear();
         chessGame.Reset();
         OnImportedReplayStateChanged();

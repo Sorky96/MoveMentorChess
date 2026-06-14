@@ -21,6 +21,18 @@ public sealed class MainWindowImportReplayTests
 1. e4 e5 2. Nf3 Nc6 *
 """;
 
+    private const string QueenPawnPgn = """
+[Event "Import replay test 2"]
+[Site "Local"]
+[Date "2026.06.15"]
+[White "Carol"]
+[Black "Drew"]
+[Result "*"]
+[ECO "D06"]
+
+1. d4 d5 2. c4 e6 *
+""";
+
     [Fact]
     public void ImportPgn_LoadsReplayAndSavesGame()
     {
@@ -42,21 +54,40 @@ public sealed class MainWindowImportReplayTests
     {
         RecordingMainWindowAnalysisDataService dataService = new();
         MainWindowViewModel viewModel = CreateViewModel(dataService);
+        ImportedGame zeroPlyGame = CreateZeroPlyGame();
         ImportedGame invalidGame = CreateInvalidReplayGame();
         ImportedGame validGame = PgnGameParser.Parse(FourPlyPgn);
         PgnBatchParseResult parseResult = new(
-            [invalidGame, validGame],
+            [zeroPlyGame, invalidGame, validGame],
             [new PgnBatchParseError(3, "Bad SAN")]);
 
         PgnFileImportResult result = viewModel.ImportPgnGames(parseResult);
 
-        Assert.Equal(2, result.ImportedGames);
-        Assert.Equal(2, result.SkippedGames);
+        Assert.Equal(3, result.ImportedGames);
+        Assert.Equal(3, result.SkippedGames);
         Assert.Same(parseResult.Games, result.Games);
         Assert.Equal(4, viewModel.ImportedMoves.Count);
-        Assert.Contains("Skipped 2", viewModel.StatusMessage, StringComparison.Ordinal);
+        Assert.Contains("Skipped 3", viewModel.StatusMessage, StringComparison.Ordinal);
         Assert.Single(dataService.SavedGameBatches);
-        Assert.Equal(2, dataService.SavedGameBatches[0].Count);
+        Assert.Equal(3, dataService.SavedGameBatches[0].Count);
+    }
+
+    [Fact]
+    public void ImportPgnGames_ClearsCachedAnalysisWhenBatchLoadsAnotherGame()
+    {
+        MainWindowViewModel viewModel = CreateViewModel(new RecordingMainWindowAnalysisDataService());
+        ImportedGame firstGame = PgnGameParser.Parse(FourPlyPgn);
+        ImportedGame secondGame = PgnGameParser.Parse(QueenPawnPgn);
+        viewModel.ImportPgn(FourPlyPgn);
+        viewModel.LoadAnalysisResult(CreateAnalysisResultWithBlunder(firstGame));
+
+        Assert.Single(viewModel.AnalysisMistakes);
+
+        viewModel.ImportPgnGames(new PgnBatchParseResult([secondGame], []));
+        viewModel.SelectedAnalysisFilter = "Blunder";
+
+        Assert.Empty(viewModel.AnalysisMistakes);
+        Assert.All(viewModel.ImportedMoves, item => Assert.False(item.HasAnalysisLabel));
     }
 
     [Fact]
@@ -145,6 +176,59 @@ public sealed class MainWindowImportReplayTests
             Result: "*",
             Eco: null,
             Site: null);
+
+    private static ImportedGame CreateZeroPlyGame()
+        => new(
+            PgnText: """
+[Event "No moves"]
+[White "No"]
+[Black "Moves"]
+[Result "*"]
+
+*
+""",
+            SanMoves: [],
+            WhitePlayer: "No",
+            BlackPlayer: "Moves",
+            WhiteElo: null,
+            BlackElo: null,
+            DateText: null,
+            Result: "*",
+            Eco: null,
+            Site: null);
+
+    private static GameAnalysisResult CreateAnalysisResultWithBlunder(ImportedGame game)
+    {
+        ReplayPly replay = new GameReplayService().Replay(game)[0];
+        EngineAnalysis before = new(
+            replay.FenBefore,
+            [new EngineLine(replay.Uci, 40, null, [replay.Uci])],
+            replay.Uci);
+        EngineAnalysis after = new(
+            replay.FenAfter,
+            [new EngineLine(replay.Uci, -220, null, [replay.Uci])],
+            replay.Uci);
+        MoveAnalysisResult move = new(
+            replay,
+            before,
+            after,
+            EvalBeforeCp: 40,
+            EvalAfterCp: -220,
+            BestMateIn: null,
+            PlayedMateIn: null,
+            CentipawnLoss: 260,
+            MoveQualityBucket.Blunder,
+            MaterialDeltaCp: 0,
+            MistakeTag: new MistakeTag("hanging_piece", 0.9, []),
+            Explanation: new MoveExplanation("short", "hint"));
+        SelectedMistake mistake = new(
+            [move],
+            MoveQualityBucket.Blunder,
+            move.MistakeTag,
+            move.Explanation!);
+
+        return new GameAnalysisResult(game, PlayerSide.White, [replay], [move], [mistake]);
+    }
 
     private sealed class MissingStockfishPathResolver : IStockfishPathResolver
     {

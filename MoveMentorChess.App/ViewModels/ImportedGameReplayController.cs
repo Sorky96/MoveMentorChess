@@ -56,6 +56,11 @@ internal sealed class ImportedGameReplayController : ViewModelBase
         ArgumentNullException.ThrowIfNull(game);
 
         IReadOnlyList<ReplayPly> replay = replayService.Replay(game);
+        ApplyLoadedReplay(game, replay);
+    }
+
+    private void ApplyLoadedReplay(ImportedGame game, IReadOnlyList<ReplayPly> replay)
+    {
         Game = game;
         Replay = replay;
         Cursor = 0;
@@ -78,7 +83,14 @@ internal sealed class ImportedGameReplayController : ViewModelBase
         {
             try
             {
-                Load(game);
+                IReadOnlyList<ReplayPly> replay = replayService.Replay(game);
+                if (replay.Count == 0)
+                {
+                    skippedGames++;
+                    continue;
+                }
+
+                ApplyLoadedReplay(game, replay);
                 return true;
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
@@ -206,12 +218,9 @@ internal sealed class ImportedGameReplayController : ViewModelBase
             .GroupBy(move => move.Replay.Ply)
             .ToDictionary(group => group.Key, group => group.First());
 
-        foreach (ImportedMoveItemViewModel item in ImportedMoves)
+        foreach (ImportedMoveItemViewModel item in ImportedMoves.Where(item => analysesByPly.ContainsKey(item.ReplayPly.Ply)))
         {
-            if (analysesByPly.TryGetValue(item.ReplayPly.Ply, out MoveAnalysisResult? analysis))
-            {
-                item.ApplyAnalysis(analysis);
-            }
+            item.ApplyAnalysis(analysesByPly[item.ReplayPly.Ply]);
         }
     }
 
