@@ -5,11 +5,3 @@ public sealed record OpeningTrainingAnswerOption(
     string Text,
     bool IsCorrect,
     string? Explanation = null);
-
-public enum OpeningTrainingAnswerKind
-{
-    Move,
-    SingleChoice,
-    MultiChoice,
-    Text
-}

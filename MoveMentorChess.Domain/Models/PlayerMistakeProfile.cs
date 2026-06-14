@@ -10,7 +10,3 @@ public sealed record PlayerMistakeProfile(
     int? AverageCentipawnLoss,
     IReadOnlyList<PlayerMistakePatternEntry> TopPatterns,
     GamePhase? WeakestPhase);
-
-public sealed record PlayerMistakePatternEntry(
-    string Label,
-    int Count);

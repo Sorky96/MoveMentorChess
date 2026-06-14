@@ -243,6 +243,8 @@ public sealed class AnalysisResultCacheAdapterTests
             return deleteImportedGameResult;
         }
 
+        public void ClearImportedAnalysisData() { }
+
         public IReadOnlyList<SavedImportedGameSummary> ListImportedGames(string? filterText = null, int limit = 200)
             => [];
 
@@ -274,5 +276,9 @@ public sealed class AnalysisResultCacheAdapterTests
 
         public IReadOnlyList<MoveAdviceFeedback> ListMoveAdviceFeedback(string? filterText = null, int limit = 5000)
             => feedback ?? [];
+
+        public void SaveMoveAdviceFeedback(MoveAdviceFeedback feedback)
+        {
+        }
     }
 }

@@ -176,6 +176,140 @@ internal static class SqliteOpeningTheoryStore
         return items;
     }
 
+    public static bool TryGetOpeningOverview(
+        SqliteDatabase database,
+        OpeningLineKey lineKey,
+        RepertoireSide repertoireSide,
+        int maxDepth,
+        out OpeningTrainerOverview? overview)
+    {
+        if (lineKey.IsEmpty)
+        {
+            overview = null;
+            return false;
+        }
+
+        OpeningLineCatalogItem? line = ListOpeningLines(database, limit: 500)
+            .FirstOrDefault(item => item.LineKey == lineKey);
+        if (line is null)
+        {
+            overview = null;
+            return false;
+        }
+
+        List<OpeningLineMove> mainLine = [];
+        List<OpeningTrainingBranch> branches = [];
+        OpeningPositionKey currentPositionKey = line.RootPositionKey;
+        int safeMaxDepth = Math.Max(1, maxDepth);
+
+        for (int ply = 0; ply < safeMaxDepth; ply++)
+        {
+            IReadOnlyList<OpeningTheoryMove> moves = GetOpeningMovesByPositionKey(database, currentPositionKey.Value, 6);
+            if (moves.Count == 0)
+            {
+                break;
+            }
+
+            OpeningTheoryMove primary = moves[0];
+            if (!TryGetOpeningPositionByKey(database, primary.ToPositionKey, out OpeningTheoryPosition? nextPosition)
+                || nextPosition is null)
+            {
+                break;
+            }
+
+            mainLine.Add(new OpeningLineMove(
+                nextPosition.Ply,
+                nextPosition.MoveNumber,
+                ParsePlayerSide(nextPosition.SideToMove) == PlayerSide.White ? PlayerSide.Black : PlayerSide.White,
+                primary.MoveSan,
+                primary.MoveUci,
+                currentPositionKey,
+                primary.ToOpeningPositionKey,
+                primary.IsMainMove));
+            currentPositionKey = primary.ToOpeningPositionKey;
+        }
+
+        IReadOnlyList<OpeningTheoryMove> branchMoves = GetOpeningMovesByPositionKey(database, line.RootPositionKey.Value, 5);
+        foreach (OpeningTheoryMove move in branchMoves)
+        {
+            OpeningTrainingMoveOption? recommended = null;
+            IReadOnlyList<OpeningTheoryMove> replies = GetOpeningMovesByPositionKey(database, move.ToPositionKey, 1);
+            OpeningTheoryMove? bestReply = replies.Count > 0 ? replies[0] : null;
+            if (bestReply is not null)
+            {
+                recommended = new OpeningTrainingMoveOption(
+                    bestReply.MoveSan,
+                    bestReply.MoveUci,
+                    OpeningTrainingMoveRole.Expected,
+                    bestReply.IsMainMove,
+                    "Best local book response.",
+                    OpeningLineRecallReferenceKind.BestMove,
+                    OpeningTrainingMoveSourceKind.OpeningBook,
+                    null,
+                    bestReply.ToOpeningPositionKey);
+            }
+
+            branches.Add(new OpeningTrainingBranch(
+                new OpeningBranchKey($"{line.LineKey.Value}|{move.MoveUci}"),
+                move.MoveSan,
+                move.MoveUci,
+                Math.Max(1, move.DistinctGameCount),
+                $"Book frequency: {move.OccurrenceCount} occurrence(s), {move.DistinctGameCount} game(s).",
+                recommended,
+                [],
+                [],
+                move.ToOpeningPositionKey));
+        }
+
+        IReadOnlyList<OpeningLineMove> pathLineMoves = GetOpeningPathLineMoves(database, line.RootPositionKey);
+        if (pathLineMoves.Count > 0)
+        {
+            mainLine.InsertRange(0, pathLineMoves);
+        }
+
+        OpeningCoverageSummary coverage = new(
+            TotalBookBranches: Math.Max(branches.Count, 1),
+            CoveredBranches: 0,
+            WeakBranches: branches.Count,
+            UnseenCommonBranches: branches.Count,
+            CoveragePercent: 0,
+            KnownPositions: mainLine.Count,
+            StableBranches: 0,
+            KnowledgeBoundaryPly: mainLine.LastOrDefault()?.Ply ?? 0);
+        OpponentReplyProfile opponentProfile = new(
+            line.LineKey,
+            line.RepertoireSide == RepertoireSide.Both ? repertoireSide : line.RepertoireSide,
+            branches.Select(branch => new OpponentMoveFrequency(
+                branch.OpponentMove,
+                branch.OpponentMoveUci,
+                branch.Frequency,
+                branch.Frequency,
+                0,
+                0,
+                false,
+                OpponentMoveFrequencySourceKind.BookFrequency,
+                branch.SourceSummary)).ToList(),
+            branches.Count == 0
+                ? "No opponent branches were found in the local opening book."
+                : $"Tracked {branches.Count} opponent branch(es) from the local opening book.");
+
+        overview = new OpeningTrainerOverview(
+            line.OpeningKey,
+            line.LineKey,
+            line.RepertoireSide,
+            line.Eco,
+            line.OpeningName,
+            line.VariationName,
+            mainLine,
+            branches,
+            opponentProfile,
+            coverage,
+            [],
+            [],
+            []);
+        return true;
+    }
+
     public static IReadOnlyList<string> GetOpeningValidationMoves(SqliteDatabase database, OpeningPositionKey rootPositionKey)
     {
         List<string> pathMoves = BuildPathMovesToPosition(database, rootPositionKey);

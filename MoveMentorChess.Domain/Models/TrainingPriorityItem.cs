@@ -21,18 +21,3 @@ public sealed record TrainingPriorityItem(
             ? "Common"
             : "Low priority";
 }
-
-public enum TrainingPriorityAction
-{
-    TrainThisBranch,
-    RepairThisPosition,
-    ReviewOpponentReply
-}
-
-public enum TrainingPriorityReasonCode
-{
-    CoverageGap,
-    RecentMistake,
-    DangerousOpponentReply,
-    NeglectedBranch
-}

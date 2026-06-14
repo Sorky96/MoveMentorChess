@@ -334,6 +334,7 @@ public sealed class GameAnalysisCacheTests
         }
 
         public bool DeleteImportedGame(string gameFingerprint) => false;
+        public void ClearImportedAnalysisData() { }
 
         public IReadOnlyList<SavedImportedGameSummary> ListImportedGames(string? filterText = null, int limit = 200) => [];
 
@@ -351,6 +352,13 @@ public sealed class GameAnalysisCacheTests
         }
 
         public IReadOnlyList<StoredMoveAnalysis> ListMoveAnalyses(string? filterText = null, int limit = 5000) => [];
+
+        public IReadOnlyList<MoveAdviceFeedback> ListMoveAdviceFeedback(string? filterText = null, int limit = 5000) => [];
+
+        public void SaveMoveAdviceFeedback(MoveAdviceFeedback feedback)
+        {
+            throw new InvalidOperationException("Feedback save failed.");
+        }
 
         public bool TryLoadWindowState(string gameFingerprint, out AnalysisWindowState? state)
         {

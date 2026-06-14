@@ -808,15 +808,24 @@ public sealed class OpeningTrainerServiceTests
         public IReadOnlyList<OpeningReviewItem> ListOpeningReviewItems(string? playerKey = null, int limit = 1000)
             => ReviewItems;
 
+        public void SaveOpeningTrainingScheduledActions(string playerKey, IReadOnlyList<OpeningTrainingScheduledAction> actions) { }
+
+        public IReadOnlyList<OpeningTrainingScheduledAction> ListDueOpeningTrainingScheduledActions(string? playerKey, DateTime nowUtc, int limit = 50) => [];
+
+        public void MarkOpeningTrainingScheduledActionCompleted(string playerKey, string actionId, DateTime completedUtc) { }
+
         public void SaveImportedGame(ImportedGame game) => throw new NotSupportedException();
         public void SaveImportedGames(IReadOnlyList<ImportedGame> games) => throw new NotSupportedException();
         public bool TryLoadImportedGame(string gameFingerprint, out ImportedGame? game) => throw new NotSupportedException();
         public bool DeleteImportedGame(string gameFingerprint) => throw new NotSupportedException();
+        public void ClearImportedAnalysisData() => throw new NotSupportedException();
         public IReadOnlyList<SavedImportedGameSummary> ListImportedGames(string? filterText = null, int limit = 200) => [];
         public IReadOnlyList<GameAnalysisResult> ListResults(string? filterText = null, int limit = 500) => [];
         public bool TryLoadResult(GameAnalysisCacheKey key, out GameAnalysisResult? result) => throw new NotSupportedException();
         public void SaveResult(GameAnalysisCacheKey key, GameAnalysisResult result) => throw new NotSupportedException();
         public IReadOnlyList<StoredMoveAnalysis> ListMoveAnalyses(string? filterText = null, int limit = 5000) => [];
+        public IReadOnlyList<MoveAdviceFeedback> ListMoveAdviceFeedback(string? filterText = null, int limit = 5000) => [];
+        public void SaveMoveAdviceFeedback(MoveAdviceFeedback feedback) => throw new NotSupportedException();
         public bool TryLoadWindowState(string gameFingerprint, out AnalysisWindowState? state) => throw new NotSupportedException();
         public void SaveWindowState(string gameFingerprint, AnalysisWindowState state) => throw new NotSupportedException();
     }
@@ -871,6 +880,7 @@ public sealed class OpeningTrainerServiceTests
         }
 
         public bool DeleteImportedGame(string gameFingerprint) => throw new NotSupportedException();
+        public void ClearImportedAnalysisData() => throw new NotSupportedException();
         public IReadOnlyList<SavedImportedGameSummary> ListImportedGames(string? filterText = null, int limit = 200)
         {
             IEnumerable<KeyValuePair<string, ImportedGame>> filtered = importedGames;
@@ -907,6 +917,7 @@ public sealed class OpeningTrainerServiceTests
 
         public bool TryLoadImportedGame(string gameFingerprint, out ImportedGame? game)
             => importedGames.TryGetValue(gameFingerprint, out game);
+
         public bool TryGetOpeningPositionByKey(string positionKey, out OpeningTheoryPosition? position)
         {
             bool found = theoryPositions.TryGetValue(positionKey, out OpeningTheoryPosition? value);
@@ -926,6 +937,18 @@ public sealed class OpeningTrainerServiceTests
                 : moves;
 
             return filtered.Take(limit).ToList();
+        }
+
+        public IReadOnlyList<OpeningLineCatalogItem> ListOpeningLines(string? filterText = null, RepertoireSide? repertoireSide = null, int limit = 100) => [];
+
+        public bool TryGetOpeningOverview(
+            OpeningLineKey lineKey,
+            RepertoireSide repertoireSide,
+            int maxDepth,
+            out OpeningTrainerOverview? overview)
+        {
+            overview = null;
+            return false;
         }
 
         public bool TryLoadResult(GameAnalysisCacheKey key, out GameAnalysisResult? result) => throw new NotSupportedException();

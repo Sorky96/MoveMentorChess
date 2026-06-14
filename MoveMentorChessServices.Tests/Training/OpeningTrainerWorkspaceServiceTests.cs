@@ -104,6 +104,7 @@ public sealed class OpeningTrainerWorkspaceServiceTests
         }
 
         public bool DeleteImportedGame(string gameFingerprint) => throw new NotSupportedException();
+        public void ClearImportedAnalysisData() => throw new NotSupportedException();
 
         public IReadOnlyList<SavedImportedGameSummary> ListImportedGames(string? filterText = null, int limit = 200) => [];
 
@@ -118,6 +119,10 @@ public sealed class OpeningTrainerWorkspaceServiceTests
         public void SaveResult(GameAnalysisCacheKey key, GameAnalysisResult result) => throw new NotSupportedException();
 
         public IReadOnlyList<StoredMoveAnalysis> ListMoveAnalyses(string? filterText = null, int limit = 5000) => [];
+
+        public IReadOnlyList<MoveAdviceFeedback> ListMoveAdviceFeedback(string? filterText = null, int limit = 5000) => [];
+
+        public void SaveMoveAdviceFeedback(MoveAdviceFeedback feedback) => throw new NotSupportedException();
 
         public bool TryLoadWindowState(string gameFingerprint, out AnalysisWindowState? state)
         {

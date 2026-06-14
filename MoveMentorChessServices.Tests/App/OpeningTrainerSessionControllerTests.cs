@@ -133,6 +133,7 @@ public sealed class OpeningTrainerSessionControllerTests
         public void SaveImportedGames(IReadOnlyList<ImportedGame> games) { }
         public bool TryLoadImportedGame(string gameFingerprint, out ImportedGame? game) { game = null; return false; }
         public bool DeleteImportedGame(string gameFingerprint) => false;
+        public void ClearImportedAnalysisData() { }
         public IReadOnlyList<SavedImportedGameSummary> ListImportedGames(string? filterText = null, int limit = 200) => [];
         public IReadOnlyList<GameAnalysisResult> ListResults(string? filterText = null, int limit = 500) => [];
         public bool TryLoadResult(GameAnalysisCacheKey key, out GameAnalysisResult? result) { result = null; return false; }

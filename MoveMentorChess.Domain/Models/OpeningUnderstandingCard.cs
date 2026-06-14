@@ -5,11 +5,3 @@ public sealed record OpeningUnderstandingCard(
     string Title,
     string Body,
     int Priority);
-
-public enum OpeningUnderstandingCardKind
-{
-    OpeningPlan,
-    PieceSetup,
-    CommonTrap,
-    TheoryExit
-}

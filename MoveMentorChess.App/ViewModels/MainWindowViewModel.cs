@@ -1658,16 +1658,3 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     private sealed record PieceMovePresentation(string Label, string EvalText, string EvalBrush);
 }
-
-public sealed record PgnFileImportResult(
-    int ImportedGames,
-    int SkippedGames,
-    IReadOnlyList<ImportedGame> Games);
-
-public sealed record BulkPgnAnalysisResult(
-    string? PrimaryPlayer,
-    int AnalyzedGames,
-    int CachedGames,
-    int SkippedGames,
-    int FailedGames,
-    IReadOnlyList<string> FailureMessages);

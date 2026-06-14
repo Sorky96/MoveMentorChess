@@ -12,11 +12,3 @@ public sealed record SpecialTrainingModeDefinition(
     RepertoireSide PreferredSide = RepertoireSide.Both,
     bool PrioritizeWeakPositions = false,
     bool PrioritizeOpponentReplies = false);
-
-public enum SpecialTrainingModeKind
-{
-    FiveMinutePrep,
-    OpponentPreparation,
-    QuickBlackReview,
-    RepairWeakestPositions
-}

@@ -245,6 +245,7 @@ public sealed class OpeningTrainingSessionBuilderTests
         public bool TryLoadImportedGame(string gameFingerprint, out ImportedGame? game)
             => importedGames.TryGetValue(gameFingerprint, out game);
         public bool DeleteImportedGame(string gameFingerprint) => false;
+        public void ClearImportedAnalysisData() { }
         public IReadOnlyList<SavedImportedGameSummary> ListImportedGames(string? filterText = null, int limit = 200) => [];
 
         // IOpeningTheoryStore
@@ -259,6 +260,18 @@ public sealed class OpeningTrainingSessionBuilderTests
             return theoryMovesByFen.TryGetValue(positionKey, out IReadOnlyList<OpeningTheoryMove>? moves)
                 ? moves.Take(limit).ToList()
                 : [];
+        }
+
+        public IReadOnlyList<OpeningLineCatalogItem> ListOpeningLines(string? filterText = null, RepertoireSide? repertoireSide = null, int limit = 100) => [];
+
+        public bool TryGetOpeningOverview(
+            OpeningLineKey lineKey,
+            RepertoireSide repertoireSide,
+            int maxDepth,
+            out OpeningTrainerOverview? overview)
+        {
+            overview = null;
+            return false;
         }
 
         private static Dictionary<string, IReadOnlyList<OpeningTheoryMove>> BuildTheoryMoves(IReadOnlyList<ImportedGame> games)

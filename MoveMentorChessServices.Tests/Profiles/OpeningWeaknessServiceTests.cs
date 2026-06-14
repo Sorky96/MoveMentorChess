@@ -474,6 +474,19 @@ public sealed class OpeningWeaknessServiceTests
 
             return filtered.Take(limit).ToList();
         }
+
+        public IReadOnlyList<OpeningLineCatalogItem> ListOpeningLines(string? filterText = null, RepertoireSide? repertoireSide = null, int limit = 100) => [];
+
+        public bool TryGetOpeningOverview(
+            OpeningLineKey lineKey,
+            RepertoireSide repertoireSide,
+            int maxDepth,
+            out OpeningTrainerOverview? overview)
+        {
+            overview = null;
+            return false;
+        }
+
         public bool TryLoadResult(GameAnalysisCacheKey key, out GameAnalysisResult? result) => throw new NotSupportedException();
         public void SaveResult(GameAnalysisCacheKey key, GameAnalysisResult result) => throw new NotSupportedException();
     }

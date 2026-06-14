@@ -1,21 +1,5 @@
 namespace MoveMentorChess.Profiles;
 
-public interface IPlayerStrengthEstimator
-{
-    MoveMentorStrengthPoint Estimate(PlayerStrengthEstimateInput input);
-}
-
-public sealed record PlayerStrengthEstimateInput(
-    string GameFingerprint,
-    DateTime? GameDate,
-    GameTimeControlCategory TimeControlCategory,
-    int? PlayerRating,
-    int? OpponentRating,
-    double? ActualScore,
-    double? ExpectedScore,
-    IReadOnlyList<StoredMoveAnalysis> Moves,
-    int SameTimeControlSampleSize);
-
 public sealed class HeuristicPlayerStrengthEstimator : IPlayerStrengthEstimator
 {
     private const int NeutralAnchor = 800;
@@ -135,13 +119,5 @@ public sealed class HeuristicPlayerStrengthEstimator : IPlayerStrengthEstimator
             ? $"result delta {(actualScore.Value - expectedScore.Value):+0.00;-0.00;0.00}"
             : "no rating-result calibration";
         return $"HeuristicV1 from {moveCount} analyzed moves, average CPL {averageCpl}, {result}.";
-    }
-}
-
-public sealed class ProfileMlPlayerStrengthEstimator : IPlayerStrengthEstimator
-{
-    public MoveMentorStrengthPoint Estimate(PlayerStrengthEstimateInput input)
-    {
-        throw new NotSupportedException("Per-profile ML strength estimation is planned but not implemented yet.");
     }
 }
