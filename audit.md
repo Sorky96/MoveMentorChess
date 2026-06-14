@@ -412,6 +412,16 @@ Acceptance criteria:
 - Full solution tests pass.
 - No UI layout changes are bundled into this sprint.
 
+Implementation status 2026-06-14:
+
+- Added `ImportedGameReplayController` to own the imported game, replay list, replay cursor, imported move projection, selected imported move, replay navigation, analysis labels, and first replayable game selection.
+- Kept `MainWindowViewModel` as the compatibility facade for existing bindings and commands while delegating import/replay state to the extracted controller.
+- Split `PgnFileImportResult`, `BulkPgnAnalysisResult`, `PgnBatchParseResult`, and `PgnBatchParseError` into one public type per file and removed the corresponding architecture allow-list entries.
+- Lowered the `MainWindowViewModel.cs` architecture budget to 1,540 lines and added `MainWindowImportReplayStateStaysExtractedFromWindowViewModel`.
+- Added `MainWindowImportReplayTests` covering successful PGN import, skipped unreplayable games, replay/parse failure, next and selected replay cursor behavior, board FEN projection, command enablement, and persistence-save fallback.
+- Validation passed with `dotnet test MoveMentorChessServices.Tests\MoveMentorChessServices.Tests.csproj --no-restore --filter "MainWindowImportReplayTests|AppArchitectureTests" --verbosity minimal` (25 passed).
+- Validation passed with `dotnet test MoveMentorChess.sln --no-restore -m:1 --verbosity minimal` (496 passed).
+
 ### Sprint 6 - Settings And Runtime Composition
 
 Goal: move settings persistence and runtime side effects out of windows.

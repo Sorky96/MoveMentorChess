@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using Avalonia.Media;
@@ -22,10 +21,9 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly ChessGame chessGame = new();
     private readonly Stack<string> undoFenStack = new();
     private readonly HashSet<string> availableTargets = new(StringComparer.Ordinal);
+    private readonly ImportedGameReplayController importedGameReplay = new();
 
     private StockfishEngine? engine;
-    private ImportedGame? importedGame;
-    private IReadOnlyList<ReplayPly> importedReplay = Array.Empty<ReplayPly>();
     private readonly Dictionary<PlayerSide, GameAnalysisResult> cachedAnalysisResultsBySide = new();
     private GameAnalysisResult? cachedAnalysisResult;
     private Func<IReadOnlyList<LegalMoveInfo>, Task<LegalMoveInfo?>>? promotionMoveSelector;
@@ -37,12 +35,10 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private string evaluationText = Localizer.Text(LocalizedStrings.MainEvaluationUnavailable);
     private string analysisDetails = Localizer.Text(LocalizedStrings.MainAnalysisPlaceholder);
     private string pieceMoveOptionsHeader = Localizer.Text(LocalizedStrings.MainSelectedPieceNone);
-    private ImportedMoveItemViewModel? selectedImportedMove;
     private PieceMoveOptionViewModel? selectedPieceMoveOption;
     private bool rotateBoard;
     private bool isBusy;
     private CancellationTokenSource? importCancellationTokenSource;
-    private int importedCursor;
     private int evaluationBarValue = 50;
     private string selectedAnalysisFilter = AnalysisFilterOptions[0];
     private PlayerSide selectedAnalysisSide = PlayerSide.White;
@@ -70,9 +66,9 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         this.analysisDataService = analysisDataService ?? throw new ArgumentNullException(nameof(analysisDataService));
         UndoCommand = new RelayCommand(UndoLastMove, () => undoFenStack.Count > 0 && !IsBusy);
         RotateBoardCommand = new RelayCommand(ToggleBoardRotation, () => !IsBusy);
-        ApplyNextImportedMoveCommand = new RelayCommand(ApplyNextImportedMove, () => !IsBusy && importedCursor < importedReplay.Count);
+        ApplyNextImportedMoveCommand = new RelayCommand(ApplyNextImportedMove, () => !IsBusy && importedGameReplay.CanApplyNextMove);
         ApplySelectedImportedMoveCommand = new RelayCommand(ApplySelectedImportedMove, () => !IsBusy && SelectedImportedMove is not null);
-        AnalyzeImportedGameCommand = new RelayCommand(async () => await AnalyzeImportedGameAsync(), () => !IsBusy && importedGame is not null && engine is not null);
+        AnalyzeImportedGameCommand = new RelayCommand(async () => await AnalyzeImportedGameAsync(), () => !IsBusy && importedGameReplay.Game is not null && engine is not null);
         StopImportCommand = new RelayCommand(StopImport, () => IsImportCancellationAvailable);
         ShowSelectedMistakeOnBoardCommand = new RelayCommand(ShowSelectedMistakeOnBoard, () => !IsBusy && SelectedAnalysisMistake?.LeadMove is not null);
 
@@ -82,7 +78,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         RefreshEngineSummary();
     }
 
-    public ObservableCollection<ImportedMoveItemViewModel> ImportedMoves { get; } = [];
+    public ObservableCollection<ImportedMoveItemViewModel> ImportedMoves => importedGameReplay.ImportedMoves;
 
     public ObservableCollection<AnalysisMistakeItemViewModel> AnalysisMistakes { get; } = [];
 
@@ -176,7 +172,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public bool CanOpenImportedAnalysis => importedGame is not null && engine is not null && !IsBusy;
+    public bool CanOpenImportedAnalysis => importedGameReplay.Game is not null && engine is not null && !IsBusy;
 
     public bool IsImportCancellationAvailable => IsBusy && importCancellationTokenSource is not null && !importCancellationTokenSource.IsCancellationRequested;
 
@@ -184,7 +180,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     public bool IsEngineUnavailable => engine is null;
 
-    public bool HasImportedGame => importedGame is not null && importedReplay.Count > 0;
+    public bool HasImportedGame => importedGameReplay.HasReplayableGame;
 
     public string PrimaryNextStepTitle
         => IsEngineUnavailable
@@ -233,11 +229,12 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     public ImportedMoveItemViewModel? SelectedImportedMove
     {
-        get => selectedImportedMove;
+        get => importedGameReplay.SelectedMove;
         set
         {
-            if (SetProperty(ref selectedImportedMove, value))
+            if (importedGameReplay.SetSelectedMove(value))
             {
+                OnPropertyChanged();
                 ApplySelectedImportedMoveCommand.RaiseCanExecuteChanged();
             }
         }
@@ -362,7 +359,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         }
 
         undoFenStack.Push(previousFen);
-        importedCursor = importedReplay.Count > 0 ? Math.Min(importedCursor, importedReplay.Count) : 0;
+        importedGameReplay.ClampCursorToReplayEnd();
         ClearSelection();
         RefreshBoard();
         RefreshEngineSummary();
@@ -381,32 +378,11 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         try
         {
             ImportedGame parsedGame = PgnGameParser.Parse(pgnText);
-            importedReplay = new GameReplayService().Replay(parsedGame);
-            importedGame = parsedGame;
-            cachedAnalysisResultsBySide.Clear();
-            cachedAnalysisResult = null;
-            importedCursor = 0;
-            ImportedMoves.Clear();
-            for (int i = 0; i < importedReplay.Count; i++)
-            {
-                ImportedMoves.Add(new ImportedMoveItemViewModel(i, importedReplay[i]));
-            }
-
-            undoFenStack.Clear();
-            chessGame.Reset();
-            SelectedImportedMove = null;
-            ClearSelection();
-            RefreshBoard();
-            RefreshEngineSummary();
-            RefreshImportedSummary();
-            OnPropertyChanged(nameof(CanOpenImportedAnalysis));
-            OnPrimaryNextStepChanged();
-            AnalysisMistakes.Clear();
-            AnalysisDetails = "Imported game loaded. Choose a side and run analysis.";
+            LoadImportedGameCore(parsedGame);
             SaveImportedGame(parsedGame);
-            StatusMessage = importedReplay.Count == 0
+            StatusMessage = importedGameReplay.ReplayCount == 0
                 ? "PGN loaded, but no SAN moves were found."
-                : $"Imported {importedReplay.Count} plies from PGN.";
+                : $"Imported {importedGameReplay.ReplayCount} plies from PGN.";
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
@@ -438,7 +414,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         }
 
         SaveImportedGames(parseResult.Games);
-        if (!TryLoadFirstReplayableImportedGame(parseResult.Games, out int replaySkippedGames))
+        if (!importedGameReplay.TryLoadFirstReplayableGame(parseResult.Games, out int replaySkippedGames))
         {
             skippedGames += replaySkippedGames;
             StatusMessage = $"PGN file contained {parseResult.Games.Count} parsed games, but none could be replayed.";
@@ -446,6 +422,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             return new PgnFileImportResult(0, skippedGames, []);
         }
 
+        AfterImportedGameLoaded();
         skippedGames += replaySkippedGames;
         StatusMessage = skippedGames == 0
             ? $"Loaded {parseResult.Games.Count} games from PGN file. Showing the first game."
@@ -461,9 +438,9 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         }
 
         LoadImportedGameCore(game);
-        StatusMessage = importedReplay.Count == 0
+        StatusMessage = importedGameReplay.ReplayCount == 0
             ? "Saved game loaded, but it does not contain SAN moves."
-            : $"Loaded saved game with {importedReplay.Count} plies.";
+            : $"Loaded saved game with {importedGameReplay.ReplayCount} plies.";
         OnPropertyChanged(nameof(CanOpenImportedAnalysis));
         OnPrimaryNextStepChanged();
     }
@@ -626,18 +603,13 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        if (!chessGame.TryLoadFen(example.FenBefore, out string? error))
+        if (!importedGameReplay.TryMoveToPositionBeforePly(example.Ply, example.FenBefore, chessGame, out string? error))
         {
             StatusMessage = error ?? "Could not open the selected example position.";
             return;
         }
 
-        importedCursor = Math.Max(0, example.Ply - 1);
-        if (importedCursor - 1 >= 0 && importedCursor - 1 < ImportedMoves.Count)
-        {
-            SelectedImportedMove = ImportedMoves[importedCursor - 1];
-        }
-
+        OnImportedReplayStateChanged();
         ClearSelection();
         RefreshBoard();
         RefreshEngineSummary();
@@ -691,7 +663,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     public AnalysisWindowRequest? CreateAnalysisWindowRequest()
     {
-        if (importedGame is null)
+        ImportedGame? currentGame = importedGameReplay.Game;
+        if (currentGame is null)
         {
             StatusMessage = "Import or load a game before opening analysis.";
             return null;
@@ -711,7 +684,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         }
 
         return new AnalysisWindowRequest(
-            importedGame,
+            currentGame,
             engine,
             NavigateToAnalysisMistakeAsync,
             ShowAnalysisProgressOnBoard,
@@ -748,12 +721,12 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     private void ApplyNextImportedMove()
     {
-        if (importedCursor >= importedReplay.Count || IsBusy)
+        if (IsBusy)
         {
             return;
         }
 
-        ApplyImportedMoveByIndex(importedCursor);
+        ApplyImportedMove(importedGameReplay.TryApplyNextMove(chessGame, out string? error), error);
     }
 
     private void ApplySelectedImportedMove()
@@ -763,50 +736,48 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        ApplyImportedMoveByIndex(SelectedImportedMove.Index);
+        ApplyImportedMove(importedGameReplay.TryApplySelectedMove(chessGame, out string? error), error);
     }
 
-    private void ApplyImportedMoveByIndex(int index)
+    private void ApplyImportedMove(bool applied, string? error)
     {
-        if (index < 0 || index >= importedReplay.Count)
+        if (!applied)
         {
+            if (!string.IsNullOrWhiteSpace(error))
+            {
+                StatusMessage = error;
+            }
+
             return;
         }
 
-        ReplayPly replayPly = importedReplay[index];
         undoFenStack.Clear();
-        if (!chessGame.TryLoadFen(replayPly.FenAfter, out string? error))
-        {
-            StatusMessage = error ?? "Could not load the imported position.";
-            return;
-        }
-
-        importedCursor = index + 1;
-        SelectedImportedMove = ImportedMoves[index];
+        OnImportedReplayStateChanged();
         ClearSelection();
         RefreshBoard();
         RefreshEngineSummary();
         RefreshImportedSummary();
-        StatusMessage = $"Moved board to {ImportedMoves[index].DisplayText}.";
+        if (SelectedImportedMove is not null)
+        {
+            StatusMessage = $"Moved board to {SelectedImportedMove.DisplayText}.";
+        }
+
         RaiseCommandStates();
     }
 
     private void LoadImportedGameCore(ImportedGame game)
     {
-        importedReplay = new GameReplayService().Replay(game);
-        importedGame = game;
+        importedGameReplay.Load(game);
         cachedAnalysisResultsBySide.Clear();
         cachedAnalysisResult = null;
-        importedCursor = 0;
-        ImportedMoves.Clear();
-        for (int i = 0; i < importedReplay.Count; i++)
-        {
-            ImportedMoves.Add(new ImportedMoveItemViewModel(i, importedReplay[i]));
-        }
+        AfterImportedGameLoaded();
+    }
 
+    private void AfterImportedGameLoaded()
+    {
         undoFenStack.Clear();
         chessGame.Reset();
-        SelectedImportedMove = null;
+        OnImportedReplayStateChanged();
         ClearSelection();
         RefreshBoard();
         RefreshEngineSummary();
@@ -830,33 +801,10 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         StopImportCommand.RaiseCanExecuteChanged();
     }
 
-    private bool TryLoadFirstReplayableImportedGame(IReadOnlyList<ImportedGame> games, out int skippedGames)
-    {
-        skippedGames = 0;
-        foreach (ImportedGame game in games)
-        {
-            try
-            {
-                LoadImportedGameCore(game);
-                return true;
-            }
-            catch (Exception ex) when (ex is not OutOfMemoryException)
-            {
-                Trace.TraceWarning(
-                    "MainWindowViewModel: skipped imported game '{0}' because replay loading failed ({1}: {2})",
-                    GameFingerprint.Compute(game.PgnText),
-                    ex.GetType().Name,
-                    ex.Message);
-                skippedGames++;
-            }
-        }
-
-        return false;
-    }
-
     private async Task AnalyzeImportedGameAsync()
     {
-        if (importedGame is null || engine is null || IsBusy)
+        ImportedGame? currentGame = importedGameReplay.Game;
+        if (currentGame is null || engine is null || IsBusy)
         {
             return;
         }
@@ -877,11 +825,11 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 openingTheory: analysisDataService.CreateOpeningTheory(),
                 playerMistakeProfileSource: analysisDataService.CreatePlayerMistakeProfileSource());
             cachedAnalysisResult = await Task.Run(() => analysisService.AnalyzeGame(
-                importedGame,
+                currentGame,
                 SelectedAnalysisSide,
                 new EngineAnalysisOptions(),
                 progress));
-            analysisDataService.StoreAnalysisResult(importedGame, SelectedAnalysisSide, new EngineAnalysisOptions(), cachedAnalysisResult);
+            analysisDataService.StoreAnalysisResult(currentGame, SelectedAnalysisSide, new EngineAnalysisOptions(), cachedAnalysisResult);
             cachedAnalysisResultsBySide[SelectedAnalysisSide] = cachedAnalysisResult;
             ApplyAnalysisToImportedMoves();
             ApplyAnalysisFilter();
@@ -909,20 +857,12 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     private void ShowAnalysisProgressOnBoard(GameAnalysisProgress progress, string? bulkStatusPrefix)
     {
-        if (!chessGame.TryLoadFen(progress.Fen, out _))
+        if (!importedGameReplay.TryShowAnalysisProgress(progress, chessGame))
         {
             return;
         }
 
-        importedCursor = progress.Stage == GameAnalysisProgressStage.AfterMove
-            ? progress.Replay.Ply
-            : Math.Max(0, progress.Replay.Ply - 1);
-
-        if (progress.Replay.Ply - 1 >= 0 && progress.Replay.Ply - 1 < ImportedMoves.Count)
-        {
-            SelectedImportedMove = ImportedMoves[progress.Replay.Ply - 1];
-        }
-
+        OnImportedReplayStateChanged();
         BestMoveArrows = [new BoardArrowViewModel(progress.Replay.FromSquare, progress.Replay.ToSquare, Color.Parse("#D33838"))];
         ClearSelection();
         RefreshImportedSummary();
@@ -943,7 +883,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
         if (cachedAnalysisResult is null)
         {
-            AnalysisDetails = importedGame is null
+            AnalysisDetails = importedGameReplay.Game is null
                 ? Localizer.Text(LocalizedStrings.MainAnalysisPlaceholder)
                 : Localizer.Text(LocalizedStrings.MainRunAnalysisPlaceholder);
             return;
@@ -974,25 +914,13 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     private void ApplyAnalysisToImportedMoves()
     {
-        ClearImportedMoveAnalysisLabels();
-
-        Dictionary<int, MoveAnalysisResult> analysesByPly = cachedAnalysisResultsBySide.Values
-            .SelectMany(result => result.MoveAnalyses)
-            .GroupBy(move => move.Replay.Ply)
-            .ToDictionary(group => group.Key, group => group.First());
-
-        foreach (ImportedMoveItemViewModel item in ImportedMoves)
-        {
-            if (analysesByPly.TryGetValue(item.ReplayPly.Ply, out MoveAnalysisResult? analysis))
-            {
-                item.ApplyAnalysis(analysis);
-            }
-        }
+        importedGameReplay.ApplyAnalysisLabels(cachedAnalysisResultsBySide.Values);
     }
 
     private void LoadCachedAnalysisResultsForCurrentGame(EngineAnalysisOptions options)
     {
-        if (importedGame is null)
+        ImportedGame? currentGame = importedGameReplay.Game;
+        if (currentGame is null)
         {
             return;
         }
@@ -1004,28 +932,16 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 continue;
             }
 
-            if (analysisDataService.TryGetCachedAnalysis(importedGame, side, options, out GameAnalysisResult? cachedResult) && cachedResult is not null)
+            if (analysisDataService.TryGetCachedAnalysis(currentGame, side, options, out GameAnalysisResult? cachedResult) && cachedResult is not null)
             {
                 cachedAnalysisResultsBySide[side] = cachedResult;
             }
         }
     }
 
-    private void ClearImportedMoveAnalysisLabels()
-    {
-        foreach (ImportedMoveItemViewModel item in ImportedMoves)
-        {
-            item.ClearAnalysis();
-        }
-    }
-
     private bool IsCurrentImportedGame(ImportedGame game)
     {
-        return importedGame is not null
-            && string.Equals(
-                GameFingerprint.Compute(importedGame.PgnText),
-                GameFingerprint.Compute(game.PgnText),
-                StringComparison.Ordinal);
+        return importedGameReplay.IsCurrentGame(game);
     }
 
     private void ShowSelectedMistakeOnBoard()
@@ -1042,18 +958,13 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         }
 
         ReplayPly replayPly = SelectedAnalysisMistake.LeadMove.Replay;
-        if (!chessGame.TryLoadFen(replayPly.FenAfter, out string? error))
+        if (!importedGameReplay.TryMoveToReplayPly(replayPly, chessGame, out string? error))
         {
             StatusMessage = error ?? "Could not navigate to the selected mistake.";
             return;
         }
 
-        importedCursor = replayPly.Ply;
-        if (replayPly.Ply - 1 >= 0 && replayPly.Ply - 1 < ImportedMoves.Count)
-        {
-            SelectedImportedMove = ImportedMoves[replayPly.Ply - 1];
-        }
-
+        OnImportedReplayStateChanged();
         ClearSelection();
         RefreshBoard();
         RefreshEngineSummary();
@@ -1102,30 +1013,13 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     private bool TryShowPositionBeforePly(int? ply, string? fenBefore, string successMessage)
     {
-        string? targetFen = !string.IsNullOrWhiteSpace(fenBefore)
-            ? fenBefore
-            : ResolveFenBeforePly(ply);
-        if (string.IsNullOrWhiteSpace(targetFen))
-        {
-            return false;
-        }
-
-        if (!chessGame.TryLoadFen(targetFen, out string? error))
+        if (!importedGameReplay.TryMoveToPositionBeforePly(ply, fenBefore, chessGame, out string? error))
         {
             StatusMessage = error ?? "Could not open the selected position.";
             return false;
         }
 
-        importedCursor = Math.Max(0, (ply ?? 1) - 1);
-        if (importedCursor - 1 >= 0 && importedCursor - 1 < ImportedMoves.Count)
-        {
-            SelectedImportedMove = ImportedMoves[importedCursor - 1];
-        }
-        else
-        {
-            SelectedImportedMove = null;
-        }
-
+        OnImportedReplayStateChanged();
         ClearSelection();
         RefreshBoard();
         RefreshEngineSummary();
@@ -1136,50 +1030,19 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     public Task NavigateToAnalysisMistakeAsync(MoveAnalysisResult move)
     {
-        if (!chessGame.TryLoadFen(move.Replay.FenAfter, out string? error))
+        if (!importedGameReplay.TryMoveToReplayPly(move.Replay, chessGame, out string? error))
         {
             StatusMessage = error ?? "Could not navigate to the selected mistake.";
             return Task.CompletedTask;
         }
 
-        importedCursor = move.Replay.Ply;
-        if (move.Replay.Ply - 1 >= 0 && move.Replay.Ply - 1 < ImportedMoves.Count)
-        {
-            SelectedImportedMove = ImportedMoves[move.Replay.Ply - 1];
-        }
-        else
-        {
-            SelectedImportedMove = null;
-        }
-
+        OnImportedReplayStateChanged();
         ClearSelection();
         RefreshBoard();
         RefreshEngineSummary();
         RefreshImportedSummary();
         StatusMessage = $"Jumped to the board position after {move.Replay.MoveNumber}{(move.Replay.Side == PlayerSide.White ? "." : "...")} {move.Replay.San}.";
         return Task.CompletedTask;
-    }
-
-    private string? ResolveFenBeforePly(int? ply)
-    {
-        if (!ply.HasValue)
-        {
-            return null;
-        }
-
-        if (ply.Value <= 1)
-        {
-            ChessGame initialGame = new();
-            return initialGame.GetFen();
-        }
-
-        int previousIndex = ply.Value - 2;
-        if (previousIndex < 0 || previousIndex >= importedReplay.Count)
-        {
-            return null;
-        }
-
-        return importedReplay[previousIndex].FenAfter;
     }
 
     private void TryInitializeEngine()
@@ -1295,30 +1158,39 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(PrimaryNextStepDescription));
     }
 
+    private void OnImportedReplayStateChanged()
+    {
+        OnPropertyChanged(nameof(SelectedImportedMove));
+        OnPrimaryNextStepChanged();
+        ApplyNextImportedMoveCommand.RaiseCanExecuteChanged();
+        ApplySelectedImportedMoveCommand.RaiseCanExecuteChanged();
+    }
+
     private void RefreshImportedSummary()
     {
-        if (importedGame is null || importedReplay.Count == 0)
+        ImportedGame? currentGame = importedGameReplay.Game;
+        if (currentGame is null || importedGameReplay.ReplayCount == 0)
         {
             ImportedGameSummary = Localizer.Text(LocalizedStrings.MainImportedMovesNone);
             return;
         }
 
-        string whitePlayer = string.IsNullOrWhiteSpace(importedGame.WhitePlayer)
+        string whitePlayer = string.IsNullOrWhiteSpace(currentGame.WhitePlayer)
             ? Localizer.Text(LocalizedStrings.CommonWhite)
-            : importedGame.WhitePlayer;
-        string blackPlayer = string.IsNullOrWhiteSpace(importedGame.BlackPlayer)
+            : currentGame.WhitePlayer;
+        string blackPlayer = string.IsNullOrWhiteSpace(currentGame.BlackPlayer)
             ? Localizer.Text(LocalizedStrings.CommonBlack)
-            : importedGame.BlackPlayer;
+            : currentGame.BlackPlayer;
         string players = Localizer.Format(LocalizedStrings.CommonPlayersVersus, whitePlayer, blackPlayer);
-        string result = string.IsNullOrWhiteSpace(importedGame.Result)
+        string result = string.IsNullOrWhiteSpace(currentGame.Result)
             ? Localizer.Text(LocalizedStrings.MainResultUnknown)
-            : Localizer.Format(LocalizedStrings.SavedAnalysesResult, importedGame.Result);
-        string eco = string.IsNullOrWhiteSpace(importedGame.Eco) ? string.Empty : $" | {OpeningCatalog.Describe(importedGame.Eco)}";
-        string date = string.IsNullOrWhiteSpace(importedGame.DateText) ? string.Empty : $" | {importedGame.DateText}";
+            : Localizer.Format(LocalizedStrings.SavedAnalysesResult, currentGame.Result);
+        string eco = string.IsNullOrWhiteSpace(currentGame.Eco) ? string.Empty : $" | {OpeningCatalog.Describe(currentGame.Eco)}";
+        string date = string.IsNullOrWhiteSpace(currentGame.DateText) ? string.Empty : $" | {currentGame.DateText}";
         ImportedGameSummary = Localizer.Format(
             LocalizedStrings.MainImportedMovesSummary,
-            importedCursor,
-            importedReplay.Count,
+            importedGameReplay.Cursor,
+            importedGameReplay.ReplayCount,
             players,
             result,
             date,
@@ -1658,16 +1530,3 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     private sealed record PieceMovePresentation(string Label, string EvalText, string EvalBrush);
 }
-
-public sealed record PgnFileImportResult(
-    int ImportedGames,
-    int SkippedGames,
-    IReadOnlyList<ImportedGame> Games);
-
-public sealed record BulkPgnAnalysisResult(
-    string? PrimaryPlayer,
-    int AnalyzedGames,
-    int CachedGames,
-    int SkippedGames,
-    int FailedGames,
-    IReadOnlyList<string> FailureMessages);

@@ -13,6 +13,7 @@ public sealed partial class AppArchitectureTests
         (string Path, int MaxLines)[] cleanupBudgets =
         [
             (Path.Join(root, "MoveMentorChess.App", "ViewModels", "OpeningTrainerWindowViewModel.cs"), 2275),
+            (Path.Join(root, "MoveMentorChess.App", "ViewModels", "MainWindowViewModel.cs"), 1540),
             (Path.Join(root, "MoveMentorChess.App", "Views", "AnalysisWindow.axaml.cs"), 540),
             (Path.Join(root, "MoveMentorChess.App", "Views", "ProfilesWindow.axaml.cs"), 790),
             (Path.Join(root, "MoveMentorChess.Training", "OpeningTrainerService.cs"), 470),
@@ -109,6 +110,24 @@ public sealed partial class AppArchitectureTests
         Assert.DoesNotContain("private OpeningTrainingIntensityChoice? selectedIntensityChoice", windowViewModel, StringComparison.Ordinal);
         Assert.DoesNotContain("private PlayerOpeningPlan? playerOpeningPlan", windowViewModel, StringComparison.Ordinal);
         Assert.DoesNotContain("private SpecialTrainingModeDefinition? selectedSpecialMode", windowViewModel, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MainWindowImportReplayStateStaysExtractedFromWindowViewModel()
+    {
+        string root = FindRepositoryRoot();
+        string viewModelsRoot = Path.Join(root, "MoveMentorChess.App", "ViewModels");
+        string windowViewModel = File.ReadAllText(Path.Join(viewModelsRoot, "MainWindowViewModel.cs"));
+
+        Assert.True(
+            File.Exists(Path.Join(viewModelsRoot, "ImportedGameReplayController.cs")),
+            "Main window imported game, replay cursor, and imported move projection should stay in the extracted controller.");
+        Assert.Contains("ImportedGameReplayController", windowViewModel, StringComparison.Ordinal);
+        Assert.DoesNotContain("private ImportedGame? importedGame", windowViewModel, StringComparison.Ordinal);
+        Assert.DoesNotContain("private IReadOnlyList<ReplayPly> importedReplay", windowViewModel, StringComparison.Ordinal);
+        Assert.DoesNotContain("private int importedCursor", windowViewModel, StringComparison.Ordinal);
+        Assert.DoesNotContain("new GameReplayService().Replay", windowViewModel, StringComparison.Ordinal);
+        Assert.DoesNotContain("TryLoadFirstReplayableImportedGame", windowViewModel, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -428,11 +447,6 @@ public sealed partial class AppArchitectureTests
                 "Architecture cleanup",
                 "Sprint 2 - Public Type File Hygiene: split board event args from the Avalonia control."),
             new(
-                Path.Join("MoveMentorChess.App", "ViewModels", "MainWindowViewModel.cs"),
-                ["MainWindowViewModel", "PgnFileImportResult", "BulkPgnAnalysisResult"],
-                "Architecture cleanup",
-                "Sprint 5 - Main Window Import And Replay Extraction: move import result records out with the import workflow."),
-            new(
                 Path.Join("MoveMentorChess.App", "ViewModels", "OpeningCoverageWindowViewModel.cs"),
                 ["OpeningCoverageWindowViewModel", "OpeningCoverageLineItemViewModel"],
                 "Architecture cleanup",
@@ -487,11 +501,6 @@ public sealed partial class AppArchitectureTests
                 ["OpeningUnderstandingCard", "OpeningUnderstandingCardKind"],
                 "Architecture cleanup",
                 "Sprint 2 - Public Type File Hygiene: split opening understanding card enum from the record."),
-            new(
-                Path.Join("MoveMentorChess.Domain", "Models", "PgnGameParser.cs"),
-                ["PgnGameParser", "PgnBatchParseResult", "PgnBatchParseError"],
-                "Architecture cleanup",
-                "Sprint 5 - Main Window Import And Replay Extraction: split PGN parse result records from the parser."),
             new(
                 Path.Join("MoveMentorChess.Domain", "Models", "PlayerMistakeProfile.cs"),
                 ["PlayerMistakeProfile", "PlayerMistakePatternEntry"],
