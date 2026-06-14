@@ -18,6 +18,7 @@ public partial class MainWindow : Window
     private readonly IAnalysisWindowFactory analysisWindowFactory;
     private readonly IProfilesWindowFactory profilesWindowFactory;
     private readonly IMainWindowDialogDataService dialogDataService;
+    private readonly ISettingsWindowFactory settingsWindowFactory;
 
     public MainWindow()
         : this(
@@ -34,18 +35,21 @@ public partial class MainWindow : Window
         : this(
             analysisWindowFactory,
             profilesWindowFactory,
-            new DefaultMainWindowDialogDataService(analysisStoreProvider))
+            new DefaultMainWindowDialogDataService(analysisStoreProvider),
+            new SettingsWindowFactory(new DefaultSettingsWorkflow()))
     {
     }
 
     internal MainWindow(
         IAnalysisWindowFactory analysisWindowFactory,
         IProfilesWindowFactory profilesWindowFactory,
-        IMainWindowDialogDataService dialogDataService)
+        IMainWindowDialogDataService dialogDataService,
+        ISettingsWindowFactory settingsWindowFactory)
     {
         this.analysisWindowFactory = analysisWindowFactory ?? throw new ArgumentNullException(nameof(analysisWindowFactory));
         this.profilesWindowFactory = profilesWindowFactory ?? throw new ArgumentNullException(nameof(profilesWindowFactory));
         this.dialogDataService = dialogDataService ?? throw new ArgumentNullException(nameof(dialogDataService));
+        this.settingsWindowFactory = settingsWindowFactory ?? throw new ArgumentNullException(nameof(settingsWindowFactory));
         InitializeComponent();
         ApplyLocalizedText();
         Opened += (_, _) =>
@@ -270,7 +274,7 @@ public partial class MainWindow : Window
 
     private async void SettingsButton_Click(object? sender, RoutedEventArgs e)
     {
-        SettingsWindow dialog = new();
+        SettingsWindow dialog = settingsWindowFactory.Create();
         bool? saved = await dialog.ShowDialog<bool?>(this);
         if (saved == true && DataContext is MainWindowViewModel viewModel)
         {

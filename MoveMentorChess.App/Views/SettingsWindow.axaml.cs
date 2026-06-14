@@ -4,14 +4,22 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Platform.Storage;
 using MoveMentorChess.Analysis;
+using MoveMentorChess.App.Composition;
 using MoveMentorChess.Localization;
 
 namespace MoveMentorChess.App.Views;
 
 public partial class SettingsWindow : Window
 {
+    private readonly ISettingsWorkflow settingsWorkflow;
+
     public SettingsWindow()
-        : this(LlamaGpuSettingsStore.Load(), StockfishSettingsStore.Load(), ApplicationSettingsStore.Load())
+        : this(new DefaultSettingsWorkflow())
+    {
+    }
+
+    internal SettingsWindow(ISettingsWorkflow settingsWorkflow)
+        : this(settingsWorkflow, settingsWorkflow.Load())
     {
     }
 
@@ -19,12 +27,20 @@ public partial class SettingsWindow : Window
         LlamaGpuSettings settings,
         StockfishSettings stockfishSettings,
         ApplicationSettings applicationSettings)
+        : this(new DefaultSettingsWorkflow(), new RuntimeSettingsSnapshot(settings, stockfishSettings, applicationSettings))
     {
+    }
+
+    private SettingsWindow(
+        ISettingsWorkflow settingsWorkflow,
+        RuntimeSettingsSnapshot snapshot)
+    {
+        this.settingsWorkflow = settingsWorkflow ?? throw new ArgumentNullException(nameof(settingsWorkflow));
         InitializeComponent();
-        Localizer.UseApplicationCulture(applicationSettings.CultureName);
+        Localizer.UseApplicationCulture(snapshot.ApplicationSettings.CultureName);
         ApplyLocalizedText();
         LanguageComboBox.ItemsSource = LanguageCatalog.SupportedLanguages;
-        LanguageComboBox.SelectedItem = LanguageCatalog.Resolve(applicationSettings.CultureName);
+        LanguageComboBox.SelectedItem = LanguageCatalog.Resolve(snapshot.ApplicationSettings.CultureName);
         ExplanationLevelComboBox.ItemsSource = new[]
         {
             new ExplanationLevelOption(ExplanationLevel.Beginner, Localizer.Text(LocalizedStrings.ExplanationBeginner)),
@@ -40,20 +56,20 @@ public partial class SettingsWindow : Window
             new NarrationStyleOption(AdviceNarrationStyle.WittyAlien, Localizer.Text(LocalizedStrings.NarrationWittyAlien))
         };
 
-        FullGpuPowerCheckBox.IsChecked = settings.UseFullGpuPower;
-        LlamaServerPathTextBox.Text = settings.ServerPath;
-        StockfishPathTextBox.Text = stockfishSettings.ExecutablePath;
-        StockfishThreadsNumeric.Value = stockfishSettings.Threads;
-        StockfishHashNumeric.Value = stockfishSettings.HashMb;
-        BulkDepthNumeric.Value = stockfishSettings.BulkAnalysisDepth;
-        BulkMultiPvNumeric.Value = stockfishSettings.BulkAnalysisMultiPv;
-        BulkMoveTimeNumeric.Value = stockfishSettings.BulkAnalysisMoveTimeMs;
+        FullGpuPowerCheckBox.IsChecked = snapshot.LlamaGpuSettings.UseFullGpuPower;
+        LlamaServerPathTextBox.Text = snapshot.LlamaGpuSettings.ServerPath;
+        StockfishPathTextBox.Text = snapshot.StockfishSettings.ExecutablePath;
+        StockfishThreadsNumeric.Value = snapshot.StockfishSettings.Threads;
+        StockfishHashNumeric.Value = snapshot.StockfishSettings.HashMb;
+        BulkDepthNumeric.Value = snapshot.StockfishSettings.BulkAnalysisDepth;
+        BulkMultiPvNumeric.Value = snapshot.StockfishSettings.BulkAnalysisMultiPv;
+        BulkMoveTimeNumeric.Value = snapshot.StockfishSettings.BulkAnalysisMoveTimeMs;
         ExplanationLevelComboBox.SelectedItem = ExplanationLevelComboBox.Items
             .OfType<ExplanationLevelOption>()
-            .FirstOrDefault(option => option.Level == settings.DefaultExplanationLevel);
+            .FirstOrDefault(option => option.Level == snapshot.LlamaGpuSettings.DefaultExplanationLevel);
         NarrationStyleComboBox.SelectedItem = NarrationStyleComboBox.Items
             .OfType<NarrationStyleOption>()
-            .FirstOrDefault(option => option.Style == settings.NarrationStyle);
+            .FirstOrDefault(option => option.Style == snapshot.LlamaGpuSettings.NarrationStyle);
         FullGpuPowerCheckBox.IsCheckedChanged += (_, _) => RefreshModeDescription();
         StockfishThreadsNumeric.ValueChanged += (_, _) => RefreshStockfishDescription();
         StockfishHashNumeric.ValueChanged += (_, _) => RefreshStockfishDescription();
@@ -93,7 +109,10 @@ public partial class SettingsWindow : Window
     {
         try
         {
-            ApplicationSettingsStore.Save(SelectedApplicationSettings);
+            settingsWorkflow.Save(new RuntimeSettingsSnapshot(
+                SelectedSettings,
+                SelectedStockfishSettings,
+                SelectedApplicationSettings));
         }
         catch (ApplicationSettingsSaveException)
         {
@@ -101,10 +120,6 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        Localizer.UseApplicationCulture(SelectedApplicationSettings.CultureName);
-        LlamaGpuSettingsStore.Save(SelectedSettings);
-        StockfishSettingsStore.Save(SelectedStockfishSettings);
-        LlamaCppServerManager.Instance.Shutdown();
         Close(true);
     }
 
