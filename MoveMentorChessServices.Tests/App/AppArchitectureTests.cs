@@ -131,6 +131,34 @@ public sealed partial class AppArchitectureTests
     }
 
     [Fact]
+    public void SettingsWindowUsesWorkflowForPersistenceAndRuntimeSideEffects()
+    {
+        string root = FindRepositoryRoot();
+        string settingsWindow = File.ReadAllText(Path.Join(root, "MoveMentorChess.App", "Views", "SettingsWindow.axaml.cs"));
+
+        Assert.Contains("ISettingsWorkflow", settingsWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("ApplicationSettingsStore", settingsWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("LlamaGpuSettingsStore", settingsWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("StockfishSettingsStore", settingsWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("LlamaCppServerManager", settingsWindow, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AppStartupAndExitRuntimeEffectsStayInCompositionRoot()
+    {
+        string root = FindRepositoryRoot();
+        string app = File.ReadAllText(Path.Join(root, "MoveMentorChess.App", "App.axaml.cs"));
+        string compositionRoot = File.ReadAllText(Path.Join(root, "MoveMentorChess.App", "Composition", "AppCompositionRoot.cs"));
+
+        Assert.Contains("AppCompositionRoot.ConfigureDesktopApplication", app, StringComparison.Ordinal);
+        Assert.DoesNotContain("ApplicationSettingsStore", app, StringComparison.Ordinal);
+        Assert.DoesNotContain("LlamaCppProcessCleaner", app, StringComparison.Ordinal);
+        Assert.DoesNotContain("LlamaCppServerManager", app, StringComparison.Ordinal);
+        Assert.Contains("ISettingsWorkflow", compositionRoot, StringComparison.Ordinal);
+        Assert.Contains("IAppRuntimeLifecycle", compositionRoot, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void PlayerProfileServiceStaysConcreteFacadeWithExtractedCollaborators()
     {
         string root = FindRepositoryRoot();

@@ -441,6 +441,18 @@ Acceptance criteria:
 - Unit tests cover load, save, failure, and selected language normalization.
 - Full solution tests pass.
 
+Implementation status 2026-06-14:
+
+- Added `ISettingsWorkflow`, `DefaultSettingsWorkflow`, and `RuntimeSettingsSnapshot` in the App composition layer to own settings load/save orchestration.
+- Added `IAppRuntimeLifecycle` and `LlamaAppRuntimeLifecycle` so startup process cleanup and Llama server shutdown are routed through composition.
+- Updated `AppCompositionRoot` to apply the saved application culture, run startup cleanup, wire exit shutdown, and pass a shared settings workflow into `MainWindow`.
+- Updated `SettingsWindow` to read/write through the workflow while keeping file picker and control event handling in code-behind.
+- Added `SettingsWindowFactory` so `MainWindow` opens settings through composition instead of constructing a self-wired settings window.
+- Added `SettingsWorkflowTests` for load, save ordering, application-settings save failure, and selected language normalization.
+- Added architecture guards that keep `SettingsWindow` off static settings stores and keep app startup/runtime effects in composition.
+- Validation passed with `dotnet test MoveMentorChessServices.Tests\MoveMentorChessServices.Tests.csproj --no-restore --filter "SettingsWorkflowTests|AppArchitectureTests" --verbosity minimal` (25 passed).
+- Validation passed with `dotnet test MoveMentorChess.sln --no-restore -m:1 --verbosity minimal` (503 passed).
+
 ### Sprint 7 - Localization Completion
 
 Goal: make visible UI text consistently localized.
