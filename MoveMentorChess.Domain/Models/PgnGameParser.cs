@@ -161,9 +161,3 @@ public static partial class PgnGameParser
         };
     }
 }
-
-public sealed record PgnBatchParseResult(
-    IReadOnlyList<ImportedGame> Games,
-    IReadOnlyList<PgnBatchParseError> Errors);
-
-public sealed record PgnBatchParseError(int GameOrdinal, string Message);
