@@ -353,6 +353,16 @@ Acceptance criteria:
 - Existing persistence tests pass.
 - No migration or schema change is bundled into this sprint.
 
+Implementation status 2026-06-14:
+
+- Split store port interfaces from `IAnalysisStore.cs` into one file per public store port while keeping the same namespace, accessibility, and method signatures.
+- Kept `IAnalysisStore` as the compatibility facade and left `SqliteAnalysisStore` as a delegating adapter with no schema or migration changes.
+- Removed the `IAnalysisStore.cs` public-top-level-type exception from `AppArchitectureTests`.
+- Added `DirectAnalysisStoreConstructorParametersStayInCompatibilityAdapters` to freeze existing direct `IAnalysisStore` constructor shims and block new ones outside the explicit compatibility list.
+- Validation passed with `dotnet test MoveMentorChessServices.Tests\MoveMentorChessServices.Tests.csproj --no-restore --filter AppArchitectureTests --verbosity minimal` (17 passed).
+- Validation passed with `dotnet test MoveMentorChessServices.Tests\MoveMentorChessServices.Tests.csproj --no-restore --filter Persistence --verbosity minimal` (50 passed).
+- Validation passed with `dotnet test MoveMentorChess.sln --no-restore -m:1 --verbosity minimal` (483 passed).
+
 ### Sprint 4 - Opening Trainer ViewModel Slice
 
 Goal: remove one coherent responsibility from `OpeningTrainerWindowViewModel`.

@@ -278,6 +278,31 @@ public sealed partial class AppArchitectureTests
     }
 
     [Fact]
+    public void DirectAnalysisStoreConstructorParametersStayInCompatibilityAdapters()
+    {
+        string root = FindRepositoryRoot();
+        HashSet<string> allowedSites = DirectAnalysisStoreConstructorAllowList()
+            .Select(NormalizeRelativePath)
+            .ToHashSet(StringComparer.Ordinal);
+
+        string[] directConstructorSites = EnumerateProductionCSharpFiles(root)
+            .SelectMany(path => FindDirectAnalysisStoreConstructorSites(root, path))
+            .Order()
+            .ToArray();
+
+        string[] unexpectedSites = directConstructorSites
+            .Where(site => !allowedSites.Contains(site))
+            .ToArray();
+        Assert.Empty(unexpectedSites);
+
+        string[] staleAllowListEntries = allowedSites
+            .Where(site => !directConstructorSites.Contains(site, StringComparer.Ordinal))
+            .Order()
+            .ToArray();
+        Assert.Empty(staleAllowListEntries);
+    }
+
+    [Fact]
     public void StockfishPathResolverUsesRuntimeEnvironmentPort()
     {
         string resolverPath = Path.Join(
@@ -424,23 +449,6 @@ public sealed partial class AppArchitectureTests
                 ["ChessGame", "AppliedMoveInfo", "LegalMoveInfo"],
                 "Architecture cleanup",
                 "Sprint 2 - Public Type File Hygiene: split public chess result records from the rules engine."),
-            new(
-                Path.Join("MoveMentorChess.Domain", "Models", "IAnalysisStore.cs"),
-                [
-                    "IImportedGameStore",
-                    "IAnalysisResultStore",
-                    "IStoredMoveAnalysisStore",
-                    "IAdviceFeedbackStore",
-                    "IAnalysisWindowStateStore",
-                    "IAnalysisStore",
-                    "IOpeningTreeStore",
-                    "IOpeningTheoryStore",
-                    "IOpeningLineContextStore",
-                    "IOpeningTrainingHistoryStore",
-                    "IOpeningTrainingTelemetryStore"
-                ],
-                "Architecture cleanup",
-                "Sprint 2 - Public Type File Hygiene: split store ports before Sprint 3 narrows store injection."),
             new(
                 Path.Join("MoveMentorChess.Domain", "Models", "OpeningTrainingAnswerOption.cs"),
                 ["OpeningTrainingAnswerOption", "OpeningTrainingAnswerKind"],
@@ -591,6 +599,25 @@ public sealed partial class AppArchitectureTests
         return entries.ToDictionary(entry => NormalizeRelativePath(entry.RelativePath), StringComparer.Ordinal);
     }
 
+    private static string[] DirectAnalysisStoreConstructorAllowList()
+    {
+        return
+        [
+            $"{Path.Join("MoveMentorChess.App", "ViewModels", "OpeningCoverageWindowViewModel.cs")}: OpeningCoverageWindowViewModel(IAnalysisStore analysisStore)",
+            $"{Path.Join("MoveMentorChess.App", "ViewModels", "OpeningTrainerWindowViewModel.cs")}: OpeningTrainerWindowViewModel(IAnalysisStore analysisStore)",
+            $"{Path.Join("MoveMentorChess.App", "ViewModels", "StoreBackedSavedLibraryDataService.cs")}: StoreBackedSavedLibraryDataService(IAnalysisStore analysisStore)",
+            $"{Path.Join("MoveMentorChess.App", "ViewModels", "StoreBackedSavedLibraryDataService.cs")}: StoreBackedSavedLibraryDataService(IAnalysisStore analysisStore, IAnalysisResultCache analysisResultCache)",
+            $"{Path.Join("MoveMentorChess.App", "Views", "SavedAnalysesWindow.axaml.cs")}: SavedAnalysesWindow(IAnalysisStore analysisStore, bool canOpenAnalysis)",
+            $"{Path.Join("MoveMentorChess.App", "Views", "SavedGamesWindow.axaml.cs")}: SavedGamesWindow(IAnalysisStore analysisStore)",
+            $"{Path.Join("MoveMentorChess.Profiles", "PlayerProfileService.cs")}: PlayerProfileService(IAnalysisStore analysisStore)",
+            $"{Path.Join("MoveMentorChess.Training", "OpeningTrainerService.cs")}: OpeningTrainerService(IAnalysisStore analysisStore)",
+            $"{Path.Join("MoveMentorChess.Training", "OpeningTrainerService.cs")}: OpeningTrainerService(IAnalysisStore analysisStore, IClock clock)",
+            $"{Path.Join("MoveMentorChess.Training", "OpeningTrainerWorkspaceService.cs")}: OpeningTrainerWorkspaceService(IAnalysisStore analysisStore)",
+            $"{Path.Join("MoveMentorChess.Training", "OpeningTrainerWorkspaceService.cs")}: OpeningTrainerWorkspaceService(IAnalysisStore analysisStore, IClock clock)",
+            $"{Path.Join("MoveMentorChess.Training", "OpeningWeaknessService.cs")}: OpeningWeaknessService(IAnalysisStore analysisStore)"
+        ];
+    }
+
     private static IEnumerable<string> EnumerateProductionCSharpFiles(string root)
     {
         return Directory
@@ -600,6 +627,41 @@ public sealed partial class AppArchitectureTests
             .Where(path => !ContainsPathSegment(path, "obj"))
             .Where(path => !IsGeneratedCSharpFile(path));
     }
+
+    private static IEnumerable<string> FindDirectAnalysisStoreConstructorSites(string root, string path)
+    {
+        string source = RemoveCommentsAndLiterals(File.ReadAllText(path));
+        if (!source.Contains("IAnalysisStore", StringComparison.Ordinal))
+        {
+            yield break;
+        }
+
+        string relativePath = NormalizeRelativePath(Path.GetRelativePath(root, path));
+        HashSet<string> typeNames = TypeDeclarationRegex()
+            .Matches(source)
+            .Select(match => match.Groups["name"].Value)
+            .ToHashSet(StringComparer.Ordinal);
+
+        foreach (Match match in ConstructorDeclarationRegex().Matches(source).Cast<Match>())
+        {
+            string typeName = match.Groups["name"].Value;
+            if (!typeNames.Contains(typeName))
+            {
+                continue;
+            }
+
+            string parameters = match.Groups["parameters"].Value;
+            if (!DirectAnalysisStoreParameterRegex().IsMatch(parameters))
+            {
+                continue;
+            }
+
+            yield return $"{relativePath}: {typeName}({NormalizeParameterList(parameters)})";
+        }
+    }
+
+    private static string NormalizeParameterList(string parameters)
+        => WhitespaceRegex().Replace(parameters, " ").Trim();
 
     private static string[] FindPublicTopLevelTypeNames(string source)
     {
@@ -911,6 +973,15 @@ public sealed partial class AppArchitectureTests
 
     [GeneratedRegex(@"\b(?:(?:public|private|protected|internal|file)\s+)?(?:(?:new|abstract|sealed|static|partial|unsafe|readonly|ref)\s+)*(?:(?:record\s+(?:class\s+|struct\s+)?)|class\s+|interface\s+|struct\s+|enum\s+)(?<name>[A-Za-z_][A-Za-z0-9_]*)", RegexOptions.CultureInvariant)]
     private static partial Regex TypeDeclarationRegex();
+
+    [GeneratedRegex(@"\b(?:(?:public|private|protected|internal)\s+)+(?:static\s+|extern\s+)*(?<name>[A-Za-z_][A-Za-z0-9_]*)\s*\((?<parameters>[^()]*)\)", RegexOptions.CultureInvariant | RegexOptions.Singleline)]
+    private static partial Regex ConstructorDeclarationRegex();
+
+    [GeneratedRegex(@"(^|,)\s*(?:\[[^\]]+\]\s*)*IAnalysisStore\??\s+[A-Za-z_][A-Za-z0-9_]*", RegexOptions.CultureInvariant | RegexOptions.Singleline)]
+    private static partial Regex DirectAnalysisStoreParameterRegex();
+
+    [GeneratedRegex(@"\s+", RegexOptions.CultureInvariant)]
+    private static partial Regex WhitespaceRegex();
 
     private sealed record PublicTopLevelTypeAllowListEntry(
         string RelativePath,
