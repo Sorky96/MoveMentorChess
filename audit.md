@@ -486,15 +486,15 @@ Acceptance criteria:
 - The PR description states why the project was kept or removed.
 - Full solution tests pass after the decision.
 
-## 7. Validation
+## 7. Initial Audit Validation
 
-Executed:
+Executed for the original static audit PR before the sprint implementation follow-ups:
 
 ```powershell
 dotnet test MoveMentorChess.sln --no-restore -m:1 --verbosity minimal
 ```
 
-Result: 481 passed, 0 failed, 0 skipped.
+Historical result: 481 passed, 0 failed, 0 skipped.
 
 ## 8. Reviewer Notes
 

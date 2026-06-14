@@ -114,7 +114,10 @@ public sealed class OpeningTrainerSelectionViewModelTests
         public IReadOnlyList<OpeningLineCatalogItem> ListOpeningLines(string? filterText = null, RepertoireSide? repertoireSide = null, int limit = 100)
         {
             return lines
-                .Where(line => repertoireSide is null || line.RepertoireSide == repertoireSide)
+                .Where(line =>
+                    repertoireSide is null
+                    || repertoireSide == RepertoireSide.Both
+                    || line.RepertoireSide == repertoireSide)
                 .Where(line => string.IsNullOrWhiteSpace(filterText)
                     || line.DisplayName.Contains(filterText, StringComparison.OrdinalIgnoreCase))
                 .Take(limit)
