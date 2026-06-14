@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using MoveMentorChess.Localization;
 
 namespace MoveMentorChess.App.ViewModels;
@@ -12,6 +13,7 @@ public sealed class OpeningTrainerSelectionViewModel : ViewModelBase
     private OpeningTrainingStrictness selectedStrictness = OpeningTrainingStrictness.BookFlexible;
     private TrainingRecommendationCard? todayRecommendation;
     private PlayerOpeningPlan? playerOpeningPlan;
+    private SpecialTrainingModeDefinition? selectedSpecialMode;
 
     public OpeningTrainerSelectionViewModel(OpeningTrainerWorkspaceService workspaceService)
     {
@@ -39,6 +41,14 @@ public sealed class OpeningTrainerSelectionViewModel : ViewModelBase
     public IReadOnlyList<RepertoireSide> AvailableSides { get; } = Enum.GetValues<RepertoireSide>();
 
     public IReadOnlyList<OpeningTrainingStrictness> AvailableStrictnessOptions { get; } = Enum.GetValues<OpeningTrainingStrictness>();
+
+    public ObservableCollection<PlayerOpeningPlanItem> TodayPlanItems { get; } = [];
+
+    public ObservableCollection<PlayerOpeningPlanItem> WeeklyPlanItems { get; } = [];
+
+    public ObservableCollection<PlayerOpeningPlanItem> LongTermGapItems { get; } = [];
+
+    public ObservableCollection<SpecialTrainingModeDefinition> SpecialTrainingModes { get; } = [];
 
     public string PlayerKey => !string.IsNullOrWhiteSpace(AdvancedPlayerKey)
         ? AdvancedPlayerKey.Trim()
@@ -212,13 +222,35 @@ public sealed class OpeningTrainerSelectionViewModel : ViewModelBase
                 ? "Your accuracy is stable. Today's session focuses on retention, not new material."
                 : "Recent practice still has some friction. Today's session keeps the scope controlled and repairs weak spots first.";
 
+    public SpecialTrainingModeDefinition? SelectedSpecialMode
+    {
+        get => selectedSpecialMode;
+        set
+        {
+            if (SetProperty(ref selectedSpecialMode, value))
+            {
+                OnPropertyChanged(nameof(SelectedSpecialModeDescription));
+                OnPropertyChanged(nameof(SelectedSpecialModeButtonText));
+            }
+        }
+    }
+
+    public string SelectedSpecialModeDescription => SelectedSpecialMode?.Description ?? "Choose a special mode to start a focused preset.";
+
+    public string SelectedSpecialModeButtonText => SelectedSpecialMode?.CommandLabel ?? "Start special mode";
+
     public void RefreshTodayRecommendation()
     {
         TodayRecommendation = workspaceService.GetRecommendationForToday(PlayerKey, SelectedSide, 120);
         PlayerOpeningPlan = workspaceService.GetPlayerOpeningPlan(PlayerKey, SelectedSide, 120);
+        ReplaceItems(TodayPlanItems, PlayerOpeningPlan.Today);
+        ReplaceItems(WeeklyPlanItems, PlayerOpeningPlan.ThisWeek);
+        ReplaceItems(LongTermGapItems, PlayerOpeningPlan.LongTermGaps);
+        ReplaceItems(SpecialTrainingModes, workspaceService.ListSpecialTrainingModes());
+        SelectedSpecialMode ??= SpecialTrainingModes.FirstOrDefault();
     }
 
-    public string BuildTodayDecisionSummary(int recommendedPositionCount, int reviewMoveCount, OpeningTrainerOverview? overview)
+    public string BuildTodayDecisionSummary(OpeningTrainerOverview? overview, OpeningLineCatalogItem? selectedOpening)
     {
         if (TodayRecommendation is null)
         {
@@ -227,8 +259,8 @@ public sealed class OpeningTrainerSelectionViewModel : ViewModelBase
 
         return Localizer.Format(
             LocalizedStrings.OpeningTrainerTodayDecisionSummary,
-            recommendedPositionCount,
-            reviewMoveCount,
+            GetRecommendedPositionCount(overview, selectedOpening),
+            CountReviewMoves(overview, selectedOpening),
             GetEstimatedDurationText(overview),
             FormatRepertoireSide(TodayRecommendation.OpeningLine.RepertoireSide));
     }
@@ -277,6 +309,61 @@ public sealed class OpeningTrainerSelectionViewModel : ViewModelBase
         return $"{TodayRecommendation.EstimatedDurationMinutes} min";
     }
 
+    private int GetRecommendedPositionCount(OpeningTrainerOverview? overview, OpeningLineCatalogItem? selectedOpening)
+    {
+        if (overview is not null && TodayRecommendation is not null && Equals(selectedOpening, TodayRecommendation.OpeningLine))
+        {
+            return Math.Max(1, overview.Coverage.WeakBranches > 0 ? overview.Coverage.WeakBranches : overview.MainLine.Count);
+        }
+
+        return TodayRecommendation is null
+            ? 0
+            : Math.Max(1, TodayRecommendation.OpeningLine.BookBranchCount);
+    }
+
+    public int CountReviewMoves(OpeningTrainerOverview? overview, OpeningLineCatalogItem? selectedOpening)
+    {
+        string? targetEco = TodayRecommendation?.OpeningLine.Eco ?? selectedOpening?.Eco;
+        if (!string.IsNullOrWhiteSpace(targetEco))
+        {
+            PlayerOpeningPlanItem? matchingWeeklyItem = WeeklyPlanItems.FirstOrDefault(item =>
+                string.Equals(item.Eco, targetEco, StringComparison.OrdinalIgnoreCase));
+            int parsedCount = ExtractLeadingInt(matchingWeeklyItem?.Evidence);
+            if (parsedCount > 0)
+            {
+                return parsedCount;
+            }
+        }
+
+        if (overview is not null && overview.MainLine.Count > 0)
+        {
+            return overview.MainLine.Count;
+        }
+
+        return Math.Max(1, GetRecommendedPositionCount(overview, selectedOpening));
+    }
+
+    private static int ExtractLeadingInt(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return 0;
+        }
+
+        int value = 0;
+        foreach (char character in text)
+        {
+            if (!char.IsDigit(character))
+            {
+                break;
+            }
+
+            value = value * 10 + character - '0';
+        }
+
+        return value;
+    }
+
     private void RaiseTodayRecommendationStateChanged()
     {
         OnPropertyChanged(nameof(HasTodayRecommendation));
@@ -309,4 +396,13 @@ public sealed class OpeningTrainerSelectionViewModel : ViewModelBase
             RepertoireSide.Black => Localizer.Text(LocalizedStrings.CommonBlack),
             _ => Localizer.Text(LocalizedStrings.OpeningTrainerBothSides)
         };
+
+    private static void ReplaceItems<T>(ObservableCollection<T> collection, IEnumerable<T> items)
+    {
+        collection.Clear();
+        foreach (T item in items)
+        {
+            collection.Add(item);
+        }
+    }
 }

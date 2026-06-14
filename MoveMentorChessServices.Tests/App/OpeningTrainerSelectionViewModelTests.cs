@@ -67,6 +67,9 @@ public sealed class OpeningTrainerSelectionViewModelTests
         Assert.Equal(RepertoireSide.Black, viewModel.TodayRecommendation?.OpeningLine.RepertoireSide);
         Assert.NotNull(viewModel.PlayerOpeningPlan);
         Assert.NotEmpty(viewModel.PlayerOpeningPlan.Today);
+        Assert.NotEmpty(viewModel.TodayPlanItems);
+        Assert.NotEmpty(viewModel.SpecialTrainingModes);
+        Assert.NotNull(viewModel.SelectedSpecialMode);
     }
 
     private static OpeningTrainerWorkspaceService CreateWorkspace(IReadOnlyList<OpeningLineCatalogItem>? lines = null)

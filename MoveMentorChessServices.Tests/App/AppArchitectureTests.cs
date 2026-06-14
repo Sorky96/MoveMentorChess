@@ -12,7 +12,7 @@ public sealed partial class AppArchitectureTests
         string root = FindRepositoryRoot();
         (string Path, int MaxLines)[] cleanupBudgets =
         [
-            (Path.Join(root, "MoveMentorChess.App", "ViewModels", "OpeningTrainerWindowViewModel.cs"), 2355),
+            (Path.Join(root, "MoveMentorChess.App", "ViewModels", "OpeningTrainerWindowViewModel.cs"), 2275),
             (Path.Join(root, "MoveMentorChess.App", "Views", "AnalysisWindow.axaml.cs"), 540),
             (Path.Join(root, "MoveMentorChess.App", "Views", "ProfilesWindow.axaml.cs"), 790),
             (Path.Join(root, "MoveMentorChess.Training", "OpeningTrainerService.cs"), 470),
@@ -108,6 +108,7 @@ public sealed partial class AppArchitectureTests
         Assert.DoesNotContain("private OpeningTrainingProfileChoice? selectedProfileChoice", windowViewModel, StringComparison.Ordinal);
         Assert.DoesNotContain("private OpeningTrainingIntensityChoice? selectedIntensityChoice", windowViewModel, StringComparison.Ordinal);
         Assert.DoesNotContain("private PlayerOpeningPlan? playerOpeningPlan", windowViewModel, StringComparison.Ordinal);
+        Assert.DoesNotContain("private SpecialTrainingModeDefinition? selectedSpecialMode", windowViewModel, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -37,7 +37,6 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     private OpeningLineCatalogItem? selectedOpening;
     private TrainingPriorityItem? selectedPriority;
     private OpeningTrainingAnswerOption? selectedAnswerOption;
-    private SpecialTrainingModeDefinition? selectedSpecialMode;
     private OpeningTrainerOverview? overview;
     private string? studySelectedSquare;
     private string? studyPreviewTargetSquare;
@@ -130,13 +129,13 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     public ObservableCollection<OpeningUnderstandingCard> UnderstandingCards { get; } = [];
 
-    public ObservableCollection<PlayerOpeningPlanItem> TodayPlanItems { get; } = [];
+    public ObservableCollection<PlayerOpeningPlanItem> TodayPlanItems => selectionViewModel.TodayPlanItems;
 
-    public ObservableCollection<PlayerOpeningPlanItem> WeeklyPlanItems { get; } = [];
+    public ObservableCollection<PlayerOpeningPlanItem> WeeklyPlanItems => selectionViewModel.WeeklyPlanItems;
 
-    public ObservableCollection<PlayerOpeningPlanItem> LongTermGapItems { get; } = [];
+    public ObservableCollection<PlayerOpeningPlanItem> LongTermGapItems => selectionViewModel.LongTermGapItems;
 
-    public ObservableCollection<SpecialTrainingModeDefinition> SpecialTrainingModes { get; } = [];
+    public ObservableCollection<SpecialTrainingModeDefinition> SpecialTrainingModes => selectionViewModel.SpecialTrainingModes;
 
     public IReadOnlyList<OpeningTrainingProfileChoice> AvailableProfileChoices => selectionViewModel.AvailableProfileChoices;
 
@@ -290,9 +289,8 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
     public string TodayLessonReason => selectionViewModel.TodayLessonReason;
 
     public string TodayDecisionSummary => selectionViewModel.BuildTodayDecisionSummary(
-        GetRecommendedPositionCount(),
-        GetReviewMoveCount(),
-        overview);
+        overview,
+        SelectedOpening);
 
     public string TodayStartSequenceText => selectionViewModel.TodayStartSequenceText;
 
@@ -350,21 +348,21 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
 
     public SpecialTrainingModeDefinition? SelectedSpecialMode
     {
-        get => selectedSpecialMode;
+        get => selectionViewModel.SelectedSpecialMode;
         set
         {
-            if (SetProperty(ref selectedSpecialMode, value))
+            SpecialTrainingModeDefinition? before = selectionViewModel.SelectedSpecialMode;
+            selectionViewModel.SelectedSpecialMode = value;
+            if (!EqualityComparer<SpecialTrainingModeDefinition?>.Default.Equals(before, selectionViewModel.SelectedSpecialMode))
             {
                 StartSpecialModeCommand.RaiseCanExecuteChanged();
-                OnPropertyChanged(nameof(SelectedSpecialModeDescription));
-                OnPropertyChanged(nameof(SelectedSpecialModeButtonText));
             }
         }
     }
 
-    public string SelectedSpecialModeDescription => SelectedSpecialMode?.Description ?? "Choose a special mode to start a focused preset.";
+    public string SelectedSpecialModeDescription => selectionViewModel.SelectedSpecialModeDescription;
 
-    public string SelectedSpecialModeButtonText => SelectedSpecialMode?.CommandLabel ?? "Start special mode";
+    public string SelectedSpecialModeButtonText => selectionViewModel.SelectedSpecialModeButtonText;
 
     public TrainingPriorityItem? SelectedPriority
     {
@@ -878,7 +876,7 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
             "safe" => "Focus: main line review only. Weak branches are listed below as optional repairs.",
             "challenge" => $"Focus: main line from {FormatMainLine(overview.MainLine, 4)}, plus less familiar opponent replies.",
             _ => overview.Coverage.WeakBranches > 0
-                ? $"Focus: {overview.Coverage.WeakBranches} review position{PluralSuffix(overview.Coverage.WeakBranches)} from your {FormatMainLine(overview.MainLine, 4)} line. The full line contains {GetReviewMoveCount()} moves, but today's practice stays focused."
+                ? $"Focus: {overview.Coverage.WeakBranches} review position{PluralSuffix(overview.Coverage.WeakBranches)} from your {FormatMainLine(overview.MainLine, 4)} line. The full line contains {selectionViewModel.CountReviewMoves(overview, SelectedOpening)} moves, but today's practice stays focused."
                 : $"Focus: main line from {FormatMainLine(overview.MainLine, 4)}, plus the most useful opponent replies."
         };
 
@@ -984,35 +982,12 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
                 properties: properties);
         }
 
-        ReplaceItems(SpecialTrainingModes, workspaceService.ListSpecialTrainingModes());
-        SelectedSpecialMode ??= SpecialTrainingModes.FirstOrDefault();
-        ReplaceItems(TodayPlanItems, PlayerOpeningPlan?.Today ?? []);
-        ReplaceItems(WeeklyPlanItems, PlayerOpeningPlan?.ThisWeek ?? []);
-        ReplaceItems(LongTermGapItems, PlayerOpeningPlan?.LongTermGaps ?? []);
-        OnPropertyChanged(nameof(HasTodayRecommendation));
-        OnPropertyChanged(nameof(TodayRecommendationOpening));
-        OnPropertyChanged(nameof(TodayRecommendationMeta));
-        OnPropertyChanged(nameof(TodayRecommendationReason));
-        OnPropertyChanged(nameof(TodayRecommendationAction));
-        OnPropertyChanged(nameof(TodayLessonOpening));
-        OnPropertyChanged(nameof(TodayLessonSideText));
-        OnPropertyChanged(nameof(TodayLessonDurationText));
-        OnPropertyChanged(nameof(TodayLessonMoveCountText));
-        OnPropertyChanged(nameof(TodayLessonReason));
-        OnPropertyChanged(nameof(TodayTrainingReasonLabel));
-        OnPropertyChanged(nameof(TodayLessonButtonText));
-        OnPropertyChanged(nameof(HasTodayLesson));
-        OnPropertyChanged(nameof(PlayerOpeningPlanTitle));
-        OnPropertyChanged(nameof(PlayerOpeningPlanSummary));
-        OnPropertyChanged(nameof(PlayerOpeningProgressText));
-        OnPropertyChanged(nameof(PlayerOpeningProgressInterpretation));
+        RaiseTodayRecommendationStateChanged();
         OnPropertyChanged(nameof(CoverageHumanText));
         OnPropertyChanged(nameof(MainLineText));
         OnPropertyChanged(nameof(RememberThisText));
         OnPropertyChanged(nameof(SelectedSpecialModeDescription));
         OnPropertyChanged(nameof(SelectedSpecialModeButtonText));
-        StartRecommendedStudyCommand.RaiseCanExecuteChanged();
-        StartRecommendedPracticeNowCommand.RaiseCanExecuteChanged();
         StartSpecialModeCommand.RaiseCanExecuteChanged();
     }
 
@@ -1957,61 +1932,6 @@ public sealed class OpeningTrainerWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(TodayLessonReasonDetail));
         OnPropertyChanged(nameof(TodayDecisionSummary));
         OnPropertyChanged(nameof(TodayStartSequenceText));
-    }
-
-    private int GetRecommendedPositionCount()
-    {
-        if (overview is not null && TodayRecommendation is not null && Equals(SelectedOpening, TodayRecommendation.OpeningLine))
-        {
-            return Math.Max(1, overview.Coverage.WeakBranches > 0 ? overview.Coverage.WeakBranches : overview.MainLine.Count);
-        }
-
-        return TodayRecommendation is null
-            ? 0
-            : Math.Max(1, TodayRecommendation.OpeningLine.BookBranchCount);
-    }
-
-    private int GetReviewMoveCount()
-    {
-        string? targetEco = TodayRecommendation?.OpeningLine.Eco ?? SelectedOpening?.Eco;
-        if (!string.IsNullOrWhiteSpace(targetEco))
-        {
-            PlayerOpeningPlanItem? matchingWeeklyItem = WeeklyPlanItems.FirstOrDefault(item =>
-                string.Equals(item.Eco, targetEco, StringComparison.OrdinalIgnoreCase));
-            int parsedCount = ExtractLeadingInt(matchingWeeklyItem?.Evidence);
-            if (parsedCount > 0)
-            {
-                return parsedCount;
-            }
-        }
-
-        if (overview is not null && overview.MainLine.Count > 0)
-        {
-            return overview.MainLine.Count;
-        }
-
-        return Math.Max(1, GetRecommendedPositionCount());
-    }
-
-    private static int ExtractLeadingInt(string? text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return 0;
-        }
-
-        int value = 0;
-        foreach (char character in text)
-        {
-            if (!char.IsDigit(character))
-            {
-                break;
-            }
-
-            value = value * 10 + character - '0';
-        }
-
-        return value;
     }
 
     private static string FormatRepertoireSide(RepertoireSide side)
