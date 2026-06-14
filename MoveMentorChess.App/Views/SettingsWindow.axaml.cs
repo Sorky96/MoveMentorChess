@@ -19,7 +19,9 @@ public partial class SettingsWindow : Window
     }
 
     internal SettingsWindow(ISettingsWorkflow settingsWorkflow)
-        : this(settingsWorkflow, settingsWorkflow.Load())
+        : this(
+            settingsWorkflow ?? throw new ArgumentNullException(nameof(settingsWorkflow)),
+            settingsWorkflow.Load())
     {
     }
 
