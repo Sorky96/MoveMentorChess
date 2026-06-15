@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using MoveMentorChess.App.ViewModels;
 using MoveMentorChess.Analysis;
 using MoveMentorChess.Engine;
+using MoveMentorChess.Localization;
 using MoveMentorChess.Opening;
 using MoveMentorChess.Persistence;
 using MoveMentorChess.Presentation.Models;
@@ -198,7 +199,7 @@ public partial class AnalysisWindow : Window
         }
 
         TestAdviceButton.IsEnabled = false;
-        viewModel.StatusText = "Testing local advice runtime...";
+        viewModel.StatusText = Localizer.Text(LocalizedStrings.AnalysisWindowTestingLocalAdviceRuntime);
 
         try
         {
@@ -226,7 +227,7 @@ public partial class AnalysisWindow : Window
 
         viewModel.BeginAnalysis(selectedSide.Side);
         SyncInteractionState();
-        timelineRenderer.Clear("Analysis timeline will appear here.");
+        timelineRenderer.Clear(Localizer.Text(LocalizedStrings.AnalysisWindowTimelineWillAppear));
         RenderDetailsPlaceholder();
         SyncFeedbackState();
 
@@ -288,7 +289,7 @@ public partial class AnalysisWindow : Window
 
         if (viewModel.CurrentResult is null)
         {
-            viewModel.SummaryText = "Choose a side and run the analysis.";
+            viewModel.SummaryText = Localizer.Text(LocalizedStrings.AnalysisWindowChooseSideRunAnalysis);
             viewModel.ClearVisibleMistakes();
             RefreshTimeline([]);
             viewModel.ShowRunAnalysisPlaceholder();

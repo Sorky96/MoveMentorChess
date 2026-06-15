@@ -1,5 +1,6 @@
 using MoveMentorChess.Analysis;
 using MoveMentorChess.Engine;
+using MoveMentorChess.Localization;
 
 namespace MoveMentorChess.App.ViewModels;
 
@@ -14,16 +15,25 @@ internal sealed record AnalysisWindowRunOutcome(
     public bool IsError => !string.IsNullOrWhiteSpace(ErrorMessage);
 
     public static AnalysisWindowRunOutcome MissingContext()
-        => new(null, IsCached: false, "Analysis window is missing required game context.", ErrorMessage: null);
+        => new(null, IsCached: false, Localizer.Text(LocalizedStrings.AnalysisWindowMissingContext), ErrorMessage: null);
 
     public static AnalysisWindowRunOutcome Cached(GameAnalysisResult result, string statusText)
         => new(result, IsCached: true, statusText, ErrorMessage: null);
 
     public static AnalysisWindowRunOutcome Completed(GameAnalysisResult result, PlayerSide side)
-        => new(result, IsCached: false, $"Analysis finished for {side}.", ErrorMessage: null);
+        => new(
+            result,
+            IsCached: false,
+            Localizer.Format(LocalizedStrings.AnalysisWindowFinishedForSide, FormatSide(side)),
+            ErrorMessage: null);
 
     public static AnalysisWindowRunOutcome Failed(Exception exception)
-        => new(null, IsCached: false, $"Analysis failed: {exception.Message}", exception.Message);
+        => new(null, IsCached: false, Localizer.Format(LocalizedStrings.AnalysisWindowFailed, exception.Message), exception.Message);
+
+    private static string FormatSide(PlayerSide side)
+        => side == PlayerSide.White
+            ? Localizer.Text(LocalizedStrings.CommonWhite)
+            : Localizer.Text(LocalizedStrings.CommonBlack);
 }
 
 internal sealed class AnalysisWindowRunCoordinator(

@@ -472,6 +472,18 @@ Acceptance criteria:
 - Localization tests cover all supported resource files for missing keys.
 - Full solution tests pass.
 
+Implementation status 2026-06-15:
+
+- Migrated `AnalysisWindow.axaml` visible labels, buttons, headers, placeholders, and window title to `loc:Localize` resources.
+- Moved Analysis Window options, placeholders, status messages, timeline/review text, feedback labels, priority badges, and snapshot chrome through `LocalizedStrings` and resource files.
+- Added English, German, Polish, Portuguese (Brazil), and Chinese (Simplified) `AnalysisWindow...` resource entries with matching key sets across all supported resource files.
+- Explicitly deferred deeper generated coaching prose and advanced details formatter sentences to Sprint 8's presentation-boundary work; Sprint 7 localized the Analysis Window chrome, controls, placeholders, filters, review/status text, and snapshot/timeline UI.
+- Documented and preserved the runtime language-change model: application culture is applied on startup and save; newly opened windows resolve localized text at construction; `MainWindow` and `SettingsWindow` explicitly refresh their code-behind localized chrome after settings save; already-open child windows should be reopened instead of partially hot-swapping language state.
+- Added `LocalizationTests.AnalysisWindowResourceKeys_AreDeclaredOnLocalizedStrings` so new Analysis Window resource keys remain typed through `LocalizedStrings`.
+- Added `AppArchitectureTests.VisibleXamlTextUsesLocalizationOrDocumentedAllowList` to block new hard-coded visible XAML text unless it has an explicit sprint follow-up reason.
+- Validation passed with `dotnet test MoveMentorChessServices.Tests\MoveMentorChessServices.Tests.csproj --no-restore --filter "LocalizationTests|AppArchitectureTests" --verbosity minimal` (31 passed).
+- Validation passed with `dotnet test MoveMentorChess.sln --no-restore -m:1 --verbosity minimal` (505 passed).
+
 ### Sprint 8 - Presentation And Training Pipeline Split
 
 Goal: clarify presentation boundaries and reduce the training session builder pipeline.

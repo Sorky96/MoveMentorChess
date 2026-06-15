@@ -1,4 +1,5 @@
 using MoveMentorChess.Analysis;
+using MoveMentorChess.Localization;
 
 namespace MoveMentorChess.Presentation.Models;
 
@@ -23,29 +24,33 @@ public static class AnalysisTimelinePresentation
 
     public static string BuildSimilarMistakesHint(int count, string label)
         => count == 0
-            ? "No other visible highlights share this diagnosis."
-            : $"Other {AnalysisMistakePresentation.FormatMistakeLabel(label).ToLowerInvariant()} moments. Click one to jump there.";
+            ? Localizer.Text(LocalizedStrings.AnalysisWindowSimilarMistakesNone)
+            : Localizer.Format(
+                LocalizedStrings.AnalysisWindowSimilarMistakesHint,
+                AnalysisMistakePresentation.FormatMistakeLabel(label).ToLowerInvariant());
 
     public static string BuildSimilarMistakeRole(SelectedMistakeViewItem item, MoveAnalysisResult currentLead, string currentLabel)
     {
         if ((item.LeadMove.CentipawnLoss ?? 0) > (currentLead.CentipawnLoss ?? 0))
         {
-            return "More costly";
+            return Localizer.Text(LocalizedStrings.AnalysisWindowSimilarRoleMoreCostly);
         }
 
         if (item.LeadMove.Replay.Phase != currentLead.Replay.Phase)
         {
-            return $"{AnalysisMistakePresentation.FormatPhase(item.LeadMove.Replay.Phase)} version";
+            return Localizer.Format(
+                LocalizedStrings.AnalysisWindowSimilarRolePhaseVersion,
+                AnalysisMistakePresentation.FormatPhase(item.LeadMove.Replay.Phase));
         }
 
         if (item.LeadMove.Replay.Ply > currentLead.Replay.Ply)
         {
-            return "Later example";
+            return Localizer.Text(LocalizedStrings.AnalysisWindowSimilarRoleLaterExample);
         }
 
         return string.Equals(item.RawLabel, currentLabel, StringComparison.Ordinal)
-            ? "Same motif"
-            : "Related";
+            ? Localizer.Text(LocalizedStrings.AnalysisWindowSimilarRoleSameMotif)
+            : Localizer.Text(LocalizedStrings.AnalysisWindowSimilarRoleRelated);
     }
 
     public static List<PhaseSegment> BuildPhaseSegments(IReadOnlyList<ReplayPly> replay)
@@ -71,7 +76,7 @@ public static class AnalysisTimelinePresentation
     {
         if (result.HighlightedMistakes.Count == 0)
         {
-            return "No recurring problem pattern found.";
+            return Localizer.Text(LocalizedStrings.AnalysisWindowNoRecurringPattern);
         }
 
         var dominant = result.HighlightedMistakes
@@ -97,14 +102,24 @@ public static class AnalysisTimelinePresentation
             .First();
 
         string moveLabel = $"{mostExpensive.Replay.MoveNumber}{(mostExpensive.Replay.Side == PlayerSide.White ? "." : "...")} {mostExpensive.Replay.San}";
-        return $"Biggest pattern: {AnalysisMistakePresentation.FormatMistakeLabel(dominant.Label)}, {dominant.Count} times, average loss {dominant.AverageLoss:0} cp. Costliest moment: {moveLabel}.";
+        return Localizer.Format(
+            LocalizedStrings.AnalysisWindowSummaryDiagnosis,
+            AnalysisMistakePresentation.FormatMistakeLabel(dominant.Label),
+            dominant.Count,
+            dominant.AverageLoss,
+            moveLabel);
     }
 
     public static int CountReviewedHighlights(GameAnalysisResult result, IReadOnlySet<int> reviewedPlies)
         => result.HighlightedMistakes.Count(mistake => reviewedPlies.Contains(AnalysisMistakePresentation.GetLeadMove(mistake).Replay.Ply));
 
     public static string BuildPhaseSummary(IEnumerable<PhaseSegment> segments)
-        => string.Join(", ", segments.Select(segment => $"{AnalysisMistakePresentation.FormatPhase(segment.Phase)} {segment.PlyCount} ply"));
+        => string.Join(
+            Localizer.Text(LocalizedStrings.AnalysisWindowPhaseSummarySeparator),
+            segments.Select(segment => Localizer.Format(
+                LocalizedStrings.AnalysisWindowPhaseSummaryItem,
+                AnalysisMistakePresentation.FormatPhase(segment.Phase),
+                segment.PlyCount)));
 
     public static string GetPhaseBrush(GamePhase phase)
     {

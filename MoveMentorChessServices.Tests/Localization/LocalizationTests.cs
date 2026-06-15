@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Collections;
+using System.Reflection;
 using System.Resources;
 using MoveMentorChess.Analysis;
 using MoveMentorChess.Localization;
@@ -61,6 +62,25 @@ public sealed class LocalizationTests
             Assert.Empty(neutralKeys.Except(localizedKeys, StringComparer.Ordinal));
             Assert.Empty(localizedKeys.Except(neutralKeys, StringComparer.Ordinal));
         }
+    }
+
+    [Fact]
+    public void AnalysisWindowResourceKeys_AreDeclaredOnLocalizedStrings()
+    {
+        string resourceDirectory = FindResourceDirectory();
+        string[] neutralKeys = ReadResourceKeys(Path.Join(resourceDirectory, "Strings.resx"))
+            .Where(key => key.StartsWith("AnalysisWindow", StringComparison.Ordinal))
+            .ToArray();
+        string[] typedKeys = typeof(LocalizedStrings)
+            .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+            .Where(field => field.IsLiteral && !field.IsInitOnly && field.FieldType == typeof(string))
+            .Select(field => field.GetRawConstantValue()?.ToString() ?? string.Empty)
+            .Where(key => key.StartsWith("AnalysisWindow", StringComparison.Ordinal))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Empty(neutralKeys.Except(typedKeys, StringComparer.Ordinal));
+        Assert.Empty(typedKeys.Except(neutralKeys, StringComparer.Ordinal));
     }
 
     [Fact]

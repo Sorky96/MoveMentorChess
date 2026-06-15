@@ -1,3 +1,6 @@
+using System.Globalization;
+using MoveMentorChess.Localization;
+
 namespace MoveMentorChess.Presentation.Models;
 
 public sealed record AnalysisSelectedDetailsPresentation(
@@ -33,7 +36,9 @@ public static class AnalysisSelectedDetailsPresenter
             AnalysisMistakePresentation.BuildMoveRange(mistake),
             AnalysisDetailsTextFormatter.FormatMoveFromFen(lead.Replay.FenBefore, lead.BeforeAnalysis.BestMoveUci),
             $"{AnalysisMistakePresentation.FormatQualityBucket(mistake.Quality)} - {AnalysisMistakePresentation.FormatMistakeLabel(effectiveLabel)}",
-            $"Evaluation loss: {lead.CentipawnLoss?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "n/a"} cp",
+            Localizer.Format(
+                LocalizedStrings.AnalysisWindowEvaluationLossCp,
+                lead.CentipawnLoss?.ToString(CultureInfo.InvariantCulture) ?? Localizer.Text(LocalizedStrings.CommonNotAvailable)),
             AnalysisCoachingTextFormatter.BuildEvalSwingText(lead),
             AnalysisCoachingTextFormatter.BuildEvalInterpretation(lead),
             AnalysisSnapshotTextFormatter.BuildPositionContextText(lead, effectiveLabel),

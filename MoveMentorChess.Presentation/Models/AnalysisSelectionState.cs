@@ -1,3 +1,5 @@
+using MoveMentorChess.Localization;
+
 namespace MoveMentorChess.Presentation.Models;
 
 public enum AnalysisReviewFilter
@@ -53,7 +55,7 @@ public sealed class AnalysisSelectionState
     {
         if (CurrentResult is null)
         {
-            return new AnalysisFilterResult([], "Choose a side and run the analysis.");
+            return new AnalysisFilterResult([], Localizer.Text(LocalizedStrings.AnalysisWindowChooseSideRunAnalysis));
         }
 
         IEnumerable<SelectedMistake> visibleMistakes = CurrentResult.HighlightedMistakes;
@@ -88,14 +90,31 @@ public sealed class AnalysisSelectionState
     {
         if (CurrentResult is null)
         {
-            return "Choose a side and run the analysis.";
+            return Localizer.Text(LocalizedStrings.AnalysisWindowChooseSideRunAnalysis);
         }
 
         int blunders = CurrentResult.HighlightedMistakes.Count(item => item.Quality == MoveQualityBucket.Blunder);
         int mistakes = CurrentResult.HighlightedMistakes.Count(item => item.Quality == MoveQualityBucket.Mistake);
         int inaccuracies = CurrentResult.HighlightedMistakes.Count(item => item.Quality == MoveQualityBucket.Inaccuracy);
-        string cacheSuffix = CurrentResultIsCached ? " Loaded from cache." : string.Empty;
+        string cacheSuffix = CurrentResultIsCached
+            ? Localizer.Text(LocalizedStrings.AnalysisWindowLoadedFromCacheSentence)
+            : string.Empty;
         string diagnosis = AnalysisTimelinePresentation.BuildSummaryDiagnosis(CurrentResult);
-        return $"Showing {items.Count} highlights for {CurrentResult.AnalyzedSide}: {blunders} blunders, {mistakes} mistakes, {inaccuracies} inaccuracies. Reviewed {CountReviewedHighlights()}/{CurrentResult.HighlightedMistakes.Count} highlights. {diagnosis}{cacheSuffix}";
+        return Localizer.Format(
+            LocalizedStrings.AnalysisWindowFilterSummary,
+            items.Count,
+            FormatSide(CurrentResult.AnalyzedSide),
+            blunders,
+            mistakes,
+            inaccuracies,
+            CountReviewedHighlights(),
+            CurrentResult.HighlightedMistakes.Count,
+            diagnosis,
+            cacheSuffix).TrimEnd();
     }
+
+    private static string FormatSide(PlayerSide side)
+        => side == PlayerSide.White
+            ? Localizer.Text(LocalizedStrings.CommonWhite)
+            : Localizer.Text(LocalizedStrings.CommonBlack);
 }

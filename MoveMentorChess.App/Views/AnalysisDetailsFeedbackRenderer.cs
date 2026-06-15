@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using MoveMentorChess.App.ViewModels;
+using MoveMentorChess.Localization;
 using MoveMentorChess.Presentation.Models;
 
 namespace MoveMentorChess.App.Views;
@@ -76,9 +77,11 @@ internal sealed class AnalysisDetailsFeedbackRenderer(
     public void ShowReviewStatus(bool isReviewed)
     {
         reviewStatusTextBlock.Text = isReviewed
-            ? "Reviewed in this session."
-            : "Not reviewed yet.";
-        markReviewedButton.Content = isReviewed ? "Reviewed" : "Mark reviewed";
+            ? Localizer.Text(LocalizedStrings.AnalysisWindowReviewedInThisSession)
+            : Localizer.Text(LocalizedStrings.AnalysisWindowNotReviewedYet);
+        markReviewedButton.Content = isReviewed
+            ? Localizer.Text(LocalizedStrings.AnalysisWindowReviewed)
+            : Localizer.Text(LocalizedStrings.AnalysisWindowMarkReviewed);
         markReviewedButton.IsEnabled = !isReviewed;
         markReviewedNextButton.IsEnabled = !isReviewed;
     }
