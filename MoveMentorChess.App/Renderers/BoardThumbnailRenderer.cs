@@ -1,14 +1,14 @@
-using System.Drawing;
 using System.Collections.Generic;
+using System.Drawing;
 
-namespace MoveMentorChess.Presentation.Helpers;
+namespace MoveMentorChess.App.Renderers;
 
 public static class BoardThumbnailRenderer
 {
     public static Bitmap Render(string fen, int size, IReadOnlyDictionary<string, Image> pieceImages)
     {
         Bitmap bmp = new(size, size);
-        if (!FenPosition.TryParse(fen, out var position, out _) || position is null)
+        if (!FenPosition.TryParse(fen, out FenPosition? position, out _) || position is null)
         {
             using Graphics gErr = Graphics.FromImage(bmp);
             gErr.Clear(Color.LightGray);
@@ -18,7 +18,7 @@ public static class BoardThumbnailRenderer
 
         int tileSize = size / 8;
         using Graphics g = Graphics.FromImage(bmp);
-        
+
         for (int y = 0; y < 8; y++)
         {
             for (int x = 0; x < 8; x++)

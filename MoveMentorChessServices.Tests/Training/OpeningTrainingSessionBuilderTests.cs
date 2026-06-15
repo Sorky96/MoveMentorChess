@@ -46,6 +46,20 @@ public sealed class OpeningTrainingSessionBuilderTests
         Assert.Null(session);
     }
 
+    [Fact]
+    public void TryBuildSession_PassesPlayerFilterIntoSnapshotLoading()
+    {
+        FakeStore store = new([], []);
+        OpeningTrainerService service = new(store);
+
+        bool result = service.TryBuildSession("Filtered Player", out OpeningTrainingSession? session);
+
+        Assert.False(result);
+        Assert.Null(session);
+        Assert.Contains("Filtered Player", store.MoveAnalysisFilters);
+        Assert.Contains("Filtered Player", store.ResultFilters);
+    }
+
     // -------------------------------------------------------------------------
     // Options normalisation – negative MaxPositions must not throw
     // -------------------------------------------------------------------------
@@ -120,6 +134,66 @@ public sealed class OpeningTrainingSessionBuilderTests
         {
             Assert.NotEmpty(session.SourceSummaries);
         }
+    }
+
+    [Fact]
+    public void TryBuildSession_FirstOpeningMistakeSourceBuildsMistakeRepairPosition()
+    {
+        GameAnalysisResult game = CreateResult("Nina", "Opponent", PlayerSide.White, "C20",
+            ["e4", "e5", "h3", "Nc6"],
+            [("opening_principles", 20, "g1f3")]);
+        ImportedGame[] theoryGames = [CreateTheoryGame("C20", ["e4", "e5", "Nf3", "Nc6"])];
+        OpeningTrainerService service = CreateService([game], theoryGames);
+
+        bool built = service.TryBuildSession(
+            "Nina",
+            out OpeningTrainingSession? session,
+            new OpeningTrainingSessionOptions
+            {
+                Sources = [OpeningTrainingSourceKind.FirstOpeningMistake],
+                MaxPositions = 1,
+                MaxPositionsPerSource = 1
+            });
+
+        Assert.True(built);
+        Assert.NotNull(session);
+        OpeningTrainingPosition position = Assert.Single(session!.Positions);
+        Assert.Equal(OpeningTrainingSourceKind.FirstOpeningMistake, position.SourceKind);
+        Assert.Equal(OpeningTrainingMode.MistakeRepair, position.Mode);
+        Assert.StartsWith("first-mistake:", position.PositionId, StringComparison.Ordinal);
+        Assert.Equal("First opening mistake", position.Reference.SourceLabel);
+        Assert.Contains(position.CandidateMoves, option => option.Role == OpeningTrainingMoveRole.Repair);
+        Assert.Single(session.SourceSummaries);
+    }
+
+    [Fact]
+    public void TryBuildSession_ExampleGameSourceBuildsLineRecallPosition()
+    {
+        GameAnalysisResult game = CreateResult("Ola", "Opponent", PlayerSide.White, "C20",
+            ["e4", "e5", "h3", "Nc6"],
+            [("opening_principles", 20, "g1f3")]);
+        ImportedGame[] theoryGames = [CreateTheoryGame("C20", ["e4", "e5", "Nf3", "Nc6"])];
+        OpeningTrainerService service = CreateService([game], theoryGames);
+
+        bool built = service.TryBuildSession(
+            "Ola",
+            out OpeningTrainingSession? session,
+            new OpeningTrainingSessionOptions
+            {
+                Sources = [OpeningTrainingSourceKind.ExampleGame],
+                MaxPositions = 1,
+                MaxPositionsPerSource = 1
+            });
+
+        Assert.True(built);
+        Assert.NotNull(session);
+        OpeningTrainingPosition position = Assert.Single(session!.Positions);
+        Assert.Equal(OpeningTrainingSourceKind.ExampleGame, position.SourceKind);
+        Assert.Equal(OpeningTrainingMode.LineRecall, position.Mode);
+        Assert.StartsWith("example:", position.PositionId, StringComparison.Ordinal);
+        Assert.Equal("Example game", position.Reference.SourceLabel);
+        Assert.Contains(position.CandidateMoves, option => option.IsPreferred);
+        Assert.Single(session.Lines);
     }
 
     // -------------------------------------------------------------------------
@@ -231,13 +305,25 @@ public sealed class OpeningTrainingSessionBuilderTests
             theoryMovesByFen = BuildTheoryMoves(theoryGames);
         }
 
+        public List<string?> ResultFilters { get; } = [];
+        public List<string?> MoveAnalysisFilters { get; } = [];
+
         // IAnalysisResultStore
-        public IReadOnlyList<GameAnalysisResult> ListResults(string? filterText = null, int limit = 500) => results;
+        public IReadOnlyList<GameAnalysisResult> ListResults(string? filterText = null, int limit = 500)
+        {
+            ResultFilters.Add(filterText);
+            return results;
+        }
+
         public bool TryLoadResult(GameAnalysisCacheKey key, out GameAnalysisResult? result) { result = null; return false; }
         public void SaveResult(GameAnalysisCacheKey key, GameAnalysisResult result) { }
 
         // IStoredMoveAnalysisStore
-        public IReadOnlyList<StoredMoveAnalysis> ListMoveAnalyses(string? filterText = null, int limit = 5000) => [];
+        public IReadOnlyList<StoredMoveAnalysis> ListMoveAnalyses(string? filterText = null, int limit = 5000)
+        {
+            MoveAnalysisFilters.Add(filterText);
+            return [];
+        }
 
         // IImportedGameStore
         public void SaveImportedGame(ImportedGame game) { }

@@ -503,6 +503,18 @@ Acceptance criteria:
 - New tests cover the extracted builder/loader without requiring SQLite.
 - Full solution tests pass.
 
+Implementation status 2026-06-15:
+
+- Documented `MoveMentorChess.Presentation` as a framework-neutral presentation adapter layer: it can shape domain/use-case data into view-ready records, color tokens, and text, but must not own UI toolkit behavior, GDI rendering, persistence access, engine lifecycle, or composition wiring.
+- Moved the GDI/System.Drawing `BoardThumbnailRenderer` out of `MoveMentorChess.Presentation` into the App rendering boundary and removed the Presentation `Microsoft.WindowsDesktop.App` framework reference.
+- Added `AppArchitectureTests.PresentationProjectRoleIsDocumentedAndFrameworkNeutral` to protect the documented Presentation role, allowed project references, and forbidden platform/persistence/engine tokens.
+- Extracted `OpeningTrainingSnapshotLoader` from `OpeningTrainingSessionBuilder` to own training snapshot loading, deduplication, and snapshot construction from stored moves/results.
+- Extracted source-specific position builders for example-game, opening-weakness, and first-opening-mistake sources while keeping `OpeningTrainingSessionBuilder` as the coordinating facade.
+- Added `AppArchitectureTests.OpeningTrainingSessionBuilderDelegatesSnapshotAndSourcePipelines` to keep snapshot/source pipelines delegated.
+- Added SQLite-free `OpeningTrainingSessionBuilderTests` coverage for first-opening-mistake and example-game source output through the public `OpeningTrainerService` API, plus regression coverage that the player filter reaches snapshot loading before the cap is applied.
+- Validation passed with `dotnet test MoveMentorChessServices.Tests\MoveMentorChessServices.Tests.csproj --no-restore --filter "OpeningTrainingSessionBuilderTests|AppArchitectureTests" --verbosity minimal` (34 passed).
+- Validation passed with `dotnet test MoveMentorChess.sln --no-restore -m:1 --verbosity minimal` (510 passed).
+
 ### Sprint 9 - Legacy Project Ownership Decision
 
 Goal: remove ambiguity around the tracked `MoveMentorChessServices` project.
