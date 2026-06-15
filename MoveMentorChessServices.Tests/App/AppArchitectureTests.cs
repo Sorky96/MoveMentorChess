@@ -59,9 +59,10 @@ public sealed partial class AppArchitectureTests
         Assert.Empty(existingShellFiles);
 
         string solution = File.ReadAllText(Path.Join(root, "MoveMentorChess.sln"));
+        string normalizedSolution = solution.Replace('\\', '/');
         Assert.DoesNotContain(
-            @"MoveMentorChessServices\MoveMentorChessServices.csproj",
-            solution,
+            "MoveMentorChessServices/MoveMentorChessServices.csproj",
+            normalizedSolution,
             StringComparison.Ordinal);
     }
 
