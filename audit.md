@@ -532,6 +532,12 @@ Acceptance criteria:
 - The PR description states why the project was kept or removed.
 - Full solution tests pass after the decision.
 
+Implementation status 2026-06-15:
+
+- Chose to remove the obsolete `MoveMentorChessServices` project shell instead of adding it back to `MoveMentorChess.sln`; the active code now lives in the split `MoveMentorChess.*` projects and the solution already builds those projects directly.
+- Removed the tracked legacy project file and icon so the repository no longer carries an unexplained project shell.
+- Added `AppArchitectureTests.LegacyMoveMentorChessServicesProjectShellStaysRemoved` to keep the obsolete shell out of the repository and solution.
+
 ## 7. Initial Audit Validation
 
 Executed for the original static audit PR before the sprint implementation follow-ups:

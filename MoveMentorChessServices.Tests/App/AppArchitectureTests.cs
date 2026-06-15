@@ -41,6 +41,32 @@ public sealed partial class AppArchitectureTests
     }
 
     [Fact]
+    public void LegacyMoveMentorChessServicesProjectShellStaysRemoved()
+    {
+        string root = FindRepositoryRoot();
+        string[] obsoleteShellFiles =
+        [
+            Path.Join(root, "MoveMentorChessServices", "MoveMentorChessServices.csproj"),
+            Path.Join(root, "MoveMentorChessServices", "MoveMentorChessServices.ico")
+        ];
+
+        string[] existingShellFiles = obsoleteShellFiles
+            .Where(File.Exists)
+            .Select(path => Path.GetRelativePath(root, path))
+            .Order()
+            .ToArray();
+
+        Assert.Empty(existingShellFiles);
+
+        string solution = File.ReadAllText(Path.Join(root, "MoveMentorChess.sln"));
+        string normalizedSolution = solution.Replace('\\', '/');
+        Assert.DoesNotContain(
+            "MoveMentorChessServices/MoveMentorChessServices.csproj",
+            normalizedSolution,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ProductionCSharpFilesExposeOnlyOnePublicTopLevelTypeUnlessAllowListed()
     {
         string root = FindRepositoryRoot();
