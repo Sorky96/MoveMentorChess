@@ -57,7 +57,7 @@ internal sealed class OpeningTrainingSessionBuilder
         }
 
         string normalizedPlayerKey = NormalizePlayerKey(playerKeyOrName);
-        List<OpeningTrainerSnapshot> snapshots = snapshotLoader.Load(null, 2000)
+        List<OpeningTrainerSnapshot> snapshots = snapshotLoader.Load(playerKeyOrName, 2000)
             .Where(snapshot => snapshot.PlayerKey == normalizedPlayerKey
                 || string.Equals(snapshot.DisplayName, playerKeyOrName, StringComparison.OrdinalIgnoreCase))
             .ToList();

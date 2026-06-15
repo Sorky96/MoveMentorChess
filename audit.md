@@ -511,9 +511,9 @@ Implementation status 2026-06-15:
 - Extracted `OpeningTrainingSnapshotLoader` from `OpeningTrainingSessionBuilder` to own training snapshot loading, deduplication, and snapshot construction from stored moves/results.
 - Extracted source-specific position builders for example-game, opening-weakness, and first-opening-mistake sources while keeping `OpeningTrainingSessionBuilder` as the coordinating facade.
 - Added `AppArchitectureTests.OpeningTrainingSessionBuilderDelegatesSnapshotAndSourcePipelines` to keep snapshot/source pipelines delegated.
-- Added SQLite-free `OpeningTrainingSessionBuilderTests` coverage for first-opening-mistake and example-game source output through the public `OpeningTrainerService` API.
-- Validation passed with `dotnet test MoveMentorChessServices.Tests\MoveMentorChessServices.Tests.csproj --no-restore --filter "OpeningTrainingSessionBuilderTests|AppArchitectureTests" --verbosity minimal` (33 passed).
-- Validation passed with `dotnet test MoveMentorChess.sln --no-restore -m:1 --verbosity minimal` (509 passed).
+- Added SQLite-free `OpeningTrainingSessionBuilderTests` coverage for first-opening-mistake and example-game source output through the public `OpeningTrainerService` API, plus regression coverage that the player filter reaches snapshot loading before the cap is applied.
+- Validation passed with `dotnet test MoveMentorChessServices.Tests\MoveMentorChessServices.Tests.csproj --no-restore --filter "OpeningTrainingSessionBuilderTests|AppArchitectureTests" --verbosity minimal` (34 passed).
+- Validation passed with `dotnet test MoveMentorChess.sln --no-restore -m:1 --verbosity minimal` (510 passed).
 
 ### Sprint 9 - Legacy Project Ownership Decision
 

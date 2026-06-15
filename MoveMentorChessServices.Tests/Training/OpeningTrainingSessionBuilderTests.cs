@@ -46,6 +46,20 @@ public sealed class OpeningTrainingSessionBuilderTests
         Assert.Null(session);
     }
 
+    [Fact]
+    public void TryBuildSession_PassesPlayerFilterIntoSnapshotLoading()
+    {
+        FakeStore store = new([], []);
+        OpeningTrainerService service = new(store);
+
+        bool result = service.TryBuildSession("Filtered Player", out OpeningTrainingSession? session);
+
+        Assert.False(result);
+        Assert.Null(session);
+        Assert.Contains("Filtered Player", store.MoveAnalysisFilters);
+        Assert.Contains("Filtered Player", store.ResultFilters);
+    }
+
     // -------------------------------------------------------------------------
     // Options normalisation – negative MaxPositions must not throw
     // -------------------------------------------------------------------------
@@ -291,13 +305,25 @@ public sealed class OpeningTrainingSessionBuilderTests
             theoryMovesByFen = BuildTheoryMoves(theoryGames);
         }
 
+        public List<string?> ResultFilters { get; } = [];
+        public List<string?> MoveAnalysisFilters { get; } = [];
+
         // IAnalysisResultStore
-        public IReadOnlyList<GameAnalysisResult> ListResults(string? filterText = null, int limit = 500) => results;
+        public IReadOnlyList<GameAnalysisResult> ListResults(string? filterText = null, int limit = 500)
+        {
+            ResultFilters.Add(filterText);
+            return results;
+        }
+
         public bool TryLoadResult(GameAnalysisCacheKey key, out GameAnalysisResult? result) { result = null; return false; }
         public void SaveResult(GameAnalysisCacheKey key, GameAnalysisResult result) { }
 
         // IStoredMoveAnalysisStore
-        public IReadOnlyList<StoredMoveAnalysis> ListMoveAnalyses(string? filterText = null, int limit = 5000) => [];
+        public IReadOnlyList<StoredMoveAnalysis> ListMoveAnalyses(string? filterText = null, int limit = 5000)
+        {
+            MoveAnalysisFilters.Add(filterText);
+            return [];
+        }
 
         // IImportedGameStore
         public void SaveImportedGame(ImportedGame game) { }
