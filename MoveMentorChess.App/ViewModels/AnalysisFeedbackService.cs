@@ -1,4 +1,5 @@
 using MoveMentorChess.Analysis;
+using MoveMentorChess.Localization;
 using MoveMentorChess.Persistence;
 using MoveMentorChess.Presentation.Models;
 
@@ -98,11 +99,11 @@ internal static class AnalysisFeedbackService
     {
         return kind switch
         {
-            AdviceFeedbackKind.Correct => "Helpful",
-            AdviceFeedbackKind.WrongLabel => "Wrong diagnosis",
-            AdviceFeedbackKind.NotUseful => "Not useful",
-            AdviceFeedbackKind.TooGeneric => "Needs clearer explanation",
-            AdviceFeedbackKind.GoodExplanation => "Good explanation",
+            AdviceFeedbackKind.Correct => Localizer.Text(LocalizedStrings.AnalysisWindowHelpful),
+            AdviceFeedbackKind.WrongLabel => Localizer.Text(LocalizedStrings.AnalysisWindowWrongDiagnosis),
+            AdviceFeedbackKind.NotUseful => Localizer.Text(LocalizedStrings.AnalysisWindowNotUseful),
+            AdviceFeedbackKind.TooGeneric => Localizer.Text(LocalizedStrings.AnalysisWindowNeedsClearerExplanation),
+            AdviceFeedbackKind.GoodExplanation => Localizer.Text(LocalizedStrings.AnalysisWindowGoodExplanation),
             _ => kind.ToString()
         };
     }

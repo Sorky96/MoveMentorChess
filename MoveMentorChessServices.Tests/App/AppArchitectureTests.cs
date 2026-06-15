@@ -1,4 +1,6 @@
 using System.Text.RegularExpressions;
+using System.Xml;
+using System.Xml.Linq;
 using MoveMentorChess.Presentation.Models;
 using Xunit;
 
@@ -6,6 +8,16 @@ namespace MoveMentorChessServices.Tests.App;
 
 public sealed partial class AppArchitectureTests
 {
+    private static readonly HashSet<string> VisibleXamlTextAttributeNames = new(StringComparer.Ordinal)
+    {
+        "Title",
+        "Content",
+        "Header",
+        "Text",
+        "PlaceholderText",
+        "ToolTip.Tip"
+    };
+
     [Fact]
     public void P1LargeClassCleanupBoundariesDoNotRegress()
     {
@@ -141,6 +153,42 @@ public sealed partial class AppArchitectureTests
         Assert.DoesNotContain("LlamaGpuSettingsStore", settingsWindow, StringComparison.Ordinal);
         Assert.DoesNotContain("StockfishSettingsStore", settingsWindow, StringComparison.Ordinal);
         Assert.DoesNotContain("LlamaCppServerManager", settingsWindow, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void VisibleXamlTextUsesLocalizationOrDocumentedAllowList()
+    {
+        string root = FindRepositoryRoot();
+        Dictionary<string, string> allowList = VisibleXamlTextAllowList();
+
+        string[] undocumentedAllowListEntries = allowList
+            .Where(entry => string.IsNullOrWhiteSpace(entry.Value)
+                || !entry.Value.Contains("Sprint ", StringComparison.Ordinal))
+            .Select(entry => $"{entry.Key} must include an allow-list reason with a follow-up sprint.")
+            .Order()
+            .ToArray();
+        Assert.Empty(undocumentedAllowListEntries);
+
+        VisibleXamlTextLiteral[] literals = EnumerateAppXamlFiles(root)
+            .SelectMany(path => FindVisibleXamlTextLiterals(root, path))
+            .ToArray();
+        HashSet<string> literalSites = literals
+            .Select(literal => literal.Site)
+            .ToHashSet(StringComparer.Ordinal);
+
+        string[] unexpectedLiterals = literals
+            .Where(literal => !allowList.ContainsKey(literal.Site))
+            .Select(literal => $"{literal.Site} should use loc:Localize, a binding, or a documented allow-list entry.")
+            .Order()
+            .ToArray();
+        Assert.Empty(unexpectedLiterals);
+
+        string[] staleAllowListEntries = allowList.Keys
+            .Where(site => !literalSites.Contains(site))
+            .Select(site => $"{site} no longer needs a visible XAML text allow-list entry.")
+            .Order()
+            .ToArray();
+        Assert.Empty(staleAllowListEntries);
     }
 
     [Fact]
@@ -443,6 +491,114 @@ public sealed partial class AppArchitectureTests
         Assert.DoesNotContain("DELETE FROM", facade, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("SELECT ", facade, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("sqlite3_prepare", facade, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static Dictionary<string, string> VisibleXamlTextAllowList()
+    {
+        List<(string Site, string Reason)> entries = [];
+
+        AddVisibleXamlTextEntries(
+            entries,
+            Path.Join("MoveMentorChess.App", "Views", "MainWindow.axaml"),
+            "Sprint 7 - Localization Completion: MainWindow startup literals are overwritten by ApplyLocalizedText after construction; move this window fully to XAML localization in a later sprint.",
+            (18, "Title", "MoveMentor Chess"),
+            (47, "Content", "ROTATE BOARD"),
+            (48, "Content", "UNDO"),
+            (82, "Content", "Configure engine"),
+            (89, "Content", "Paste PGN"),
+            (95, "Content", "Analyze game"),
+            (103, "Content", "PASTE PGN"),
+            (104, "Content", "LOAD PGN FILE"),
+            (106, "Content", "APPLY NEXT"),
+            (107, "Content", "APPLY SELECTED"),
+            (116, "Content", "ANALYZE IMPORTED"),
+            (118, "Content", "PLAYER COACH"),
+            (127, "Content", "SAVED ANALYSES"),
+            (135, "Content", "LOAD SAVED"),
+            (144, "Content", "OPENING TRAINER"),
+            (153, "Content", "SETTINGS"),
+            (163, "Content", "OPENING COVERAGE"),
+            (173, "Content", "CLOSE APP"),
+            (355, "ToolTip.Tip", "Stop import"));
+
+        AddVisibleXamlTextEntries(
+            entries,
+            Path.Join("MoveMentorChess.App", "Views", "SettingsWindow.axaml"),
+            "Sprint 7 - Localization Completion: SettingsWindow startup literals are overwritten by ApplyLocalizedText after construction; move this window fully to XAML localization in a later sprint.",
+            (10, "Title", "Settings"),
+            (21, "Text", "Settings"),
+            (22, "Content", "Close"),
+            (28, "Text", "Choose how MoveMentor uses the local model and Stockfish on this machine."),
+            (41, "Text", "Setup checklist"),
+            (45, "Text", "1. Pick or auto-detect Stockfish. 2. Import a PGN. 3. Run analysis. 4. Follow the training recommendation."),
+            (50, "Text", "Language"),
+            (55, "Text", "Model"),
+            (57, "Content", "Use full GPU power for the local model"),
+            (58, "Text", "llama-server.exe path (optional)"),
+            (61, "PlaceholderText", "Auto-detect llama-server.exe"),
+            (65, "Content", "Browse"),
+            (68, "Text", "Explanation level"),
+            (70, "Text", "Narration style"),
+            (78, "Text", "Stockfish"),
+            (79, "Text", "stockfish.exe path"),
+            (82, "PlaceholderText", "Auto-detect stockfish.exe"),
+            (86, "Content", "Browse"),
+            (89, "Text", "Engine threads"),
+            (94, "Text", "Hash memory (MB)"),
+            (99, "Text", "Bulk analysis depth"),
+            (104, "Text", "Bulk analysis MultiPV"),
+            (109, "Text", "Bulk analysis move time (ms)"),
+            (133, "Text", "Save when Stockfish is detected or after choosing a custom path."),
+            (139, "Content", "Cancel"),
+            (140, "Content", "Save"));
+
+        return entries.ToDictionary(entry => entry.Site, entry => entry.Reason, StringComparer.Ordinal);
+    }
+
+    private static void AddVisibleXamlTextEntries(
+        List<(string Site, string Reason)> entries,
+        string relativePath,
+        string reason,
+        params (int Line, string Attribute, string Value)[] sites)
+    {
+        string normalizedPath = NormalizeRelativePath(relativePath);
+        foreach ((int line, string attribute, string value) in sites)
+        {
+            entries.Add(($"{normalizedPath}:{line}:{attribute}={value}", reason));
+        }
+    }
+
+    private static IEnumerable<string> EnumerateAppXamlFiles(string root)
+        => Directory
+            .EnumerateFiles(Path.Join(root, "MoveMentorChess.App", "Views"), "*.axaml", SearchOption.AllDirectories)
+            .Where(path => !ContainsPathSegment(path, "bin"))
+            .Where(path => !ContainsPathSegment(path, "obj"))
+            .Order(StringComparer.Ordinal);
+
+    private static IEnumerable<VisibleXamlTextLiteral> FindVisibleXamlTextLiterals(string root, string path)
+    {
+        XDocument document = XDocument.Load(path, LoadOptions.SetLineInfo);
+        string relativePath = NormalizeRelativePath(Path.GetRelativePath(root, path));
+
+        foreach (XAttribute attribute in document.Descendants().Attributes())
+        {
+            string attributeName = attribute.Name.LocalName;
+            if (!VisibleXamlTextAttributeNames.Contains(attributeName))
+            {
+                continue;
+            }
+
+            string value = attribute.Value;
+            if (string.IsNullOrWhiteSpace(value)
+                || value.TrimStart().StartsWith('{'))
+            {
+                continue;
+            }
+
+            IXmlLineInfo lineInfo = attribute;
+            int lineNumber = lineInfo.HasLineInfo() ? lineInfo.LineNumber : 0;
+            yield return new VisibleXamlTextLiteral(relativePath, lineNumber, attributeName, value);
+        }
     }
 
     private static Dictionary<string, PublicTopLevelTypeAllowListEntry> PublicTopLevelTypeAllowList()
@@ -1043,4 +1199,13 @@ public sealed partial class AppArchitectureTests
         IReadOnlyList<string> PublicTypes,
         string Owner,
         string FollowUp);
+
+    private sealed record VisibleXamlTextLiteral(
+        string RelativePath,
+        int Line,
+        string Attribute,
+        string Value)
+    {
+        public string Site => $"{RelativePath}:{Line}:{Attribute}={Value}";
+    }
 }

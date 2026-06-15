@@ -3,6 +3,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using MoveMentorChess.Localization;
 using MoveMentorChess.Presentation.Models;
 
 namespace MoveMentorChess.App.Views;
@@ -33,7 +34,7 @@ internal sealed class AnalysisTimelineRenderer(
 
         if (result is null || result.Replay.Count == 0)
         {
-            timelineSummaryTextBlock.Text = "Run analysis to see game phases and mistake markers.";
+            timelineSummaryTextBlock.Text = Localizer.Text(LocalizedStrings.AnalysisWindowTimelineRunAnalysisHint);
             return;
         }
 
@@ -116,8 +117,16 @@ internal sealed class AnalysisTimelineRenderer(
         marker.Height = isSelected ? 22 : 12;
         marker.Margin = new Avalonia.Thickness(isSelected ? 0 : 1, 0);
         marker.Cursor = new Cursor(StandardCursorType.Hand);
-        string reviewed = isReviewed ? " Reviewed." : string.Empty;
-        ToolTip.SetTip(marker, $"{item.MoveRange}: {AnalysisMistakePresentation.FormatQualityBucket(item.Mistake.Quality)}, {item.LabelText}, {AnalysisMistakePresentation.BuildImpactText(item.LeadMove)}.{reviewed}");
+        string reviewed = isReviewed ? $" {Localizer.Text(LocalizedStrings.AnalysisWindowReviewedTooltipSuffix)}" : string.Empty;
+        ToolTip.SetTip(
+            marker,
+            Localizer.Format(
+                LocalizedStrings.AnalysisWindowTimelineMarkerTooltip,
+                item.MoveRange,
+                AnalysisMistakePresentation.FormatQualityBucket(item.Mistake.Quality),
+                item.LabelText,
+                AnalysisMistakePresentation.BuildImpactText(item.LeadMove),
+                reviewed));
     }
 
     private void RenderSelectedText(SelectedMistakeViewItem? selectedItem, IReadOnlySet<int> reviewedPlies)
@@ -127,8 +136,15 @@ internal sealed class AnalysisTimelineRenderer(
             return;
         }
 
-        string reviewed = reviewedPlies.Contains(selectedItem.LeadMove.Replay.Ply) ? " Reviewed." : string.Empty;
-        timelineSelectedTextBlock.Text = $"You are here: {selectedItem.MoveRange} - {selectedItem.LabelText}, {AnalysisMistakePresentation.BuildImpactText(selectedItem.LeadMove)}.{reviewed}";
+        string reviewed = reviewedPlies.Contains(selectedItem.LeadMove.Replay.Ply)
+            ? $" {Localizer.Text(LocalizedStrings.AnalysisWindowReviewedTooltipSuffix)}"
+            : string.Empty;
+        timelineSelectedTextBlock.Text = Localizer.Format(
+            LocalizedStrings.AnalysisWindowTimelineSelectedText,
+            selectedItem.MoveRange,
+            selectedItem.LabelText,
+            AnalysisMistakePresentation.BuildImpactText(selectedItem.LeadMove),
+            reviewed);
     }
 
     private void RenderSummary(GameAnalysisResult result, IEnumerable<PhaseSegment> segments, IReadOnlySet<int> reviewedPlies)
@@ -136,6 +152,10 @@ internal sealed class AnalysisTimelineRenderer(
         string phaseSummary = AnalysisTimelinePresentation.BuildPhaseSummary(segments);
         int reviewedCount = AnalysisTimelinePresentation.CountReviewedHighlights(result, reviewedPlies);
         int totalHighlights = result.HighlightedMistakes.Count;
-        timelineSummaryTextBlock.Text = $"{phaseSummary}. Reviewed {reviewedCount}/{totalHighlights} highlights. Markers: red blunder, orange mistake, yellow inaccuracy.";
+        timelineSummaryTextBlock.Text = Localizer.Format(
+            LocalizedStrings.AnalysisWindowTimelineSummary,
+            phaseSummary,
+            reviewedCount,
+            totalHighlights);
     }
 }

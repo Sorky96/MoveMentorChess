@@ -258,6 +258,121 @@
   <data name="AnalysisImpactWinningTacticMissed" xml:space="preserve"><value>gewinnende Taktik verpasst</value></data>
   <data name="AnalysisImpactMateRouteChanged" xml:space="preserve"><value>Mattweg verändert</value></data>
   <data name="AnalysisImpactEvaluationLoss" xml:space="preserve"><value>Bewertungsverlust {0} cp</value></data>
+  <data name="AnalysisWindowTitle" xml:space="preserve"><value>Analyse der importierten Partie</value></data>
+  <data name="AnalysisWindowRunAnalysis" xml:space="preserve"><value>Analyse starten</value></data>
+  <data name="AnalysisWindowShowOnBoard" xml:space="preserve"><value>Auf dem Brett zeigen</value></data>
+  <data name="AnalysisWindowTestAdviceModel" xml:space="preserve"><value>Ratgebermodell testen</value></data>
+  <data name="AnalysisWindowGameMap" xml:space="preserve"><value>Partiekarte</value></data>
+  <data name="AnalysisWindowEmptyStateTitle" xml:space="preserve"><value>Mit einer Analyse beginnen</value></data>
+  <data name="AnalysisWindowEmptyRunAnalysis" xml:space="preserve"><value>Analyse starten</value></data>
+  <data name="AnalysisWindowBackToBoard" xml:space="preserve"><value>Zurück zum Brett</value></data>
+  <data name="AnalysisWindowTryInstead" xml:space="preserve"><value>Stattdessen versuchen</value></data>
+  <data name="AnalysisWindowEvaluationSwing" xml:space="preserve"><value>Bewertungsschwung</value></data>
+  <data name="AnalysisWindowPositionContext" xml:space="preserve"><value>Positionskontext</value></data>
+  <data name="AnalysisWindowWhatHappened" xml:space="preserve"><value>Was passiert ist</value></data>
+  <data name="AnalysisWindowWhyItMatters" xml:space="preserve"><value>Warum es wichtig ist</value></data>
+  <data name="AnalysisWindowTrainingFocus" xml:space="preserve"><value>Trainingsfokus</value></data>
+  <data name="AnalysisWindowReviewAction" xml:space="preserve"><value>Wiederholungsaktion</value></data>
+  <data name="AnalysisWindowMarkReviewed" xml:space="preserve"><value>Als geprüft markieren</value></data>
+  <data name="AnalysisWindowMarkReviewedNext" xml:space="preserve"><value>Markieren &amp; weiter</value></data>
+  <data name="AnalysisWindowTopCandidateMoves" xml:space="preserve"><value>Beste Kandidatenzüge</value></data>
+  <data name="AnalysisWindowBeforeMovingCheck" xml:space="preserve"><value>Vor dem Zug prüfen</value></data>
+  <data name="AnalysisWindowPositionSnapshot" xml:space="preserve"><value>Positionsmomentaufnahme</value></data>
+  <data name="AnalysisWindowPlayedMove" xml:space="preserve"><value>Gespielter Zug</value></data>
+  <data name="AnalysisWindowBestMove" xml:space="preserve"><value>Bester Zug</value></data>
+  <data name="AnalysisWindowThreat" xml:space="preserve"><value>Drohung</value></data>
+  <data name="AnalysisWindowPlayed" xml:space="preserve"><value>Gespielt</value></data>
+  <data name="AnalysisWindowBest" xml:space="preserve"><value>Bester</value></data>
+  <data name="AnalysisWindowThreatLabel" xml:space="preserve"><value>Drohung:</value></data>
+  <data name="AnalysisWindowBestIdeaLabel" xml:space="preserve"><value>Beste Idee:</value></data>
+  <data name="AnalysisWindowMistakeLabel" xml:space="preserve"><value>Fehler:</value></data>
+  <data name="AnalysisWindowAdvancedDetails" xml:space="preserve"><value>Erweiterte Details</value></data>
+  <data name="AnalysisWindowSimilarMistakes" xml:space="preserve"><value>Ähnliche Fehler in dieser Partie</value></data>
+  <data name="AnalysisWindowJump" xml:space="preserve"><value>Springen</value></data>
+  <data name="AnalysisWindowImproveAdvice" xml:space="preserve"><value>Ratschlag verbessern</value></data>
+  <data name="AnalysisWindowHelpful" xml:space="preserve"><value>Hilfreich</value></data>
+  <data name="AnalysisWindowWrongDiagnosis" xml:space="preserve"><value>Falsche Diagnose</value></data>
+  <data name="AnalysisWindowNotUseful" xml:space="preserve"><value>Nicht nützlich</value></data>
+  <data name="AnalysisWindowNeedsClearerExplanation" xml:space="preserve"><value>Braucht klarere Erklärung</value></data>
+  <data name="AnalysisWindowGoodExplanation" xml:space="preserve"><value>Gute Erklärung</value></data>
+  <data name="AnalysisWindowCustomLabelPlaceholder" xml:space="preserve"><value>eigenes Label</value></data>
+  <data name="AnalysisWindowCommentPlaceholder" xml:space="preserve"><value>Kommentar</value></data>
+  <data name="AnalysisWindowAnalyzeWhite" xml:space="preserve"><value>Weiß analysieren</value></data>
+  <data name="AnalysisWindowAnalyzeBlack" xml:space="preserve"><value>Schwarz analysieren</value></data>
+  <data name="AnalysisWindowFilterAllHighlights" xml:space="preserve"><value>Alle Highlights</value></data>
+  <data name="AnalysisWindowFilterNotReviewed" xml:space="preserve"><value>Nicht geprüft</value></data>
+  <data name="AnalysisWindowFilterReviewed" xml:space="preserve"><value>Geprüft</value></data>
+  <data name="AnalysisWindowFilterBlundersOnly" xml:space="preserve"><value>Nur Patzer</value></data>
+  <data name="AnalysisWindowFilterMistakesOnly" xml:space="preserve"><value>Nur Fehler</value></data>
+  <data name="AnalysisWindowFilterInaccuraciesOnly" xml:space="preserve"><value>Nur Ungenauigkeiten</value></data>
+  <data name="AnalysisWindowChooseSideRunAnalysis" xml:space="preserve"><value>Wähle eine Seite und starte die Analyse.</value></data>
+  <data name="AnalysisWindowRunAnalysisPlaceholderBody" xml:space="preserve"><value>Starte die Analyse, um die größten Fehler, ihre Bedeutung und den nächsten Trainingsfokus zu sehen.</value></data>
+  <data name="AnalysisWindowAnalysisRunningTitle" xml:space="preserve"><value>Analyse läuft</value></data>
+  <data name="AnalysisWindowAnalysisRunningBody" xml:space="preserve"><value>Die Analyse-Engine prüft die importierte Partie. Das kann einen Moment dauern.</value></data>
+  <data name="AnalysisWindowSelectMistakeTitle" xml:space="preserve"><value>Fehler auswählen</value></data>
+  <data name="AnalysisWindowSelectMistakeBody" xml:space="preserve"><value>Wähle einen Fehler aus der Liste, um den besseren Zug, die Positionsansicht und einen kurzen Trainingsfokus zu sehen.</value></data>
+  <data name="AnalysisWindowNoFilterMatchesTitle" xml:space="preserve"><value>Keine Treffer für diesen Filter</value></data>
+  <data name="AnalysisWindowNoFilterMatchesBody" xml:space="preserve"><value>Keine Fehler passen zu diesem Filter. Versuche alle Highlights oder wechsle die analysierte Seite.</value></data>
+  <data name="AnalysisWindowAnalysisFailedTitle" xml:space="preserve"><value>Analyse konnte nicht abgeschlossen werden</value></data>
+  <data name="AnalysisWindowAnalysisFailedBody" xml:space="preserve"><value>Die Analyse konnte nicht abgeschlossen werden. Prüfe die Stockfish-Einstellungen und starte sie erneut.</value></data>
+  <data name="AnalysisWindowAllReviewedTitle" xml:space="preserve"><value>Alle sichtbaren Fehler geprüft</value></data>
+  <data name="AnalysisWindowAllReviewedBody" xml:space="preserve"><value>Alle sichtbaren Fehler sind geprüft. Wechsle Filter oder kehre zum Brett zurück, um weiter zu üben.</value></data>
+  <data name="AnalysisWindowAnalyzingImportedGameForSide" xml:space="preserve"><value>Importierte Partie wird für {0} analysiert...</value></data>
+  <data name="AnalysisWindowChooseCorrectedLabelFirst" xml:space="preserve"><value>Wähle oder gib zuerst ein korrigiertes Label ein.</value></data>
+  <data name="AnalysisWindowMissingContext" xml:space="preserve"><value>Dem Analysefenster fehlt der erforderliche Partiekontext.</value></data>
+  <data name="AnalysisWindowFinishedForSide" xml:space="preserve"><value>Analyse für {0} abgeschlossen.</value></data>
+  <data name="AnalysisWindowFailed" xml:space="preserve"><value>Analyse fehlgeschlagen: {0}</value></data>
+  <data name="AnalysisWindowFeedbackSaved" xml:space="preserve"><value>Feedback gespeichert: {0}.</value></data>
+  <data name="AnalysisWindowTestingLocalAdviceRuntime" xml:space="preserve"><value>Lokale Ratgeber-Laufzeit wird getestet...</value></data>
+  <data name="AnalysisWindowTimelineWillAppear" xml:space="preserve"><value>Die Analyse-Zeitleiste erscheint hier.</value></data>
+  <data name="AnalysisWindowReviewedInThisSession" xml:space="preserve"><value>In dieser Sitzung geprüft.</value></data>
+  <data name="AnalysisWindowNotReviewedYet" xml:space="preserve"><value>Noch nicht geprüft.</value></data>
+  <data name="AnalysisWindowReviewed" xml:space="preserve"><value>Geprüft</value></data>
+  <data name="AnalysisWindowBestMoveView" xml:space="preserve"><value>Ansicht bester Zug</value></data>
+  <data name="AnalysisWindowThreatView" xml:space="preserve"><value>Drohungsansicht</value></data>
+  <data name="AnalysisWindowTimelineRunAnalysisHint" xml:space="preserve"><value>Starte die Analyse, um Partiephasen und Fehlermarker zu sehen.</value></data>
+  <data name="AnalysisWindowReviewedTooltipSuffix" xml:space="preserve"><value>Geprüft.</value></data>
+  <data name="AnalysisWindowTimelineMarkerTooltip" xml:space="preserve"><value>{0}: {1}, {2}, {3}.{4}</value></data>
+  <data name="AnalysisWindowTimelineSelectedText" xml:space="preserve"><value>Du bist hier: {0} - {1}, {2}.{3}</value></data>
+  <data name="AnalysisWindowTimelineSummary" xml:space="preserve"><value>{0}. Geprüft {1}/{2} Highlights. Marker: rot Patzer, orange Fehler, gelb Ungenauigkeit.</value></data>
+  <data name="AnalysisWindowFilterSummary" xml:space="preserve"><value>Zeige {0} Highlights für {1}: {2} Patzer, {3} Fehler, {4} Ungenauigkeiten. Geprüft {5}/{6} Highlights. {7}{8}</value></data>
+  <data name="AnalysisWindowLoadedFromCacheSentence" xml:space="preserve"><value>Aus dem Cache geladen.</value></data>
+  <data name="AnalysisWindowPriorityCostliest" xml:space="preserve"><value>Teuerster</value></data>
+  <data name="AnalysisWindowPriorityCostliestReason" xml:space="preserve"><value>Hier beginnen: Das war der größte Bewertungsverlust in der Partie.</value></data>
+  <data name="AnalysisWindowPriorityOpeningTurningPoint" xml:space="preserve"><value>Wendepunkt der Eröffnung</value></data>
+  <data name="AnalysisWindowPriorityOpeningTurningPointReason" xml:space="preserve"><value>Dieser Zug hat die Richtung der Eröffnungsphase verändert.</value></data>
+  <data name="AnalysisWindowPriorityRecurringPattern" xml:space="preserve"><value>Wiederkehrendes Muster</value></data>
+  <data name="AnalysisWindowPriorityRecurringPatternReason" xml:space="preserve"><value>{0} erscheint {1} Mal in dieser Analyse.</value></data>
+  <data name="AnalysisWindowPriorityReviewFirst" xml:space="preserve"><value>Zuerst prüfen</value></data>
+  <data name="AnalysisWindowPriorityReviewFirstReason" xml:space="preserve"><value>Zug mit großer Wirkung: Prüfe ihn vor kleineren Ungenauigkeiten.</value></data>
+  <data name="AnalysisWindowPriorityReviewLater" xml:space="preserve"><value>Später prüfen</value></data>
+  <data name="AnalysisWindowPriorityReviewLaterReason" xml:space="preserve"><value>Nützlich, aber weniger dringend als die wichtigsten Wendepunkte.</value></data>
+  <data name="AnalysisWindowEvaluationLossCp" xml:space="preserve"><value>Bewertungsverlust: {0} cp</value></data>
+  <data name="AnalysisWindowBestMoveViewDescription" xml:space="preserve"><value>Ansicht bester Zug: Vergleiche den grünen Pfeil mit deinem gespielten Zug.</value></data>
+  <data name="AnalysisWindowOpponentKeyReply" xml:space="preserve"><value>Nach dem gespielten Zug ist die Schlüsselantwort des Gegners {0}.</value></data>
+  <data name="AnalysisWindowMaterialBalanced" xml:space="preserve"><value>Material: ausgeglichen</value></data>
+  <data name="AnalysisWindowMaterialValue" xml:space="preserve"><value>Material: {0}</value></data>
+  <data name="AnalysisWindowPositionSnapshotText" xml:space="preserve"><value>{0}&#x0A;König: {1}&#x0A;Hauptrisiko: {2}</value></data>
+  <data name="AnalysisWindowKeepsCleanerPosition" xml:space="preserve"><value>hält die sauberere Stellung</value></data>
+  <data name="AnalysisWindowMoveAllowedForcedMate" xml:space="preserve"><value>{0} ließ ein erzwungenes Matt zu.</value></data>
+  <data name="AnalysisWindowMoveLeftMaterialVulnerable" xml:space="preserve"><value>{0} ließ Material verwundbar.</value></data>
+  <data name="AnalysisWindowMoveLeftPieceLoose" xml:space="preserve"><value>{0} ließ eine Figur locker stehen.</value></data>
+  <data name="AnalysisWindowMoveCreatedProblem" xml:space="preserve"><value>{0} erzeugte ein {1}-Problem.</value></data>
+  <data name="AnalysisWindowMovedPieceStatusUnknown" xml:space="preserve"><value>Status der gezogenen Figur unbekannt</value></data>
+  <data name="AnalysisWindowMovedPieceHanging" xml:space="preserve"><value>Gezogene Figur hängt</value></data>
+  <data name="AnalysisWindowMovedPieceUnderPressure" xml:space="preserve"><value>Gezogene Figur unter Druck</value></data>
+  <data name="AnalysisWindowMovedPieceSafe" xml:space="preserve"><value>Gezogene Figur sicher</value></data>
+  <data name="AnalysisWindowSimilarMistakesNone" xml:space="preserve"><value>Keine anderen sichtbaren Highlights teilen diese Diagnose.</value></data>
+  <data name="AnalysisWindowSimilarMistakesHint" xml:space="preserve"><value>Andere {0}-Momente. Klicke einen an, um dorthin zu springen.</value></data>
+  <data name="AnalysisWindowSimilarRoleMoreCostly" xml:space="preserve"><value>Teurer</value></data>
+  <data name="AnalysisWindowSimilarRolePhaseVersion" xml:space="preserve"><value>{0}-Version</value></data>
+  <data name="AnalysisWindowSimilarRoleLaterExample" xml:space="preserve"><value>Späteres Beispiel</value></data>
+  <data name="AnalysisWindowSimilarRoleSameMotif" xml:space="preserve"><value>Gleiches Motiv</value></data>
+  <data name="AnalysisWindowSimilarRoleRelated" xml:space="preserve"><value>Verwandt</value></data>
+  <data name="AnalysisWindowNoRecurringPattern" xml:space="preserve"><value>Kein wiederkehrendes Problemmuster gefunden.</value></data>
+  <data name="AnalysisWindowSummaryDiagnosis" xml:space="preserve"><value>Größtes Muster: {0}, {1} Mal, durchschnittlicher Verlust {2:0} cp. Teuerster Moment: {3}.</value></data>
+  <data name="AnalysisWindowPhaseSummarySeparator" xml:space="preserve"><value>, </value></data>
+  <data name="AnalysisWindowPhaseSummaryItem" xml:space="preserve"><value>{0} {1} Halbzüge</value></data>
   <data name="SavedAnalysesTitle" xml:space="preserve"><value>Gespeicherte Analysen</value></data>
   <data name="SavedAnalysesFilterPlaceholder" xml:space="preserve"><value>Nach Spieler, Eröffnung, Ergebnis oder Labels filtern...</value></data>
   <data name="SavedAnalysesLoadGame" xml:space="preserve"><value>Partie laden</value></data>

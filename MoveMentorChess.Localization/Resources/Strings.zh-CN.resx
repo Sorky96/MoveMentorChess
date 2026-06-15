@@ -459,4 +459,119 @@
   <data name="OpeningTrainerNoOpeningSelected" xml:space="preserve"><value>未选择开局</value></data>
   <data name="OpeningTrainerChooseItemFromList" xml:space="preserve"><value>从列表中选择一项</value></data>
   <data name="OpeningTrainerSideRepertoire" xml:space="preserve"><value>{0}开局库</value></data>
+  <data name="AnalysisWindowTitle" xml:space="preserve"><value>导入棋局分析</value></data>
+  <data name="AnalysisWindowRunAnalysis" xml:space="preserve"><value>运行分析</value></data>
+  <data name="AnalysisWindowShowOnBoard" xml:space="preserve"><value>在棋盘上显示</value></data>
+  <data name="AnalysisWindowTestAdviceModel" xml:space="preserve"><value>测试建议模型</value></data>
+  <data name="AnalysisWindowGameMap" xml:space="preserve"><value>棋局地图</value></data>
+  <data name="AnalysisWindowEmptyStateTitle" xml:space="preserve"><value>先运行一次分析</value></data>
+  <data name="AnalysisWindowEmptyRunAnalysis" xml:space="preserve"><value>运行分析</value></data>
+  <data name="AnalysisWindowBackToBoard" xml:space="preserve"><value>返回棋盘</value></data>
+  <data name="AnalysisWindowTryInstead" xml:space="preserve"><value>改试这个</value></data>
+  <data name="AnalysisWindowEvaluationSwing" xml:space="preserve"><value>评估变化</value></data>
+  <data name="AnalysisWindowPositionContext" xml:space="preserve"><value>局面背景</value></data>
+  <data name="AnalysisWindowWhatHappened" xml:space="preserve"><value>发生了什么</value></data>
+  <data name="AnalysisWindowWhyItMatters" xml:space="preserve"><value>为什么重要</value></data>
+  <data name="AnalysisWindowTrainingFocus" xml:space="preserve"><value>训练重点</value></data>
+  <data name="AnalysisWindowReviewAction" xml:space="preserve"><value>复盘动作</value></data>
+  <data name="AnalysisWindowMarkReviewed" xml:space="preserve"><value>标记已复盘</value></data>
+  <data name="AnalysisWindowMarkReviewedNext" xml:space="preserve"><value>标记并下一个</value></data>
+  <data name="AnalysisWindowTopCandidateMoves" xml:space="preserve"><value>最佳候选着法</value></data>
+  <data name="AnalysisWindowBeforeMovingCheck" xml:space="preserve"><value>走子前检查</value></data>
+  <data name="AnalysisWindowPositionSnapshot" xml:space="preserve"><value>局面快照</value></data>
+  <data name="AnalysisWindowPlayedMove" xml:space="preserve"><value>实战着法</value></data>
+  <data name="AnalysisWindowBestMove" xml:space="preserve"><value>最佳着法</value></data>
+  <data name="AnalysisWindowThreat" xml:space="preserve"><value>威胁</value></data>
+  <data name="AnalysisWindowPlayed" xml:space="preserve"><value>实战</value></data>
+  <data name="AnalysisWindowBest" xml:space="preserve"><value>最佳</value></data>
+  <data name="AnalysisWindowThreatLabel" xml:space="preserve"><value>威胁：</value></data>
+  <data name="AnalysisWindowBestIdeaLabel" xml:space="preserve"><value>最佳思路：</value></data>
+  <data name="AnalysisWindowMistakeLabel" xml:space="preserve"><value>错误：</value></data>
+  <data name="AnalysisWindowAdvancedDetails" xml:space="preserve"><value>高级详情</value></data>
+  <data name="AnalysisWindowSimilarMistakes" xml:space="preserve"><value>本局中的相似错误</value></data>
+  <data name="AnalysisWindowJump" xml:space="preserve"><value>跳转</value></data>
+  <data name="AnalysisWindowImproveAdvice" xml:space="preserve"><value>改进建议</value></data>
+  <data name="AnalysisWindowHelpful" xml:space="preserve"><value>有帮助</value></data>
+  <data name="AnalysisWindowWrongDiagnosis" xml:space="preserve"><value>诊断错误</value></data>
+  <data name="AnalysisWindowNotUseful" xml:space="preserve"><value>没有用</value></data>
+  <data name="AnalysisWindowNeedsClearerExplanation" xml:space="preserve"><value>需要更清晰的解释</value></data>
+  <data name="AnalysisWindowGoodExplanation" xml:space="preserve"><value>解释很好</value></data>
+  <data name="AnalysisWindowCustomLabelPlaceholder" xml:space="preserve"><value>自定义标签</value></data>
+  <data name="AnalysisWindowCommentPlaceholder" xml:space="preserve"><value>评论</value></data>
+  <data name="AnalysisWindowAnalyzeWhite" xml:space="preserve"><value>分析白方</value></data>
+  <data name="AnalysisWindowAnalyzeBlack" xml:space="preserve"><value>分析黑方</value></data>
+  <data name="AnalysisWindowFilterAllHighlights" xml:space="preserve"><value>全部重点</value></data>
+  <data name="AnalysisWindowFilterNotReviewed" xml:space="preserve"><value>未复盘</value></data>
+  <data name="AnalysisWindowFilterReviewed" xml:space="preserve"><value>已复盘</value></data>
+  <data name="AnalysisWindowFilterBlundersOnly" xml:space="preserve"><value>仅严重失误</value></data>
+  <data name="AnalysisWindowFilterMistakesOnly" xml:space="preserve"><value>仅错误</value></data>
+  <data name="AnalysisWindowFilterInaccuraciesOnly" xml:space="preserve"><value>仅不精确</value></data>
+  <data name="AnalysisWindowChooseSideRunAnalysis" xml:space="preserve"><value>选择一方并运行分析。</value></data>
+  <data name="AnalysisWindowRunAnalysisPlaceholderBody" xml:space="preserve"><value>运行分析以查看最大的错误、它们为什么重要，以及下一步该练什么。</value></data>
+  <data name="AnalysisWindowAnalysisRunningTitle" xml:space="preserve"><value>分析正在运行</value></data>
+  <data name="AnalysisWindowAnalysisRunningBody" xml:space="preserve"><value>分析引擎正在检查导入的棋局。可能需要一点时间。</value></data>
+  <data name="AnalysisWindowSelectMistakeTitle" xml:space="preserve"><value>选择一个错误</value></data>
+  <data name="AnalysisWindowSelectMistakeBody" xml:space="preserve"><value>从列表中选择一个错误，以查看更好的着法、局面快照和简短训练重点。</value></data>
+  <data name="AnalysisWindowNoFilterMatchesTitle" xml:space="preserve"><value>此筛选器没有匹配项</value></data>
+  <data name="AnalysisWindowNoFilterMatchesBody" xml:space="preserve"><value>没有错误符合此筛选器。试试全部重点，或切换分析方。</value></data>
+  <data name="AnalysisWindowAnalysisFailedTitle" xml:space="preserve"><value>分析无法完成</value></data>
+  <data name="AnalysisWindowAnalysisFailedBody" xml:space="preserve"><value>分析无法完成。请检查 Stockfish 设置，然后再次运行分析。</value></data>
+  <data name="AnalysisWindowAllReviewedTitle" xml:space="preserve"><value>所有可见错误已复盘</value></data>
+  <data name="AnalysisWindowAllReviewedBody" xml:space="preserve"><value>所有可见错误都已复盘。切换筛选器或返回棋盘继续练习。</value></data>
+  <data name="AnalysisWindowAnalyzingImportedGameForSide" xml:space="preserve"><value>正在为 {0} 分析导入棋局...</value></data>
+  <data name="AnalysisWindowChooseCorrectedLabelFirst" xml:space="preserve"><value>请先选择或输入修正标签。</value></data>
+  <data name="AnalysisWindowMissingContext" xml:space="preserve"><value>分析窗口缺少必要的棋局上下文。</value></data>
+  <data name="AnalysisWindowFinishedForSide" xml:space="preserve"><value>{0} 的分析已完成。</value></data>
+  <data name="AnalysisWindowFailed" xml:space="preserve"><value>分析失败：{0}</value></data>
+  <data name="AnalysisWindowFeedbackSaved" xml:space="preserve"><value>反馈已保存：{0}。</value></data>
+  <data name="AnalysisWindowTestingLocalAdviceRuntime" xml:space="preserve"><value>正在测试本地建议运行时...</value></data>
+  <data name="AnalysisWindowTimelineWillAppear" xml:space="preserve"><value>分析时间线将显示在这里。</value></data>
+  <data name="AnalysisWindowReviewedInThisSession" xml:space="preserve"><value>本次会话已复盘。</value></data>
+  <data name="AnalysisWindowNotReviewedYet" xml:space="preserve"><value>尚未复盘。</value></data>
+  <data name="AnalysisWindowReviewed" xml:space="preserve"><value>已复盘</value></data>
+  <data name="AnalysisWindowBestMoveView" xml:space="preserve"><value>最佳着法视图</value></data>
+  <data name="AnalysisWindowThreatView" xml:space="preserve"><value>威胁视图</value></data>
+  <data name="AnalysisWindowTimelineRunAnalysisHint" xml:space="preserve"><value>运行分析以查看棋局阶段和错误标记。</value></data>
+  <data name="AnalysisWindowReviewedTooltipSuffix" xml:space="preserve"><value>已复盘。</value></data>
+  <data name="AnalysisWindowTimelineMarkerTooltip" xml:space="preserve"><value>{0}: {1}, {2}, {3}.{4}</value></data>
+  <data name="AnalysisWindowTimelineSelectedText" xml:space="preserve"><value>你在这里：{0} - {1}, {2}.{3}</value></data>
+  <data name="AnalysisWindowTimelineSummary" xml:space="preserve"><value>{0}。已复盘 {1}/{2} 个重点。标记：红色严重失误、橙色错误、黄色不精确。</value></data>
+  <data name="AnalysisWindowFilterSummary" xml:space="preserve"><value>正在显示 {1} 的 {0} 个重点：{2} 个严重失误、{3} 个错误、{4} 个不精确。已复盘 {5}/{6} 个重点。{7}{8}</value></data>
+  <data name="AnalysisWindowLoadedFromCacheSentence" xml:space="preserve"><value>已从缓存加载。</value></data>
+  <data name="AnalysisWindowPriorityCostliest" xml:space="preserve"><value>代价最高</value></data>
+  <data name="AnalysisWindowPriorityCostliestReason" xml:space="preserve"><value>从这里开始：这是本局最大的评估损失。</value></data>
+  <data name="AnalysisWindowPriorityOpeningTurningPoint" xml:space="preserve"><value>开局转折点</value></data>
+  <data name="AnalysisWindowPriorityOpeningTurningPointReason" xml:space="preserve"><value>这步改变了开局阶段的走向。</value></data>
+  <data name="AnalysisWindowPriorityRecurringPattern" xml:space="preserve"><value>重复模式</value></data>
+  <data name="AnalysisWindowPriorityRecurringPatternReason" xml:space="preserve"><value>{0} 在本次分析中出现了 {1} 次。</value></data>
+  <data name="AnalysisWindowPriorityReviewFirst" xml:space="preserve"><value>优先复盘</value></data>
+  <data name="AnalysisWindowPriorityReviewFirstReason" xml:space="preserve"><value>高影响着法：先复盘它，再看较小的不精确。</value></data>
+  <data name="AnalysisWindowPriorityReviewLater" xml:space="preserve"><value>稍后复盘</value></data>
+  <data name="AnalysisWindowPriorityReviewLaterReason" xml:space="preserve"><value>有用，但优先级低于主要转折点。</value></data>
+  <data name="AnalysisWindowEvaluationLossCp" xml:space="preserve"><value>评估损失：{0} cp</value></data>
+  <data name="AnalysisWindowBestMoveViewDescription" xml:space="preserve"><value>最佳着法视图：将绿色箭头与你的实战着法进行比较。</value></data>
+  <data name="AnalysisWindowOpponentKeyReply" xml:space="preserve"><value>实战着法之后，对手的关键回应是 {0}。</value></data>
+  <data name="AnalysisWindowMaterialBalanced" xml:space="preserve"><value>子力：均衡</value></data>
+  <data name="AnalysisWindowMaterialValue" xml:space="preserve"><value>子力：{0}</value></data>
+  <data name="AnalysisWindowPositionSnapshotText" xml:space="preserve"><value>{0}&#x0A;王：{1}&#x0A;主要风险：{2}</value></data>
+  <data name="AnalysisWindowKeepsCleanerPosition" xml:space="preserve"><value>保持更干净的局面</value></data>
+  <data name="AnalysisWindowMoveAllowedForcedMate" xml:space="preserve"><value>{0} 允许了强制将杀。</value></data>
+  <data name="AnalysisWindowMoveLeftMaterialVulnerable" xml:space="preserve"><value>{0} 让子力变得脆弱。</value></data>
+  <data name="AnalysisWindowMoveLeftPieceLoose" xml:space="preserve"><value>{0} 留下了松动棋子。</value></data>
+  <data name="AnalysisWindowMoveCreatedProblem" xml:space="preserve"><value>{0} 制造了一个 {1} 问题。</value></data>
+  <data name="AnalysisWindowMovedPieceStatusUnknown" xml:space="preserve"><value>移动棋子状态未知</value></data>
+  <data name="AnalysisWindowMovedPieceHanging" xml:space="preserve"><value>移动棋子悬空</value></data>
+  <data name="AnalysisWindowMovedPieceUnderPressure" xml:space="preserve"><value>移动棋子承压</value></data>
+  <data name="AnalysisWindowMovedPieceSafe" xml:space="preserve"><value>移动棋子安全</value></data>
+  <data name="AnalysisWindowSimilarMistakesNone" xml:space="preserve"><value>没有其他可见重点具有相同诊断。</value></data>
+  <data name="AnalysisWindowSimilarMistakesHint" xml:space="preserve"><value>其他 {0} 时刻。点击一个即可跳转。</value></data>
+  <data name="AnalysisWindowSimilarRoleMoreCostly" xml:space="preserve"><value>代价更高</value></data>
+  <data name="AnalysisWindowSimilarRolePhaseVersion" xml:space="preserve"><value>{0}版本</value></data>
+  <data name="AnalysisWindowSimilarRoleLaterExample" xml:space="preserve"><value>更晚的例子</value></data>
+  <data name="AnalysisWindowSimilarRoleSameMotif" xml:space="preserve"><value>相同主题</value></data>
+  <data name="AnalysisWindowSimilarRoleRelated" xml:space="preserve"><value>相关</value></data>
+  <data name="AnalysisWindowNoRecurringPattern" xml:space="preserve"><value>未发现重复的问题模式。</value></data>
+  <data name="AnalysisWindowSummaryDiagnosis" xml:space="preserve"><value>最大模式：{0}，{1} 次，平均损失 {2:0} cp。代价最高的时刻：{3}。</value></data>
+  <data name="AnalysisWindowPhaseSummarySeparator" xml:space="preserve"><value>, </value></data>
+  <data name="AnalysisWindowPhaseSummaryItem" xml:space="preserve"><value>{0} {1} 半回合</value></data>
 </root>

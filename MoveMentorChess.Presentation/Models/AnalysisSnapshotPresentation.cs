@@ -1,4 +1,5 @@
 using MoveMentorChess.Engine;
+using MoveMentorChess.Localization;
 
 namespace MoveMentorChess.Presentation.Models;
 
@@ -23,7 +24,7 @@ public static class AnalysisSnapshotPresentation
     {
         if (mode == AnalysisSnapshotMode.Best)
         {
-            return "Best-move view: compare the green arrow with the move you played.";
+            return Localizer.Text(LocalizedStrings.AnalysisWindowBestMoveViewDescription);
         }
 
         if (mode == AnalysisSnapshotMode.Threat)
@@ -32,7 +33,7 @@ public static class AnalysisSnapshotPresentation
             string threatMove = AnalysisDetailsTextFormatter.FormatMoveFromFen(lead.Replay.FenAfter, threatLine?.MoveUci);
             return threatLine is null
                 ? BuildThreatText(label)
-                : $"After the played move, the opponent's key reply is {threatMove}.";
+                : Localizer.Format(LocalizedStrings.AnalysisWindowOpponentKeyReply, threatMove);
         }
 
         return BuildThreatText(label);
@@ -44,11 +45,14 @@ public static class AnalysisSnapshotPresentation
     public static string BuildPositionSnapshotText(MoveAnalysisResult lead, string label)
     {
         string material = lead.MaterialDeltaCp == 0
-            ? "Material: balanced"
-            : $"Material: {AnalysisCoachingTextFormatter.FormatSignedPawns(lead.MaterialDeltaCp)}";
-        string kingSquare = PositionInspector.GetKingSquare(lead.Replay.FenAfter, lead.Replay.Side) ?? "unknown";
+            ? Localizer.Text(LocalizedStrings.AnalysisWindowMaterialBalanced)
+            : Localizer.Format(
+                LocalizedStrings.AnalysisWindowMaterialValue,
+                AnalysisCoachingTextFormatter.FormatSignedPawns(lead.MaterialDeltaCp));
+        string kingSquare = PositionInspector.GetKingSquare(lead.Replay.FenAfter, lead.Replay.Side)
+            ?? Localizer.Text(LocalizedStrings.CommonUnknown);
 
-        return $"{material}\nKing: {kingSquare}\nMain risk: {BuildThreatText(label)}";
+        return Localizer.Format(LocalizedStrings.AnalysisWindowPositionSnapshotText, material, kingSquare, BuildThreatText(label));
     }
 
     public static IReadOnlyList<AnalysisSnapshotArrow> BuildSnapshotArrows(MoveAnalysisResult lead, AnalysisSnapshotMode mode)
@@ -81,7 +85,7 @@ public static class AnalysisSnapshotPresentation
         string bestMove = AnalysisDetailsTextFormatter.FormatMoveFromFen(lead.Replay.FenBefore, lead.BeforeAnalysis.BestMoveUci);
         EngineLine? bestLine = lead.BeforeAnalysis.Lines.Count > 0 ? lead.BeforeAnalysis.Lines[0] : null;
         string note = bestLine is null
-            ? "keeps the cleaner position"
+            ? Localizer.Text(LocalizedStrings.AnalysisWindowKeepsCleanerPosition)
             : AnalysisCoachingTextFormatter.BuildCandidateCoachNote(lead, bestLine, isBest: true);
         return $"{bestMove}: {note}.";
     }
@@ -90,14 +94,23 @@ public static class AnalysisSnapshotPresentation
     {
         if (lead.PlayedMateIn is < 0)
         {
-            return $"{AnalysisDetailsTextFormatter.FormatSanAndUci(lead.Replay.San, lead.Replay.Uci)} allowed a forced mate.";
+            return Localizer.Format(
+                LocalizedStrings.AnalysisWindowMoveAllowedForcedMate,
+                AnalysisDetailsTextFormatter.FormatSanAndUci(lead.Replay.San, lead.Replay.Uci));
         }
 
         return label switch
         {
-            "material_loss" => $"{AnalysisDetailsTextFormatter.FormatSanAndUci(lead.Replay.San, lead.Replay.Uci)} left material vulnerable.",
-            "hanging_piece" => $"{AnalysisDetailsTextFormatter.FormatSanAndUci(lead.Replay.San, lead.Replay.Uci)} left a piece loose.",
-            _ => $"{AnalysisDetailsTextFormatter.FormatSanAndUci(lead.Replay.San, lead.Replay.Uci)} created a {AnalysisMistakePresentation.FormatMistakeLabel(label).ToLowerInvariant()} problem."
+            "material_loss" => Localizer.Format(
+                LocalizedStrings.AnalysisWindowMoveLeftMaterialVulnerable,
+                AnalysisDetailsTextFormatter.FormatSanAndUci(lead.Replay.San, lead.Replay.Uci)),
+            "hanging_piece" => Localizer.Format(
+                LocalizedStrings.AnalysisWindowMoveLeftPieceLoose,
+                AnalysisDetailsTextFormatter.FormatSanAndUci(lead.Replay.San, lead.Replay.Uci)),
+            _ => Localizer.Format(
+                LocalizedStrings.AnalysisWindowMoveCreatedProblem,
+                AnalysisDetailsTextFormatter.FormatSanAndUci(lead.Replay.San, lead.Replay.Uci),
+                AnalysisMistakePresentation.FormatMistakeLabel(label).ToLowerInvariant())
         };
     }
 
@@ -110,20 +123,20 @@ public static class AnalysisSnapshotPresentation
 
         if (safety is null)
         {
-            return ("Moved piece status unknown", "#657386");
+            return (Localizer.Text(LocalizedStrings.AnalysisWindowMovedPieceStatusUnknown), "#657386");
         }
 
         if (safety.Value.IsHanging || safety.Value.IsFreeToTake)
         {
-            return ("Moved piece hanging", "#B93838");
+            return (Localizer.Text(LocalizedStrings.AnalysisWindowMovedPieceHanging), "#B93838");
         }
 
         if (safety.Value.LikelyLosesExchange || safety.Value.Attackers > safety.Value.Defenders)
         {
-            return ("Moved piece under pressure", "#D9822B");
+            return (Localizer.Text(LocalizedStrings.AnalysisWindowMovedPieceUnderPressure), "#D9822B");
         }
 
-        return ("Moved piece safe", "#1F7A55");
+        return (Localizer.Text(LocalizedStrings.AnalysisWindowMovedPieceSafe), "#1F7A55");
     }
 
     public static string BuildBeforeMoveChecklistText(string label)

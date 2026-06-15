@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using MoveMentorChess.App.Controls;
 using MoveMentorChess.App.ViewModels;
+using MoveMentorChess.Localization;
 using MoveMentorChess.Presentation.Models;
 
 namespace MoveMentorChess.App.Views;
@@ -89,8 +90,8 @@ internal sealed class AnalysisSnapshotRenderer(
         positionSafetyBadgeTextBlock.Text = snapshotMode == AnalysisSnapshotMode.Played
             ? safetyText
             : snapshotMode == AnalysisSnapshotMode.Best
-                ? "Best move view"
-                : "Threat view";
+                ? Localizer.Text(LocalizedStrings.AnalysisWindowBestMoveView)
+                : Localizer.Text(LocalizedStrings.AnalysisWindowThreatView);
         positionSafetyBadgeBorder.Background = Brush.Parse(snapshotMode == AnalysisSnapshotMode.Played ? safetyBrush : "#263A49");
         positionThreatTextBlock.Text = AnalysisSnapshotPresentation.BuildSnapshotThreatText(lead, snapshotLabel, snapshotMode);
         positionBestIdeaTextBlock.Text = AnalysisSnapshotPresentation.BuildBestMoveIdeaText(lead);

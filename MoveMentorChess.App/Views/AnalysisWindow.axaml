@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="using:MoveMentorChess.App.Controls"
+        xmlns:loc="using:MoveMentorChess.App.Localization"
         x:Class="MoveMentorChess.App.Views.AnalysisWindow"
         Width="1120"
         Height="760"
@@ -8,7 +9,7 @@
         MinHeight="620"
         WindowState="FullScreen"
         WindowDecorations="None"
-        Title="Imported Game Analysis"
+        Title="{loc:Localize AnalysisWindowTitle}"
         Background="{DynamicResource ChromeBrush}">
   <Grid Margin="18" RowDefinitions="Auto,Auto,*">
     <Grid ColumnDefinitions="220,180,*,170,150,100">
@@ -34,16 +35,16 @@
               Grid.Column="3"
               Margin="16,0,0,0"
               Click="AnalyzeButton_Click"
-              Content="Run Analysis" />
+              Content="{loc:Localize AnalysisWindowRunAnalysis}" />
       <Button x:Name="ShowOnBoardButton"
               Grid.Column="4"
               Margin="12,0,0,0"
               Click="ShowOnBoardButton_Click"
-              Content="Show On Board" />
+              Content="{loc:Localize AnalysisWindowShowOnBoard}" />
       <Button Grid.Column="5"
               Margin="12,0,0,0"
               Click="CloseButton_Click"
-              Content="Close" />
+              Content="{loc:Localize SettingsClose}" />
     </Grid>
 
     <Grid Grid.Row="1" Margin="0,12,0,0" ColumnDefinitions="*,170">
@@ -65,7 +66,7 @@
               Grid.Column="1"
               HorizontalAlignment="Right"
               Click="TestAdviceButton_Click"
-              Content="Test Advice Model"
+              Content="{loc:Localize AnalysisWindowTestAdviceModel}"
               IsVisible="False" />
     </Grid>
 
@@ -77,7 +78,7 @@
                 CornerRadius="8"
                 Padding="10">
           <StackPanel Spacing="7">
-            <TextBlock Text="Game Map"
+            <TextBlock Text="{loc:Localize AnalysisWindowGameMap}"
                        FontSize="12"
                        FontWeight="SemiBold"
                        Foreground="#8FB0C2" />
@@ -201,7 +202,7 @@
                         HorizontalAlignment="Center"
                         Spacing="14">
               <TextBlock x:Name="AnalysisEmptyStateTitleTextBlock"
-                         Text="Start with one analysis"
+                         Text="{loc:Localize AnalysisWindowEmptyStateTitle}"
                          FontSize="24"
                          FontWeight="Bold"
                          Foreground="#F5FAFD"
@@ -220,12 +221,12 @@
                         MinHeight="38"
                         HorizontalContentAlignment="Center"
                         Click="AnalyzeButton_Click"
-                        Content="Run analysis" />
+                        Content="{loc:Localize AnalysisWindowEmptyRunAnalysis}" />
                 <Button MinWidth="140"
                         MinHeight="38"
                         HorizontalContentAlignment="Center"
                         Click="CloseButton_Click"
-                        Content="Back to board" />
+                        Content="{loc:Localize AnalysisWindowBackToBoard}" />
               </StackPanel>
             </StackPanel>
           </Grid>
@@ -249,7 +250,7 @@
                                Foreground="#F5FAFD"
                                TextWrapping="Wrap" />
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                      <TextBlock Text="Try instead"
+                      <TextBlock Text="{loc:Localize AnalysisWindowTryInstead}"
                                  FontSize="12"
                                  FontWeight="SemiBold"
                                  Foreground="#8FB0C2" />
@@ -284,7 +285,7 @@
                         Margin="0,14,0,0"
                         ColumnDefinitions="*,*">
                     <StackPanel Spacing="4">
-                      <TextBlock Text="Evaluation swing"
+                      <TextBlock Text="{loc:Localize AnalysisWindowEvaluationSwing}"
                                  FontSize="12"
                                  FontWeight="SemiBold"
                                  Foreground="#8FB0C2" />
@@ -300,7 +301,7 @@
                     <StackPanel Grid.Column="1"
                                 Margin="18,0,0,0"
                                 Spacing="4">
-                      <TextBlock Text="Position context"
+                      <TextBlock Text="{loc:Localize AnalysisWindowPositionContext}"
                                  FontSize="12"
                                  FontWeight="SemiBold"
                                  Foreground="#8FB0C2" />
@@ -319,7 +320,7 @@
                           BorderThickness="1"
                           CornerRadius="6">
                     <StackPanel Spacing="5">
-                      <TextBlock Text="What happened"
+                      <TextBlock Text="{loc:Localize AnalysisWindowWhatHappened}"
                                  FontSize="12"
                                  FontWeight="SemiBold"
                                  Foreground="#8FB0C2" />
@@ -334,7 +335,7 @@
                               Grid.ColumnSpan="2"
                               Margin="0,12,0,0"
                               Spacing="4">
-                    <TextBlock Text="Why it matters"
+                    <TextBlock Text="{loc:Localize AnalysisWindowWhyItMatters}"
                                FontSize="12"
                                FontWeight="SemiBold"
                                Foreground="#8FB0C2" />
@@ -347,7 +348,7 @@
                               Grid.ColumnSpan="2"
                               Margin="0,12,0,0"
                               Spacing="4">
-                    <TextBlock Text="Training focus"
+                    <TextBlock Text="{loc:Localize AnalysisWindowTrainingFocus}"
                                FontSize="12"
                                FontWeight="SemiBold"
                                Foreground="#8FB0C2" />
@@ -360,7 +361,7 @@
                               Grid.ColumnSpan="2"
                               Margin="0,12,0,0"
                               Spacing="4">
-                    <TextBlock Text="Review action"
+                    <TextBlock Text="{loc:Localize AnalysisWindowReviewAction}"
                                FontSize="12"
                                FontWeight="SemiBold"
                                Foreground="#8FB0C2" />
@@ -378,13 +379,13 @@
                                 Grid.Column="1"
                                 Margin="12,0,0,0"
                                 Click="MarkReviewedButton_Click"
-                                Content="Mark reviewed" />
+                                Content="{loc:Localize AnalysisWindowMarkReviewed}" />
                         <Button x:Name="MarkReviewedNextButton"
                                 Grid.Row="1"
                                 Grid.Column="1"
                                 Margin="12,6,0,0"
                                 Click="MarkReviewedNextButton_Click"
-                                Content="Mark reviewed &amp; next" />
+                                Content="{loc:Localize AnalysisWindowMarkReviewedNext}" />
                         <TextBlock x:Name="ReviewStatusTextBlock"
                                    Grid.Row="1"
                                    Margin="0,6,0,0"
@@ -398,7 +399,7 @@
                               Grid.ColumnSpan="2"
                               Margin="0,12,0,0"
                               Spacing="4">
-                    <TextBlock Text="Top candidate moves"
+                    <TextBlock Text="{loc:Localize AnalysisWindowTopCandidateMoves}"
                                FontSize="12"
                                FontWeight="SemiBold"
                                Foreground="#8FB0C2" />
@@ -411,7 +412,7 @@
                               Grid.ColumnSpan="2"
                               Margin="0,12,0,0"
                               Spacing="4">
-                    <TextBlock Text="Before moving, check"
+                    <TextBlock Text="{loc:Localize AnalysisWindowBeforeMovingCheck}"
                                FontSize="12"
                                FontWeight="SemiBold"
                                Foreground="#8FB0C2" />
@@ -430,26 +431,26 @@
                         BorderThickness="1"
                         CornerRadius="6">
                   <StackPanel Spacing="8">
-                    <TextBlock Text="Position snapshot"
+                    <TextBlock Text="{loc:Localize AnalysisWindowPositionSnapshot}"
                                FontSize="12"
                                FontWeight="SemiBold"
                                Foreground="#8FB0C2" />
                     <StackPanel Orientation="Horizontal" Spacing="8">
                       <StackPanel Orientation="Horizontal" Spacing="4">
                         <Border Width="18" Height="4" Background="#D9822B" VerticalAlignment="Center" />
-                        <TextBlock Text="Played move"
+                        <TextBlock Text="{loc:Localize AnalysisWindowPlayedMove}"
                                    FontSize="12"
                                    Foreground="#D7E2EA" />
                       </StackPanel>
                       <StackPanel Orientation="Horizontal" Spacing="4">
                         <Border Width="18" Height="4" Background="#56C271" VerticalAlignment="Center" />
-                        <TextBlock Text="Best move"
+                        <TextBlock Text="{loc:Localize AnalysisWindowBestMove}"
                                    FontSize="12"
                                    Foreground="#D7E2EA" />
                       </StackPanel>
                       <StackPanel Orientation="Horizontal" Spacing="4">
                         <Border Width="18" Height="4" Background="#D84A4A" VerticalAlignment="Center" />
-                        <TextBlock Text="Threat"
+                        <TextBlock Text="{loc:Localize AnalysisWindowThreat}"
                                    FontSize="12"
                                    Foreground="#D7E2EA" />
                       </StackPanel>
@@ -458,13 +459,13 @@
                     <StackPanel Orientation="Horizontal" Spacing="6">
                       <Button x:Name="SnapshotPlayedButton"
                               Click="SnapshotPlayedButton_Click"
-                              Content="Played" />
+                              Content="{loc:Localize AnalysisWindowPlayed}" />
                       <Button x:Name="SnapshotBestButton"
                               Click="SnapshotBestButton_Click"
-                              Content="Best" />
+                              Content="{loc:Localize AnalysisWindowBest}" />
                       <Button x:Name="SnapshotThreatButton"
                               Click="SnapshotThreatButton_Click"
-                              Content="Threat" />
+                              Content="{loc:Localize AnalysisWindowThreat}" />
                     </StackPanel>
                     <Border x:Name="PositionSafetyBadgeBorder"
                             HorizontalAlignment="Left"
@@ -478,7 +479,7 @@
                                  TextWrapping="Wrap" />
                     </Border>
                     <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="90,*" Margin="0,4,0,0">
-                      <TextBlock Text="Threat:"
+                      <TextBlock Text="{loc:Localize AnalysisWindowThreatLabel}"
                                  FontWeight="SemiBold"
                                  Foreground="#8FB0C2" />
                       <TextBlock x:Name="PositionThreatTextBlock"
@@ -486,7 +487,7 @@
                                  Foreground="#D7E2EA"
                                  TextWrapping="Wrap" />
                       <TextBlock Grid.Row="1"
-                                 Text="Best idea:"
+                                 Text="{loc:Localize AnalysisWindowBestIdeaLabel}"
                                  FontWeight="SemiBold"
                                  Foreground="#8FB0C2" />
                       <TextBlock x:Name="PositionBestIdeaTextBlock"
@@ -495,7 +496,7 @@
                                  Foreground="#D7E2EA"
                                  TextWrapping="Wrap" />
                       <TextBlock Grid.Row="2"
-                                 Text="Mistake:"
+                                 Text="{loc:Localize AnalysisWindowMistakeLabel}"
                                  FontWeight="SemiBold"
                                  Foreground="#8FB0C2" />
                       <TextBlock x:Name="PositionMistakeTextBlock"
@@ -509,7 +510,7 @@
                 </Grid>
               </Border>
 
-              <Expander Header="Advanced details" IsExpanded="False" Margin="0,-2,0,0">
+              <Expander Header="{loc:Localize AnalysisWindowAdvancedDetails}" IsExpanded="False" Margin="0,-2,0,0">
                 <TextBlock x:Name="DetailsTextBlock"
                            Margin="0,8,0,0"
                            Foreground="#BFD1DC"
@@ -523,7 +524,7 @@
                       CornerRadius="6"
                       Padding="12">
                 <StackPanel Spacing="6">
-                  <TextBlock Text="Similar mistakes in this game"
+                  <TextBlock Text="{loc:Localize AnalysisWindowSimilarMistakes}"
                              FontSize="12"
                              FontWeight="SemiBold"
                              Foreground="#8FB0C2" />
@@ -569,7 +570,7 @@
                                   Padding="6,2"
                                   CornerRadius="4"
                                   Background="#263A49">
-                            <TextBlock Text="Jump"
+                            <TextBlock Text="{loc:Localize AnalysisWindowJump}"
                                        FontSize="11"
                                        FontWeight="SemiBold"
                                        Foreground="#FFFFFF" />
@@ -587,23 +588,23 @@
                     Grid.Row="1"
                     Margin="0,10,0,0"
                     Spacing="8">
-          <Expander Header="Improve advice" IsExpanded="False">
+          <Expander Header="{loc:Localize AnalysisWindowImproveAdvice}" IsExpanded="False">
             <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
               <Button x:Name="CorrectFeedbackButton"
                       Click="CorrectFeedbackButton_Click"
-                      Content="Helpful" />
+                      Content="{loc:Localize AnalysisWindowHelpful}" />
               <Button x:Name="WrongLabelFeedbackButton"
                       Click="WrongLabelFeedbackButton_Click"
-                      Content="Wrong diagnosis" />
+                      Content="{loc:Localize AnalysisWindowWrongDiagnosis}" />
               <Button x:Name="NotUsefulFeedbackButton"
                       Click="NotUsefulFeedbackButton_Click"
-                      Content="Not useful" />
+                      Content="{loc:Localize AnalysisWindowNotUseful}" />
               <Button x:Name="TooGenericFeedbackButton"
                       Click="TooGenericFeedbackButton_Click"
-                      Content="Needs clearer explanation" />
+                      Content="{loc:Localize AnalysisWindowNeedsClearerExplanation}" />
               <Button x:Name="GoodExplanationFeedbackButton"
                       Click="GoodExplanationFeedbackButton_Click"
-                      Content="Good explanation" />
+                      Content="{loc:Localize AnalysisWindowGoodExplanation}" />
             </StackPanel>
           </Expander>
           <Grid x:Name="ManualCorrectionPanel"
@@ -616,19 +617,19 @@
                      Background="{DynamicResource ChromeBrush}"
                      Foreground="#EAF2F7"
                      BorderBrush="{DynamicResource PanelAccentBrush}"
-                     PlaceholderText="custom label" />
+                     PlaceholderText="{loc:Localize AnalysisWindowCustomLabelPlaceholder}" />
             <TextBox x:Name="FeedbackCommentTextBox"
                      Grid.Column="2"
                      Margin="8,0,0,0"
                      Background="{DynamicResource ChromeBrush}"
                      Foreground="#EAF2F7"
                      BorderBrush="{DynamicResource PanelAccentBrush}"
-                     PlaceholderText="comment" />
+                     PlaceholderText="{loc:Localize AnalysisWindowCommentPlaceholder}" />
             <Button x:Name="SaveManualCorrectionButton"
                     Grid.Column="3"
                     Margin="8,0,0,0"
                     Click="SaveManualCorrectionButton_Click"
-                    Content="Save" />
+                    Content="{loc:Localize SettingsSave}" />
           </Grid>
         </StackPanel>
       </Grid>

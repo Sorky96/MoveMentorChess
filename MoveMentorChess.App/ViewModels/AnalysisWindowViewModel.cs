@@ -1,5 +1,6 @@
 using MoveMentorChess.Analysis;
 using MoveMentorChess.Engine;
+using MoveMentorChess.Localization;
 using MoveMentorChess.Opening;
 using MoveMentorChess.Presentation.Models;
 
@@ -14,15 +15,17 @@ internal sealed class AnalysisWindowViewModel : ViewModelBase
     private readonly Action<GameAnalysisProgress>? analysisProgress;
     private readonly IAnalysisWindowDataService dataService;
     private readonly PlayerSide initialSide;
+    private readonly IReadOnlyList<AnalysisSideOption> sideOptions;
+    private readonly IReadOnlyList<AnalysisFilterOption> filterOptions;
     private readonly Dictionary<PlayerSide, GameAnalysisResult> initialResultsBySide = [];
     private readonly AnalysisSelectionState selectionState = new();
     private readonly AnalysisExplanationService explanationService = new();
     private readonly AnalysisWindowRunCoordinator runCoordinator;
-    private string statusText = "Choose a side and run the analysis.";
+    private string statusText = Localizer.Text(LocalizedStrings.AnalysisWindowChooseSideRunAnalysis);
     private string summaryText = string.Empty;
     private string adviceStatusText = string.Empty;
-    private string detailsPlaceholderTitle = "Start with one analysis";
-    private string detailsPlaceholderText = "Run analysis to see the biggest mistakes, why they mattered, and what to practice next.";
+    private string detailsPlaceholderTitle = Localizer.Text(LocalizedStrings.AnalysisWindowEmptyStateTitle);
+    private string detailsPlaceholderText = Localizer.Text(LocalizedStrings.AnalysisWindowRunAnalysisPlaceholderBody);
     private IReadOnlyList<SelectedMistakeViewItem> visibleMistakes = [];
     private SelectedMistakeViewItem? selectedMistake;
     private AnalysisSideOption? selectedSideOption;
@@ -47,8 +50,10 @@ internal sealed class AnalysisWindowViewModel : ViewModelBase
         this.analysisProgress = analysisProgress;
         this.initialSide = initialSide;
         this.dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));
-        selectedSideOption = AnalysisWindowSetupService.GetSideOption(initialSide);
-        selectedFilterOption = AnalysisWindowSetupService.FilterOptions[0];
+        sideOptions = AnalysisWindowSetupService.CreateSideOptions();
+        filterOptions = AnalysisWindowSetupService.CreateFilterOptions();
+        selectedSideOption = AnalysisWindowSetupService.GetSideOption(sideOptions, initialSide);
+        selectedFilterOption = filterOptions[0];
         if (importedGame is not null && initialResultsBySide is not null)
         {
             foreach ((PlayerSide side, GameAnalysisResult result) in initialResultsBySide)
@@ -94,9 +99,9 @@ internal sealed class AnalysisWindowViewModel : ViewModelBase
 
     public PlayerSide ActiveSide => selectionState.CurrentResult?.AnalyzedSide ?? initialSide;
 
-    public IReadOnlyList<AnalysisSideOption> SideOptions => AnalysisWindowSetupService.SideOptions;
+    public IReadOnlyList<AnalysisSideOption> SideOptions => sideOptions;
 
-    public IReadOnlyList<AnalysisFilterOption> FilterOptions => AnalysisWindowSetupService.FilterOptions;
+    public IReadOnlyList<AnalysisFilterOption> FilterOptions => filterOptions;
 
     public AnalysisSideOption? SelectedSideOption
     {
@@ -185,12 +190,12 @@ internal sealed class AnalysisWindowViewModel : ViewModelBase
 
     public void ApplyWindowState(AnalysisWindowState state)
     {
-        SelectedSideOption = AnalysisWindowSetupService.GetSideOption(state.SelectedSide);
-        SelectedFilterOption = AnalysisWindowSetupService.GetFilterOption(state.QualityFilterIndex);
+        SelectedSideOption = AnalysisWindowSetupService.GetSideOption(sideOptions, state.SelectedSide);
+        SelectedFilterOption = AnalysisWindowSetupService.GetFilterOption(filterOptions, state.QualityFilterIndex);
     }
 
     public void StoreWindowState()
-        => StoreWindowState(SelectedSide, AnalysisWindowSetupService.GetFilterIndex(SelectedFilterOption));
+        => StoreWindowState(SelectedSide, AnalysisWindowSetupService.GetFilterIndex(filterOptions, SelectedFilterOption));
 
     public void StoreWindowState(PlayerSide side, int qualityFilterIndex)
     {
@@ -210,7 +215,7 @@ internal sealed class AnalysisWindowViewModel : ViewModelBase
     public void BeginAnalysis(PlayerSide side)
     {
         IsAnalysisRunning = true;
-        StatusText = $"Analyzing imported game for {side}...";
+        StatusText = Localizer.Format(LocalizedStrings.AnalysisWindowAnalyzingImportedGameForSide, FormatSide(side));
         SummaryText = string.Empty;
         ClearVisibleMistakes();
         ShowAnalyzingPlaceholder();
@@ -295,33 +300,33 @@ internal sealed class AnalysisWindowViewModel : ViewModelBase
 
     public void ShowRunAnalysisPlaceholder()
         => ShowDetailsPlaceholder(
-            "Start with one analysis",
-            "Run analysis to see the biggest mistakes, why they mattered, and what to practice next.");
+            Localizer.Text(LocalizedStrings.AnalysisWindowEmptyStateTitle),
+            Localizer.Text(LocalizedStrings.AnalysisWindowRunAnalysisPlaceholderBody));
 
     public void ShowAnalyzingPlaceholder()
         => ShowDetailsPlaceholder(
-            "Analysis is running",
-            "The analysis engine is reviewing the imported game. This may take a moment.");
+            Localizer.Text(LocalizedStrings.AnalysisWindowAnalysisRunningTitle),
+            Localizer.Text(LocalizedStrings.AnalysisWindowAnalysisRunningBody));
 
     public void ShowSelectMistakePlaceholder()
         => ShowDetailsPlaceholder(
-            "Select a mistake",
-            "Select a mistake from the list to see the better move, the position snapshot, and a short training focus.");
+            Localizer.Text(LocalizedStrings.AnalysisWindowSelectMistakeTitle),
+            Localizer.Text(LocalizedStrings.AnalysisWindowSelectMistakeBody));
 
     public void ShowNoFilterMatchesPlaceholder()
         => ShowDetailsPlaceholder(
-            "No matches for this filter",
-            "No mistakes match this filter. Try All highlights or switch the analyzed side.");
+            Localizer.Text(LocalizedStrings.AnalysisWindowNoFilterMatchesTitle),
+            Localizer.Text(LocalizedStrings.AnalysisWindowNoFilterMatchesBody));
 
     public void ShowAnalysisFailedPlaceholder()
         => ShowDetailsPlaceholder(
-            "Analysis could not finish",
-            "Analysis could not finish. Check Stockfish settings, then run the analysis again.");
+            Localizer.Text(LocalizedStrings.AnalysisWindowAnalysisFailedTitle),
+            Localizer.Text(LocalizedStrings.AnalysisWindowAnalysisFailedBody));
 
     public void ShowAllReviewedPlaceholder()
         => ShowDetailsPlaceholder(
-            "All visible mistakes reviewed",
-            "All visible mistakes are reviewed. Switch filters or return to the board to keep practicing.");
+            Localizer.Text(LocalizedStrings.AnalysisWindowAllReviewedTitle),
+            Localizer.Text(LocalizedStrings.AnalysisWindowAllReviewedBody));
 
     private void ShowDetailsPlaceholder(string title, string body)
     {
@@ -501,9 +506,14 @@ internal sealed class AnalysisWindowViewModel : ViewModelBase
             return true;
         }
 
-        StatusText = "Choose or enter a corrected label first.";
+        StatusText = Localizer.Text(LocalizedStrings.AnalysisWindowChooseCorrectedLabelFirst);
         return false;
     }
+
+    private static string FormatSide(PlayerSide side)
+        => side == PlayerSide.White
+            ? Localizer.Text(LocalizedStrings.CommonWhite)
+            : Localizer.Text(LocalizedStrings.CommonBlack);
 }
 
 internal sealed record AnalysisWindowSelectedDetails(

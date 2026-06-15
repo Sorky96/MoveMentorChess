@@ -1,4 +1,5 @@
 using MoveMentorChess.Analysis;
+using MoveMentorChess.Localization;
 using MoveMentorChess.Presentation.Models;
 
 namespace MoveMentorChess.App.ViewModels;
@@ -28,6 +29,8 @@ internal static class AnalysisFeedbackRecorder
         dataService.SaveMoveAdviceFeedback(feedback);
         AdviceFeedbackEntry entry = AnalysisFeedbackService.CreateFeedbackLogEntry(feedback, item, timestampUtc);
         AdviceFeedbackLogger.CreateDefault().Record(entry);
-        return $"Feedback saved: {AnalysisFeedbackService.FormatFeedbackKind(feedbackKind)}.";
+        return Localizer.Format(
+            LocalizedStrings.AnalysisWindowFeedbackSaved,
+            AnalysisFeedbackService.FormatFeedbackKind(feedbackKind));
     }
 }

@@ -18,7 +18,7 @@ public sealed class SelectedMistakeViewItem
         LabelForeground = AnalysisMistakePresentation.GetMistakeLabelForeground(RawLabel);
         MetaText = $"{AnalysisMistakePresentation.FormatQualityBucket(Mistake.Quality)} | {AnalysisMistakePresentation.BuildImpactText(LeadMove)} | {AnalysisMistakePresentation.FormatPhase(LeadMove.Replay.Phase)}";
         (PriorityText, PriorityReason, PriorityBrush) = AnalysisMistakePresentation.BuildPriorityInfo(Mistake, LeadMove, RawLabel, analysisResult);
-        ReviewStatusText = isReviewed ? "Reviewed" : string.Empty;
+        ReviewStatusText = isReviewed ? Localizer.Text(LocalizedStrings.AnalysisWindowReviewed) : string.Empty;
         ReviewStatusBrush = isReviewed ? "#9ED7A6" : "#657386";
     }
 
@@ -152,28 +152,43 @@ public static class AnalysisMistakePresentation
             .First();
         if (costliest.Replay.Ply == lead.Replay.Ply)
         {
-            return ("Costliest", "Start here: this was the largest evaluation loss in the game.", "#8F3F9F");
+            return (
+                Localizer.Text(LocalizedStrings.AnalysisWindowPriorityCostliest),
+                Localizer.Text(LocalizedStrings.AnalysisWindowPriorityCostliestReason),
+                "#8F3F9F");
         }
 
         if (analysisResult.OpeningReview?.TheoryExit?.Ply == lead.Replay.Ply
             || analysisResult.OpeningReview?.FirstSignificantMistake?.Ply == lead.Replay.Ply)
         {
-            return ("Opening turning point", "This move changed the direction of the opening phase.", "#1F7A55");
+            return (
+                Localizer.Text(LocalizedStrings.AnalysisWindowPriorityOpeningTurningPoint),
+                Localizer.Text(LocalizedStrings.AnalysisWindowPriorityOpeningTurningPointReason),
+                "#1F7A55");
         }
 
         int recurringCount = analysisResult.HighlightedMistakes.Count(item =>
             string.Equals(item.Tag?.Label ?? GetLeadMove(item).MistakeTag?.Label ?? "unclassified", label, StringComparison.Ordinal));
         if (recurringCount >= 2)
         {
-            return ("Recurring pattern", $"{FormatMistakeLabel(label)} appears {recurringCount} times in this analysis.", "#2F6FB3");
+            return (
+                Localizer.Text(LocalizedStrings.AnalysisWindowPriorityRecurringPattern),
+                Localizer.Format(LocalizedStrings.AnalysisWindowPriorityRecurringPatternReason, FormatMistakeLabel(label), recurringCount),
+                "#2F6FB3");
         }
 
         if (mistake.Quality == MoveQualityBucket.Blunder || (lead.CentipawnLoss ?? 0) >= 150)
         {
-            return ("Review first", "High-impact move: review it before smaller inaccuracies.", "#B93838");
+            return (
+                Localizer.Text(LocalizedStrings.AnalysisWindowPriorityReviewFirst),
+                Localizer.Text(LocalizedStrings.AnalysisWindowPriorityReviewFirstReason),
+                "#B93838");
         }
 
-        return ("Review later", "Useful, but lower priority than the main turning points.", "#657386");
+        return (
+            Localizer.Text(LocalizedStrings.AnalysisWindowPriorityReviewLater),
+            Localizer.Text(LocalizedStrings.AnalysisWindowPriorityReviewLaterReason),
+            "#657386");
     }
 
     public static string GetMistakeLabelBrush(string label)
