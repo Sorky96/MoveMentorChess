@@ -122,6 +122,66 @@ public sealed class OpeningTrainingSessionBuilderTests
         }
     }
 
+    [Fact]
+    public void TryBuildSession_FirstOpeningMistakeSourceBuildsMistakeRepairPosition()
+    {
+        GameAnalysisResult game = CreateResult("Nina", "Opponent", PlayerSide.White, "C20",
+            ["e4", "e5", "h3", "Nc6"],
+            [("opening_principles", 20, "g1f3")]);
+        ImportedGame[] theoryGames = [CreateTheoryGame("C20", ["e4", "e5", "Nf3", "Nc6"])];
+        OpeningTrainerService service = CreateService([game], theoryGames);
+
+        bool built = service.TryBuildSession(
+            "Nina",
+            out OpeningTrainingSession? session,
+            new OpeningTrainingSessionOptions
+            {
+                Sources = [OpeningTrainingSourceKind.FirstOpeningMistake],
+                MaxPositions = 1,
+                MaxPositionsPerSource = 1
+            });
+
+        Assert.True(built);
+        Assert.NotNull(session);
+        OpeningTrainingPosition position = Assert.Single(session!.Positions);
+        Assert.Equal(OpeningTrainingSourceKind.FirstOpeningMistake, position.SourceKind);
+        Assert.Equal(OpeningTrainingMode.MistakeRepair, position.Mode);
+        Assert.StartsWith("first-mistake:", position.PositionId, StringComparison.Ordinal);
+        Assert.Equal("First opening mistake", position.Reference.SourceLabel);
+        Assert.Contains(position.CandidateMoves, option => option.Role == OpeningTrainingMoveRole.Repair);
+        Assert.Single(session.SourceSummaries);
+    }
+
+    [Fact]
+    public void TryBuildSession_ExampleGameSourceBuildsLineRecallPosition()
+    {
+        GameAnalysisResult game = CreateResult("Ola", "Opponent", PlayerSide.White, "C20",
+            ["e4", "e5", "h3", "Nc6"],
+            [("opening_principles", 20, "g1f3")]);
+        ImportedGame[] theoryGames = [CreateTheoryGame("C20", ["e4", "e5", "Nf3", "Nc6"])];
+        OpeningTrainerService service = CreateService([game], theoryGames);
+
+        bool built = service.TryBuildSession(
+            "Ola",
+            out OpeningTrainingSession? session,
+            new OpeningTrainingSessionOptions
+            {
+                Sources = [OpeningTrainingSourceKind.ExampleGame],
+                MaxPositions = 1,
+                MaxPositionsPerSource = 1
+            });
+
+        Assert.True(built);
+        Assert.NotNull(session);
+        OpeningTrainingPosition position = Assert.Single(session!.Positions);
+        Assert.Equal(OpeningTrainingSourceKind.ExampleGame, position.SourceKind);
+        Assert.Equal(OpeningTrainingMode.LineRecall, position.Mode);
+        Assert.StartsWith("example:", position.PositionId, StringComparison.Ordinal);
+        Assert.Equal("Example game", position.Reference.SourceLabel);
+        Assert.Contains(position.CandidateMoves, option => option.IsPreferred);
+        Assert.Single(session.Lines);
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------

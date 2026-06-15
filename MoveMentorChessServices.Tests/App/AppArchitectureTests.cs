@@ -480,6 +480,100 @@ public sealed partial class AppArchitectureTests
     }
 
     [Fact]
+    public void PresentationProjectRoleIsDocumentedAndFrameworkNeutral()
+    {
+        string root = FindRepositoryRoot();
+        string presentationRoot = Path.Join(root, "MoveMentorChess.Presentation");
+        string readmePath = Path.Join(presentationRoot, "README.md");
+
+        Assert.True(File.Exists(readmePath), "Presentation must document its intended architectural role.");
+
+        string readme = File.ReadAllText(readmePath);
+        Assert.Contains("framework-neutral presentation adapter layer", readme, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("must not own platform rendering", readme, StringComparison.OrdinalIgnoreCase);
+
+        string projectFile = File.ReadAllText(Path.Join(presentationRoot, "MoveMentorChess.Presentation.csproj"));
+        Assert.DoesNotContain("FrameworkReference", projectFile, StringComparison.Ordinal);
+
+        string[] allowedReferences =
+        [
+            "MoveMentorChess.Analysis",
+            "MoveMentorChess.Domain",
+            "MoveMentorChess.Localization",
+            "MoveMentorChess.Opening",
+            "MoveMentorChess.Profiles"
+        ];
+        string[] unexpectedReferences = ReadProjectReferences(root, "MoveMentorChess.Presentation")
+            .Except(allowedReferences, StringComparer.Ordinal)
+            .Order()
+            .ToArray();
+        Assert.Empty(unexpectedReferences);
+
+        string[] forbiddenTokens =
+        [
+            "System.Drawing",
+            "Avalonia",
+            "Microsoft.Data.Sqlite",
+            "AnalysisStoreProvider",
+            "StockfishEngine",
+            "LlamaCpp"
+        ];
+        string[] frameworkLeaks = Directory
+            .EnumerateFiles(presentationRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !ContainsPathSegment(path, "bin"))
+            .Where(path => !ContainsPathSegment(path, "obj"))
+            .SelectMany(path =>
+            {
+                string source = File.ReadAllText(path);
+                return forbiddenTokens
+                    .Where(token => source.Contains(token, StringComparison.Ordinal))
+                    .Select(token => $"{Path.GetRelativePath(root, path)} contains {token}");
+            })
+            .Order()
+            .ToArray();
+        Assert.Empty(frameworkLeaks);
+
+        Assert.False(
+            File.Exists(Path.Join(presentationRoot, "Helpers", "BoardThumbnailRenderer.cs")),
+            "GDI thumbnail rendering belongs outside the framework-neutral Presentation project.");
+        Assert.True(
+            File.Exists(Path.Join(root, "MoveMentorChess.App", "Renderers", "BoardThumbnailRenderer.cs")),
+            "The existing GDI thumbnail renderer should live in the App rendering boundary.");
+    }
+
+    [Fact]
+    public void OpeningTrainingSessionBuilderDelegatesSnapshotAndSourcePipelines()
+    {
+        string root = FindRepositoryRoot();
+        string trainingRoot = Path.Join(root, "MoveMentorChess.Training");
+        string builder = File.ReadAllText(Path.Join(trainingRoot, "OpeningTrainingSessionBuilder.cs"));
+
+        string[] requiredCollaborators =
+        [
+            "OpeningTrainingSnapshotLoader.cs",
+            "OpeningTrainingExampleGamePositionBuilder.cs",
+            "OpeningTrainingOpeningWeaknessPositionBuilder.cs",
+            "OpeningTrainingFirstMistakePositionBuilder.cs"
+        ];
+        string[] missingCollaborators = requiredCollaborators
+            .Where(fileName => !File.Exists(Path.Join(trainingRoot, fileName)))
+            .ToArray();
+        Assert.Empty(missingCollaborators);
+
+        Assert.Contains("OpeningTrainingSnapshotLoader", builder, StringComparison.Ordinal);
+        Assert.Contains("OpeningTrainingExampleGamePositionBuilder", builder, StringComparison.Ordinal);
+        Assert.Contains("OpeningTrainingOpeningWeaknessPositionBuilder", builder, StringComparison.Ordinal);
+        Assert.Contains("OpeningTrainingFirstMistakePositionBuilder", builder, StringComparison.Ordinal);
+        Assert.DoesNotContain("analysisDataSource.Load(", builder, StringComparison.Ordinal);
+        Assert.DoesNotContain("BuildExampleGamePositions", builder, StringComparison.Ordinal);
+        Assert.DoesNotContain("BuildOpeningWeaknessPositions", builder, StringComparison.Ordinal);
+        Assert.DoesNotContain("BuildFirstMistakePositions", builder, StringComparison.Ordinal);
+
+        string snapshotLoader = File.ReadAllText(Path.Join(trainingRoot, "OpeningTrainingSnapshotLoader.cs"));
+        Assert.Contains("analysisDataSource.Load", snapshotLoader, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void SqliteAnalysisStoreFacadeDoesNotOwnSqlStatements()
     {
         string facadePath = Path.Join(FindRepositoryRoot(), "MoveMentorChess.Persistence", "SqliteAnalysisStore.cs");

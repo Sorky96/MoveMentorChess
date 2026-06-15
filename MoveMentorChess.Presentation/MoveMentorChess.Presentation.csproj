@@ -7,10 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <FrameworkReference Include="Microsoft.WindowsDesktop.App" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\MoveMentorChess.Analysis\MoveMentorChess.Analysis.csproj" />
     <ProjectReference Include="..\MoveMentorChess.Domain\MoveMentorChess.Domain.csproj" />
     <ProjectReference Include="..\MoveMentorChess.Localization\MoveMentorChess.Localization.csproj" />
