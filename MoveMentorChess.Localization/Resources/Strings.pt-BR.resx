@@ -536,7 +536,7 @@
   <data name="AnalysisWindowTimelineMarkerTooltip" xml:space="preserve"><value>{0}: {1}, {2}, {3}.{4}</value></data>
   <data name="AnalysisWindowTimelineSelectedText" xml:space="preserve"><value>Você está aqui: {0} - {1}, {2}.{3}</value></data>
   <data name="AnalysisWindowTimelineSummary" xml:space="preserve"><value>{0}. Revisado {1}/{2} destaques. Marcadores: vermelho erro grave, laranja erro, amarelo imprecisão.</value></data>
-  <data name="AnalysisWindowFilterSummary" xml:space="preserve"><value>Mostrando {0} destaques para {1}: {2} erros graves, {3} erros, {4} imprecisões. Revisado {5}/{6} destaques. {7}{8}</value></data>
+  <data name="AnalysisWindowFilterSummary" xml:space="preserve"><value>Mostrando {0} destaques para {1}: {2} erros graves, {3} erros, {4} imprecisões. Revisado {5}/{6} destaques. {7} {8}</value></data>
   <data name="AnalysisWindowLoadedFromCacheSentence" xml:space="preserve"><value>Carregado do cache.</value></data>
   <data name="AnalysisWindowPriorityCostliest" xml:space="preserve"><value>Mais caro</value></data>
   <data name="AnalysisWindowPriorityCostliestReason" xml:space="preserve"><value>Comece aqui: esta foi a maior perda de avaliação na partida.</value></data>

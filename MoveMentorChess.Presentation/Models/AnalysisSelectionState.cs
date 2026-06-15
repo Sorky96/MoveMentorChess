@@ -97,7 +97,7 @@ public sealed class AnalysisSelectionState
         int mistakes = CurrentResult.HighlightedMistakes.Count(item => item.Quality == MoveQualityBucket.Mistake);
         int inaccuracies = CurrentResult.HighlightedMistakes.Count(item => item.Quality == MoveQualityBucket.Inaccuracy);
         string cacheSuffix = CurrentResultIsCached
-            ? $" {Localizer.Text(LocalizedStrings.AnalysisWindowLoadedFromCacheSentence)}"
+            ? Localizer.Text(LocalizedStrings.AnalysisWindowLoadedFromCacheSentence)
             : string.Empty;
         string diagnosis = AnalysisTimelinePresentation.BuildSummaryDiagnosis(CurrentResult);
         return Localizer.Format(
@@ -110,7 +110,7 @@ public sealed class AnalysisSelectionState
             CountReviewedHighlights(),
             CurrentResult.HighlightedMistakes.Count,
             diagnosis,
-            cacheSuffix);
+            cacheSuffix).TrimEnd();
     }
 
     private static string FormatSide(PlayerSide side)

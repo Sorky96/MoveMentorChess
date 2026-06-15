@@ -590,7 +590,7 @@ public sealed partial class AppArchitectureTests
 
             string value = attribute.Value;
             if (string.IsNullOrWhiteSpace(value)
-                || value.TrimStart().StartsWith('{'))
+                || IsAllowedVisibleTextExpression(value))
             {
                 continue;
             }
@@ -599,6 +599,14 @@ public sealed partial class AppArchitectureTests
             int lineNumber = lineInfo.HasLineInfo() ? lineInfo.LineNumber : 0;
             yield return new VisibleXamlTextLiteral(relativePath, lineNumber, attributeName, value);
         }
+    }
+
+    private static bool IsAllowedVisibleTextExpression(string value)
+    {
+        string trimmed = value.TrimStart();
+        return trimmed.StartsWith("{loc:Localize ", StringComparison.Ordinal)
+            || trimmed.StartsWith("{Binding", StringComparison.Ordinal)
+            || trimmed.StartsWith("{CompiledBinding", StringComparison.Ordinal);
     }
 
     private static Dictionary<string, PublicTopLevelTypeAllowListEntry> PublicTopLevelTypeAllowList()

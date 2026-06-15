@@ -335,7 +335,7 @@
   <data name="AnalysisWindowTimelineMarkerTooltip" xml:space="preserve"><value>{0}: {1}, {2}, {3}.{4}</value></data>
   <data name="AnalysisWindowTimelineSelectedText" xml:space="preserve"><value>Jesteś tutaj: {0} - {1}, {2}.{3}</value></data>
   <data name="AnalysisWindowTimelineSummary" xml:space="preserve"><value>{0}. Przejrzane {1}/{2} wyróżnień. Znaczniki: czerwony podstawka, pomarańczowy błąd, żółty niedokładność.</value></data>
-  <data name="AnalysisWindowFilterSummary" xml:space="preserve"><value>Pokazuję {0} wyróżnień dla strony {1}: podstawki {2}, błędy {3}, niedokładności {4}. Przejrzane {5}/{6} wyróżnień. {7}{8}</value></data>
+  <data name="AnalysisWindowFilterSummary" xml:space="preserve"><value>Pokazuję {0} wyróżnień dla strony {1}: podstawki {2}, błędy {3}, niedokładności {4}. Przejrzane {5}/{6} wyróżnień. {7} {8}</value></data>
   <data name="AnalysisWindowLoadedFromCacheSentence" xml:space="preserve"><value>Wczytano z pamięci podręcznej.</value></data>
   <data name="AnalysisWindowPriorityCostliest" xml:space="preserve"><value>Najkosztowniejszy</value></data>
   <data name="AnalysisWindowPriorityCostliestReason" xml:space="preserve"><value>Zacznij tutaj: to była największa strata oceny w partii.</value></data>

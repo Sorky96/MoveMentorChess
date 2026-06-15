@@ -335,7 +335,7 @@
   <data name="AnalysisWindowTimelineMarkerTooltip" xml:space="preserve"><value>{0}: {1}, {2}, {3}.{4}</value></data>
   <data name="AnalysisWindowTimelineSelectedText" xml:space="preserve"><value>Du bist hier: {0} - {1}, {2}.{3}</value></data>
   <data name="AnalysisWindowTimelineSummary" xml:space="preserve"><value>{0}. Geprüft {1}/{2} Highlights. Marker: rot Patzer, orange Fehler, gelb Ungenauigkeit.</value></data>
-  <data name="AnalysisWindowFilterSummary" xml:space="preserve"><value>Zeige {0} Highlights für {1}: {2} Patzer, {3} Fehler, {4} Ungenauigkeiten. Geprüft {5}/{6} Highlights. {7}{8}</value></data>
+  <data name="AnalysisWindowFilterSummary" xml:space="preserve"><value>Zeige {0} Highlights für {1}: {2} Patzer, {3} Fehler, {4} Ungenauigkeiten. Geprüft {5}/{6} Highlights. {7} {8}</value></data>
   <data name="AnalysisWindowLoadedFromCacheSentence" xml:space="preserve"><value>Aus dem Cache geladen.</value></data>
   <data name="AnalysisWindowPriorityCostliest" xml:space="preserve"><value>Teuerster</value></data>
   <data name="AnalysisWindowPriorityCostliestReason" xml:space="preserve"><value>Hier beginnen: Das war der größte Bewertungsverlust in der Partie.</value></data>

@@ -110,7 +110,7 @@ public static class AnalysisSnapshotPresentation
             _ => Localizer.Format(
                 LocalizedStrings.AnalysisWindowMoveCreatedProblem,
                 AnalysisDetailsTextFormatter.FormatSanAndUci(lead.Replay.San, lead.Replay.Uci),
-                AnalysisMistakePresentation.FormatMistakeLabel(label).ToLowerInvariant())
+                AnalysisMistakePresentation.FormatMistakeLabel(label))
         };
     }
 

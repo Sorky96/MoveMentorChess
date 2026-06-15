@@ -338,7 +338,7 @@
   <data name="AnalysisWindowTimelineMarkerTooltip" xml:space="preserve"><value>{0}: {1}, {2}, {3}.{4}</value></data>
   <data name="AnalysisWindowTimelineSelectedText" xml:space="preserve"><value>You are here: {0} - {1}, {2}.{3}</value></data>
   <data name="AnalysisWindowTimelineSummary" xml:space="preserve"><value>{0}. Reviewed {1}/{2} highlights. Markers: red blunder, orange mistake, yellow inaccuracy.</value></data>
-  <data name="AnalysisWindowFilterSummary" xml:space="preserve"><value>Showing {0} highlights for {1}: {2} blunders, {3} mistakes, {4} inaccuracies. Reviewed {5}/{6} highlights. {7}{8}</value></data>
+  <data name="AnalysisWindowFilterSummary" xml:space="preserve"><value>Showing {0} highlights for {1}: {2} blunders, {3} mistakes, {4} inaccuracies. Reviewed {5}/{6} highlights. {7} {8}</value></data>
   <data name="AnalysisWindowLoadedFromCacheSentence" xml:space="preserve"><value>Loaded from cache.</value></data>
   <data name="AnalysisWindowPriorityCostliest" xml:space="preserve"><value>Costliest</value></data>
   <data name="AnalysisWindowPriorityCostliestReason" xml:space="preserve"><value>Start here: this was the largest evaluation loss in the game.</value></data>
