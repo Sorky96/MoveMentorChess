@@ -20,6 +20,7 @@ public sealed class ProfilesWindowFactory : IProfilesWindowFactory
             new DefaultProfilesWindowDataService(analysisStoreProvider),
             request.NavigateToProfileExampleAsync,
             request.NavigateToOpeningExampleAsync,
-            request.NavigateToOpeningPositionAsync);
+            request.NavigateToOpeningPositionAsync,
+            new DefaultProfileFormattingWorkflow());
     }
 }

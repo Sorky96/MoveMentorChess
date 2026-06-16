@@ -2,9 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using Avalonia.Media;
-using MoveMentorChess.Analysis;
 using MoveMentorChess.App.Composition;
-using MoveMentorChess.Engine;
 using MoveMentorChess.Localization;
 using MoveMentorChess.Opening;
 using MoveMentorChess.Persistence;
@@ -16,14 +14,14 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private static readonly IReadOnlyList<string> AnalysisFilterOptions = ["All", "Blunder", "Mistake", "Inaccuracy"];
     private static readonly IReadOnlyList<PlayerSide> AnalysisSides = [PlayerSide.White, PlayerSide.Black];
 
-    private readonly IStockfishPathResolver stockfishPathResolver;
+    private readonly IMainWindowEngineSession engineSession;
     private readonly IMainWindowAnalysisDataService analysisDataService;
+    private readonly IMainWindowAnalysisWorkflow analysisWorkflow;
     private readonly ChessGame chessGame = new();
     private readonly Stack<string> undoFenStack = new();
     private readonly HashSet<string> availableTargets = new(StringComparer.Ordinal);
     private readonly ImportedGameReplayController importedGameReplay = new();
 
-    private StockfishEngine? engine;
     private readonly Dictionary<PlayerSide, GameAnalysisResult> cachedAnalysisResultsBySide = new();
     private GameAnalysisResult? cachedAnalysisResult;
     private Func<IReadOnlyList<LegalMoveInfo>, Task<LegalMoveInfo?>>? promotionMoveSelector;
@@ -46,7 +44,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     public MainWindowViewModel()
         : this(
-            new DefaultStockfishPathResolver(),
+            new DefaultMainWindowEngineSession(new DefaultStockfishPathResolver()),
             new DefaultMainWindowAnalysisDataService(() => null))
     {
     }
@@ -54,21 +52,39 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     public MainWindowViewModel(
         IStockfishPathResolver stockfishPathResolver,
         Func<IAnalysisStore?> analysisStoreProvider)
-        : this(stockfishPathResolver, new DefaultMainWindowAnalysisDataService(analysisStoreProvider))
+        : this(
+            new DefaultMainWindowEngineSession(stockfishPathResolver),
+            new DefaultMainWindowAnalysisDataService(analysisStoreProvider))
     {
     }
 
     internal MainWindowViewModel(
         IStockfishPathResolver stockfishPathResolver,
         IMainWindowAnalysisDataService analysisDataService)
+        : this(new DefaultMainWindowEngineSession(stockfishPathResolver), analysisDataService)
     {
-        this.stockfishPathResolver = stockfishPathResolver ?? throw new ArgumentNullException(nameof(stockfishPathResolver));
+    }
+
+    internal MainWindowViewModel(
+        IMainWindowEngineSession engineSession,
+        IMainWindowAnalysisDataService analysisDataService)
+        : this(engineSession, analysisDataService, new DefaultMainWindowAnalysisWorkflow(analysisDataService))
+    {
+    }
+
+    internal MainWindowViewModel(
+        IMainWindowEngineSession engineSession,
+        IMainWindowAnalysisDataService analysisDataService,
+        IMainWindowAnalysisWorkflow analysisWorkflow)
+    {
+        this.engineSession = engineSession ?? throw new ArgumentNullException(nameof(engineSession));
         this.analysisDataService = analysisDataService ?? throw new ArgumentNullException(nameof(analysisDataService));
+        this.analysisWorkflow = analysisWorkflow ?? throw new ArgumentNullException(nameof(analysisWorkflow));
         UndoCommand = new RelayCommand(UndoLastMove, () => undoFenStack.Count > 0 && !IsBusy);
         RotateBoardCommand = new RelayCommand(ToggleBoardRotation, () => !IsBusy);
         ApplyNextImportedMoveCommand = new RelayCommand(ApplyNextImportedMove, () => !IsBusy && importedGameReplay.CanApplyNextMove);
         ApplySelectedImportedMoveCommand = new RelayCommand(ApplySelectedImportedMove, () => !IsBusy && SelectedImportedMove is not null);
-        AnalyzeImportedGameCommand = new RelayCommand(async () => await AnalyzeImportedGameAsync(), () => !IsBusy && importedGameReplay.Game is not null && engine is not null);
+        AnalyzeImportedGameCommand = new RelayCommand(async () => await AnalyzeImportedGameAsync(), () => !IsBusy && importedGameReplay.Game is not null && engineSession.IsAvailable);
         StopImportCommand = new RelayCommand(StopImport, () => IsImportCancellationAvailable);
         ShowSelectedMistakeOnBoardCommand = new RelayCommand(ShowSelectedMistakeOnBoard, () => !IsBusy && SelectedAnalysisMistake?.LeadMove is not null);
 
@@ -172,13 +188,13 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public bool CanOpenImportedAnalysis => importedGameReplay.Game is not null && engine is not null && !IsBusy;
+    public bool CanOpenImportedAnalysis => importedGameReplay.Game is not null && engineSession.IsAvailable && !IsBusy;
 
     public bool IsImportCancellationAvailable => IsBusy && importCancellationTokenSource is not null && !importCancellationTokenSource.IsCancellationRequested;
 
-    public bool IsEngineAvailable => engine is not null;
+    public bool IsEngineAvailable => engineSession.IsAvailable;
 
-    public bool IsEngineUnavailable => engine is null;
+    public bool IsEngineUnavailable => !engineSession.IsAvailable;
 
     public bool HasImportedGame => importedGameReplay.HasReplayableGame;
 
@@ -268,13 +284,11 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     public void Dispose()
     {
-        engine?.Dispose();
+        engineSession.Dispose();
     }
 
     public void ReloadEngineSettings()
     {
-        engine?.Dispose();
-        engine = null;
         TryInitializeEngine();
         RefreshEngineSummary();
     }
@@ -467,7 +481,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     public async Task<BulkPgnAnalysisResult> AnalyzeImportedGamesAsync(IReadOnlyList<ImportedGame> games)
     {
-        if (IsBusy || engine is null || games.Count == 0)
+        if (IsBusy || engineSession.Analyzer is not { } engineAnalyzer || games.Count == 0)
         {
             return new BulkPgnAnalysisResult(DetectPrimaryPlayer(games), 0, 0, 0, 0, []);
         }
@@ -491,11 +505,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 ? "The analysis engine is reviewing the imported PGN file. This may take a while."
                 : $"The analysis engine is reviewing games for {primaryPlayer}. This may take a while.";
 
-            EngineAnalysisOptions options = StockfishSettingsStore.Load().ToBulkAnalysisOptions();
-            GameAnalysisService analysisService = new(
-                engine,
-                openingTheory: analysisDataService.CreateOpeningTheory(),
-                playerMistakeProfileSource: analysisDataService.CreatePlayerMistakeProfileSource());
+            EngineAnalysisOptions options = analysisWorkflow.CreateBulkAnalysisOptions();
             GameAnalysisResult? lastResult = null;
 
             foreach (ImportedGame game in games)
@@ -526,8 +536,12 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                     IProgress<GameAnalysisProgress> progress = new Progress<GameAnalysisProgress>(
                         item => ShowAnalysisProgressOnBoard(item, bulkStatus));
 
-                    GameAnalysisResult result = await Task.Run(
-                        () => analysisService.AnalyzeGame(game, side, options, progress, cancellation.Token),
+                    GameAnalysisResult result = await analysisWorkflow.AnalyzeGameAsync(
+                        engineAnalyzer,
+                        game,
+                        side,
+                        options,
+                        progress,
                         cancellation.Token);
                     analysisDataService.StoreAnalysisResult(game, side, options, result);
                     analyzed++;
@@ -672,7 +686,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
         LoadCachedAnalysisResultsForCurrentGame(new EngineAnalysisOptions());
 
-        if (engine is null && cachedAnalysisResultsBySide.Count == 0)
+        if (!engineSession.IsAvailable && cachedAnalysisResultsBySide.Count == 0)
         {
             StatusMessage = "The analysis engine is unavailable, and no saved analysis was found for the imported game.";
             return null;
@@ -685,7 +699,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
         return new AnalysisWindowRequest(
             currentGame,
-            engine,
+            engineSession.Analyzer,
             NavigateToAnalysisMistakeAsync,
             ShowAnalysisProgressOnBoard,
             SelectedAnalysisSide,
@@ -694,7 +708,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     public bool HasAnalysisEngine()
     {
-        return engine is not null;
+        return engineSession.IsAvailable;
     }
 
     private void UndoLastMove()
@@ -804,7 +818,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
     private async Task AnalyzeImportedGameAsync()
     {
         ImportedGame? currentGame = importedGameReplay.Game;
-        if (currentGame is null || engine is null || IsBusy)
+        if (currentGame is null || engineSession.Analyzer is not { } engineAnalyzer || IsBusy)
         {
             return;
         }
@@ -820,16 +834,14 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             ApplyAnalysisToImportedMoves();
             IProgress<GameAnalysisProgress> progress = new Progress<GameAnalysisProgress>(ShowAnalysisProgressOnBoard);
 
-            GameAnalysisService analysisService = new(
-                engine,
-                openingTheory: analysisDataService.CreateOpeningTheory(),
-                playerMistakeProfileSource: analysisDataService.CreatePlayerMistakeProfileSource());
-            cachedAnalysisResult = await Task.Run(() => analysisService.AnalyzeGame(
+            EngineAnalysisOptions options = analysisWorkflow.CreateDefaultAnalysisOptions();
+            cachedAnalysisResult = await analysisWorkflow.AnalyzeGameAsync(
+                engineAnalyzer,
                 currentGame,
                 SelectedAnalysisSide,
-                new EngineAnalysisOptions(),
-                progress));
-            analysisDataService.StoreAnalysisResult(currentGame, SelectedAnalysisSide, new EngineAnalysisOptions(), cachedAnalysisResult);
+                options,
+                progress);
+            analysisDataService.StoreAnalysisResult(currentGame, SelectedAnalysisSide, options, cachedAnalysisResult);
             cachedAnalysisResultsBySide[SelectedAnalysisSide] = cachedAnalysisResult;
             ApplyAnalysisToImportedMoves();
             ApplyAnalysisFilter();
@@ -1047,29 +1059,12 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
 
     private void TryInitializeEngine()
     {
-        string? enginePath = stockfishPathResolver.Resolve();
-        try
-        {
-            if (string.IsNullOrWhiteSpace(enginePath))
-            {
-                throw new InvalidOperationException("Could not locate the external chess engine executable.");
-            }
-
-            StockfishSettings stockfishSettings = StockfishSettingsStore.Load();
-            engine = new StockfishEngine(enginePath, stockfishSettings.ToEngineOptions());
-            engine.SendCommand("setoption name MultiPV value 3");
-            StatusMessage = $"MoveMentor Chess is ready. External chess engine loaded from {enginePath}.";
-        }
-        catch (Exception ex) when (ex is not OutOfMemoryException)
-        {
-            engine = null;
-            StatusMessage = $"MoveMentor Chess is ready, but the analysis engine is unavailable. {ex.Message}";
-        }
+        StatusMessage = engineSession.Reload();
     }
 
     private void RefreshEngineSummary()
     {
-        if (engine is null)
+        if (!engineSession.IsAvailable)
         {
             SuggestionText = Localizer.Text(LocalizedStrings.MainEngineSuggestionsUnavailable);
             EvaluationText = Localizer.Text(LocalizedStrings.MainEvaluationUnavailable);
@@ -1084,8 +1079,8 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         try
         {
             string currentFen = chessGame.GetFen();
-            engine.SetPositionFen(currentFen);
-            string[] moves = engine.GetTopMoves(3).ToArray();
+            MainWindowEngineSummary summary = engineSession.RefreshSummary(currentFen);
+            string[] moves = summary.TopMoves.ToArray();
             SuggestionText = moves.Length == 0
                 ? Localizer.Text(LocalizedStrings.MainTopMovesNone)
                 : Localizer.Format(LocalizedStrings.MainTopMoves, string.Join(", ", moves));
@@ -1103,13 +1098,12 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 .ToList();
             OnPropertyChanged(nameof(BestMoveArrows));
 
-            EvaluationSummary? evaluation = engine.GetEvaluationSummary();
-            if (evaluation is null)
+            if (summary.Evaluation is null)
             {
                 EvaluationText = Localizer.Text(LocalizedStrings.MainEvaluationUnavailable);
                 EvaluationBarValue = 50;
             }
-            else if (evaluation.MateIn is int mateIn)
+            else if (summary.Evaluation.MateIn is int mateIn)
             {
                 int signedMate = chessGame.WhiteToMove ? mateIn : -mateIn;
                 bool whiteWinning = signedMate > 0;
@@ -1120,7 +1114,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
             }
             else
             {
-                int cp = evaluation.Centipawns ?? 0;
+                int cp = summary.Evaluation.Centipawns ?? 0;
                 int whitePerspectiveCp = chessGame.WhiteToMove ? cp : -cp;
                 double pawns = whitePerspectiveCp / 100.0;
                 double normalized = Math.Clamp((pawns + 5.0) / 10.0, 0.0, 1.0);
@@ -1246,11 +1240,11 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         EngineAnalysis? baselineAnalysis = null;
         string? bestMove = null;
 
-        if (engine is not null)
+        if (engineSession.IsAvailable)
         {
             try
             {
-                baselineAnalysis = engine.AnalyzePosition(currentFen, new EngineAnalysisOptions(Depth: 10, MultiPv: 1, MoveTimeMs: 90));
+                baselineAnalysis = engineSession.AnalyzePosition(currentFen, new EngineAnalysisOptions(Depth: 10, MultiPv: 1, MoveTimeMs: 90));
                 bestMove = baselineAnalysis.BestMoveUci;
             }
             catch (Exception ex) when (ex is not OutOfMemoryException)
@@ -1296,7 +1290,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 GetEvalBrush(cachedMoveAnalysis.EvalAfterCp, cachedMoveAnalysis.PlayedMateIn));
         }
 
-        if (engine is null || baselineAnalysis is null)
+        if (!engineSession.IsAvailable || baselineAnalysis is null)
         {
             return new PieceMovePresentation(moveText, string.Empty, "#657386");
         }
@@ -1311,7 +1305,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                 return new PieceMovePresentation(moveText, string.Empty, "#657386");
             }
 
-            EngineAnalysis moveAnalysis = engine.AnalyzePosition(appliedMove.FenAfter, new EngineAnalysisOptions(Depth: 10, MultiPv: 1, MoveTimeMs: 90));
+            EngineAnalysis moveAnalysis = engineSession.AnalyzePosition(appliedMove.FenAfter, new EngineAnalysisOptions(Depth: 10, MultiPv: 1, MoveTimeMs: 90));
             EngineLine? moveLine = moveAnalysis.Lines.Count > 0 ? moveAnalysis.Lines[0] : null;
             int moveCp = NormalizePerspectiveScore(moveLine?.Centipawns, perspectiveSide, perspectiveSide == "White" ? "Black" : "White");
             int? moveMate = moveLine?.MateIn is int mate ? -mate : null;

@@ -1,6 +1,7 @@
 using MoveMentorChess.App.Composition;
 using MoveMentorChess.App.ViewModels;
 using MoveMentorChess.Analysis;
+using MoveMentorChess.Engine;
 using MoveMentorChess.Opening;
 using MoveMentorChess.Persistence;
 using Xunit;
@@ -161,6 +162,29 @@ public sealed class MainWindowImportReplayTests
         Assert.Equal(1, store.SaveImportedGameCallCount);
     }
 
+    [Fact]
+    public async Task AnalyzeImportedGamesAsync_UsesInjectedEngineSessionAndAnalysisWorkflow()
+    {
+        RecordingMainWindowAnalysisDataService dataService = new();
+        RecordingEngineAnalyzer engineAnalyzer = new();
+        RecordingMainWindowAnalysisWorkflow analysisWorkflow = new();
+        MainWindowViewModel viewModel = new(
+            new RecordingMainWindowEngineSession(engineAnalyzer),
+            dataService,
+            analysisWorkflow);
+        ImportedGame game = PgnGameParser.Parse(FourPlyPgn);
+
+        BulkPgnAnalysisResult result = await viewModel.AnalyzeImportedGamesAsync([game]);
+
+        Assert.Equal(1, result.AnalyzedGames);
+        Assert.Same(engineAnalyzer, analysisWorkflow.LastEngineAnalyzer);
+        Assert.Equal(game, analysisWorkflow.LastGame);
+        Assert.Equal(analysisWorkflow.BulkOptions, analysisWorkflow.LastOptions);
+        Assert.Single(dataService.StoredResults);
+        Assert.Equal(game, dataService.StoredResults[0].Game);
+        Assert.Equal(PlayerSide.White, dataService.StoredResults[0].Side);
+    }
+
     private static MainWindowViewModel CreateViewModel(IMainWindowAnalysisDataService dataService)
         => new(new MissingStockfishPathResolver(), dataService);
 
@@ -197,7 +221,7 @@ public sealed class MainWindowImportReplayTests
             Eco: null,
             Site: null);
 
-    private static GameAnalysisResult CreateAnalysisResultWithBlunder(ImportedGame game)
+    private static GameAnalysisResult CreateAnalysisResultWithBlunder(ImportedGame game, PlayerSide side = PlayerSide.White)
     {
         ReplayPly replay = new GameReplayService().Replay(game)[0];
         EngineAnalysis before = new(
@@ -227,7 +251,7 @@ public sealed class MainWindowImportReplayTests
             move.MistakeTag,
             move.Explanation!);
 
-        return new GameAnalysisResult(game, PlayerSide.White, [replay], [move], [mistake]);
+        return new GameAnalysisResult(game, side, [replay], [move], [mistake]);
     }
 
     private sealed class MissingStockfishPathResolver : IStockfishPathResolver
@@ -240,6 +264,8 @@ public sealed class MainWindowImportReplayTests
         public List<ImportedGame> SavedGames { get; } = [];
 
         public List<IReadOnlyList<ImportedGame>> SavedGameBatches { get; } = [];
+
+        public List<(ImportedGame Game, PlayerSide Side, EngineAnalysisOptions Options, GameAnalysisResult Result)> StoredResults { get; } = [];
 
         public void SaveImportedGame(ImportedGame game)
         {
@@ -265,11 +291,68 @@ public sealed class MainWindowImportReplayTests
 
         public void StoreAnalysisResult(ImportedGame game, PlayerSide side, EngineAnalysisOptions options, GameAnalysisResult result)
         {
+            StoredResults.Add((game, side, options, result));
         }
 
         public IPlayerMistakeProfileSource? CreatePlayerMistakeProfileSource() => null;
 
         public OpeningTheoryQueryService? CreateOpeningTheory() => null;
+    }
+
+    private sealed class RecordingMainWindowEngineSession(IEngineAnalyzer analyzer) : IMainWindowEngineSession
+    {
+        public bool IsAvailable => true;
+
+        public IEngineAnalyzer? Analyzer => analyzer;
+
+        public string Reload() => "Engine ready.";
+
+        public MainWindowEngineSummary RefreshSummary(string fen)
+            => new([], null);
+
+        public EngineAnalysis AnalyzePosition(string fen, EngineAnalysisOptions options)
+            => analyzer.AnalyzePosition(fen, options);
+
+        public void Dispose()
+        {
+        }
+    }
+
+    private sealed class RecordingMainWindowAnalysisWorkflow : IMainWindowAnalysisWorkflow
+    {
+        public EngineAnalysisOptions BulkOptions { get; } = new(Depth: 9, MultiPv: 2, MoveTimeMs: 120);
+
+        public IEngineAnalyzer? LastEngineAnalyzer { get; private set; }
+
+        public ImportedGame? LastGame { get; private set; }
+
+        public EngineAnalysisOptions? LastOptions { get; private set; }
+
+        public EngineAnalysisOptions CreateDefaultAnalysisOptions()
+            => new();
+
+        public EngineAnalysisOptions CreateBulkAnalysisOptions()
+            => BulkOptions;
+
+        public Task<GameAnalysisResult> AnalyzeGameAsync(
+            IEngineAnalyzer engineAnalyzer,
+            ImportedGame game,
+            PlayerSide side,
+            EngineAnalysisOptions options,
+            IProgress<GameAnalysisProgress>? progress,
+            CancellationToken cancellationToken = default)
+        {
+            LastEngineAnalyzer = engineAnalyzer;
+            LastGame = game;
+            LastOptions = options;
+            return Task.FromResult(CreateAnalysisResultWithBlunder(game, side));
+        }
+    }
+
+    private sealed class RecordingEngineAnalyzer : IEngineAnalyzer
+    {
+        public EngineAnalysis AnalyzePosition(string fen, EngineAnalysisOptions options)
+            => new(fen, [new EngineLine("e2e4", 20, null, ["e2e4"])], "e2e4");
     }
 
     private sealed class RecordingAnalysisResultCache : IAnalysisResultCache

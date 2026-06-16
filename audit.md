@@ -532,6 +532,37 @@ Acceptance criteria:
 - The PR description states why the project was kept or removed.
 - Full solution tests pass after the decision.
 
+### Sprint 10 - Runtime Workflow Extraction
+
+Goal: move remaining Main Window engine/runtime analysis construction and profile-formatting settings access behind App-level ports.
+
+Scope:
+
+- Extract `MainWindowViewModel` engine lifecycle access behind an injected engine session.
+- Extract Main Window game-analysis orchestration behind an injected analysis workflow.
+- Move `ProfilesWindow` profile/training-plan formatting and Llama GPU settings reads behind a formatting workflow.
+- Keep existing window constructors as compatibility facades while production composition wires explicit workflow instances.
+
+Acceptance criteria:
+
+- `MainWindowViewModel` no longer directly references `StockfishEngine`, `StockfishSettingsStore`, or `GameAnalysisService`.
+- `ProfilesWindow.axaml.cs` no longer directly reads `LlamaGpuSettingsStore` or constructs formatter factories/fallback formatters.
+- Architecture tests guard both runtime workflow boundaries.
+- Existing Main Window import/replay behavior remains covered.
+- Full solution tests pass.
+
+Implementation status 2026-06-15:
+
+- Added `IMainWindowEngineSession` and `DefaultMainWindowEngineSession` so Stockfish process creation, reload, summary refresh, move-option analysis, and disposal live behind a port.
+- Added `IMainWindowAnalysisWorkflow` and `DefaultMainWindowAnalysisWorkflow` so single-game and bulk game analysis construction uses an injected workflow instead of constructing `GameAnalysisService` inside `MainWindowViewModel`.
+- Updated `AppCompositionRoot` to wire the Main Window engine session and analysis workflow explicitly.
+- Added `IProfileFormattingWorkflow` and `DefaultProfileFormattingWorkflow` so `ProfilesWindow` delegates Llama settings, profile formatting, training-plan formatting, and heuristic fallback outside code-behind.
+- Updated `ProfilesWindowFactory` to provide the formatting workflow in production.
+- Added architecture guards for Main Window runtime ports and Profiles Window formatting workflow boundaries.
+- Added `MainWindowImportReplayTests.AnalyzeImportedGamesAsync_UsesInjectedEngineSessionAndAnalysisWorkflow` to verify batch analysis delegates through the injected ports.
+- Validation passed with `dotnet test MoveMentorChessServices.Tests\MoveMentorChessServices.Tests.csproj --no-restore --filter "MainWindowImportReplayTests|AppArchitectureTests" --verbosity minimal` plus `AVALONIA_TELEMETRY_OPTOUT=1` (34 passed).
+- Validation passed with `dotnet test MoveMentorChess.sln --no-restore -m:1 --verbosity minimal` plus `AVALONIA_TELEMETRY_OPTOUT=1` (513 passed).
+
 ## 7. Initial Audit Validation
 
 Executed for the original static audit PR before the sprint implementation follow-ups:

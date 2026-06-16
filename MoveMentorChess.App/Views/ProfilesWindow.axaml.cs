@@ -4,7 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
-using MoveMentorChess.Analysis;
+using MoveMentorChess.App.Composition;
 using MoveMentorChess.App.Renderers;
 using MoveMentorChess.App.ViewModels;
 using MoveMentorChess.Profiles;
@@ -19,8 +19,7 @@ public partial class ProfilesWindow : Window
 
     private readonly IProfilesWindowDataService dataService;
     private readonly PlayerProfileService profileService;
-    private readonly IPlayerProfileFormatter profileFormatter;
-    private readonly ITrainingPlanFormatter trainingPlanFormatter;
+    private readonly IProfileFormattingWorkflow profileFormattingWorkflow;
     private readonly ProfileCoachSessionTracker profileSessionTracker;
     private readonly ProfileExampleCardRenderer exampleCardRenderer;
     private List<PlayerProfileSummaryItemViewModel> items = [];
@@ -48,8 +47,7 @@ public partial class ProfilesWindow : Window
             navigateToProfileExampleAsync,
             navigateToOpeningExampleAsync,
             navigateToOpeningPositionAsync,
-            profileFormatter,
-            trainingPlanFormatter)
+            new DefaultProfileFormattingWorkflow(profileFormatter, trainingPlanFormatter))
     {
     }
 
@@ -58,13 +56,11 @@ public partial class ProfilesWindow : Window
         Func<ProfileMistakeExample, Task>? navigateToProfileExampleAsync = null,
         Func<OpeningExampleGame, Task>? navigateToOpeningExampleAsync = null,
         Func<OpeningMoveRecommendation, Task>? navigateToOpeningPositionAsync = null,
-        IPlayerProfileFormatter? profileFormatter = null,
-        ITrainingPlanFormatter? trainingPlanFormatter = null)
+        IProfileFormattingWorkflow? profileFormattingWorkflow = null)
     {
         this.dataService = dataService ?? throw new ArgumentNullException(nameof(dataService));
         profileService = dataService.ProfileService;
-        this.profileFormatter = profileFormatter ?? PlayerProfileFormatterFactory.CreateDefault();
-        this.trainingPlanFormatter = trainingPlanFormatter ?? TrainingPlanFormatterFactory.CreateDefault();
+        this.profileFormattingWorkflow = profileFormattingWorkflow ?? new DefaultProfileFormattingWorkflow();
         profileSessionTracker = dataService.CreateSessionTracker();
         exampleCardRenderer = new ProfileExampleCardRenderer(
             this,
@@ -376,16 +372,7 @@ public partial class ProfilesWindow : Window
     {
         try
         {
-            LlamaGpuSettings settings = LlamaGpuSettingsStore.Load();
-            PlayerProfileAudienceLevel audienceLevel = ToProfileAudienceLevel(settings.DefaultExplanationLevel);
-            AdviceNarrationStyle narrationStyle = settings.NarrationStyle;
-
-            (PlayerProfileFormattedOutput Profile, TrainingPlanFormattedOutput TrainingPlan) formatted = await Task.Run(() =>
-            {
-                PlayerProfileFormattedOutput formattedProfile = profileFormatter.Format(report, audienceLevel, narrationStyle);
-                TrainingPlanFormattedOutput formattedTrainingPlan = trainingPlanFormatter.Format(report.TrainingPlan, audienceLevel, narrationStyle);
-                return (formattedProfile, formattedTrainingPlan);
-            });
+            ProfileFormattingResult formatted = await profileFormattingWorkflow.FormatAsync(report);
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -413,26 +400,15 @@ public partial class ProfilesWindow : Window
                     return;
                 }
 
-                PlayerProfileFormattedOutput fallbackProfile = new HeuristicPlayerProfileFormatter().Format(report);
-                TrainingPlanFormattedOutput fallbackPlan = new HeuristicTrainingPlanFormatter().Format(report.TrainingPlan);
-                ReplacePanelChildren(summaryPanel, BuildFormattedProfileRows(fallbackProfile));
-                ReplacePanelChildren(weeklyPlanPanel, BuildWeeklyPlanRows(report, fallbackPlan, PracticeOpeningFromProfileAsync));
+                ProfileFormattingResult fallback = profileFormattingWorkflow.FormatFallback(report);
+                ReplacePanelChildren(summaryPanel, BuildFormattedProfileRows(fallback.Profile));
+                ReplacePanelChildren(weeklyPlanPanel, BuildWeeklyPlanRows(report, fallback.TrainingPlan, PracticeOpeningFromProfileAsync));
                 if (compactWeeklyPlanPanel is not null)
                 {
-                    ReplacePanelChildren(compactWeeklyPlanPanel, BuildCompactWeeklyPlanRows(report, fallbackPlan, PracticeOpeningFromProfileAsync));
+                    ReplacePanelChildren(compactWeeklyPlanPanel, BuildCompactWeeklyPlanRows(report, fallback.TrainingPlan, PracticeOpeningFromProfileAsync));
                 }
             });
         }
-    }
-
-    private static PlayerProfileAudienceLevel ToProfileAudienceLevel(ExplanationLevel explanationLevel)
-    {
-        return explanationLevel switch
-        {
-            ExplanationLevel.Beginner => PlayerProfileAudienceLevel.Beginner,
-            ExplanationLevel.Advanced => PlayerProfileAudienceLevel.Advanced,
-            _ => PlayerProfileAudienceLevel.Intermediate
-        };
     }
 
     private Border CreateCoachDecisionCard(PlayerProfileReport report)

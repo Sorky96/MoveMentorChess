@@ -28,6 +28,8 @@ internal static class AppCompositionRoot
         IProfilesWindowFactory profilesWindowFactory = dataServiceFactory.CreateProfilesWindowFactory();
         IStockfishPathResolver stockfishPathResolver = new DefaultStockfishPathResolver();
         IMainWindowAnalysisDataService mainWindowAnalysisDataService = dataServiceFactory.CreateMainWindowAnalysisDataService();
+        IMainWindowEngineSession mainWindowEngineSession = new DefaultMainWindowEngineSession(stockfishPathResolver);
+        IMainWindowAnalysisWorkflow mainWindowAnalysisWorkflow = new DefaultMainWindowAnalysisWorkflow(mainWindowAnalysisDataService);
         IMainWindowDialogDataService mainWindowDialogDataService = dataServiceFactory.CreateMainWindowDialogDataService();
         ISettingsWindowFactory settingsWindowFactory = new SettingsWindowFactory(SettingsWorkflow.Value);
 
@@ -38,8 +40,9 @@ internal static class AppCompositionRoot
             settingsWindowFactory)
         {
             DataContext = new MainWindowViewModel(
-                stockfishPathResolver,
-                mainWindowAnalysisDataService)
+                mainWindowEngineSession,
+                mainWindowAnalysisDataService,
+                mainWindowAnalysisWorkflow)
         };
     }
 }

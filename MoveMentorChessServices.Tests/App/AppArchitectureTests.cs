@@ -25,7 +25,7 @@ public sealed partial class AppArchitectureTests
         (string Path, int MaxLines)[] cleanupBudgets =
         [
             (Path.Join(root, "MoveMentorChess.App", "ViewModels", "OpeningTrainerWindowViewModel.cs"), 2275),
-            (Path.Join(root, "MoveMentorChess.App", "ViewModels", "MainWindowViewModel.cs"), 1540),
+            (Path.Join(root, "MoveMentorChess.App", "ViewModels", "MainWindowViewModel.cs"), 1530),
             (Path.Join(root, "MoveMentorChess.App", "Views", "AnalysisWindow.axaml.cs"), 540),
             (Path.Join(root, "MoveMentorChess.App", "Views", "ProfilesWindow.axaml.cs"), 790),
             (Path.Join(root, "MoveMentorChess.Training", "OpeningTrainerService.cs"), 470),
@@ -143,6 +143,23 @@ public sealed partial class AppArchitectureTests
     }
 
     [Fact]
+    public void MainWindowEngineAndAnalysisRuntimeStayBehindPorts()
+    {
+        string root = FindRepositoryRoot();
+        string appRoot = Path.Join(root, "MoveMentorChess.App");
+        string viewModel = File.ReadAllText(Path.Join(appRoot, "ViewModels", "MainWindowViewModel.cs"));
+        string compositionRoot = File.ReadAllText(Path.Join(appRoot, "Composition", "AppCompositionRoot.cs"));
+
+        Assert.Contains("IMainWindowEngineSession", viewModel, StringComparison.Ordinal);
+        Assert.Contains("IMainWindowAnalysisWorkflow", viewModel, StringComparison.Ordinal);
+        Assert.DoesNotContain("StockfishSettingsStore", viewModel, StringComparison.Ordinal);
+        Assert.DoesNotContain("StockfishEngine", viewModel, StringComparison.Ordinal);
+        Assert.DoesNotContain("GameAnalysisService", viewModel, StringComparison.Ordinal);
+        Assert.Contains("DefaultMainWindowEngineSession", compositionRoot, StringComparison.Ordinal);
+        Assert.Contains("DefaultMainWindowAnalysisWorkflow", compositionRoot, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void SettingsWindowUsesWorkflowForPersistenceAndRuntimeSideEffects()
     {
         string root = FindRepositoryRoot();
@@ -153,6 +170,23 @@ public sealed partial class AppArchitectureTests
         Assert.DoesNotContain("LlamaGpuSettingsStore", settingsWindow, StringComparison.Ordinal);
         Assert.DoesNotContain("StockfishSettingsStore", settingsWindow, StringComparison.Ordinal);
         Assert.DoesNotContain("LlamaCppServerManager", settingsWindow, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ProfilesWindowUsesFormattingWorkflowForRuntimeSettings()
+    {
+        string root = FindRepositoryRoot();
+        string appRoot = Path.Join(root, "MoveMentorChess.App");
+        string profilesWindow = File.ReadAllText(Path.Join(appRoot, "Views", "ProfilesWindow.axaml.cs"));
+        string profilesWindowFactory = File.ReadAllText(Path.Join(appRoot, "Composition", "ProfilesWindowFactory.cs"));
+
+        Assert.Contains("IProfileFormattingWorkflow", profilesWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("LlamaGpuSettingsStore", profilesWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("PlayerProfileFormatterFactory", profilesWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("TrainingPlanFormatterFactory", profilesWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("HeuristicPlayerProfileFormatter", profilesWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("HeuristicTrainingPlanFormatter", profilesWindow, StringComparison.Ordinal);
+        Assert.Contains("DefaultProfileFormattingWorkflow", profilesWindowFactory, StringComparison.Ordinal);
     }
 
     [Fact]
