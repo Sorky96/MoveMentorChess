@@ -532,6 +532,12 @@ Acceptance criteria:
 - The PR description states why the project was kept or removed.
 - Full solution tests pass after the decision.
 
+Implementation status 2026-06-15:
+
+- Chose to remove the obsolete `MoveMentorChessServices` project shell instead of adding it back to `MoveMentorChess.sln`; the active code now lives in the split `MoveMentorChess.*` projects and the solution already builds those projects directly.
+- Removed the tracked legacy project file and icon so the repository no longer carries an unexplained project shell.
+- Added `AppArchitectureTests.LegacyMoveMentorChessServicesProjectShellStaysRemoved` to keep the obsolete shell out of the repository and solution.
+
 ### Sprint 10 - Runtime Workflow Extraction
 
 Goal: move remaining Main Window engine/runtime analysis construction and profile-formatting settings access behind App-level ports.
