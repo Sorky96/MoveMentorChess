@@ -30,6 +30,17 @@ A chess training app built with Avalonia for manual play, PGN review, engine-ass
 - optional local `llama.cpp` runtime and GGUF model for richer coaching text
 - piece images from the `Images` folder copied to the output directory
 
+## Security scanning
+
+GitHub Actions includes a Black Duck SCA workflow in `.github/workflows/black-duck-security-scan-ci.yml`.
+
+The workflow runs on pull requests, pushes to `main` or `master`, a weekly Tuesday schedule, and manual dispatch. Pull requests from forks are skipped because GitHub does not expose repository secrets to them. PR scans use Black Duck rapid mode, while push, scheduled, and manual runs use full scan mode. The scan fails the workflow for `CRITICAL` or `HIGH` findings and uploads a SARIF report when GitHub code scanning is available.
+
+Repository administrators must configure these GitHub repository secrets before scans can run:
+
+- `BLACKDUCK_URL` - the base URL of the Black Duck instance.
+- `BLACKDUCK_API_TOKEN` - a Black Duck API token with permission to create/update the `MoveMentorChess` project and versions, read scan results, and evaluate policies.
+
 ## External engine setup
 
 This repository does not include `stockfish.exe`.
