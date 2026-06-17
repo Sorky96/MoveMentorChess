@@ -28,25 +28,37 @@ internal sealed class DefaultMainWindowAnalysisWorkflow : IMainWindowAnalysisWor
     public EngineAnalysisOptions CreateBulkAnalysisOptions()
         => settingsProvider().ToBulkAnalysisOptions();
 
-    public Task<GameAnalysisResult> AnalyzeGameAsync(
-        IEngineAnalyzer engineAnalyzer,
-        ImportedGame game,
-        PlayerSide side,
-        EngineAnalysisOptions options,
-        IProgress<GameAnalysisProgress>? progress,
-        CancellationToken cancellationToken = default)
+    public IMainWindowAnalysisRun CreateAnalysisRun(IEngineAnalyzer engineAnalyzer)
     {
         ArgumentNullException.ThrowIfNull(engineAnalyzer);
-        ArgumentNullException.ThrowIfNull(game);
-        ArgumentNullException.ThrowIfNull(options);
 
         GameAnalysisService analysisService = new(
             engineAnalyzer,
             openingTheory: analysisDataService.CreateOpeningTheory(),
             playerMistakeProfileSource: analysisDataService.CreatePlayerMistakeProfileSource());
 
-        return Task.Run(
-            () => analysisService.AnalyzeGame(game, side, options, progress, cancellationToken),
-            cancellationToken);
+        return new DefaultMainWindowAnalysisRun(analysisService);
+    }
+
+    private sealed class DefaultMainWindowAnalysisRun(GameAnalysisService analysisService) : IMainWindowAnalysisRun
+    {
+        public Task<GameAnalysisResult> AnalyzeGameAsync(
+            ImportedGame game,
+            PlayerSide side,
+            EngineAnalysisOptions options,
+            IProgress<GameAnalysisProgress>? progress,
+            CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(game);
+            ArgumentNullException.ThrowIfNull(options);
+
+            return Task.Run(
+                () => analysisService.AnalyzeGame(game, side, options, progress, cancellationToken),
+                cancellationToken);
+        }
+
+        public void Dispose()
+        {
+        }
     }
 }

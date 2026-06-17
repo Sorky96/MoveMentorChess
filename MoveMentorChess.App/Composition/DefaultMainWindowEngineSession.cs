@@ -30,23 +30,27 @@ internal sealed class DefaultMainWindowEngineSession : IMainWindowEngineSession
     public string Reload()
     {
         DisposeEngine();
-        string? enginePath = stockfishPathResolver.Resolve();
+        StockfishEngine? initializedEngine = null;
 
         try
         {
+            string? enginePath = stockfishPathResolver.Resolve();
             if (string.IsNullOrWhiteSpace(enginePath))
             {
                 throw new InvalidOperationException("Could not locate the external chess engine executable.");
             }
 
             StockfishSettings stockfishSettings = settingsProvider();
-            engine = new StockfishEngine(enginePath, stockfishSettings.ToEngineOptions());
-            engine.SendCommand("setoption name MultiPV value 3");
+            initializedEngine = new StockfishEngine(enginePath, stockfishSettings.ToEngineOptions());
+            initializedEngine.SendCommand("setoption name MultiPV value 3");
+            engine = initializedEngine;
+            initializedEngine = null;
             return $"MoveMentor Chess is ready. External chess engine loaded from {enginePath}.";
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
-            engine = null;
+            initializedEngine?.Dispose();
+            DisposeEngine();
             return $"MoveMentor Chess is ready, but the analysis engine is unavailable. {ex.Message}";
         }
     }

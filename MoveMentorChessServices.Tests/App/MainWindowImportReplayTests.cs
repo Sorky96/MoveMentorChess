@@ -174,13 +174,14 @@ public sealed class MainWindowImportReplayTests
             analysisWorkflow);
         ImportedGame game = PgnGameParser.Parse(FourPlyPgn);
 
-        BulkPgnAnalysisResult result = await viewModel.AnalyzeImportedGamesAsync([game]);
+        BulkPgnAnalysisResult result = await viewModel.AnalyzeImportedGamesAsync([game, game]);
 
-        Assert.Equal(1, result.AnalyzedGames);
+        Assert.Equal(2, result.AnalyzedGames);
         Assert.Same(engineAnalyzer, analysisWorkflow.LastEngineAnalyzer);
-        Assert.Equal(game, analysisWorkflow.LastGame);
-        Assert.Equal(analysisWorkflow.BulkOptions, analysisWorkflow.LastOptions);
-        Assert.Single(dataService.StoredResults);
+        Assert.Equal(1, analysisWorkflow.RunCreationCount);
+        Assert.Equal([game, game], analysisWorkflow.AnalyzedGames);
+        Assert.All(analysisWorkflow.UsedOptions, options => Assert.Equal(analysisWorkflow.BulkOptions, options));
+        Assert.Equal(2, dataService.StoredResults.Count);
         Assert.Equal(game, dataService.StoredResults[0].Game);
         Assert.Equal(PlayerSide.White, dataService.StoredResults[0].Side);
     }
@@ -324,9 +325,11 @@ public sealed class MainWindowImportReplayTests
 
         public IEngineAnalyzer? LastEngineAnalyzer { get; private set; }
 
-        public ImportedGame? LastGame { get; private set; }
+        public int RunCreationCount { get; private set; }
 
-        public EngineAnalysisOptions? LastOptions { get; private set; }
+        public List<ImportedGame> AnalyzedGames { get; } = [];
+
+        public List<EngineAnalysisOptions> UsedOptions { get; } = [];
 
         public EngineAnalysisOptions CreateDefaultAnalysisOptions()
             => new();
@@ -334,18 +337,30 @@ public sealed class MainWindowImportReplayTests
         public EngineAnalysisOptions CreateBulkAnalysisOptions()
             => BulkOptions;
 
-        public Task<GameAnalysisResult> AnalyzeGameAsync(
-            IEngineAnalyzer engineAnalyzer,
-            ImportedGame game,
-            PlayerSide side,
-            EngineAnalysisOptions options,
-            IProgress<GameAnalysisProgress>? progress,
-            CancellationToken cancellationToken = default)
+        public IMainWindowAnalysisRun CreateAnalysisRun(IEngineAnalyzer engineAnalyzer)
         {
             LastEngineAnalyzer = engineAnalyzer;
-            LastGame = game;
-            LastOptions = options;
-            return Task.FromResult(CreateAnalysisResultWithBlunder(game, side));
+            RunCreationCount++;
+            return new RecordingMainWindowAnalysisRun(this);
+        }
+
+        private sealed class RecordingMainWindowAnalysisRun(RecordingMainWindowAnalysisWorkflow owner) : IMainWindowAnalysisRun
+        {
+            public Task<GameAnalysisResult> AnalyzeGameAsync(
+                ImportedGame game,
+                PlayerSide side,
+                EngineAnalysisOptions options,
+                IProgress<GameAnalysisProgress>? progress,
+                CancellationToken cancellationToken = default)
+            {
+                owner.AnalyzedGames.Add(game);
+                owner.UsedOptions.Add(options);
+                return Task.FromResult(CreateAnalysisResultWithBlunder(game, side));
+            }
+
+            public void Dispose()
+            {
+            }
         }
     }
 

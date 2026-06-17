@@ -8,8 +8,12 @@ internal interface IMainWindowAnalysisWorkflow
 
     EngineAnalysisOptions CreateBulkAnalysisOptions();
 
+    IMainWindowAnalysisRun CreateAnalysisRun(IEngineAnalyzer engineAnalyzer);
+}
+
+internal interface IMainWindowAnalysisRun : IDisposable
+{
     Task<GameAnalysisResult> AnalyzeGameAsync(
-        IEngineAnalyzer engineAnalyzer,
         ImportedGame game,
         PlayerSide side,
         EngineAnalysisOptions options,
