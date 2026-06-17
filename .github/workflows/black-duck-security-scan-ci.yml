@@ -1,1 +1,82 @@
+name: Black Duck SCA
 
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - master
+      - main
+  schedule:
+    - cron: "17 2 * * 2"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: write
+  security-events: write
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+  BLACKDUCK_PROJECT_NAME: MoveMentorChess
+
+jobs:
+  black-duck-sca:
+    name: Black Duck SCA
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+
+    env:
+      BLACKDUCK_VERSION_NAME: ${{ github.head_ref || github.ref_name }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # pin v6.0.3
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # pin v5.3.0
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore MoveMentorChess.sln --verbosity minimal
+
+      - name: Check Black Duck configuration
+        id: blackduck-config
+        shell: bash
+        env:
+          BLACKDUCK_URL: ${{ secrets.BLACKDUCK_URL }}
+          BLACKDUCK_API_TOKEN: ${{ secrets.BLACKDUCK_API_TOKEN }}
+        run: |
+          if [[ -n "$BLACKDUCK_URL" && -n "$BLACKDUCK_API_TOKEN" ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Black Duck SCA scan skipped. Configure BLACKDUCK_URL and BLACKDUCK_API_TOKEN repository secrets to enable it."
+          fi
+
+      - name: Run Black Duck SCA
+        if: ${{ steps.blackduck-config.outputs.configured == 'true' }}
+        uses: blackduck-inc/black-duck-security-scan@v2.8.0
+        with:
+          blackducksca_url: ${{ secrets.BLACKDUCK_URL }}
+          blackducksca_token: ${{ secrets.BLACKDUCK_API_TOKEN }}
+          blackducksca_scan_full: ${{ github.event_name != 'pull_request' }}
+          blackducksca_scan_failure_severities: "CRITICAL,HIGH"
+          blackducksca_prComment_enabled: ${{ github.event_name == 'pull_request' }}
+          blackducksca_reports_sarif_create: "true"
+          blackducksca_reports_sarif_file_path: "blackduck-results.sarif"
+          blackducksca_upload_sarif_report: "true"
+          blackducksca_waitForScan: "true"
+          detect_search_depth: "10"
+          detect_args: >
+            --detect.project.name=${{ env.BLACKDUCK_PROJECT_NAME }}
+            --detect.project.version.name=${{ env.BLACKDUCK_VERSION_NAME }}
+          github_token: ${{ github.token }}
+          project_source_excludes: ".git/**,.vs/**,.vscode/**,.idea/**,.dotnet-home/**,bin/**,obj/**,TestResults/**,.test-output/**,artifacts/**,Screens/**"
