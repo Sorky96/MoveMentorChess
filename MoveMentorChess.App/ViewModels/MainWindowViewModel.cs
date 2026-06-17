@@ -492,7 +492,7 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         int failed = 0;
         int skipped = 0;
         List<string> failureMessages = [];
-        IMainWindowAnalysisRun? analysisRun = null;
+        using MainWindowAnalysisRunLease analysisRun = new(analysisWorkflow, engineAnalyzer);
 
         try
         {
@@ -537,7 +537,6 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
                     IProgress<GameAnalysisProgress> progress = new Progress<GameAnalysisProgress>(
                         item => ShowAnalysisProgressOnBoard(item, bulkStatus));
 
-                    analysisRun ??= analysisWorkflow.CreateAnalysisRun(engineAnalyzer);
                     GameAnalysisResult result = await analysisRun.AnalyzeGameAsync(
                         game,
                         side,
@@ -581,7 +580,6 @@ public sealed class MainWindowViewModel : ViewModelBase, IDisposable
         }
         finally
         {
-            analysisRun?.Dispose();
             IsBusy = false;
             importCancellationTokenSource = null;
             OnPropertyChanged(nameof(IsImportCancellationAvailable));
