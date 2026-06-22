@@ -154,7 +154,7 @@ jobs:
       # ── create GitHub Release ─────────────────────────────────────────────
       - name: Create GitHub Release
         if: github.ref_type == 'tag' || steps.version.outputs.has_manual_tag == 'true'
-        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # pin v3.0.0
+        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # pin v3.0.1
         with:
           tag_name: ${{ steps.version.outputs.label }}
           name: "MoveMentorChess ${{ steps.version.outputs.label }}"
