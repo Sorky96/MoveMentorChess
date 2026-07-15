@@ -116,7 +116,7 @@ internal static class Program
 
             using WriteableBitmap frame = window.CaptureRenderedFrame()
                 ?? throw new InvalidOperationException($"Could not capture {window.GetType().Name}.");
-            frame.Save(outputPath);
+            frame.Save(outputPath, PngBitmapEncoderOptions.Default);
         }
         finally
         {
