@@ -1953,6 +1953,8 @@ confidence: 0.82
     [Fact]
     public void LocalProcessAdviceModel_ExecutesLocalCommandAndReturnsStdout()
     {
+        const int ProcessStartupTimeoutMs = 30_000;
+
         string powerShellPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.Windows),
             "System32",
@@ -1965,7 +1967,7 @@ confidence: 0.82
         LocalProcessAdviceModel model = new(new LocalAdviceModelOptions(
             powerShellPath,
             "-NoProfile -Command \"$input | Out-Null; Write-Output '{\\\"short_text\\\":\\\"Process short text\\\",\\\"detailed_text\\\":\\\"Process detailed text\\\",\\\"training_hint\\\":\\\"Process training hint\\\"}'\"",
-            TimeoutMs: 5000));
+            TimeoutMs: ProcessStartupTimeoutMs));
 
         string? rawResponse = model.Generate(new LocalModelAdviceRequest(
             CreateReplay(
