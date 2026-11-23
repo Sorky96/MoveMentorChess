@@ -47,4 +47,4 @@ jobs:
         run: dotnet build MoveMentorChess.sln --configuration Release --no-restore -m:1 --verbosity minimal
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@3ea37a44b6e4e6847c46edae209410d258d548d1 # pin v4
+        uses: github/codeql-action/analyze@38112626f97ac1fd7acf3df7ebca51f4677c1b38 # pin v4
